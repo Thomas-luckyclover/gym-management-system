@@ -22,9 +22,9 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css">
 
         <%-- BF-07: hai vai trò dùng chung bố cục; token màu thay đổi theo theme. --%>
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/customer-list.css?v=20261025-bf07">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/customer-list.css?v=20261031-fixed-page">
 
-        <script src="${pageContext.request.contextPath}/js/pages/receptionist/customer-list.js?v=20261025-bf07" defer>
+        <script src="${pageContext.request.contextPath}/js/pages/receptionist/customer-list.js?v=20261031-fixed-page" defer>
         </script>
     </head>
     <body class="dock <c:out value="${roleTheme}" />">
@@ -76,7 +76,7 @@
                         </c:choose>
                     </nav>
 
-                    <%-- ===== Bộ lọc hồ sơ: keyword, statusFilter, pageSize ===== --%>
+                    <%-- ===== Bộ lọc hồ sơ: keyword, statusFilter; cố định 10 dòng/trang ===== --%>
                     <c:if test="${currentTab == 'all' or currentTab == 'profiles'}">
                         <form class="bf07-filters bf07-panel" action="${listUrl}" method="get" role="search">
                             <input type="hidden" name="tab" value="<c:out value="${currentTab}" />">
@@ -97,17 +97,7 @@
                                     </c:if>
                                 </select>
                             </div>
-                            <div class="bf07-page-size">
-                                <label for="profilePageSize">Số dòng</label>
-                                <select id="profilePageSize" name="pageSize">
-                                    <c:forEach var="size" items="${[10,20,50]}">
-                                        <option value="${size}" <c:if test="${pageSize == size}">selected</c:if>>
-                                            <c:out value="${size}" />
-                                        </option>
-                                    </c:forEach>
-                                </select>
-                            </div>
-                            <div class="bf07-filter-actions">
+<div class="bf07-filter-actions">
                                 <button class="btn btn-primary" type="submit">Tìm</button>
                                 <c:if test="${not empty keyword or statusFilter != 'ALL'}">
                                     <a class="btn btn-outline" href="${listUrl}">Xóa lọc</a>
@@ -206,7 +196,7 @@
                                                             </span>
                                                         </td>
                                                         <td data-label="Gói hiện tại">
-                                                            <c:out value="${profile.currentPackageName}" default="Không có gói còn hạn" />
+                                                            ${empty profile.currentPackageName ? 'Chưa có gói' : 'Đã có gói'}
                                                         </td>
                                                         <td data-label="Trạng thái">
                                                             <span class="badge badge-<c:out value="${profile.statusTone}" />">
@@ -357,28 +347,26 @@
                                                 <c:out value="${pageData.pageNumber}" />
                                             </b>
                                             /
-                                            <c:out value="${pageData.totalPages}" />
+                                            <c:out value="${pageData.totalPages}" /> (<c:out value="${pageData.totalItems}" /> mục)
                                         </span>
                                         <div class="bf07-row-actions">
                                             <c:if test="${pageData.hasPrevious}">
                                                 <c:url var="prevUrl" value="${listPath}">
                                                     <c:param name="tab" value="${currentTab}" />
                                                     <c:param name="page" value="${pageData.pageNumber - 1}" />
-                                                    <c:param name="pageSize" value="${pageSize}" />
                                                     <c:param name="keyword" value="${keyword}" />
                                                     <c:param name="status" value="${statusFilter}" />
                                                 </c:url>
-                                                <a class="btn btn-outline" href="<c:out value="${prevUrl}" />">Trước</a>
+                                                <a class="btn btn-outline" href="<c:out value="${prevUrl}" />">Trang trước</a>
                                             </c:if>
                                             <c:if test="${pageData.hasNext}">
                                                 <c:url var="nextUrl" value="${listPath}">
                                                     <c:param name="tab" value="${currentTab}" />
                                                     <c:param name="page" value="${pageData.pageNumber + 1}" />
-                                                    <c:param name="pageSize" value="${pageSize}" />
                                                     <c:param name="keyword" value="${keyword}" />
                                                     <c:param name="status" value="${statusFilter}" />
                                                 </c:url>
-                                                <a class="btn btn-outline" href="<c:out value="${nextUrl}" />">Sau</a>
+                                                <a class="btn btn-outline" href="<c:out value="${nextUrl}" />">Trang sau</a>
                                             </c:if>
                                         </div>
                                     </div>

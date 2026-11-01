@@ -214,6 +214,9 @@
 .session-card small,
 .session-card-pt { color: var(--color-text-soft); font-size: var(--font-size-xs); }
 .session-card [data-session-content] { padding: var(--space-3); }   /* chỉ thấy khi không có JS */
+/* Nhãn trạng thái trong thẻ buổi giữ 1 dòng (máy tính bị bẻ "Đang cập / nhật", chấm màu rơi riêng 1 dòng).
+   iPad ngang mới cho xuống dòng — xem khối 901–1100px bên dưới. */
+.schedule-week .session-card .session-status { white-space: nowrap; }
 
 /* Buổi đã qua: nền trầm nhưng không làm mờ cả thẻ — kết quả vẫn đọc rõ, vẫn bấm được. */
 .session-card.is-ended { border-color: var(--color-border); background: var(--color-bg); }
@@ -389,11 +392,21 @@ body.session-detail-open { overflow: hidden; }
 /* Dãy 7 ngày chỉ dùng trên điện thoại. */
 .schedule-mobile-days { display: none; }
 
+/* iPad ngang (901–1100px): 7 cột chỉ rộng ~110px. Giờ "18:00 – 19:30" (nowrap) và nhãn "Đang cập nhật" dài hơn ô
+   nên thẻ buổi tràn đè sang cột bên cạnh. Ô bớt đệm, giờ được xuống dòng ở dấu "–", nhãn được xuống dòng. */
+@media (min-width: 901px) and (max-width: 1100px) {
+  .schedule-week tbody td { padding: var(--space-2); }
+  .schedule-week .session-card summary { padding: var(--space-1-5) var(--space-2); }
+  .schedule-week .session-card summary > strong { white-space: normal; }
+  .schedule-week .session-card .session-status { max-width: 100%; white-space: normal; }
+}
+
 @media (max-width: 700px) {
   .schedule-month-stats { flex-basis: 100%; margin-left: 0; }
 }
 
-@media (max-width: 640px) {
+/* ≤900px (điện thoại + iPad dọc): 7 cột quá hẹp → chỉ hiện 1 ngày + dải chọn ngày (JSP gắn is-mobile-day). */
+@media (max-width: 900px) {
   .schedule-toolbar { padding: var(--space-2) var(--space-3); }
   .schedule-period h2 { font-size: var(--font-size-sm); }
   .schedule-controls { width: 100%; justify-content: space-between; }

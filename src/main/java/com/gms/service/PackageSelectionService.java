@@ -141,7 +141,7 @@ public class PackageSelectionService {
     }
 
     /**
-     * Gói này khách có tự mua online được không (UC-22: chỉ gói tập và vé ngày;
+     * Gói này khách có tự mua online được không (UC-22: chỉ gói tập và vé ngày;PT tháng
      * PT bán ở quầy). Hàm tạo đơn sau này phải gọi lại hàm này ở server, không
      * chỉ dựa vào việc ẩn nút trên giao diện.
      *
@@ -185,8 +185,8 @@ public class PackageSelectionService {
         }
 
         // B3: dựng thẻ giá, cất theo mã gói để ghép lại đúng thứ tự gốc ở B4
-        Map<Integer, PackageCardView> cardsByPackageId = new LinkedHashMap<>();
-        Map<Integer, Long> originalPriceByPackageId = new HashMap<>();
+        Map<Integer, PackageCardView> cardsByPackageId = new LinkedHashMap<>(); //id,card
+        Map<Integer, Long> originalPriceByPackageId = new HashMap<>(); //id, gia goc
         for (PackageCardView card : buildGymCards(gymPackages, originalPriceByPackageId)) {
             cardsByPackageId.put(card.getPkg().getPackageId(), card);
         }
@@ -685,11 +685,10 @@ public class PackageSelectionService {
         return durationValue;
     }
 
-    // ===== Dựng thẻ giá gói tập (sao chép từ HomeService.buildGymCards) =====
+    // ===== Dựng thẻ giá gói tập buoi =====
     /**
      * Tạo thẻ cho gói tập: giá/tháng, % tiết kiệm so với gói 1 tháng, rồi gắn
-     * nhãn. Khác HomeService ở một điểm: % tiết kiệm chỉ tính cho gói từ 3
-     * tháng (SRS 7.1.1).
+     * nhãn. 
      *
      * Ví dụ seed (gói 1 tháng = 799.000): Gói 3 Tháng 2.190.000 →
      * 730.000/tháng, tiết kiệm 9%; Gói 6 Tháng 3.990.000 → 665.000/tháng, tiết
@@ -852,7 +851,7 @@ public class PackageSelectionService {
             return "Thanh toán trực tuyến hoặc tại quầy";
         }
         if (packageType == Package.Type.SINGLE_SESSION) {
-            return "Đặt qua mục Đặt buổi lẻ";
+            return "Chọn PT và khung giờ để đặt buổi";
         }
         return "Chỉ mua tại quầy";
     }
@@ -864,11 +863,11 @@ public class PackageSelectionService {
      */
     private String buildPurchaseHint(Package.Type packageType, int paymentDueMinutes, String openingHours) {
         if (isOnlinePurchasable(packageType)) {
-            return "Thanh toán VNPay, giữ đơn " + paymentDueMinutes + " phút. Hoặc mua tại quầy.";
+            return "Thanh toán VNPay. Hoặc mua tại quầy.";
         }
 
         if (packageType == Package.Type.SINGLE_SESSION) {
-            return "Đặt ở mục Đặt buổi lẻ hoặc tại quầy.";
+            return "Bấm Chọn buổi để chọn PT, ngày và khung giờ. Sau khi xác nhận lịch, bạn sẽ được chuyển sang chi tiết thanh toán.";
         }
 
         String counterHint = "Đăng ký tại quầy lễ tân.";

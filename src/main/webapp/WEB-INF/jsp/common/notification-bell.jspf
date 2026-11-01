@@ -24,7 +24,8 @@
        id="notificationPopover"
        hidden>
 
-    <div class="notification-popover-head">
+    <div class="notification-popover-head"
+         id="notificationPopoverHead">
 
       <div>
         <strong>Thông báo</strong>
@@ -50,6 +51,11 @@
         Đang tải...
       </div>
 
+    </div>
+
+    <div class="notification-detail"
+         id="notificationDetailView"
+         hidden>
     </div>
 
   </div>

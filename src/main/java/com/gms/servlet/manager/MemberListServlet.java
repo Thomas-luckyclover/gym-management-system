@@ -26,7 +26,7 @@ public class MemberListServlet extends HttpServlet {
         // B1: đăng nhập và vai trò đã được AuthFilter/ManagerAreaFilter kiểm tra.
         int accountId = (Integer) request.getSession(false).getAttribute(SessionKey.ACCOUNT_ID);
         int page = PaginationUtil.getPageNumber(request);
-        int pageSize = PaginationUtil.getPageSize(request);
+        int pageSize = 10; // BF-07 cố định 10 hồ sơ mỗi trang.
         String tab = RequestUtil.getTrimmedParam(request, "tab");
         String keyword = RequestUtil.getTrimmedParam(request, "keyword");
         String status = service.normalizeStatus(RequestUtil.getTrimmedParam(request, "status"), true);

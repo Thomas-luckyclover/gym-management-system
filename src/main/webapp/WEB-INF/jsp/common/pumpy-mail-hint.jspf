@@ -1,18 +1,33 @@
 <%@ page pageEncoding="UTF-8" %>
 <%-- ===== Hộp gợi ý "Chưa nhận được mail?" — Pumpy tựa tạ lười biếng + bong bóng thoại =====
      Dùng ở bước nhập mã: Quên mật khẩu (bước 2) và Đăng ký (bước OTP, bước claim-otp).
+     Màn Đăng nhập: trang cha đặt <c:set var="pumpyHintMode" value="login" /> trước khi include → chữ về MẬT KHẨU TẠM
+     (tài khoản lễ tân tạo tại quầy, thay CBR-31). Không đặt = chữ về mã xác thực như cũ.
      Chữ tĩnh, hình trang trí (aria-hidden). CSS: common.css mục 13 (.pumpy-hint). Nút "Gửi lại mã" nằm phía trên khối này. --%>
 <aside class="pumpy-hint" aria-labelledby="pumpyHintTitle">
 
 
             <div class="pumpy-bubble">
-              <p class="pumpy-bubble__title" id="pumpyHintTitle">Chưa thấy mail à? Từ từ thôi…</p>
-              <ol class="pumpy-steps">
-                <li>Mở mục <b>Thư rác / Spam</b> hoặc <b>Quảng cáo</b> trong hộp thư.</li>
-                <li>Hết thời gian chờ thì bấm <b>Gửi lại mã</b> ở trên.</li>
-                <li>Đợi vài phút rồi thử lại, đôi khi mail đến hơi chậm.</li>
-                <li>Vẫn không được? Ghé <b>quầy lễ tân</b>, mọi người sẽ giúp bạn.</li>
-              </ol>
+              <c:choose>
+                <c:when test="${pumpyHintMode eq 'login'}">
+                  <p class="pumpy-bubble__title" id="pumpyHintTitle">Đăng ký ở quầy? Mật khẩu tạm nằm trong email</p>
+                  <ol class="pumpy-steps">
+                    <li>Mở email bạn đưa lễ tân, xem cả <b>Spam / Quảng cáo</b>.</li>
+                    <li>Đăng nhập bằng <b>email</b> hoặc <b>SĐT</b> + mật khẩu tạm.</li>
+                    <li>Không thấy mail? Bấm <b>Quên mật khẩu</b>.</li>
+                    <li>Email bị ghi sai? Hỏi <b>quầy lễ tân</b>.</li>
+                  </ol>
+                </c:when>
+                <c:otherwise>
+                  <p class="pumpy-bubble__title" id="pumpyHintTitle">Chưa thấy mail à? Từ từ thôi…</p>
+                  <ol class="pumpy-steps">
+                    <li>Mở mục <b>Thư rác / Spam</b> hoặc <b>Quảng cáo</b> trong hộp thư.</li>
+                    <li>Hết thời gian chờ thì bấm <b>Gửi lại mã</b> ở trên.</li>
+                    <li>Đợi vài phút rồi thử lại, đôi khi mail đến hơi chậm.</li>
+                    <li>Vẫn không được? Ghé <b>quầy lễ tân</b>, mọi người sẽ giúp bạn.</li>
+                  </ol>
+                </c:otherwise>
+              </c:choose>
             </div>
             <svg class="pumpy-lazy" viewBox="0 0 250 160" aria-hidden="true" focusable="false">
               <ellipse cx="128" cy="152" rx="112" ry="6" fill="#000" opacity=".35"/>

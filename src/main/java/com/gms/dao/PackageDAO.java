@@ -86,7 +86,7 @@ public class PackageDAO {
         String sql = "SELECT PackageId, PackageName, Description, Benefits, PackageType, "
                 + "DurationUnit, DurationValue, EstimatedSessionCount, Price, IsActive, "
                 + "UnlocksExerciseLibrary, CreatedAt, RowVer "
-                + "FROM Packages "
+                + "FROM Packages WITH (HOLDLOCK) "
                 + "WHERE PackageId = ?";
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {

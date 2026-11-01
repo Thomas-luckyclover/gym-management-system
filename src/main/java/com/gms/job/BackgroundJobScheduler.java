@@ -35,9 +35,9 @@ import java.util.concurrent.TimeUnit;
 public class BackgroundJobScheduler implements ServletContextListener {
 
     // ===== Cấu hình lịch chạy (giá trị hiện tại ghi bên phải) =====
-    private static final LocalTime DAILY_RUN_TIME = LocalTime.of(0, 5);   // = 00:05 giờ VN mỗi ngày
-    private static final int DAILY_MAX_RETRIES = 3;                       // = lỗi DB thì thử lại tối đa 3 lần
-    private static final long DAILY_RETRY_DELAY_MINUTES = 5;              // = mỗi lần thử lại cách 5 phút
+    private static final LocalTime DAILY_RUN_TIME = LocalTime.of(0, 5);    // = 00:05 giờ VN mỗi ngày
+    private static final int DAILY_MAX_RETRIES = 3;                        // = lỗi DB thì thử lại tối đa 3 lần
+    private static final long DAILY_RETRY_DELAY_MINUTES = 5;               // = mỗi lần thử lại cách 5 phút
 
     /** Job hằng ngày — THỨ TỰ TRONG LIST LÀ THỨ TỰ CHẠY, không đảo. */
     private static final List<BackgroundJob> DAILY_JOBS = List.of(
@@ -50,9 +50,9 @@ public class BackgroundJobScheduler implements ServletContextListener {
 
     /** Job chạy mỗi phút — độc lập nhau. */
     private static final List<BackgroundJob> MINUTE_JOBS = List.of(
-            new CancelOverdueOnlineOrdersJob(),       // JOB-05: hủy đơn online quá hạn thanh toán (khung TODO)
-            new ExpireTimedOutTransactionsJob(),      // JOB-06: giao dịch quá thời gian chờ (khung TODO)
-            new LeaveRequestReminderJob()             // JOB-07: nhắc Manager đơn nghỉ đến hạn (không tự quyết thay Manager)
+            new CancelOverdueOnlineOrdersJob(),      // JOB-05: hủy đơn online quá hạn thanh toán (khung TODO)
+            new ExpireTimedOutTransactionsJob(),     // JOB-06: giao dịch quá thời gian chờ (khung TODO)
+            new LeaveRequestReminderJob()            // JOB-07: nhắc Manager đơn nghỉ đến hạn (không tự quyết thay Manager)
     );
 
     private ScheduledExecutorService dailyExecutor;

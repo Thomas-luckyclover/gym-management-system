@@ -69,9 +69,13 @@ public class FacilityDAO {
      * Đếm tổng số dòng máy theo từ khóa tìm kiếm (dành cho lễ tân: chỉ IsActive = 1).
      */
     public long countCatalog(String keyword) throws SQLException {
+        return countCatalog(keyword, (String) null);
+    }
+
+    public long countCatalog(String keyword, String location) throws SQLException {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM Facilities f WHERE f.IsActive = 1 ");
         List<Object> parameters = new ArrayList<>();
-        appendCatalogFilters(sql, parameters, keyword);
+        appendCatalogFilters(sql, parameters, keyword, location);
 
         try (Connection connection = DBContext.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql.toString())) {
@@ -86,13 +90,17 @@ public class FacilityDAO {
     }
 
     public long countCatalog(String keyword, Facility.Category category, Facility.Status status) throws SQLException {
-        return countCatalog(keyword);
+        return countCatalog(keyword, (String) null);
     }
 
     /**
      * Lấy danh sách dòng máy phân trang kèm danh sách các cá thể máy con.
      */
     public List<Facility> findCatalogPage(String keyword, int page, int pageSize) throws SQLException {
+        return findCatalogPage(keyword, (String) null, page, pageSize);
+    }
+
+    public List<Facility> findCatalogPage(String keyword, String location, int page, int pageSize) throws SQLException {
         StringBuilder sql = new StringBuilder("""
             SELECT f.FacilityId, f.FacilityName, f.Category, f.Location, f.ImageUrl, f.UnitLabel, f.IsActive,
                    ISNULL(ei_stats.TotalCount, 0) AS TotalQuantity,
@@ -122,7 +130,7 @@ public class FacilityDAO {
             """);
 
         List<Object> parameters = new ArrayList<>();
-        appendCatalogFilters(sql, parameters, keyword);
+        appendCatalogFilters(sql, parameters, keyword, location);
 
         sql.append("""
             ORDER BY 
@@ -294,6 +302,14 @@ public class FacilityDAO {
     }
 
     private void appendCatalogFilters(StringBuilder sql, List<Object> parameters, String keyword) {
+        appendCatalogFilters(sql, parameters, keyword, null);
+    }
+
+    private void appendCatalogFilters(StringBuilder sql, List<Object> parameters, String keyword, String location) {
+        if (location != null && !location.isBlank()) {
+            sql.append(" AND f.Location = ? ");
+            parameters.add(location.trim());
+        }
         if (keyword != null && !keyword.isBlank()) {
             String trimmed = keyword.trim();
             String searchPattern = "%" + trimmed + "%";

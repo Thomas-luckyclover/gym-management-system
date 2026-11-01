@@ -19,65 +19,59 @@ import java.util.List;
 /**
  * Truy cập bảng Orders — 1 lần mua 1 gói (DBR-39, DBR-40).
  *
- * Bốn method cho Bước 1 (tạo đơn Pending):
- * generateNextOrderCode — sinh mã DH-yyyy-nnnn (DBR-09)
- * insert — thêm đơn mới, trả OrderId tự sinh
+ * Bốn method cho Bước 1 (tạo đơn Pending): generateNextOrderCode — sinh mã
+ * DH-yyyy-nnnn (DBR-09) insert — thêm đơn mới, trả OrderId tự sinh
  * findPendingOnlineByHolderAndPackage — tìm đơn online cũ còn Pending (CBR-71)
  * markCancelled — hủy đơn, có điều kiện trạng thái (DBR-40, DBR-43)
  *
  * Method ghi đều nhận Connection từ Service truyền vào để dùng chung 1
- * transaction
- * (codeImplementationBackend.md Mục 13). Mọi method đổi trạng thái trả về int =
- * số dòng
- * bị ảnh hưởng, KHÔNG trả void: rowsAffected == 0 nghĩa là có request khác đã
- * xử lý
- * đơn này trước (GBR-13), Service phải xử lý trường hợp đó chứ không coi là
- * lỗi.
+ * transaction (codeImplementationBackend.md Mục 13). Mọi method đổi trạng thái
+ * trả về int = số dòng bị ảnh hưởng, KHÔNG trả void: rowsAffected == 0 nghĩa là
+ * có request khác đã xử lý đơn này trước (GBR-13), Service phải xử lý trường
+ * hợp đó chứ không coi là lỗi.
  *
- * Ba điểm khớp với entity Order:
- * - Channel / Status / CancelType là enum lồng, ghi xuống DB bằng getDbValue(),
- * đọc lên bằng fromDbValue() (GBR-01: enum lưu tiếng Anh).
- * - Tiền là long trong Java dù cột DB là INT (docs/notes.md mục D5) -> setLong
- * / getLong.
- * - orderId là final không có setter, nên insert() CHỈ trả OrderId về cho
- * Service,
- * không gán lại vào entity. Service dùng giá trị trả về đó cho các bước sau.
+ * Ba điểm khớp với entity Order: - Channel / Status / CancelType là enum lồng,
+ * ghi xuống DB bằng getDbValue(), đọc lên bằng fromDbValue() (GBR-01: enum lưu
+ * tiếng Anh). - Tiền là long trong Java dù cột DB là INT (docs/notes.md mục D5)
+ * -> setLong / getLong. - orderId là final không có setter, nên insert() CHỈ
+ * trả OrderId về cho Service, không gán lại vào entity. Service dùng giá trị
+ * trả về đó cho các bước sau.
  *
  * @author Le Cong Minh
  */
 public class OrderDAO {
 
-    /** Các cột dùng chung cho mọi câu SELECT của class này. */
+    /**
+     * Các cột dùng chung cho mọi câu SELECT của class này.
+     */
     private static final String SELECT_COLUMNS = "OrderId, OrderCode, HolderCustomerId, PartnerCustomerId, PackageId, VoucherId, "
             + "CreatedByEmployeeId, ShiftId, Channel, PackageNameSnapshot, PackageDescriptionSnapshot, "
             + "PackageBenefitsSnapshot, UnitPriceSnapshot, DiscountAmount, VatRateSnapshot, VatAmount, "
             + "Status, PaymentDueAt, CreatedAt, PaidAt, CancelType, CancelledAt, CancelReason";
 
     // ===== 1. Sinh mã đơn =====
-
     /**
      * Sinh mã đơn kế tiếp của năm hiện tại theo dạng DH-yyyy-nnnn (DBR-09).
      *
      * Số thứ tự reset theo năm, nên KHÔNG dùng MAX(OrderId) như
-     * generateNextCustomerCode:
-     * phải lọc theo tiền tố của năm rồi lấy 4 ký tự cuối.
+     * generateNextCustomerCode: phải lọc theo tiền tố của năm rồi lấy 4 ký tự
+     * cuối.
      *
-     * Chống trùng: bảng có UQ_Orders_OrderCode, nên hai request đồng thời đọc cùng
-     * một MAX
-     * thì câu insert thứ hai sẽ ném SQLException duplicate key chứ không ghi trùng
-     * —
-     * Service bắt lỗi đó, gọi lại method này và thử insert lần nữa.
+     * Chống trùng: bảng có UQ_Orders_OrderCode, nên hai request đồng thời đọc
+     * cùng một MAX thì câu insert thứ hai sẽ ném SQLException duplicate key chứ
+     * không ghi trùng — Service bắt lỗi đó, gọi lại method này và thử insert
+     * lần nữa.
      *
      * @param conn Connection tham gia transaction
      * @return mã đơn mới, ví dụ "DH-2026-0001"
      * @throws SQLException khi truy vấn lỗi, hoặc khi số thứ tự vượt 9999 (vỡ
-     *                      CK_Orders_Code)
+     * CK_Orders_Code)
      */
     public String generateNextOrderCode(Connection conn) throws SQLException {
         int year = LocalDate.now(DateTimeUtil.GYM_ZONE).getYear();
         String prefix = String.format("DH-%d-", year);
 
-        String sql = "SELECT MAX(OrderCode) FROM Orders WHERE OrderCode LIKE ?";
+        String sql = "SELECT MAX(OrderCode) FROM Orders WITH (UPDLOCK, HOLDLOCK) WHERE OrderCode LIKE ?";
 
         // B1: lấy mã lớn nhất của năm nay
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -104,24 +98,23 @@ public class OrderDAO {
     }
 
     // ===== 2. Thêm đơn mới =====
-
     /**
      * Thêm một đơn mới trong transaction dùng chung Connection.
      *
-     * KHÔNG ghi PaidAt / CancelType / CancelledAt / CancelReason: đơn mới luôn ở
-     * Pending,
-     * và CK_Orders_Paid cùng CK_Orders_Cancelled bắt buộc bốn cột đó phải NULL khi
-     * Pending.
+     * KHÔNG ghi PaidAt / CancelType / CancelledAt / CancelReason: đơn mới luôn
+     * ở Pending, và CK_Orders_Paid cùng CK_Orders_Cancelled bắt buộc bốn cột đó
+     * phải NULL khi Pending.
      *
-     * Hai CHECK dễ vướng nhất khi gọi method này:
-     * CK_Orders_ChannelFields — ONLINE: createdByEmployeeId và shiftId phải null,
-     * paymentDueAt phải có giá trị. COUNTER: ngược lại hoàn toàn.
-     * CK_Orders_VoucherDiscount — voucherId null thì discountAmount phải bằng 0.
+     * Hai CHECK dễ vướng nhất khi gọi method này: CK_Orders_ChannelFields —
+     * ONLINE: createdByEmployeeId và shiftId phải null, paymentDueAt phải có
+     * giá trị. COUNTER: ngược lại hoàn toàn. CK_Orders_VoucherDiscount —
+     * voucherId null thì discountAmount phải bằng 0.
      *
-     * @param conn  Connection tham gia transaction
-     * @param order đơn cần chèn, đã có orderCode và đã tính sẵn vatAmount (DBR-57)
-     * @return OrderId tự sinh trong database (orderId của entity là final nên không
-     *         gán lại được)
+     * @param conn Connection tham gia transaction
+     * @param order đơn cần chèn, đã có orderCode và đã tính sẵn vatAmount
+     * (DBR-57)
+     * @return OrderId tự sinh trong database (orderId của entity là final nên
+     * không gán lại được)
      * @throws SQLException khi truy vấn lỗi hoặc vi phạm CHECK / UNIQUE
      */
     public int insert(Connection conn, Order order) throws SQLException {
@@ -179,8 +172,8 @@ public class OrderDAO {
     }
 
     /**
-     * Thêm một đơn mới dùng Connection riêng lẻ ngoài transaction.
-     * Chỉ dùng khi thật sự chỉ có 1 câu SQL — luồng mua hàng luôn đi qua bản nhận
+     * Thêm một đơn mới dùng Connection riêng lẻ ngoài transaction. Chỉ dùng khi
+     * thật sự chỉ có 1 câu SQL — luồng mua hàng luôn đi qua bản nhận
      * Connection.
      *
      * @param order đơn cần chèn
@@ -194,32 +187,31 @@ public class OrderDAO {
     }
 
     // ===== 3. Tìm đơn online còn Pending (CBR-71) =====
-
     /**
-     * Tìm các đơn ONLINE còn Pending của cùng một khách cho cùng một gói (CBR-71).
+     * Tìm các đơn ONLINE còn Pending của cùng một khách cho cùng một gói
+     * (CBR-71).
      *
-     * Service gọi trước khi tạo đơn mới: mỗi đơn trả về đều phải markCancelled với
-     * CancelType.REPLACED_BY_NEW_ORDER, trả lại lượt voucher (BR-44) và nhả slot
-     * đang
-     * Held về Free (DBR-36).
+     * Service gọi trước khi tạo đơn mới: mỗi đơn trả về đều phải markCancelled
+     * với CancelType.REPLACED_BY_NEW_ORDER, trả lại lượt voucher (BR-44) và nhả
+     * slot đang Held về Free (DBR-36).
      *
      * Trả List chứ không trả 1 đơn: theo luật thì tối đa chỉ có 1, nhưng nếu dữ
-     * liệu lỡ
-     * có nhiều hơn thì Service vẫn dọn sạch được, thay vì bỏ sót đơn thứ hai.
+     * liệu lỡ có nhiều hơn thì Service vẫn dọn sạch được, thay vì bỏ sót đơn
+     * thứ hai.
      *
      * Chỉ lọc Channel = 'Online': đơn tại quầy không áp CBR-71, nó chỉ hủy được
-     * theo
-     * CBR-11 trong ca đã tạo nó.
+     * theo CBR-11 trong ca đã tạo nó.
      *
-     * @param conn             Connection tham gia transaction
+     * @param conn Connection tham gia transaction
      * @param holderCustomerId khách đứng tên đơn
-     * @param packageId        gói đang mua
-     * @return danh sách đơn online còn Pending, cũ nhất trước; rỗng nếu không có
+     * @param packageId gói đang mua
+     * @return danh sách đơn online còn Pending, cũ nhất trước; rỗng nếu không
+     * có
      * @throws SQLException khi truy vấn lỗi
      */
     public List<Order> findPendingOnlineByHolderAndPackage(Connection conn, int holderCustomerId, int packageId)
             throws SQLException {
-        String sql = "SELECT " + SELECT_COLUMNS + " FROM Orders "
+        String sql = "SELECT " + SELECT_COLUMNS + " FROM Orders WITH (UPDLOCK, HOLDLOCK) "
                 + "WHERE HolderCustomerId = ? AND PackageId = ? "
                 + "AND Channel = 'Online' AND Status = 'Pending' "
                 + "ORDER BY CreatedAt ASC";
@@ -245,7 +237,7 @@ public class OrderDAO {
      * Bản dùng Connection riêng lẻ, cho chỗ chỉ cần đọc ngoài transaction.
      *
      * @param holderCustomerId khách đứng tên đơn
-     * @param packageId        gói đang mua
+     * @param packageId gói đang mua
      * @return danh sách đơn online còn Pending
      * @throws SQLException khi truy vấn lỗi
      */
@@ -255,34 +247,96 @@ public class OrderDAO {
         }
     }
 
-    // ===== 4. Hủy đơn =====
+    /**
+     * Đọc đơn online thuộc tài khoản hiện tại; không cho xem đơn của khách
+     * khác.
+     *
+     * @param conn kết nối do Service quản lý
+     * @param accountId tài khoản từ session
+     * @param orderId mã đơn trên URL
+     * @return đơn thuộc chủ hoặc null
+     */
+    public Order findOnlineByIdAndAccount(Connection conn, int accountId, int orderId) throws SQLException {
+        String sql = "SELECT " + SELECT_COLUMNS + " FROM Orders "
+                + "WHERE OrderId = ? AND Channel = 'Online' AND HolderCustomerId IN ("
+                + "SELECT c.CustomerId FROM Customers c JOIN Accounts a ON a.PersonId = c.PersonId "
+                + "WHERE a.AccountId = ? AND a.Status = 'Active' AND c.Status <> 'Inactive')";
+        try (PreparedStatement statement = conn.prepareStatement(sql)) {
+            statement.setInt(1, orderId);
+            statement.setInt(2, accountId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return mapResultSetToOrder(resultSet);
+                }
+            }
+        }
+        return null;
+    }
 
+    /**
+     * Khóa đơn online đúng chủ tới cuối transaction thay voucher.
+     */
+    public Order findOnlineForUpdate(Connection conn, int accountId, int orderId) throws SQLException {
+        String sql = "SELECT " + SELECT_COLUMNS + " FROM Orders WITH (UPDLOCK, HOLDLOCK) "
+                + "WHERE OrderId = ? AND Channel = 'Online' AND HolderCustomerId IN ("
+                + "SELECT c.CustomerId FROM Customers c JOIN Accounts a ON a.PersonId = c.PersonId "
+                + "WHERE a.AccountId = ? AND a.Status = 'Active' AND c.Status <> 'Inactive')";
+        try (PreparedStatement statement = conn.prepareStatement(sql)) {
+            statement.setInt(1, orderId);
+            statement.setInt(2, accountId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next() ? mapResultSetToOrder(resultSet) : null;
+            }
+        }
+    }
+
+    /**
+     * Ghi voucher/giảm giá/VAT cùng lúc, chỉ khi đơn còn Pending trong hạn và
+     * chưa trả tiền.
+     *
+     * @param conn transaction giữ lượt voucher và cập nhật đơn
+     * @param order đơn do Service đã tính lại giảm giá và VAT
+     * @param now mốc giờ VN dùng kiểm hạn; kiểm lại sát lúc ghi
+     * @return số đơn cập nhật; 0 thì Service rollback toàn bộ
+     */
+    public int updateVoucher(Connection conn, Order order, LocalDateTime now) throws SQLException {
+        String sql = "UPDATE Orders SET VoucherId = ?, DiscountAmount = ?, VatAmount = ? "
+                + "WHERE OrderId = ? AND Channel = 'Online' AND Status = 'Pending' AND PaymentDueAt > ? "
+                + "AND NOT EXISTS (SELECT 1 FROM Transactions WHERE OrderId = ? AND Status = 'Pending')";
+        try (PreparedStatement statement = conn.prepareStatement(sql)) {
+            setNullableInt(statement, 1, order.getVoucherId());
+            statement.setLong(2, order.getDiscountAmount());
+            statement.setLong(3, order.getVatAmount());
+            statement.setInt(4, order.getOrderId());
+            statement.setTimestamp(5, Timestamp.valueOf(now));
+            statement.setInt(6, order.getOrderId());
+            return statement.executeUpdate();
+        }
+    }
+
+    // ===== 4. Hủy đơn =====
     /**
      * Hủy một đơn, ghi loại hủy và thời điểm hủy (DBR-43).
      *
-     * Điều kiện trạng thái nằm ngay trong WHERE, không kiểm bằng if trước đó: giữa
-     * lúc
-     * đọc và lúc ghi có thể có JOB-05 hoặc một IPN chen vào, đặt vào WHERE thì
-     * database
-     * tự phân xử và request sau bị từ chối (GBR-13).
+     * Điều kiện trạng thái nằm ngay trong WHERE, không kiểm bằng if trước đó:
+     * giữa lúc đọc và lúc ghi có thể có JOB-05 hoặc một IPN chen vào, đặt vào
+     * WHERE thì database tự phân xử và request sau bị từ chối (GBR-13).
      *
-     * Trạng thái được phép hủy, theo DBR-40:
-     * CANCELLED_BY_RECEPTIONIST — Pending hoặc Paid (CBR-11, chỉ đơn tại quầy,
-     * trong ca đã tạo)
-     * ba loại còn lại — chỉ Pending
+     * Trạng thái được phép hủy, theo DBR-40: CANCELLED_BY_RECEPTIONIST —
+     * Pending hoặc Paid (CBR-11, chỉ đơn tại quầy, trong ca đã tạo) ba loại còn
+     * lại — chỉ Pending
      *
      * Lý do hủy: CK_Orders_ReceptionistCancel bắt buộc reason ≥ 5 ký tự khi
-     * cancelType = CANCELLED_BY_RECEPTIONIST (GBR-09). Service kiểm độ dài trước
-     * khi gọi,
-     * nếu không database sẽ từ chối với lỗi CHECK khó đọc.
+     * cancelType = CANCELLED_BY_RECEPTIONIST (GBR-09). Service kiểm độ dài
+     * trước khi gọi, nếu không database sẽ từ chối với lỗi CHECK khó đọc.
      *
-     * @param conn       Connection tham gia transaction
-     * @param orderId    đơn cần hủy
+     * @param conn Connection tham gia transaction
+     * @param orderId đơn cần hủy
      * @param cancelType loại hủy, không được null
-     * @param reason     lý do hủy, bắt buộc với CANCELLED_BY_RECEPTIONIST; null với
-     *                   ba loại tự động
-     * @return 1 nếu hủy được; 0 nếu đơn không còn ở trạng thái cho phép hủy (đã có
-     *         người xử lý trước)
+     * @param reason lý do hủy, bắt buộc với CANCELLED_BY_RECEPTIONIST; null với
+     * ba loại tự động
+     * @return 1 nếu hủy được; 0 nếu đơn không còn ở trạng thái cho phép hủy (đã
+     * có người xử lý trước)
      * @throws SQLException khi truy vấn lỗi hoặc vi phạm CHECK
      */
     public int markCancelled(Connection conn, int orderId, Order.CancelType cancelType, String reason)
@@ -309,12 +363,11 @@ public class OrderDAO {
     }
 
     // ===== Hàm hỗ trợ =====
-
     /**
      * Gán tham số int cho phép null (partnerCustomerId, voucherId,
      * createdByEmployeeId, shiftId).
      *
-     * @param stmt  statement đang gán tham số
+     * @param stmt statement đang gán tham số
      * @param index vị trí tham số
      * @param value giá trị, có thể null
      * @throws SQLException khi gán lỗi
@@ -330,7 +383,7 @@ public class OrderDAO {
     /**
      * Gán tham số thời điểm cho phép null (paymentDueAt, paidAt, cancelledAt).
      *
-     * @param stmt  statement đang gán tham số
+     * @param stmt statement đang gán tham số
      * @param index vị trí tham số
      * @param value giá trị, có thể null
      * @throws SQLException khi gán lỗi
@@ -344,9 +397,8 @@ public class OrderDAO {
     }
 
     /**
-     * Ánh xạ một dòng ResultSet thành entity Order, dùng constructor đầy đủ 23 tham
-     * số
-     * mà entity đã chuẩn bị sẵn cho DAO.
+     * Ánh xạ một dòng ResultSet thành entity Order, dùng constructor đầy đủ 23
+     * tham số mà entity đã chuẩn bị sẵn cho DAO.
      *
      * @param rs ResultSet đang trỏ vào dòng cần đọc
      * @return entity Order
@@ -380,9 +432,10 @@ public class OrderDAO {
     }
 
     /**
-     * Đọc cột int cho phép null — rs.getInt trả 0 khi NULL nên phải kiểm wasNull.
+     * Đọc cột int cho phép null — rs.getInt trả 0 khi NULL nên phải kiểm
+     * wasNull.
      *
-     * @param rs     ResultSet đang trỏ vào dòng cần đọc
+     * @param rs ResultSet đang trỏ vào dòng cần đọc
      * @param column tên cột
      * @return giá trị, hoặc null nếu cột NULL
      * @throws SQLException khi đọc cột lỗi
@@ -395,7 +448,7 @@ public class OrderDAO {
     /**
      * Đọc cột thời điểm cho phép null.
      *
-     * @param rs     ResultSet đang trỏ vào dòng cần đọc
+     * @param rs ResultSet đang trỏ vào dòng cần đọc
      * @param column tên cột
      * @return giá trị, hoặc null nếu cột NULL
      * @throws SQLException khi đọc cột lỗi
@@ -403,5 +456,88 @@ public class OrderDAO {
     private LocalDateTime readNullableDateTime(ResultSet rs, String column) throws SQLException {
         Timestamp timestamp = rs.getTimestamp(column);
         return timestamp == null ? null : timestamp.toLocalDateTime();
+    }
+
+    /**
+     * IPN không có session, nên đọc đơn từ OrderId của Transaction.
+     *
+     * @param conn kết nối trong transaction của Service
+     * @param orderId ID đơn đã đọc từ Transaction
+     * @param lock true để giữ khóa đơn đến commit/rollback
+     * @return đơn tìm được hoặc null
+     */
+    public Order findForCallback(
+            Connection conn, int orderId, boolean lock) throws SQLException {
+
+        String sql = "SELECT " + SELECT_COLUMNS + " FROM Orders "
+                + (lock ? "WITH (UPDLOCK, HOLDLOCK) " : "")
+                + "WHERE OrderId = ?";
+
+        try (PreparedStatement statement = conn.prepareStatement(sql)) {
+            statement.setInt(1, orderId);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return mapResultSetToOrder(resultSet);
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Chuyển đơn Pending thành Paid sau khi Service xác minh IPN.
+     *
+     * @param conn kết nối trong transaction của Service
+     * @param orderId đơn cần cập nhật
+     * @param now thời điểm GMS ghi nhận thanh toán
+     * @return số dòng cập nhật; Service yêu cầu đúng 1 dòng
+     */
+    public int markPaid(
+            Connection conn, int orderId, LocalDateTime now)
+            throws SQLException {
+
+        String sql = "UPDATE Orders "
+                + "SET Status = 'Paid', PaidAt = ? "
+                + "WHERE OrderId = ? AND Status = 'Pending'";
+
+        try (PreparedStatement statement = conn.prepareStatement(sql)) {
+            statement.setTimestamp(1, Timestamp.valueOf(now));
+            statement.setInt(2, orderId);
+            return statement.executeUpdate();
+        }
+    }
+
+    /**
+     * JOB-05: mã các đơn online còn Pending, quá PaymentDueAt và chưa có giao
+     * dịch Success. Chọn theo trạng thái nên lượt chạy bị lỡ sẽ được lượt sau
+     * xử lý bù.
+     */
+    public List<Integer> findOverdueOnlineIds(Connection conn, LocalDateTime now) throws SQLException {
+        String sql = """
+            SELECT o.OrderId
+            FROM Orders o
+            WHERE o.Channel = 'Online'
+              AND o.Status = 'Pending'
+              AND o.PaymentDueAt < ?
+              AND NOT EXISTS (SELECT 1 FROM Transactions t
+                              WHERE t.OrderId = o.OrderId AND t.Status = 'Success')
+            ORDER BY o.OrderId
+            """;
+
+        List<Integer> ids = new ArrayList<>();
+
+        try (PreparedStatement statement = conn.prepareStatement(sql)) {
+            statement.setTimestamp(1, Timestamp.valueOf(now));
+
+            try (ResultSet rows = statement.executeQuery()) {
+                while (rows.next()) {
+                    ids.add(rows.getInt("OrderId"));
+                }
+            }
+        }
+
+        return ids;
     }
 }

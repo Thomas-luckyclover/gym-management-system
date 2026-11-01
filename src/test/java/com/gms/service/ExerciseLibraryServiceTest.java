@@ -128,20 +128,7 @@ class ExerciseLibraryServiceTest {
     @ParameterizedTest
     @CsvSource({"0, 1", "1, 1", "12, 1", "13, 2", "78, 7", "812, 68"})
     void totalPagesRoundsUpAndEmptyIsOnePage(int total, int expected) {
-        assertEquals(expected, ExerciseLibraryService.totalPages(total, 12));
-    }
-
-    @Test
-    void pageLinksShowFiveAroundCurrentAndStayInsideRange() {
-        assertEquals(List.of("4", "5", "6", "7", "8"), values(ExerciseLibraryService.pageLinks(6, 20)));
-        assertEquals(List.of("1", "2", "3", "4", "5"), values(ExerciseLibraryService.pageLinks(1, 20)));
-        assertEquals(List.of("16", "17", "18", "19", "20"), values(ExerciseLibraryService.pageLinks(20, 20)));
-        assertEquals(List.of("1", "2"), values(ExerciseLibraryService.pageLinks(2, 2)));
-        assertTrue(ExerciseLibraryService.pageLinks(6, 20).get(2).isSelected());
-    }
-
-    private static List<String> values(List<Option> options) {
-        return options.stream().map(Option::getValue).toList();
+        assertEquals(expected, ExerciseLibraryService.totalPages(total));
     }
 
     // ===== Nhãn tiếng Việt =====
@@ -172,23 +159,56 @@ class ExerciseLibraryServiceTest {
         assertEquals("", item.getMuscleText());
     }
 
+    /** Kho ảnh minh họa: đủ 8 nhóm cơ, nhóm nào cũng có ít nhất 12 ảnh (1 trang = 12 bài). */
     @Test
-    void missingWgerImageGetsCategoryPhotoButRealImageIsKept() {
-        ExerciseItem noImage = new ExerciseItem();
-        noImage.setCategoryId(9);
-        ExerciseLibraryService.fillLabels(noImage);
-        assertEquals("/images/exercises/legs.jpg", noImage.getFallbackImage());
+    void imagePoolCoversEveryCategory() {
+        for (int categoryId : ExerciseLibraryService.CATEGORY_LABELS.keySet()) {
+            assertTrue(ExerciseImagePool.poolSize(categoryId) >= 12, "nhóm " + categoryId);
+        }
+    }
 
+    /** Bài có ảnh wger giữ nguyên; bài thiếu ảnh cùng nhóm trên 1 trang không bị trùng ảnh; nhóm lạ không có ảnh. */
+    @Test
+    void missingWgerImagesGetDistinctPhotosOnOnePage() {
+        java.util.List<ExerciseItem> page = new java.util.ArrayList<>();
+        for (int id = 1; id <= 11; id++) {
+            ExerciseItem item = new ExerciseItem();
+            item.setExerciseId(id * 13);            // mã cách đều: dễ rơi trùng vị trí nếu không né
+            item.setName("Unknown move " + id);
+            item.setCategoryId(9);
+            page.add(item);
+        }
         ExerciseItem withImage = new ExerciseItem();
         withImage.setCategoryId(9);
         withImage.setImageUrl("https://wger.de/media/exercise-images/91/squat.png");
-        ExerciseLibraryService.fillLabels(withImage);
-        assertNull(withImage.getFallbackImage());
-
+        page.add(withImage);
         ExerciseItem unknown = new ExerciseItem();
         unknown.setCategoryId(42);
-        ExerciseLibraryService.fillLabels(unknown);
+        unknown.setName("Unknown");
+        page.add(unknown);
+
+        ExerciseImagePool.assign(page);
+
+        java.util.Set<String> seen = new java.util.HashSet<>();
+        for (ExerciseItem item : page.subList(0, 11)) {
+            assertTrue(item.getFallbackImage().startsWith("/images/exercises/library/legs/"), item.getFallbackImage());
+            assertTrue(seen.add(item.getFallbackImage()), "trùng ảnh " + item.getFallbackImage());
+            assertFalse(item.isFallbackExact());
+        }
+        assertNull(withImage.getFallbackImage());
         assertNull(unknown.getFallbackImage());
+    }
+
+    /** Tên bài khớp tên ảnh trong kho (không phân biệt hoa thường, dấu câu) → đúng ảnh động tác đó. */
+    @Test
+    void exerciseNameMatchesPhotoOfSameMove() {
+        assertEquals("barbell bench press medium grip", ExerciseImagePool.normalize("Barbell Bench Press - Medium Grip"));
+        ExerciseItem item = new ExerciseItem();
+        item.setCategoryId(11);
+        item.setName("barbell bench press - medium grip");
+        ExerciseImagePool.assign(java.util.List.of(item));
+        assertEquals("/images/exercises/library/chest/barbell-bench-press-medium-grip.jpg", item.getFallbackImage());
+        assertTrue(item.isFallbackExact());
     }
 
     @Test

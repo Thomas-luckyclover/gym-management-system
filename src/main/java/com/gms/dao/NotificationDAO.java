@@ -271,10 +271,17 @@ public class NotificationDAO {
                         + "n.ScheduledAt, "
                         + "n.SentAt, "
                         + "n.CreatedAt, "
-                        + "nr.ReadAt "
+                        + "nr.ReadAt, "
+                        + "p.FullName AS SenderName, "
+                        + "e.EmployeeCode AS SenderCode, "
+                        + "e.Position AS SenderPosition "
                         + "FROM NotificationRecipients nr "
                         + "JOIN Notifications n "
                         + "ON n.NotificationId = nr.NotificationId "
+                        + "LEFT JOIN Employees e "
+                        + "ON e.EmployeeId = n.SentByEmployeeId "
+                        + "LEFT JOIN Persons p "
+                        + "ON p.PersonId = e.PersonId "
                         + "WHERE nr.AccountId = ? "
                         + "AND n.SentAt IS NOT NULL "
                         + "ORDER BY n.SentAt DESC, "
@@ -418,9 +425,21 @@ public class NotificationDAO {
                         resultSet.getTimestamp("ReadAt")
                 );
 
+        String senderName =
+                resultSet.getString("SenderName");
+
+        String senderCode =
+                resultSet.getString("SenderCode");
+
+        String senderPosition =
+                resultSet.getString("SenderPosition");
+
         return new NotificationBellRow(
                 notification,
-                readAt
+                readAt,
+                senderName,
+                senderCode,
+                senderPosition
         );
     }
 
@@ -437,13 +456,29 @@ public class NotificationDAO {
 
         private final Notification notification;
         private final LocalDateTime readAt;
+        private final String senderName;
+        private final String senderCode;
+        private final String senderPosition;
 
         public NotificationBellRow(
                 Notification notification,
                 LocalDateTime readAt
         ) {
+            this(notification, readAt, null, null, null);
+        }
+
+        public NotificationBellRow(
+                Notification notification,
+                LocalDateTime readAt,
+                String senderName,
+                String senderCode,
+                String senderPosition
+        ) {
             this.notification = notification;
             this.readAt = readAt;
+            this.senderName = senderName;
+            this.senderCode = senderCode;
+            this.senderPosition = senderPosition;
         }
 
         public Notification getNotification() {
@@ -456,6 +491,18 @@ public class NotificationDAO {
 
         public boolean isRead() {
             return readAt != null;
+        }
+
+        public String getSenderName() {
+            return senderName;
+        }
+
+        public String getSenderCode() {
+            return senderCode;
+        }
+
+        public String getSenderPosition() {
+            return senderPosition;
         }
     }
 }

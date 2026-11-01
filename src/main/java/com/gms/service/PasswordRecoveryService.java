@@ -17,7 +17,8 @@ import java.sql.SQLException;
 
 /**
  * SERVICE "QUÊN MẬT KHẨU" (màn #3, UC-03). Chỉ ForgotPasswordServlet gọi.
- * Đây cũng là cách tài khoản do Lễ tân tạo tại quầy (chưa có mật khẩu) đặt mật khẩu LẦN ĐẦU (CBR-24, CBR-31).
+ * Từ 31/10/2026 tài khoản Lễ tân tạo tại quầy đã có mật khẩu tạm gửi qua email (CounterAccountService, thay CBR-31);
+ * khách quên mật khẩu tạm vẫn dùng luồng này.
  *
  * Service chỉ quyết định ĐƯỢC / KHÔNG ĐƯỢC rồi trả ServiceResult; không biết gì về trang web.
  *
@@ -35,6 +36,16 @@ import java.sql.SQLException;
  *   Bước 3 phải xong trước giờ hết hạn của mã vừa dùng (lúc gửi mã + 15 phút), Servlet giữ mốc này trong session.
  *
  * @author Le Cong Minh
+ *
+ * ❓ VẤN ĐÁP (mỗi câu kèm luồng file để mở theo khi trả lời):
+ *   1) Luồng quên mật khẩu? → 3 bước: gửi mã 6 số qua email → nhập mã → đặt mật khẩu mới.
+ *      Khách quên mật khẩu tạm do lễ tân gửi (CounterAccountService) cũng dùng luồng này.
+ *      File: servlet/auth/ForgotPasswordServlet.java → service/PasswordRecoveryService.java → dao/AccountDAO.java + dao/VerificationCodeDAO.java → WEB-INF/jsp/auth/forgot-password.jsp.
+ *   2) Mã có hết hạn không? → có, 15 phút (P-15); nhập sai 5 lần → khóa 5 phút (P-17/P-18). Luật này KHÔNG nằm ở đây mà ở VerificationCodeService.
+ *      File: service/PasswordRecoveryService.java → service/VerificationCodeService.java → dao/VerificationCodeDAO.java.
+ *   3) Đổi mật khẩu có an toàn? → băm BCrypt (DB không giữ mật khẩu gốc); đổi mật khẩu + mở khóa tạm + ghi log trong 1 TRANSACTION;
+ *      xong đăng xuất tài khoản trên MỌI trình duyệt (CBR-93).
+ *      File: service/PasswordRecoveryService.java (resetPassword) → util/PasswordUtil.java + dao/AccountDAO.java + listener/SessionRegistryListener.java.
  */
 public class PasswordRecoveryService {
 

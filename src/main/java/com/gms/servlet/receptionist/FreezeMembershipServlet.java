@@ -142,6 +142,11 @@ public class FreezeMembershipServlet extends HttpServlet {
             return;
         }
 
+        // CSRF: token sai / thiếu → chặn (form: toast + quay lại; AJAX: JSON 403).
+        if (RequestUtil.rejectInvalidCsrf(request, response, "/receptionist/freeze")) {
+            return;
+        }
+
         int accountId = (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
         String action = RequestUtil.getTrimmedParam(request, "action"); // Đọc action để biết người dùng muốn làm gì
 
@@ -176,19 +181,19 @@ public class FreezeMembershipServlet extends HttpServlet {
 
         if (subscriptionId <= 0 || ValidationUtil.isNullOrEmpty(startDateStr)
                 || ValidationUtil.isNullOrEmpty(plannedEndDateStr)) {
-            RequestUtil.setFlashToast(request, "error", "Vui lòng chọn đầy đủ thời gian bảo lưu.");
+            RequestUtil.setFlashToast(request, "error", Messages.MSG285_FREEZE_PERIOD_REQUIRED);
             RequestUtil.redirect(request, response, redirectUrl);
             return;
         }
 
         if (ValidationUtil.isNullOrEmpty(reason) || reason.length() < 5) {
-            RequestUtil.setFlashToast(request, "error", "Lý do bảo lưu phải có ít nhất 5 ký tự.");
+            RequestUtil.setFlashToast(request, "error", Messages.MSG278_FREEZE_REASON_MIN);
             RequestUtil.redirect(request, response, redirectUrl);
             return;
         }
 
         if (reason.length() > 500) {
-            RequestUtil.setFlashToast(request, "error", "Lý do bảo lưu không được vượt quá 500 ký tự.");
+            RequestUtil.setFlashToast(request, "error", Messages.MSG286_FREEZE_REASON_MAX);
             RequestUtil.redirect(request, response, redirectUrl);
             return;
         }
@@ -199,7 +204,7 @@ public class FreezeMembershipServlet extends HttpServlet {
             startDate = parseFlexibleDate(startDateStr);
             plannedEndDate = parseFlexibleDate(plannedEndDateStr);
         } catch (DateTimeParseException e) {
-            RequestUtil.setFlashToast(request, "error", "Định dạng ngày không hợp lệ.");
+            RequestUtil.setFlashToast(request, "error", Messages.MSG287_DATE_FORMAT_INVALID);
             RequestUtil.redirect(request, response, redirectUrl);
             return;
         }
@@ -223,7 +228,7 @@ public class FreezeMembershipServlet extends HttpServlet {
         String redirectUrl = buildRedirectUrl(q, filter);
 
         if (freezeRecordId <= 0) {
-            RequestUtil.setFlashToast(request, "error", "Mã đợt bảo lưu không hợp lệ.");
+            RequestUtil.setFlashToast(request, "error", Messages.MSG288_FREEZE_ID_INVALID);
             RequestUtil.redirect(request, response, redirectUrl);
             return;
         }

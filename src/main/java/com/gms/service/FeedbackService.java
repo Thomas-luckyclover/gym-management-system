@@ -39,7 +39,7 @@ public class FeedbackService {
         }
         String trimmed = content == null ? "" : content.strip();
         if (trimmed.length() < 10 || trimmed.length() > 1000) {
-            return ServiceResult.failField("content", "Content must contain 10–1000 characters.");
+            return ServiceResult.failField("content", Messages.MSG312_FEEDBACK_CONTENT_LENGTH);
         }
         LocalDate month = today.get().withDayOfMonth(1);
         // B2: kiểm tra quyền chấm và lưu phiếu (CBR-116, DBR-67)

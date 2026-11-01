@@ -20,6 +20,14 @@ import java.util.List;
  *
  * Vì sao nhắc? Không vào được phòng tập thì JOB-04 sẽ chốt buổi là Vắng → khách mất buổi.
  * Nhắc trước 1 ngày để khách kịp mua gói / vé ngày.
+ *
+ * ❓ VẤN ĐÁP (mỗi câu kèm luồng file để mở theo khi trả lời):
+ *   1) JOB-08 làm gì? → mỗi ngày 00:05 nhắc khách có buổi PT NGÀY MAI nhưng chưa vào được phòng tập (thiếu membership/vé ngày hoặc đang bảo lưu).
+ *      File: job/BackgroundJobScheduler.java → job/RemindMissingGymAccessJob.java → service/SessionReminderService.java.
+ *   2) Vì sao phải nhắc? → nếu không kịp mua gói/vé, JOB-04 sẽ chốt buổi là Vắng → khách mất buổi. Nhắc trước 1 ngày để khách kịp xử lý.
+ *      File: service/SessionReminderService.java → service/AutoCloseSessionService.java (JOB-04 chốt Vắng nếu không xử lý).
+ *   3) Có gửi trùng không? → không: mỗi khách chỉ 1 lời nhắc cho 1 ngày tập (DAO lọc, job chạy lại cũng không gửi lại).
+ *      File: service/SessionReminderService.java → dao/SessionReminderDAO.java (lọc khách chưa nhắc).
  */
 public class SessionReminderService {
 

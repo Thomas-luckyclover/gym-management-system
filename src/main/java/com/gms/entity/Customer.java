@@ -168,4 +168,41 @@ public class Customer {
     public void setDeletedAt(LocalDateTime deletedAt) {
         this.deletedAt = deletedAt;
     }
+        // Trạng thái hồ sơ khách — enum khớp CHECK Customers.Status (NamingConvention mục 2b)
+    public enum Status {
+
+        NEW("New", "Mới"),
+        ACTIVE("Active", "Đang hoạt động"),
+        FROZEN("Frozen", "Bảo lưu"),
+        EXPIRED("Expired", "Hết hạn"),
+        INACTIVE("Inactive", "Ngừng");
+
+        private final String dbValue;
+        private final String displayName;
+
+        Status(String dbValue, String displayName) {
+            this.dbValue = dbValue;
+            this.displayName = displayName;
+        }
+
+        // Giá trị lưu trong cột Customers.Status
+        public String getDbValue() {
+            return dbValue;
+        }
+
+        // Chữ tiếng Việt hiện trên thẻ trạng thái
+        public String getDisplayName() {
+            return displayName;
+        }
+
+        // Chuỗi DB → enum; không khớp thì trả null (không đoán giá trị mặc định)
+        public static Status fromDbValue(String value) {
+            for (Status item : values()) {
+                if (item.dbValue.equals(value)) {
+                    return item;
+                }
+            }
+            return null;
+        }
+    }
 }

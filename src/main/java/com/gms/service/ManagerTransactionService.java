@@ -94,7 +94,7 @@ public class ManagerTransactionService {
 
         // B1: Kiểm tra khoảng ngày hợp lệ (fromDate <= toDate)
         if (fromDate != null && toDate != null && fromDate.isAfter(toDate)) {
-            return ServiceResult.fail("Ngày bắt đầu không được lớn hơn ngày kết thúc.");
+            return ServiceResult.fail(Messages.MSG169_DATE_RANGE_REVERSED);
         }
 
         try {
@@ -149,7 +149,7 @@ public class ManagerTransactionService {
 
         // B1: Kiểm tra khoảng ngày
         if (fromDate != null && toDate != null && fromDate.isAfter(toDate)) {
-            return ServiceResult.fail("Ngày bắt đầu không được lớn hơn ngày kết thúc.");
+            return ServiceResult.fail(Messages.MSG169_DATE_RANGE_REVERSED);
         }
 
         try {
@@ -177,7 +177,7 @@ public class ManagerTransactionService {
      */
     public ServiceResult<ManagerOrderDetailView> getOrderDetail(int orderId) {
         if (orderId <= 0) {
-            return ServiceResult.fail("Mã đơn hàng không hợp lệ.");
+            return ServiceResult.fail(Messages.MSG170_ORDER_CODE_INVALID_FULL);
         }
 
         try {
@@ -204,11 +204,11 @@ public class ManagerTransactionService {
     public ServiceResult<Void> recordRefund(int accountId, int transactionId, String refundNote) {
         // B1: Kiểm tra ghi chú hợp lệ (ít nhất 5 ký tự)
         if (!ValidationUtil.isValidReason(refundNote)) {
-            return ServiceResult.fail("Ghi chú hoàn tiền phải từ 5 đến 500 ký tự (ghi rõ số TK hoặc mã giao dịch hoàn).");
+            return ServiceResult.fail(Messages.MSG171_REFUND_NOTE_LENGTH);
         }
 
         if (transactionId <= 0) {
-            return ServiceResult.fail("Mã giao dịch không hợp lệ.");
+            return ServiceResult.fail(Messages.MSG158_TRANSACTION_ID_INVALID);
         }
 
         try (Connection conn = DBContext.getConnection()) {
@@ -218,14 +218,14 @@ public class ManagerTransactionService {
                 Employee manager = findEmployeeForAccount(conn, accountId, Role.MANAGER);
                 if (manager == null) {
                     conn.rollback();
-                    return ServiceResult.fail("Bạn không có quyền thực hiện xác nhận hoàn tiền.");
+                    return ServiceResult.fail(Messages.MSG172_REFUND_NO_PERMISSION);
                 }
 
                 // B3: Đánh dấu giao dịch đã hoàn tiền
                 int rowsUpdated = transactionDAO.markRefunded(conn, transactionId, manager.getEmployeeId(), refundNote.trim());
                 if (rowsUpdated == 0) {
                     conn.rollback();
-                    return ServiceResult.fail("Giao dịch không tồn tại, không yêu cầu hoàn tiền hoặc đã được hoàn trước đó.");
+                    return ServiceResult.fail(Messages.MSG173_REFUND_NOT_APPLICABLE);
                 }
 
                 // B4: Ghi nhật ký AuditLog

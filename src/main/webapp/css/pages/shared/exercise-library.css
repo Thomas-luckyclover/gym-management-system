@@ -7,7 +7,7 @@
      2. Màn khóa (khách chưa có gói mở khóa)
      3. Bộ lọc (form GET) + chip nhóm cơ
      4. Lưới thẻ bài
-     5. Phân trang + ghi nguồn
+     5. Phân trang Trước/Sau + nhảy trang bằng form GET
      6. Điện thoại
 
    Màu, bo góc, khoảng cách lấy hết từ token Arena (tokens.css) → sáng/tối tự đổi theo data-theme.
@@ -152,11 +152,13 @@ html body.dock .content.exercise-library .ex-empty h2 {
   padding: var(--arena-pad-sm) var(--arena-pad);
   border-radius: var(--arena-radius-chip);
   background: var(--arena-chalk);
+  border: var(--border-width) solid var(--arena-card-line);
 }
 .ex-field {
   display: grid;
   gap: var(--space-1);
   min-width: 160px;
+  max-width: 100%;
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
   color: var(--arena-ink);
@@ -182,6 +184,7 @@ html body.dock .content.exercise-library .ex-empty h2 {
 }
 .ex-filters__actions {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-2);
 }
 .ex-filters__actions .btn {
@@ -196,6 +199,7 @@ html body.dock .content.exercise-library .ex-empty h2 {
   display: inline-flex;
   align-items: baseline;
   gap: var(--space-1);
+  min-height: var(--brand-control-height);
   padding: var(--space-1-5) var(--space-3);
   border-radius: var(--radius-pill);
   background: var(--arena-chalk);
@@ -219,7 +223,10 @@ html body.dock .content.exercise-library .ex-empty h2 {
   opacity: 0.85;
 }
 .ex-chip:focus-visible,
-.ex-page:focus-visible {
+.ex-page:focus-visible,
+.ex-pager__jump input:focus-visible,
+.ex-card__source:focus-visible,
+.ex-card__how summary:focus-visible {
   outline: var(--focus-outline-width) solid var(--arena-focus-ring);
   outline-offset: 2px;
 }
@@ -229,7 +236,7 @@ html body.dock .content.exercise-library .ex-empty h2 {
 
 .ex-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
   gap: var(--arena-gap);
   padding: 0;
   list-style: none;
@@ -242,6 +249,8 @@ html body.dock .content.exercise-library .ex-empty h2 {
   background: var(--arena-chalk);
   box-shadow: var(--arena-shadow-light);
   color: var(--arena-ink);
+  min-width: 0;
+  border: var(--border-width) solid var(--arena-card-line);
 }
 /* Ảnh wger nền trắng, tỉ lệ khác nhau → khung 4:3 nền trắng, ảnh nằm gọn (contain) */
 .ex-card__media {
@@ -283,8 +292,8 @@ html body.dock .content.exercise-library .ex-empty h2 {
   font-size: var(--font-size-xs);
 }
 .ex-card__body {
-  display: grid;
-  align-content: start;
+  display: flex;
+  flex-direction: column;
   gap: var(--space-1-5);
   padding: var(--space-3) var(--space-4) var(--space-4);
 }
@@ -317,7 +326,9 @@ html body.dock .content.exercise-library .ex-card__body h3 {
 }
 .ex-card__source {
   display: inline-block;
-  margin-top: var(--space-2);
+  margin-top: auto;
+  padding-top: var(--space-2);
+  overflow-wrap: anywhere;
   color: var(--arena-accent-text);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
@@ -330,7 +341,7 @@ html body.dock .content.exercise-library .ex-card__body h3 {
 }
 
 
-/* ==================== 5. PHÂN TRANG + GHI NGUỒN ==================== */
+/* ==================== 5. PHÂN TRANG — link và form GET giữ nguyên bộ lọc ==================== */
 
 .ex-pager {
   display: flex;
@@ -338,7 +349,11 @@ html body.dock .content.exercise-library .ex-card__body h3 {
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-  color: var(--arena-on-dark-soft);
+  padding: var(--arena-pad-sm) var(--arena-pad);
+  border: var(--border-width) solid var(--arena-card-line);
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-chalk);
+  color: var(--arena-ink-soft);
   font-size: var(--font-size-sm);
   font-variant-numeric: tabular-nums;
 }
@@ -348,27 +363,72 @@ html body.dock .content.exercise-library .ex-card__body h3 {
   align-items: center;
   gap: var(--space-1-5);
 }
+.ex-pager__total {
+  white-space: nowrap;
+}
+.ex-pager__jump {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+}
+.ex-pager__jump label {
+  color: var(--arena-ink);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+}
+.ex-pager__jump input {
+  width: 5rem;
+  min-width: 0;
+  min-height: var(--brand-control-height);
+  padding: var(--space-2);
+  border: var(--border-width) solid var(--arena-chalk-line-strong);
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-surface);
+  color: var(--arena-ink);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
 .ex-page {
   display: inline-grid;
   place-items: center;
-  min-width: 38px;
-  min-height: 38px;
+  flex-shrink: 0;
+  min-width: var(--brand-control-height);
+  min-height: var(--brand-control-height);
+  padding: var(--space-2) var(--space-3);
+  border: 0;
   border-radius: var(--arena-radius-chip);
   background: var(--arena-chalk);
   box-shadow: inset 0 0 0 1px var(--arena-card-line);
   color: var(--arena-ink);
+  font: inherit;
   font-weight: var(--font-weight-semibold);
   text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.exercise-library :is(a.ex-chip, a.ex-page):is(:hover, :focus-visible) {
+  color: var(--arena-ink);
+  text-decoration: none;
+}
+.exercise-library a.ex-chip.is-active:is(:hover, :focus-visible) {
+  color: var(--color-on-primary);
 }
 .ex-page.is-active {
   background: var(--color-primary);
   box-shadow: none;
   color: var(--color-on-primary);
 }
+.ex-page.is-disabled {
+  color: var(--arena-steel-ink);
+  box-shadow: inset 0 0 0 1px var(--arena-chalk-line-strong);
+  cursor: default;
+}
 
 @media (hover: hover) {
   .ex-chip:hover,
-  .ex-page:hover {
+  .ex-page:not(.is-disabled):hover {
     box-shadow: inset 0 0 0 1px var(--arena-hover-line);
   }
 }
@@ -385,7 +445,7 @@ html body.dock .content.exercise-library .ex-card__body h3 {
     min-width: 0;
   }
   .ex-grid {
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
   }
   .ex-card__body {
     padding: var(--space-2-5) var(--space-3) var(--space-3);
@@ -393,5 +453,13 @@ html body.dock .content.exercise-library .ex-card__body h3 {
   .ex-locked {
     margin: var(--space-3) 0;
     padding: var(--space-6) var(--arena-pad-sm);
+  }
+  .ex-pager {
+    align-items: flex-start;
+    padding: var(--arena-pad-sm);
+  }
+  .ex-pager__links {
+    width: 100%;
+    justify-content: space-between;
   }
 }

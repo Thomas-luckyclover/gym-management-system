@@ -355,6 +355,66 @@ html body.dock .stats-table thead th.num {
   html body.dock.body-stats-page :is(.stats-chart, .stats-form, .stats-history) {
     padding: var(--arena-pad-sm);
   }
+  /* Chữ trục: SVG co theo bề rộng (viewBox 640) → 11px chỉ còn ~5px trên điện thoại. Tăng theo đơn vị viewBox. */
+  .stats-svg .axis {
+    font-size: 20px;
+  }
+}
+
+/* Điện thoại: bảng 9 cột phải cuộn ngang, cột "Thay đổi" bị cắt. Mỗi lần đo thành 1 thẻ:
+     hàng 1  Ngày · Cân nặng · Thay đổi
+     hàng 2  BMI · Mỡ · Cơ · Vòng eo   (nhãn lấy từ data-label của ô, JSP gắn)
+     hàng 3  Ghi chú · nút Xóa
+   Tiêu đề bảng vẫn còn cho trình đọc màn hình (ẩn bằng kiểu visually-hidden, không display:none). */
+@media (max-width: 600px) {
+  .stats-table-wrap { overflow-x: visible; }
+  .stats-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .stats-table tbody tr {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    align-items: baseline;
+    gap: var(--space-1) var(--space-2);
+    padding: var(--space-3);
+  }
+  .stats-table tbody tr + tr {
+    border-top: var(--border-width) solid var(--arena-grid-line);
+  }
+  /* Đủ mạnh để thắng "html body.dock table:not(.no-gms-table) tbody td" (đệm + viền ô) của common.css. */
+  html body.dock.body-stats-page .stats-table tbody td {
+    padding: 0;
+    border: 0;
+    background: none;
+    text-align: left;
+  }
+  .stats-table tbody td.date {
+    grid-column: 1 / 3;
+    font-weight: var(--font-weight-semibold);
+  }
+  html body.dock.body-stats-page .stats-table tbody td.num:nth-child(3) {
+    text-align: right;
+  }
+  .stats-table tbody td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    color: var(--arena-steel-ink);
+    font-size: var(--font-size-2xs);
+  }
+  .stats-table tbody td.note {
+    grid-column: 1 / 4;
+    min-width: 0;
+    font-size: var(--font-size-xs);
+  }
+  .stats-table tbody td:last-child {
+    grid-column: 4;
+    justify-self: end;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .stats-tile,

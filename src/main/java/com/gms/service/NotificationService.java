@@ -179,6 +179,12 @@ public class NotificationService {
                 Notification notification =
                         row.getNotification();
 
+                String actionUrl =
+                        buildActionUrl(
+                                notification,
+                                currentRole
+                        );
+
                 items.add(
                         new BellItem(
                                 notification
@@ -189,13 +195,25 @@ public class NotificationService {
                                         .getContent(),
                                 notification
                                         .getSentAt(),
+                                row.getReadAt(),
                                 row.isRead(),
                                 notification
                                         .isSystemGenerated(),
-                                buildActionUrl(
-                                        notification,
-                                        currentRole
-                                )
+                                buildSenderName(row),
+                                buildSenderSubline(row),
+                                buildAudienceLabel(
+                                        notification
+                                                .getAudience()
+                                ),
+                                buildCategoryLabel(
+                                        notification
+                                ),
+                                actionUrl,
+                                actionUrl != null
+                                        ? buildActionLabel(
+                                                notification
+                                        )
+                                        : null
                         )
                 );
             }
@@ -287,7 +305,133 @@ public class NotificationService {
         }
     }
 
-    // ===== Điều hướng notification =====
+    // ===== Điều hướng & hiển thị chi tiết notification =====
+
+    private String buildSenderName(
+            NotificationDAO.NotificationBellRow row
+    ) {
+        Notification notification = row.getNotification();
+        if (notification == null || notification.isSystemGenerated()) {
+            return "Hệ thống Super Gym";
+        }
+        String senderName = row.getSenderName();
+        if (senderName != null && !senderName.isBlank()) {
+            return senderName.trim();
+        }
+        return "Ban quản lý";
+    }
+
+    private String buildSenderSubline(
+            NotificationDAO.NotificationBellRow row
+    ) {
+        Notification notification = row.getNotification();
+        if (notification == null || notification.isSystemGenerated()) {
+            return "Tự động từ hệ thống";
+        }
+        String positionLabel = formatPositionLabel(row.getSenderPosition());
+        String senderCode = row.getSenderCode();
+        if (senderCode != null && !senderCode.isBlank()) {
+            return positionLabel + " · " + senderCode.trim();
+        }
+        return positionLabel;
+    }
+
+    private String formatPositionLabel(String position) {
+        if (position == null) {
+            return "Quản lý";
+        }
+        switch (position.trim()) {
+            case "Admin":
+                return "Quản trị hệ thống";
+            case "Manager":
+                return "Quản lý";
+            case "PT":
+                return "Huấn luyện viên PT";
+            case "Receptionist":
+                return "Lễ tân";
+            default:
+                return position.trim();
+        }
+    }
+
+    private String buildAudienceLabel(
+            Notification.Audience audience
+    ) {
+        if (audience == null) {
+            return "Cá nhân";
+        }
+        switch (audience) {
+            case ALL_CUSTOMERS:
+                return "Tất cả khách hàng";
+            case ACTIVE_MEMBERS:
+                return "Hội viên đang hoạt động";
+            case PTS:
+                return "Huấn luyện viên (PT)";
+            case RECEPTIONISTS:
+                return "Lễ tân";
+            case ALL_STAFF:
+                return "Toàn bộ nhân sự";
+            case INDIVIDUAL:
+            default:
+                return "Cá nhân";
+        }
+    }
+
+    private String buildCategoryLabel(
+            Notification notification
+    ) {
+        if (notification == null || notification.getTitle() == null) {
+            return "Thông báo";
+        }
+        String title = notification.getTitle().trim();
+        String titleLower = title.toLowerCase();
+
+        if (title.startsWith(MAINTENANCE_TITLE_PREFIX) || titleLower.contains("bảo trì")) {
+            return "Bảo trì thiết bị";
+        }
+        if (titleLower.contains("nghỉ phép") || titleLower.contains("ngày nghỉ") || titleLower.contains("đơn nghỉ")) {
+            return "Nghỉ phép";
+        }
+        if (titleLower.contains("xóa hồ sơ")) {
+            return "Hồ sơ hội viên";
+        }
+        if (titleLower.contains("buổi tập") || titleLower.contains("lịch tập") || titleLower.contains("đặt lịch")) {
+            return "Lịch tập PT";
+        }
+        if (notification.isSystemGenerated()) {
+            return "Thông báo hệ thống";
+        }
+        Notification.Audience audience = notification.getAudience();
+        if (audience == Notification.Audience.ALL_CUSTOMERS
+                || audience == Notification.Audience.ACTIVE_MEMBERS) {
+            return "Thông báo phòng tập";
+        }
+        return "Thông báo nội bộ";
+    }
+
+    private String buildActionLabel(
+            Notification notification
+    ) {
+        if (notification == null || notification.getTitle() == null) {
+            return "Đi tới trang liên quan";
+        }
+        String title = notification.getTitle().trim();
+        String titleLower = title.toLowerCase();
+
+        if (title.startsWith(MAINTENANCE_TITLE_PREFIX) || titleLower.contains("bảo trì")) {
+            return "Xem yêu cầu bảo trì";
+        }
+        if (titleLower.contains("nghỉ phép") || titleLower.contains("ngày nghỉ") || titleLower.contains("đơn nghỉ")) {
+            return "Xem đơn nghỉ phép";
+        }
+        if (titleLower.contains("xóa hồ sơ")) {
+            return "Xem yêu cầu xóa hồ sơ";
+        }
+        if (titleLower.contains("buổi tập") || titleLower.contains("lịch tập") || titleLower.contains("đặt lịch")) {
+            return "Xem lịch tập";
+        }
+        return "Đi tới trang liên quan";
+    }
 
     private String buildActionUrl(
             Notification notification,
@@ -390,9 +534,15 @@ public class NotificationService {
         private final String title;
         private final String content;
         private final LocalDateTime sentAt;
+        private final LocalDateTime readAt;
         private final boolean read;
         private final boolean systemGenerated;
+        private final String senderName;
+        private final String senderSubline;
+        private final String audienceLabel;
+        private final String categoryLabel;
         private final String actionUrl;
+        private final String actionLabel;
 
         public BellItem(
                 int notificationId,
@@ -403,6 +553,38 @@ public class NotificationService {
                 boolean systemGenerated,
                 String actionUrl
         ) {
+            this(
+                    notificationId,
+                    title,
+                    content,
+                    sentAt,
+                    null,
+                    read,
+                    systemGenerated,
+                    systemGenerated ? "Hệ thống Super Gym" : "Ban quản lý",
+                    systemGenerated ? "Tự động từ hệ thống" : "Quản lý",
+                    "Cá nhân",
+                    systemGenerated ? "Thông báo hệ thống" : "Thông báo nội bộ",
+                    actionUrl,
+                    actionUrl != null ? "Đi tới trang liên quan" : null
+            );
+        }
+
+        public BellItem(
+                int notificationId,
+                String title,
+                String content,
+                LocalDateTime sentAt,
+                LocalDateTime readAt,
+                boolean read,
+                boolean systemGenerated,
+                String senderName,
+                String senderSubline,
+                String audienceLabel,
+                String categoryLabel,
+                String actionUrl,
+                String actionLabel
+        ) {
 
             this.notificationId =
                     notificationId;
@@ -410,13 +592,21 @@ public class NotificationService {
             this.title = title;
             this.content = content;
             this.sentAt = sentAt;
+            this.readAt = readAt;
             this.read = read;
 
             this.systemGenerated =
                     systemGenerated;
 
+            this.senderName = senderName;
+            this.senderSubline = senderSubline;
+            this.audienceLabel = audienceLabel;
+            this.categoryLabel = categoryLabel;
+
             this.actionUrl =
                     actionUrl;
+            this.actionLabel =
+                    actionLabel;
         }
 
         public int getNotificationId() {
@@ -435,6 +625,10 @@ public class NotificationService {
             return sentAt;
         }
 
+        public LocalDateTime getReadAt() {
+            return readAt;
+        }
+
         public boolean isRead() {
             return read;
         }
@@ -443,8 +637,28 @@ public class NotificationService {
             return systemGenerated;
         }
 
+        public String getSenderName() {
+            return senderName;
+        }
+
+        public String getSenderSubline() {
+            return senderSubline;
+        }
+
+        public String getAudienceLabel() {
+            return audienceLabel;
+        }
+
+        public String getCategoryLabel() {
+            return categoryLabel;
+        }
+
         public String getActionUrl() {
             return actionUrl;
+        }
+
+        public String getActionLabel() {
+            return actionLabel;
         }
     }
 }

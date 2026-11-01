@@ -142,7 +142,7 @@ class FreezeServiceTest {
         FreezeCustomerView view = res.getData();
         assertTrue(view.isOwnProfile());
         assertFalse(view.isEligibleToFreeze());
-        assertTrue(view.getIneligibilityReason().contains("CBR-115"));
+        assertEquals(Messages.MSG282_STAFF_OWN_FREEZE, view.getIneligibilityReason());
     }
 
     @Test
@@ -286,7 +286,7 @@ class FreezeServiceTest {
 
         ServiceResult<Void> res = freezeService.applyFreeze(STAFF_ACCOUNT_ID, SUB_ID, start, end, "Công tác nước ngoài");
         assertFalse(res.isSuccess());
-        assertTrue(res.getMessage().contains("CBR-115"));
+        assertEquals(Messages.MSG282_STAFF_OWN_FREEZE, res.getMessage());
     }
 
     @Test

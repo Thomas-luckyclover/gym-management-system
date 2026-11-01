@@ -19,7 +19,8 @@
       <header class="topbar">
         <div class="tb-left">
           <h1 class="tb-title">Báo hỏng thiết bị</h1>
-          <span class="tb-subtitle">Bước 2/2 · Mô tả để Quản lý duyệt mà không cần ra tận nơi</span>
+          <%-- Câu giải thích chuyển vào hint box chung (.pt-info, common.css / common.js) thay cho dòng chữ phụ dưới tiêu đề. --%>
+          <span class="pt-info"><button type="button" class="pt-info-trigger" aria-label="Hướng dẫn Báo hỏng thiết bị" aria-describedby="report-help"><span aria-hidden="true">i</span></button><span id="report-help" class="pt-info-popover" role="tooltip"><b>Bước 2/2:</b> mô tả rõ để Quản lý duyệt mà không cần ra tận nơi.</span></span>
         </div>
 
         <div class="top-right">
@@ -228,12 +229,7 @@
               <div class="field-label-row">
                 <div class="label-with-hint">
                   <label class="group-title" for="descriptionInput">Mô tả sự cố *</label>
-                  <span class="hint-icon-trigger" tabindex="0" role="tooltip" aria-label="Hướng dẫn mô tả sự cố">
-                    <i class="fa-solid fa-circle-info hint-red-i"></i>
-                    <span class="hint-floating-popover">
-                      Nhập từ 10 - 500 ký tự. Nên ghi rõ mã lỗi trên màn hình (nếu có).
-                    </span>
-                  </span>
+                  <span class="pt-info"><button type="button" class="pt-info-trigger" aria-label="Hướng dẫn mô tả sự cố" aria-describedby="step2-hint-1"><span aria-hidden="true">i</span></button><span id="step2-hint-1" class="pt-info-popover" role="tooltip">Nhập từ 10 - 500 ký tự. Nên ghi rõ mã lỗi trên màn hình (nếu có).</span></span>
                 </div>
                 <span class="char-counter"><span id="charCount">0</span>/500</span>
               </div>
@@ -287,12 +283,7 @@
                 <div class="field-label-row">
                   <div class="label-with-hint">
                     <span class="group-title">Biện pháp tại chỗ</span>
-                    <span class="hint-icon-trigger" tabindex="0" role="tooltip" aria-label="Lưu ý an toàn">
-                      <i class="fa-solid fa-circle-info hint-red-i"></i>
-                      <span class="hint-floating-popover">
-                        Bắt buộc tích nếu sự cố có thể gây chấn thương cho khách.
-                      </span>
-                    </span>
+                    <span class="pt-info"><button type="button" class="pt-info-trigger" aria-label="Lưu ý an toàn" aria-describedby="step2-hint-2"><span aria-hidden="true">i</span></button><span id="step2-hint-2" class="pt-info-popover" role="tooltip">Bắt buộc tích nếu sự cố có thể gây chấn thương cho khách.</span></span>
                   </div>
                 </div>
 
@@ -387,28 +378,81 @@
         });
       }
 
+      function formatShortFilename(name, maxLen) {
+        if (!name) return '';
+        var limit = maxLen || 26;
+        if (name.length <= limit) return name;
+        var dotIdx = name.lastIndexOf('.');
+        if (dotIdx > 0 && (name.length - dotIdx) < 8) {
+          var ext = name.substring(dotIdx);
+          var keep = limit - ext.length - 3;
+          if (keep > 6) {
+            return name.substring(0, Math.floor(keep / 2)) + '...' + name.substring(dotIdx - Math.ceil(keep / 2), dotIdx) + ext;
+          }
+        }
+        return name.substring(0, limit - 3) + '...';
+      }
+
+      function clearUploadedImage(e) {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        fileInput.value = '';
+        imagePreview.innerHTML = '';
+        imagePreview.style.display = 'none';
+        dropContent.style.display = 'flex';
+        if (dropArea) {
+          dropArea.classList.remove('has-preview');
+        }
+      }
+
       // Xem trước ảnh upload (gọn gàng, cân đối trong khung)
       fileInput.addEventListener('change', function () {
         if (this.files && this.files[0]) {
           var file = this.files[0];
           var reader = new FileReader();
           reader.onload = function (e) {
+            var shortName = formatShortFilename(file.name, 26);
             imagePreview.innerHTML =
               '<div class="preview-inner">' +
                 '<img src="' + e.target.result + '" alt="Preview" class="preview-img">' +
                 '<div class="preview-meta">' +
-                  '<span class="preview-filename">' + escapeHtml(file.name) + '</span>' +
-                  '<span class="preview-change"><i class="fa-solid fa-arrows-rotate"></i> Bấm để đổi ảnh</span>' +
+                  '<span class="preview-filename" title="' + escapeHtml(file.name) + '">' + escapeHtml(shortName) + '</span>' +
+                  '<div class="preview-actions-row">' +
+                    '<button type="button" class="preview-change-btn" id="btnChangeUploadedImage" title="Chọn ảnh khác">' +
+                      '<i class="fa-solid fa-arrows-rotate"></i> Đổi ảnh' +
+                    '</button>' +
+                    '<span class="preview-sep">·</span>' +
+                    '<button type="button" class="preview-remove-btn" id="btnRemoveUploadedImage" title="Gỡ bỏ ảnh này">' +
+                      '<i class="fa-solid fa-trash-can"></i> Gỡ ảnh' +
+                    '</button>' +
+                  '</div>' +
                 '</div>' +
               '</div>';
             imagePreview.style.display = 'flex';
             dropContent.style.display = 'none';
+            if (dropArea) {
+              dropArea.classList.add('has-preview');
+            }
+
+            var btnChange = document.getElementById('btnChangeUploadedImage');
+            if (btnChange) {
+              btnChange.addEventListener('click', function (ev) {
+                ev.preventDefault();
+                ev.stopPropagation();
+                fileInput.click();
+              });
+            }
+
+            var btnRemove = document.getElementById('btnRemoveUploadedImage');
+            if (btnRemove) {
+              btnRemove.addEventListener('click', clearUploadedImage);
+            }
           };
           reader.readAsDataURL(file);
         } else {
-          imagePreview.innerHTML = '';
-          imagePreview.style.display = 'none';
-          dropContent.style.display = 'flex';
+          clearUploadedImage();
         }
       });
     });

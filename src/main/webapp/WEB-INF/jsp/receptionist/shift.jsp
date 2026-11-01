@@ -489,7 +489,7 @@
             <c:if test="${detail.hasPendingOrders()}">
               <div class="alert-banner danger" style="margin-bottom: var(--space-4);">
                 <i class="fa-solid fa-circle-exclamation"></i>
-                <span>Không thể chốt ca: còn <b>${detail.pendingOrders.size()}</b> đơn hàng quầy đang chờ xử lý. Vui lòng xác nhận hoặc hủy đơn trước khi chốt ca (CBR-78).</span>
+                <span>Không thể chốt ca: còn <b>${detail.pendingOrders.size()}</b> đơn hàng quầy đang chờ xử lý. Vui lòng xác nhận hoặc hủy đơn trước khi chốt ca.</span>
               </div>
             </c:if>
             <p class="modal-desc" id="modalCloseDesc">Đếm số tiền mặt thực tế trong két quầy Lễ tân và nhập vào bên dưới. Nếu có chênh lệch so với số liệu sổ sách, bắt buộc phải nêu rõ lý do giải trình.</p>

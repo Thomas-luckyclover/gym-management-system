@@ -73,6 +73,10 @@ public class PtSalePlan {
     private List<String> requested = new ArrayList<>();  // "2026-10-27@09:30" — buổi đã gửi lên khi Giữ lịch bị từ chối
     private List<Day> days = new ArrayList<>();
     private List<Integer> unpublished = new ArrayList<>(); // Thứ PT chưa công bố khung nào (1–5) → nhãn trong Lịch mẫu
+    private List<String> published = new ArrayList<>();    // giờ PT đã công bố (JS tô xanh); giờ ngoài list này = lễ tân tự nhập ("PT chưa mở")
+    private String open;                                    // giờ mở cửa P-19 ("05:30") → min cho ô nhập giờ tự do
+    private String close;                                   // giờ bắt đầu muộn nhất hợp lệ (đóng cửa − thời lượng buổi, "20:30") → max cho ô nhập giờ tự do
+    private int minutes;                                    // độ dài 1 buổi (P-06, phút) → JS tính giờ kết thúc cho giờ tự nhập
 
     public String getStart() { return start; }
     public void setStart(String start) { this.start = start; }
@@ -90,4 +94,12 @@ public class PtSalePlan {
     public void setDays(List<Day> days) { this.days = days; }
     public List<Integer> getUnpublished() { return unpublished; }
     public void setUnpublished(List<Integer> unpublished) { this.unpublished = unpublished; }
+    public List<String> getPublished() { return published; }
+    public void setPublished(List<String> published) { this.published = published; }
+    public String getOpen() { return open; }
+    public void setOpen(String open) { this.open = open; }
+    public String getClose() { return close; }
+    public void setClose(String close) { this.close = close; }
+    public int getMinutes() { return minutes; }
+    public void setMinutes(int minutes) { this.minutes = minutes; }
 }

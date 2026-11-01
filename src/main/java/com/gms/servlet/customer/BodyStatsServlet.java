@@ -1,5 +1,6 @@
 package com.gms.servlet.customer;
 
+import com.gms.constant.Messages;
 import com.gms.constant.SessionKey;
 import com.gms.dto.BodyStatsView;
 import com.gms.dto.CustomerDashboardView;
@@ -81,7 +82,7 @@ public class BodyStatsServlet extends HttpServlet {
         ServiceResult<Void> result;
         if ("delete".equals(request.getParameter("action"))) {
             Integer id = RequestUtil.getPositiveIntParam(request, "id");
-            result = id == null ? ServiceResult.fail("Không tìm thấy lần đo này.") : statsService.delete(accountId, id);
+            result = id == null ? ServiceResult.fail(Messages.MSG298_MEASUREMENT_NOT_FOUND) : statsService.delete(accountId, id);
         } else {
             result = statsService.save(accountId, request.getParameter("measuredOn"), request.getParameter("weight"),
                     request.getParameter("height"), request.getParameter("fat"), request.getParameter("muscle"),

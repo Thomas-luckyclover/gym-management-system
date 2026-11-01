@@ -8,14 +8,16 @@ const source = fs.readFileSync(path.resolve(__dirname, "../../main/webapp/js/pag
 // Chỉ kiểm tra phần tính giờ / kiểm tra chỗ đặt / lưu tạm; giao diện thật được kiểm tra trên trình duyệt.
 function loadSchedule() {
     const saved = new Map();
+    const publishButton = {};
     const plan = {
         dataset: { duration: "90", axisStart: "300", axisEnd: "1320", draftKey: "15:2026-10-26" },
         querySelectorAll: () => [],
         classList: { contains: () => false }
     };
+    const elements = { "main-content": plan, "pt-publish": publishButton };
     const context = vm.createContext({
         document: {
-            getElementById: id => (id === "main-content" ? plan : { dataset: {} }),
+            getElementById: id => elements[id] || { dataset: {} },
             addEventListener() {}
         },
         window: { matchMedia: () => ({ matches: true }) },
@@ -23,7 +25,7 @@ function loadSchedule() {
         CSS: { escape: value => value }
     });
     vm.runInContext(source, context);
-    return { context, plan, saved };
+    return { context, plan, saved, publishButton };
 }
 
 /** Cột ngày giả: khoảng được thêm 05:30–20:30, có sẵn các thẻ chiếm giờ truyền vào. */
@@ -91,4 +93,22 @@ test("lưu tạm theo đúng tài khoản + tuần, chỉ ngày/giờ bắt đ�
         drafts: [{ date: "2026-10-27", start: "12:30" }],
         removals: ["773"]
     });
+});
+
+test("chỉ thêm dùng Công bố; có khung gỡ dùng Lưu thay đổi và bỏ gỡ thì đổi lại", () => {
+    const { context, plan, publishButton } = loadSchedule();
+    const draft = { querySelector: () => ({ value: "12:30" }) };
+    let removals = [];
+    plan.querySelectorAll = selector => selector === ".pt-draft" ? [draft] : removals;
+    context.savePtChanges();
+    assert.equal(publishButton.textContent, "Công bố");
+    removals = [{ value: "773" }];
+    context.savePtChanges();
+    assert.equal(publishButton.textContent, "Lưu thay đổi");
+    plan.querySelectorAll = selector => selector === ".pt-draft" ? [] : removals;
+    context.savePtChanges();
+    assert.equal(publishButton.textContent, "Lưu thay đổi");
+    removals = [];
+    context.savePtChanges();
+    assert.equal(publishButton.textContent, "Công bố");
 });

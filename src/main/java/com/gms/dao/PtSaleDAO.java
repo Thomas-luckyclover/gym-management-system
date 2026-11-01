@@ -484,9 +484,17 @@ public class PtSaleDAO {
     /** Ngày PT chưa có khung giờ đó: tạo khung mới ở trạng thái Held cho đơn này (hủy giữ chỗ thì xóa khung này). */
     public void insertHeldSlot(Connection connection, int ptId, LocalDate date, LocalTime start, LocalTime end,
             int orderId, LocalDateTime expiresAt, LocalDateTime now) throws SQLException {
+        // DBR-33: chặn chồng giờ NGAY TRONG SQL (lớp cuối — Service có thể lọt do race hay khung Withdrawn).
+        // Công thức nửa mở [start, end): khung cũ trùng khi cũ.StartTime < mới.EndTime AND cũ.EndTime > mới.StartTime.
+        // INSERT ... SELECT ... WHERE NOT EXISTS: nếu trùng thì SELECT trả 0 dòng → không ghi gì → ta báo lỗi.
         String sql = """
                 INSERT INTO TimeSlots (PtEmployeeId, SlotDate, StartTime, EndTime, Status, HeldByOrderId, HoldExpiresAt, CreatedAt)
-                VALUES (?, ?, CAST(? AS time), CAST(? AS time), 'Held', ?, ?, ?)
+                SELECT ?, ?, CAST(? AS time), CAST(? AS time), 'Held', ?, ?, ?
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM TimeSlots t
+                    WHERE t.PtEmployeeId = ? AND t.SlotDate = ? AND t.Status <> 'Withdrawn'
+                      AND t.StartTime < CAST(? AS time) AND t.EndTime > CAST(? AS time)
+                )
                 """;
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, ptId);
@@ -496,11 +504,51 @@ public class PtSaleDAO {
             statement.setInt(5, orderId);
             statement.setTimestamp(6, Timestamp.valueOf(expiresAt.withNano(0)));
             statement.setTimestamp(7, Timestamp.valueOf(now.withNano(0)));
-            statement.executeUpdate();
+            // Các dấu ? trong NOT EXISTS (theo đúng thứ tự xuất hiện trong SQL):
+            statement.setInt(8, ptId);                                   // t.PtEmployeeId = ?
+            statement.setDate(9, Date.valueOf(date));                    // t.SlotDate = ?
+            statement.setString(10, end.toString());                     // t.StartTime < @end
+            statement.setString(11, start.toString());                   // t.EndTime  > @start
+            int inserted = statement.executeUpdate();
+            if (inserted == 0) {
+                // IllegalArgumentException (không phải SQLException) để Service trả đúng câu lỗi cho lễ tân.
+                throw new IllegalArgumentException("Khung giờ này trùng với khung giờ đã có của PT ("
+                        + start + "–" + end + ").");
+            }
         }
     }
 
     // ----- ĐỌC ĐƠN ĐANG GIỮ -----
+
+    /**
+     * Các đơn tại quầy còn Pending có khung Held CHƯA quá hạn.
+     * Dùng cho màn Bán gói PT hiện danh sách "Đơn đang giữ" để lễ tân tìm lại sau khi mất URL ?order= (bấm Back).
+     */
+    public List<HeldOrder> findActiveHoldOrders(Connection connection, LocalDateTime now) throws SQLException {
+        String sql = """
+                SELECT o.OrderId, o.OrderCode, o.CreatedAt, MIN(t.HoldExpiresAt) AS ExpiresAt
+                FROM Orders o
+                JOIN TimeSlots t ON t.HeldByOrderId = o.OrderId AND t.Status = 'Held'
+                WHERE o.Status = 'Pending' AND o.Channel = 'Counter' AND t.HoldExpiresAt >= ?
+                GROUP BY o.OrderId, o.OrderCode, o.CreatedAt
+                ORDER BY o.CreatedAt DESC
+                """;
+        List<HeldOrder> rows = new ArrayList<>();
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setTimestamp(1, Timestamp.valueOf(now.withNano(0)));
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    HeldOrder held = new HeldOrder();
+                    held.orderId = rs.getInt("OrderId");
+                    held.orderCode = rs.getString("OrderCode");
+                    held.createdAt = rs.getTimestamp("CreatedAt").toLocalDateTime();
+                    held.expiresAt = rs.getTimestamp("ExpiresAt").toLocalDateTime();
+                    rows.add(held);
+                }
+            }
+        }
+        return rows;
+    }
 
     /** Một đơn đang giữ chỗ (đọc từ Orders + khung Held của đơn). */
     public static class HeldOrder {

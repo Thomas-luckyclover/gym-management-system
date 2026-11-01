@@ -1,5 +1,6 @@
 package com.gms.dao;
 
+import com.gms.constant.AppConstants;
 import com.gms.dto.ClosedShiftHistoryItem;
 import com.gms.dto.ShiftMetrics;
 import com.gms.dto.ShiftTransactionItem;
@@ -290,7 +291,7 @@ public class ShiftDAO {
 
         // B5: Nếu cả 2 đều chưa mở, xét theo giờ hiện tại (trước 13:00 là Sáng, từ 13:00 là Chiều)
         LocalDateTime now = LocalDateTime.now(DateTimeUtil.GYM_ZONE);
-        boolean isAfternoonTime = now.getHour() >= 13;
+        boolean isAfternoonTime = !now.toLocalTime().isBefore(AppConstants.AFTERNOON_SHIFT_START);   // mốc ca chung 13:00
 
         if (isAfternoonTime && afternoon != null) {
             return afternoon;

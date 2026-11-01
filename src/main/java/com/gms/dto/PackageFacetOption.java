@@ -11,7 +11,6 @@ package com.gms.dto;
  * Ví dụ ô tick: field = "duration", key = "month-3", label = "3 tháng", count = 2, selected = true.
  * Ví dụ chip: field = "buy", key = "online", label = "Thanh toán trực tuyến".
  *
- * @author ALOHA
  */
 public class PackageFacetOption {
 

@@ -111,15 +111,6 @@ public class LoginServlet extends HttpServlet {
                 RequestUtil.redirect(request, response, targetUrl);
             }
         } else {
-            // Tài khoản chưa có mật khẩu (MSG38, VD tài khoản Lễ tân tạo tại quầy) → khách bấm "Đặt mật khẩu"
-            // sẽ sang Quên mật khẩu. Để sẵn email trong session để ô email bên đó điền sẵn (ForgotPasswordServlet đọc 1 lần).
-            // CHỈ điền khi khách gõ EMAIL: nếu khách gõ số điện thoại thì không điền, vì điền vào là để lộ
-            // email gắn với số điện thoại đó cho bất kỳ ai biết SĐT.
-            boolean isNoPasswordYet = Messages.MSG38_NO_PASSWORD_YET.equals(result.getMessage());
-            if (isNoPasswordYet && ValidationUtil.isValidEmail(identifier)) {
-                request.getSession().setAttribute(SessionKey.RECOVERY_PREFILL_EMAIL, identifier);
-            }
-
             if (isAjax) {
                 JsonUtil.writeJson(response, JsonResponse.from(result));
             } else {
@@ -145,12 +136,9 @@ public class LoginServlet extends HttpServlet {
      * Chọn panel giao diện đăng nhập theo câu thông báo từ AuthService.
      *
      * @param errorMessage thông báo lỗi login
-     * @return form | blocked-no-password | blocked-lock
+     * @return form | blocked-lock
      */
     private String resolveLoginStep(String errorMessage) {
-        if (Messages.MSG38_NO_PASSWORD_YET.equals(errorMessage)) {
-            return "blocked-no-password";
-        }
         if (errorMessage != null && errorMessage.startsWith(LOCK_MESSAGE_PREFIX)) {
             return "blocked-lock";
         }

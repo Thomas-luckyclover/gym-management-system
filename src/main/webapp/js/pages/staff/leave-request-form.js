@@ -15,14 +15,13 @@ document.addEventListener("DOMContentLoaded", function () {
     const consent = document.getElementById("acceptUnpaid");
     const consentRow = document.getElementById("unpaidConsentRow");
     const consentHint = document.getElementById("unpaidConsentHint");
-    const scheduleLink = document.getElementById("leaveScheduleLink");
+    const scheduleWarning = document.getElementById("leaveScheduleWarning");
+    const scheduleMessage = document.getElementById("leaveScheduleMessage");
     const dateError = document.getElementById("leaveDateClientErr");
     const planTitle = document.getElementById("leavePlanTitle");
     const balanceText = document.getElementById("leaveBalanceText");
     const expectedAnnualInput = document.getElementById("expectedAnnualDays");
     const expectedUnpaidInput = document.getElementById("expectedUnpaidDays");
-    const deadlineText = document.getElementById("infoDeadline");
-    const dateText = document.getElementById("infoDate");
     let currentPlan = null;
     // Mỗi lần đổi ngày/ca tăng số này; bỏ phản hồi API cũ nếu người dùng đã đổi lựa chọn.
     let requestVersion = 0;
@@ -71,12 +70,6 @@ document.addEventListener("DOMContentLoaded", function () {
             dateError.hidden = false;
             return;
         }
-        const cutoffLabel = cutoff.substring(0, 5);
-        deadlineText.textContent = cutoffLabel + " · ngày hôm trước";
-        dateText.textContent = "—";
-        if (fromInput.value) {
-            dateText.textContent = formatDate(fromInput.value);
-        }
         if (!fromInput.value) {
             return;
         }
@@ -112,7 +105,10 @@ document.addEventListener("DOMContentLoaded", function () {
         consent.required = false;
         consentRow.hidden = true;
         consentHint.hidden = true;
-        scheduleLink.hidden = true;
+        if (scheduleWarning) {
+            scheduleWarning.hidden = true;
+            scheduleMessage.textContent = "";
+        }
         planError.hidden = true;
         planParts.textContent = "";
         balanceText.textContent = "";
@@ -148,20 +144,11 @@ document.addEventListener("DOMContentLoaded", function () {
         consentRow.hidden = !plan.needsUnpaidConsent;
         consentHint.hidden = !plan.needsUnpaidConsent;
         consent.required = plan.needsUnpaidConsent;
-        if (plan.sessionConflicts > 0) {
-            planError.textContent = "Trùng " + plan.sessionConflicts + " buổi dạy. Xử lý lịch trước khi gửi đơn.";
-            planError.hidden = false;
-            scheduleLink.hidden = false;
+        if (scheduleWarning && plan.sessionConflicts > 0) {
+            scheduleMessage.textContent = "Trùng " + plan.sessionConflicts + " buổi dạy. Xử lý lịch trước khi gửi đơn.";
+            scheduleWarning.hidden = false;
         }
 
-        // Ô i hiện quân số thấp nhất trong toàn khoảng ngày đang chọn.
-        const staffing = plan.staffing;
-        document.getElementById("pvPt").textContent = staffing.remainingPt;
-        document.getElementById("pvRecep").textContent = staffing.remainingReceptionist;
-        document.getElementById("pvMinPt").textContent = staffing.minPt;
-        document.getElementById("pvMinRecep").textContent = staffing.minReceptionist;
-        document.getElementById("pvScope").textContent = formatDate(plan.fromDate)
-                + (plan.fromDate === plan.toDate ? "" : " → " + formatDate(plan.toDate));
     }
 
     // B2.3: gọi API, bỏ phản hồi cũ rồi chuyển dữ liệu mới cho renderPlan().

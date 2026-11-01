@@ -3,8 +3,10 @@
 
 <section class="account-card">
     <div class="account-card-body">
-        <h2>Hồ sơ phụ thuộc</h2>
-        <p class="account-subtitle">Danh sách hồ sơ trẻ em mà bạn là người giám hộ. Mọi thay đổi về hồ sơ con vui lòng liên hệ quầy Lễ tân.</p>
+        <div class="title-hint-row">
+            <h2>Hồ sơ phụ thuộc</h2>
+            <span class="pt-info"><button type="button" class="pt-info-trigger" aria-label="Về hồ sơ phụ thuộc" aria-describedby="dependents-help"><span aria-hidden="true">i</span></button><span id="dependents-help" class="pt-info-popover" role="tooltip">Danh sách hồ sơ trẻ em mà bạn là người giám hộ. Mọi thay đổi về hồ sơ con vui lòng liên hệ quầy Lễ tân.</span></span>
+        </div>
     </div>
 
     <c:choose>

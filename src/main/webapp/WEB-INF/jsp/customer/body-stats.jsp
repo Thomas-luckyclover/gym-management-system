@@ -23,7 +23,7 @@
 <head>
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Chỉ số cơ thể · Super Gym</title>
-    <link rel="stylesheet" href="${ctx}/css/pages/customer/body-stats.css?v=20261025p">
+    <link rel="stylesheet" href="${ctx}/css/pages/customer/body-stats.css?v=20261031a">
     <link rel="stylesheet" href="${ctx}/css/pages/auth/notification-bell.css">
     <script src="${ctx}/js/pages/auth/notification-bell.js" defer></script>
 </head>
@@ -158,10 +158,10 @@
                                                 <td class="date"><c:out value="${gms:formatDate(r.measuredOn)}" /></td>
                                                 <td class="num"><c:out value="${r.weightText}" /></td>
                                                 <td class="num is-${r.changeTone}"><c:out value="${r.changeText}" /></td>
-                                                <td class="num"><c:out value="${r.bmiText}" /></td>
-                                                <td class="num"><c:out value="${r.fatText}" /></td>
-                                                <td class="num"><c:out value="${r.muscleText}" /></td>
-                                                <td class="num"><c:out value="${r.waistText}" /></td>
+                                                <td class="num" data-label="BMI"><c:out value="${r.bmiText}" /></td>
+                                                <td class="num" data-label="Mỡ"><c:out value="${r.fatText}" /></td>
+                                                <td class="num" data-label="Cơ"><c:out value="${r.muscleText}" /></td>
+                                                <td class="num" data-label="Vòng eo"><c:out value="${r.waistText}" /></td>
                                                 <td class="note"><c:out value="${r.note}" /></td>
                                                 <td>
                                                     <form method="post" action="${ctx}/customer/body-stats">

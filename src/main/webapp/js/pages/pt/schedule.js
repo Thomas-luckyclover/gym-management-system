@@ -102,7 +102,8 @@ function movePtGhost(event) {
     ptGhost.style.setProperty("--start", start - ptAxisStart);
     ptGhost.style.setProperty("--length", ptDuration);
     ptGhost.querySelector(".pt-slot-time").textContent = ptClock(start) + " – " + ptClock(start + ptDuration);
-    ptGhost.querySelector(".pt-ghost-hint").textContent = reason || "Bấm để thêm";
+    // Lý do đầy đủ được báo khi bấm; ô theo chuột chỉ giữ nhãn ngắn để không tràn chiều cao.
+    ptGhost.querySelector(".pt-ghost-hint").textContent = reason ? "Không thể thêm" : "Bấm để thêm";
     ptGhost.classList.toggle("is-blocked", reason !== "");
     if (ptGhost.parentElement !== track) {
         track.appendChild(ptGhost);
@@ -163,7 +164,7 @@ function isPtWeekLayout() {
 
 /** HÀM CHÍNH — trình duyệt gọi khi bấm "Thêm vào nháp". Lấy ngày + giờ trong form rồi thêm như khi bấm lưới. */
 function addPtDraftFromForm(event) {
-    event.preventDefault();
+    event.preventDefault(); // chặn trình duyệt gửi form
     const form = event.currentTarget;
     const startInput = form.elements.start;
 
@@ -172,7 +173,7 @@ function addPtDraftFromForm(event) {
     const start = ptMinutes(startInput.value);
 
     // B2: thêm nháp; lỗi thì báo ngay dưới ô giờ (trình duyệt tự hiện bong bóng lỗi).
-    const error = addPtDraft(track, start);
+    const error = addPtDraft(track, start);//thêm nháp
     startInput.setCustomValidity(error);
     if (!form.reportValidity()) {
         return;
@@ -201,6 +202,9 @@ function showPtEndTime() {
  * HÀM PHỤ — gọi ở B3 của handlePtBoardClick, B2 của addPtDraftFromForm và B1 của restorePtChanges.
  * Kiểm tra rồi thêm một khung nháp vào cột ngày. Trả "" nếu thêm được, hoặc câu lý do nếu không.
  */
+
+//track: cột ngày cần thêm khung.
+//start: giờ bắt đầu, tính bằng phút. Ví dụ 09:30 → 570.
 function addPtDraft(track, start) {
     // B1: kiểm tra trước, không được thì trả lý do.
     const reason = ptWhyCannotPlace(track, start);
@@ -219,7 +223,7 @@ function addPtDraft(track, start) {
     draft.querySelector(".pt-slot-time").textContent = ptClock(start) + " – " + ptClock(start + ptDuration);
 
     // B3: gắn vào cột; CSS tự đặt vị trí, tự đếm, tự hiện thanh Công bố. Rồi lưu tạm.
-    track.appendChild(draft);
+    track.appendChild(draft); //Nó gắn thẻ khung nháp draft vào cột ngày track, nên khung xuất hiện trên lịch. Chưa lưu vào database.
     savePtChanges();
     return "";
 }
@@ -295,6 +299,11 @@ function savePtChanges() {
     for (const box of ptPlan.querySelectorAll(".pt-remove:checked")) {
         removals.push(box.value);
     }
+    // Có gỡ khung thì lưu thay đổi; chỉ thêm khung mới mới gọi là công bố.
+    const button = document.getElementById("pt-publish");
+    if (!button.disabled) {
+        button.textContent = removals.length ? "Lưu thay đổi" : "Công bố";
+    }
 
     try {
         sessionStorage.setItem(ptStorageKey, JSON.stringify({ drafts: drafts, removals: removals }));
@@ -353,10 +362,11 @@ async function publishPtChanges(event) {
     }
 
     // B1: khóa màn trong lúc chờ để không bấm lặp hay sửa giữa chừng (CSS làm mờ theo aria-busy).
-    const params = new URLSearchParams(new FormData(ptPublishForm));
+    const params = new URLSearchParams(new FormData(ptPublishForm)); // gom những đứa checkbox đang tick - PtPublishForm
+    const hasRemovals = params.has("removeSlotId");
     ptPlan.setAttribute("aria-busy", "true");
     button.disabled = true;
-    button.textContent = "Đang công bố…";
+    button.textContent = hasRemovals ? "Đang lưu…" : "Đang công bố…";
     errorLine.textContent = "";
 
     try {
@@ -365,18 +375,18 @@ async function publishPtChanges(event) {
 
         // B3: thành công → xóa lưu tạm, tải lại trang để đọc lịch mới từ DB (toast hiện sau khi tải).
         if (result.success) {
-            sessionStorage.removeItem(ptStorageKey);
-            location.reload();
+            sessionStorage.removeItem(ptStorageKey); //remove item trong sessionStorage, xóa bản lưu tạm trong kho
+            location.reload(); // tải lại trang
             return;
         }
-        errorLine.textContent = result.message || "Chưa công bố được. Thay đổi vẫn được giữ.";
+        errorLine.textContent = result.message || "Chưa lưu được thay đổi. Bạn có thể thử lại.";
     } catch (error) {
         errorLine.textContent = "Chưa nhận được kết quả. Thay đổi vẫn được giữ; kiểm tra lịch trước khi thử lại.";
     } finally {
         // B4: mở khóa lại (lỗi thì PT sửa rồi bấm lại).
         ptPlan.removeAttribute("aria-busy");
         button.disabled = false;
-        button.textContent = "Công bố";
+        button.textContent = hasRemovals ? "Lưu thay đổi" : "Công bố";
     }
 }
 

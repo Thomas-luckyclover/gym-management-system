@@ -3,6 +3,7 @@ package com.gms.dto;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.ArrayList;
 
 /**
  * MỘT NGÀY (một cột) trên Lịch dạy PT.
@@ -26,6 +27,8 @@ public class PtScheduleDay {
     private LocalTime openTime;      // giờ mở cửa
     private LocalTime closeTime;     // giờ đóng cửa
     private String leaveLabel;       // nhãn nghỉ phép, ví dụ "Nghỉ phép ca sáng · chờ duyệt"; không nghỉ → ""
+    private String leaveDetails;
+    private List<String> leaveBookings = new ArrayList<>(); // buổi đã có khách trùng ca nghỉ, không tự hủy
 
     // ===== Khoảng giờ được THÊM khung mới (phút trong ngày). null = ngày này không thêm được =====
     private Integer firstStartMinute; // giờ bắt đầu sớm nhất, đã làm tròn mốc 15 phút
@@ -60,6 +63,10 @@ public class PtScheduleDay {
 
     public String getLeaveLabel() { return leaveLabel; }
     public void setLeaveLabel(String leaveLabel) { this.leaveLabel = leaveLabel; }
+
+    public String getLeaveDetails() { return leaveDetails; }
+    public void setLeaveDetails(String leaveDetails) { this.leaveDetails = leaveDetails; }
+    public List<String> getLeaveBookings() { return leaveBookings; }
 
     public Integer getFirstStartMinute() { return firstStartMinute; }
     public void setFirstStartMinute(Integer firstStartMinute) { this.firstStartMinute = firstStartMinute; }

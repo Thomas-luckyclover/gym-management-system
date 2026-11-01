@@ -1,5 +1,6 @@
 package com.gms.service;
 
+import com.gms.constant.AppConstants;
 import com.gms.constant.Messages;
 import com.gms.dao.NotificationDAO;
 import com.gms.dao.PtSaleDAO;
@@ -52,13 +53,24 @@ import java.util.TreeSet;
  *   PHẦN 1. HÀM CHÍNH       search, prepare, hold, pay, release
  *   PHẦN 2. 4 BƯỚC          build → loadCustomers, loadPackage, loadPt, loadPlan · loadHeld
  *   PHẦN 3. LUẬT (static)   whyCannotBuy, candidateTimes, checkDay, buildPlan, checkRequested, sessionValue, …
+ *
+ * ❓ VẤN ĐÁP (mỗi câu kèm luồng file để mở theo khi trả lời):
+ *   1) Luồng bán gói PT? → 4 bước: 1 Gói & PT → 2 Lịch tập → 3 Khách → 4 Giữ chỗ & thu tiền (kiểu máy POS: trái tư vấn, phải "Đơn bán").
+ *      File: servlet/receptionist/PtSaleServlet.java → service/PtSaleService.java → dao/PtSaleDAO.java → WEB-INF/jsp/receptionist/pt-sales.jsp.
+ *   2) Giữ chỗ 15 phút hoạt động thế nào? → hold: khóa dòng PT (UPDLOCK) → tạo đơn Pending → khung Free→Held (HoldExpiresAt +15');
+ *      quá hạn thì releaseExpired nhả (khung về Free, đơn Cancelled). Vì vậy PT không thấy "Đang giữ" nếu đã hết 15 phút.
+ *      File: service/PtSaleService.java (hold / release / releaseExpired) → dao/PtScheduleDAO.java (khóa khung) + dao/PtSaleDAO.java (đơn).
+ *   3) Chống trùng giờ ở đâu? → Service checkDay/whySkip kiểm tra trước; PtSaleDAO.insertHeldSlot kiểm tra NOT EXISTS trước khi tạo khung Held.
+ *      File: service/PtSaleService.java (checkDay) → dao/PtSaleDAO.java (insertHeldSlot).
+ *   4) Vì sao có tick "Đã xác nhận với PT"? → khi xếp buổi vào giờ PT CHƯA mở khung (buổi "create"): hệ thống tự tạo khung mới, nên bắt buộc có xác nhận PT đồng ý.
+ *      File: service/PtSaleService.java (buildPlan / hold) → dao/PtSaleDAO.java (insertHeldSlot) → WEB-INF/jsp/receptionist/pt-sales.jsp.
  */
 public class PtSaleService {
 
     static final int START_DAYS_AHEAD = 30;                  // ngày bắt đầu: hôm nay → +30 ngày
     static final int TIME_WINDOW_DAYS = 14;                  // giờ trên bảng tuần: khung PT công bố trong 14 ngày đầu kỳ
     static final int HOLD_MINUTES = 15;                      // giữ chỗ bao lâu
-    static final LocalTime AFTERNOON_FROM = LocalTime.of(14, 0);
+    static final LocalTime AFTERNOON_FROM = AppConstants.AFTERNOON_SHIFT_START;   // mốc ca chung 13:00
     static final String EXPIRED_REASON = "Hết 15 phút giữ chỗ, chưa thu tiền";
     static final String RELEASE_REASON = "Lễ tân hủy giữ chỗ, chưa thu tiền";
 
@@ -122,12 +134,28 @@ public class PtSaleService {
                     return problem == null ? ServiceResult.ok(view) : ServiceResult.fail(problem);
                 }
                 build(connection, view, input, receptionist[1], now, false);
+                view.setPendingHolds(loadPendingHolds(connection, now));
                 return ServiceResult.ok(view);
             }
         } catch (SQLException | IllegalStateException | DateTimeException exception) {
             exception.printStackTrace();
             return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
         }
+    }
+
+    /**
+     * HÀM PHỤ — gọi ở cuối prepare (khi KHÔNG mở đơn cụ thể ?order=).
+     * Liệt kê đơn tại quầy đang giữ chỗ chưa hết hạn → JSP hiện danh sách "Đơn đang giữ" để lễ tân tìm lại
+     * sau khi bấm Back / đăng xuất mà mất URL ?order= (không mất dữ liệu, chỉ mất đường dẫn).
+     */
+    private List<PtSaleView.PendingHold> loadPendingHolds(Connection connection, LocalDateTime now) throws SQLException {
+        List<PtSaleDAO.HeldOrder> active = saleDAO.findActiveHoldOrders(connection, now);
+        List<PtSaleView.PendingHold> holds = new ArrayList<>();
+        for (PtSaleDAO.HeldOrder order : active) {
+            long secondsLeft = Math.max(0, Duration.between(now, order.expiresAt).getSeconds());
+            holds.add(new PtSaleView.PendingHold(order.orderId, order.orderCode, secondsLeft));
+        }
+        return holds;
     }
 
     /**
@@ -183,8 +211,7 @@ public class PtSaleService {
                             orderId, expires, now);
                 }
             }
-            return ServiceResult.ok(orderId, "Đã giữ " + view.getSessionCount() + " buổi trong " + HOLD_MINUTES
-                    + " phút · đơn " + code + ". Thu tiền để chốt.");
+            return ServiceResult.ok(orderId, String.format(Messages.MSG307_PT_SALE_HELD, view.getSessionCount(), HOLD_MINUTES, code));
         });
     }
 
@@ -195,11 +222,11 @@ public class PtSaleService {
     public ServiceResult<Integer> pay(int accountId, int orderId, String startText, String method, String reference,
             LocalDateTime now) {
         if (!"Cash".equals(method) && !"Transfer".equals(method)) {
-            return ServiceResult.fail("Chọn cách thu tiền: tiền mặt hoặc chuyển khoản.");
+            return ServiceResult.fail(Messages.MSG308_PT_SALE_METHOD_REQUIRED);
         }
         String ref = reference == null || reference.isBlank() || "Cash".equals(method) ? null : reference.trim();
         if (ref != null && ref.length() > 50) {
-            return ServiceResult.fail("Mã giao dịch chuyển khoản tối đa 50 ký tự.");
+            return ServiceResult.fail(Messages.MSG309_PT_SALE_REFERENCE_LENGTH);
         }
         LocalDate start = parseDate(startText);
 
@@ -242,8 +269,7 @@ public class PtSaleService {
 
             // B4: thông báo khách (+ người tập cùng) và PT.
             notifySale(connection, held, pkg, pt == null ? "PT" : pt.fullName, start, end, count, now);
-            return ServiceResult.ok(orderId, "Đã thu " + money(held.price) + " · đơn " + held.orderCode + " · "
-                    + count + " buổi đã vào lịch PT.");
+            return ServiceResult.ok(orderId, String.format(Messages.MSG310_PT_SALE_PAID, money(held.price), held.orderCode, count));
         });
     }
 
@@ -256,7 +282,7 @@ public class PtSaleService {
                 throw new IllegalArgumentException("Đơn này không còn giữ chỗ.");
             }
             saleDAO.releaseHold(connection, orderId, held.createdAt, RELEASE_REASON, now);
-            return ServiceResult.ok(orderId, "Đã hủy giữ chỗ đơn " + held.orderCode + ", các khung đã trả lại cho PT.");
+            return ServiceResult.ok(orderId, String.format(Messages.MSG311_PT_SALE_RELEASED, held.orderCode));
         });
     }
 
@@ -506,20 +532,29 @@ public class PtSaleService {
         }
         List<LeaveInfo> leaves = scheduleDAO.findLeaves(connection, view.getPtId(), start, end);
         List<HourException> exceptions = scheduleDAO.findHourExceptions(connection, start, end);
-        List<LocalTime> candidates = candidateTimes(slots, start, minutes, now);
+        // Giờ chọn được = giờ PT đã công bố (14 ngày đầu kỳ) + giờ LỄ TÂN TỰ NHẬP (lịch mẫu t1..t5 + sửa riêng trong sessions).
+        // Giờ tự nhập sẽ thành buổi "create" (PT chưa mở khung) → lúc Giữ lịch, hold() bắt tích "Đã xác nhận với PT".
+        List<LocalTime> published = candidateTimes(slots, start, minutes, now);
+        LocalTime[] hours = PtScheduleService.parseOpeningHours(configService.getString(SystemConfigService.OPENING_HOURS));
         Map<LocalDate, LocalTime> requested = parseSessions(input.sessions);
-        // Thứ PT chưa công bố khung nào → hộp nhắc vàng trên JSP.
+        List<LocalTime> custom = new ArrayList<>();
+        for (LocalTime time : view.getWeekTimes()) {
+            custom.add(time);                       // giờ lịch mẫu (t1..t5 trên URL)
+        }
+        if (requested != null) {
+            custom.addAll(requested.values());      // giờ sửa riêng từng buổi (sessions trên URL)
+        }
+        List<LocalTime> candidates = mergeCustomTimes(published, custom, minutes, hours[0], hours[1]);
+        // Thứ PT chưa công bố khung nào → chỉ là gợi ý (nhãn "PT chưa công bố"), KHÔNG chặn: lễ tân vẫn tự nhập giờ được.
         List<Integer> unpublished = unpublishedWeekdays(slots, start, now);
         view.setUnpublishedWeekdays(unpublished);
 
         if (!lock) {
-            if (candidates.isEmpty()) {
-                view.setPlanError(view.getPtName() + " chưa công bố khung trống nào vào T2–T6 trong 2 tuần đầu kỳ. "
-                        + "Nhờ PT công bố trên Lịch dạy, hoặc đổi ngày bắt đầu / PT.");
-                return;
-            }
             PtSalePlan plan = buildPlan(start, end, minutes, view.getPrice(), candidates, slots, leaves, exceptions, busy, now);
             plan.setUnpublished(unpublished);
+            plan.setPublished(formatTimes(published));                       // JS: giờ ngoài danh sách này = "PT chưa mở"
+            plan.setOpen(DateTimeUtil.formatTime(hours[0]));                 // min cho ô nhập giờ tự do
+            plan.setClose(DateTimeUtil.formatTime(hours[1].minusMinutes(minutes))); // max = giờ bắt đầu muộn nhất hợp lệ (đóng cửa − thời lượng buổi)
             for (int i = 0; i < 5; i++) {
                 LocalTime time = view.getWeekTimes()[i];
                 plan.getPattern()[i] = time != null && candidates.contains(time) ? DateTimeUtil.formatTime(time) : null;
@@ -554,7 +589,7 @@ public class PtSaleService {
     private String loadHeld(Connection connection, PtSaleView view, int orderId, LocalDateTime now) throws SQLException {
         HeldOrder held = saleDAO.findHeldOrder(connection, orderId, false);
         if (held == null || !"Pending".equals(held.status) || held.slots.isEmpty() || held.expiresAt == null) {
-            return "Đơn này không còn giữ chỗ (đã thu tiền, đã hủy hoặc quá " + HOLD_MINUTES + " phút). Bán lại từ đầu.";
+            return String.format(Messages.MSG108_HOLD_NO_LONGER_VALID, HOLD_MINUTES);
         }
         LocalDate today = now.toLocalDate();
         PackageRow pkg = saleDAO.findPackage(connection, held.packageId);
@@ -706,6 +741,52 @@ public class PtSaleService {
     }
 
     /**
+     * Giờ bắt đầu hợp lệ cho 1 buổi PT do LỄ TÂN TỰ NHẬP (không cần PT đã công bố khung):
+     *   trong giờ mở cửa (P-19), đúng mốc 15 phút, và khung (giờ → giờ + minutes) vẫn kết thúc trước giờ đóng cửa.
+     * open/close null (P-19 lỗi cấu hình) → không giờ nào hợp lệ.
+     */
+    static boolean isValidStartTime(LocalTime time, int minutes, LocalTime open, LocalTime close) {
+        if (time == null || open == null || close == null) {
+            return false;
+        }
+        if (minutes <= 0 || minutes >= 24 * 60) {
+            return false;
+        }
+        LocalTime end = time.plusMinutes(minutes);
+        if (time.isBefore(open) || !end.isAfter(time) || end.isAfter(close)) {
+            return false;
+        }
+        return time.toSecondOfDay() % (15 * 60) == 0;   // cùng mốc 15 phút với khung PT công bố
+    }
+
+    /**
+     * Gộp giờ lễ tân tự chọn (customTimes = giờ từ lịch mẫu t1..t5 + giờ sửa riêng từng buổi trong sessions)
+     * vào danh sách giờ chọn được. Chỉ giữ giờ HỢP LỆ (isValidStartTime) → giờ này sẽ thành buổi "create"
+     * (cần tick "Đã xác nhận với PT"). Nhờ vậy lễ tân bán được gói ở giờ PT chưa kịp công bố khung.
+     */
+    static List<LocalTime> mergeCustomTimes(List<LocalTime> published, List<LocalTime> customTimes, int minutes,
+            LocalTime open, LocalTime close) {
+        TreeSet<LocalTime> merged = new TreeSet<>(published);
+        if (customTimes != null) {
+            for (LocalTime time : customTimes) {
+                if (isValidStartTime(time, minutes, open, close)) {
+                    merged.add(time);
+                }
+            }
+        }
+        return new ArrayList<>(merged);
+    }
+
+    /** [18:00, 06:00] → ["06:00", "18:00"] (xếp tăng dần). Cho PtSalePlan.published — JS tô xanh giờ PT đã mở. */
+    static List<String> formatTimes(List<LocalTime> times) {
+        List<String> texts = new ArrayList<>();
+        for (LocalTime time : times) {
+            texts.add(DateTimeUtil.formatTime(time));
+        }
+        return texts;
+    }
+
+    /**
      * Đếm số buổi "create" = ngày đó PT CHƯA có khung đúng giờ này → giữ lịch sẽ tự tạo khung mới.
      * Ví dụ PT Thứ 5 chỉ mở 09:00, lễ tân chọn Thứ 5 18:00 → mỗi Thứ 5 là 1 buổi "create". hold() bắt tích "Đã xác nhận với PT".
      */
@@ -781,6 +862,7 @@ public class PtSaleService {
         plan.setStart(start.toString());
         plan.setEnd(end.toString());
         plan.setPrice(price);
+        plan.setMinutes(minutes);
         for (LocalTime time : candidates) {
             plan.getTimes().add(DateTimeUtil.formatTime(time));
         }
@@ -931,7 +1013,7 @@ public class PtSaleService {
         return Math.round(price * (double) vatRate / (100 + vatRate));
     }
 
-    /** Ca theo giờ: trước 14:00 là ca sáng (Morning), từ 14:00 là ca chiều (Afternoon). */
+    /** Ca theo giờ: trước 13:00 là ca sáng (Morning), từ 13:00 là ca chiều (Afternoon) — AppConstants.AFTERNOON_SHIFT_START. */
     static String shiftTypeAt(LocalTime time) {
         return time.isBefore(AFTERNOON_FROM) ? "Morning" : "Afternoon";
     }

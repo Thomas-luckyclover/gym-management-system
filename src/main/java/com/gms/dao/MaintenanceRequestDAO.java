@@ -180,6 +180,58 @@ public class MaintenanceRequestDAO {
         return null;
     }
 
+    public MaintenanceRequestView findViewByRequestCode(String requestCode)
+            throws SQLException {
+
+        if (requestCode == null || requestCode.isBlank()) {
+            return null;
+        }
+
+        String sql = buildViewSelect()
+                + " WHERE mr.RequestCode = ?";
+
+        try (Connection connection = DBContext.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setString(1, requestCode.trim());
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return mapResultSetToView(resultSet);
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public MaintenanceRequestView findActiveByEquipmentItemId(int equipmentItemId)
+            throws SQLException {
+
+        if (equipmentItemId <= 0) {
+            return null;
+        }
+
+        String sql = buildViewSelect()
+                + " WHERE mr.EquipmentItemId = ? "
+                + "ORDER BY CASE WHEN mr.Status IN ('Open', 'InProgress') THEN 0 ELSE 1 END, "
+                + "mr.ReportedAt DESC, mr.MaintenanceRequestId DESC";
+
+        try (Connection connection = DBContext.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setInt(1, equipmentItemId);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return mapResultSetToView(resultSet);
+                }
+            }
+        }
+
+        return null;
+    }
+
     // ===== Danh sách Receptionist (Xem tất cả yêu cầu theo quy tắc mới) =====
 
     /**
