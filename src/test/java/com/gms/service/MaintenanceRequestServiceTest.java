@@ -747,13 +747,23 @@ class MaintenanceRequestServiceTest {
             return true;
         }
 
-        @Override
+                @Override
         public long countCatalog(String keyword) {
             return filterFacilities(keyword).size();
         }
 
         @Override
+        public long countCatalog(String keyword, String location) {
+            return filterFacilities(keyword).size();
+        }
+
+        @Override
         public List<Facility> findCatalogPage(String keyword, int page, int pageSize) {
+            return filterFacilities(keyword);
+        }
+
+        @Override
+        public List<Facility> findCatalogPage(String keyword, String location, int page, int pageSize) {
             return filterFacilities(keyword);
         }
 

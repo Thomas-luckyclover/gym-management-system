@@ -130,75 +130,54 @@
                             <div class="counter-validity-config">
                                 <span class="config-label">Thời gian kích hoạt &amp; hết hạn gói:</span>
 
-                                <c:choose>
-                                    <%-- TRƯỜNG HỢP A: KHÁCH ĐANG CÓ GÓI CÒN HẠN -> BẮT BUỘC NỐI TIẾP --%>
-                                    <c:when test="${isChained}">
-                                        <input type="hidden" name="startDateMode" value="chained">
-                                        <div class="validity-chained-notice">
-                                            <i class="fa-solid fa-link"></i>
-                                            <div>
-                                                <p class="notice-title">Tự động kích hoạt nối tiếp sau gói hiện tại</p>
-                                                <p class="notice-sub">Hội viên đang có gói còn hạn đến ngày <strong><c:out value="${selectedCustomer.currentPackageEndText}" /></strong>. Gói mới sẽ tự động bắt đầu từ ngày hôm sau để không gián đoạn quyền lợi.</p>
-                                            </div>
-                                        </div>
-                                        <div class="validity-dates-preview">
-                                            <div class="date-chip">
-                                                <span class="date-label">Ngày bắt đầu:</span>
-                                                <span class="date-value"><c:out value="${defaultStartDateText}" /></span>
-                                            </div>
-                                            <div class="date-arrow"><i class="fa-solid fa-arrow-right"></i></div>
-                                            <div class="date-chip highlight">
-                                                <span class="date-label">Ngày hết hạn dự kiến:</span>
-                                                <span class="date-value"><c:out value="${defaultEndDateText}" /></span>
-                                            </div>
-                                        </div>
-                                    </c:when>
-
-                                    <%-- TRƯỜNG HỢP B: KHÁCH MỚI HOẶC CHƯA CÓ GÓI -> CHO CHỌN HÔM NAY HOẶC TRONG 7 NGÀY --%>
-                                    <c:otherwise>
-                                        <%-- id="validityPickerOptions" được dùng trong counter-sale.js, hàm initValidityPicker() --%>
-                                        <div class="validity-picker-options" id="validityPickerOptions"
-                                             data-duration-months="<c:out value='${selectedCard.durationMonths}' />"
-                                             data-today-iso="<c:out value='${defaultStartDateIso}' />"
-                                             data-today-text="<c:out value='${defaultStartDateText}' />"
-                                             data-default-end-text="<c:out value='${defaultEndDateText}' />">
-                                            <label class="validity-option-radio">
-                                                <input type="radio" name="startDateMode" id="modeToday" value="today" checked>
-                                                <span class="radio-label">
+                                <%-- id="validityPickerOptions" được dùng trong counter-sale.js, hàm initValidityPicker() --%>
+                                <div class="validity-picker-options" id="validityPickerOptions"
+                                     data-duration-months="<c:out value='${selectedCard.durationMonths}' />"
+                                     data-today-iso="<c:out value='${defaultStartDateIso}' />"
+                                     data-today-text="<c:out value='${defaultStartDateText}' />"
+                                     data-default-end-text="<c:out value='${defaultEndDateText}' />">
+                                    <label class="validity-option-radio">
+                                        <input type="radio" name="startDateMode" id="modeToday" value="today" checked>
+                                        <span class="radio-label">
+                                            <c:choose>
+                                                <c:when test="${isChained}">
+                                                    <strong>Kích hoạt nối tiếp sau gói hiện tại</strong> (<c:out value="${defaultStartDateText}" />)
+                                                </c:when>
+                                                <c:otherwise>
                                                     <strong>Kích hoạt ngay hôm nay</strong> (<c:out value="${todayText}" />)
-                                                </span>
-                                            </label>
-                                            <label class="validity-option-radio">
-                                                <input type="radio" name="startDateMode" id="modeCustom" value="custom">
-                                                <span class="radio-label">
-                                                    <strong>Hẹn ngày kích hoạt khác</strong> (trong 7 ngày tới)
-                                                </span>
-                                            </label>
-                                        </div>
+                                                </c:otherwise>
+                                            </c:choose>
+                                        </span>
+                                    </label>
+                                    <label class="validity-option-radio">
+                                        <input type="radio" name="startDateMode" id="modeCustom" value="custom">
+                                        <span class="radio-label">
+                                            <strong>Hẹn ngày kích hoạt khác</strong> (trong 7 ngày tới)
+                                        </span>
+                                    </label>
+                                </div>
 
-                                        <%-- id="customDateWrap" được dùng trong counter-sale.js, hàm initValidityPicker() để toggle ẩn/hiện --%>
-                                        <div class="validity-custom-input" id="customDateWrap" hidden>
-                                            <label for="customStartDate" class="field-label">Chọn ngày bắt đầu:</label>
-                                            <input type="date" id="customStartDate" name="customStartDate"
-                                                   value="<c:out value='${defaultStartDateIso}' />"
-                                                   min="<c:out value='${minStartDateIso}' />"
-                                                   max="<c:out value='${maxStartDateIso}' />">
-                                            <span class="field-hint">Chỉ được chọn từ hôm nay đến <c:out value="${maxStartDateIso}" /></span>
-                                        </div>
+                                <%-- id="customDateWrap" được dùng trong counter-sale.js, hàm initValidityPicker() để toggle ẩn/hiện --%>
+                                <div class="validity-custom-input" id="customDateWrap" hidden>
+                                    <label for="customStartDate" class="field-label">Chọn ngày bắt đầu:</label>
+                                    <input type="date" id="customStartDate" name="customStartDate"
+                                           value="<c:out value='${defaultStartDateIso}' />"
+                                           min="<c:out value='${minStartDateIso}' />"
+                                           max="<c:out value='${maxStartDateIso}' />">
+                                    <span class="field-hint">Chỉ được chọn từ <c:out value="${defaultStartDateText}" /> đến <c:out value="${maxStartDateText}" /></span>
+                                </div>
 
-                                        <div class="validity-dates-preview">
-                                            <div class="date-chip">
-                                                <span class="date-label">Ngày bắt đầu:</span>
-                                                <span class="date-value" id="previewStartDate"><c:out value="${defaultStartDateText}" /></span>
-                                            </div>
-                                            <div class="date-arrow"><i class="fa-solid fa-arrow-right"></i></div>
-                                            <div class="date-chip highlight">
-                                                <span class="date-label">Ngày hết hạn dự kiến:</span>
-                                                <span class="date-value" id="previewEndDate"><c:out value="${defaultEndDateText}" /></span>
-                                            </div>
-                                        </div>
-                                    </c:otherwise>
-                                </c:choose>
+                                <div class="validity-dates-preview">
+                                    <div class="date-chip">
+                                        <span class="date-label">Ngày bắt đầu:</span>
+                                        <span class="date-value" id="previewStartDate"><c:out value="${defaultStartDateText}" /></span>
+                                    </div>
+                                    <div class="date-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+                                    <div class="date-chip highlight">
+                                        <span class="date-label">Ngày hết hạn dự kiến:</span>
+                                        <span class="date-value" id="previewEndDate"><c:out value="${defaultEndDateText}" /></span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 

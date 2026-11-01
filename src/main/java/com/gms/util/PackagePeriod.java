@@ -61,15 +61,20 @@ public final class PackagePeriod {
         return today.plusDays(MAX_DAYS_AHEAD);
     }
 
+    public static LocalDate latestStart(LocalDate today, LocalDate lastMembershipEnd) {
+        LocalDate earliest = earliestStart(today, lastMembershipEnd);
+        return earliest.plusDays(MAX_DAYS_AHEAD);
+    }
+
     /**
-     * Các ngày khách được bấm chọn, theo thứ tự tăng dần. Rỗng khi gói hiện tại
-     * còn hiệu lực quá xa nên gói mới buộc phải nối sau, không còn ngày để
-     * chọn.
+     * Các ngày khách được bấm chọn, theo thứ tự tăng dần. Cho phép chọn trong vòng
+     * MAX_DAYS_AHEAD (7 ngày) tính từ ngày sớm nhất được bắt đầu (hôm nay hoặc ngày sau khi gói cũ hết hạn).
      */
     public static List<LocalDate> options(LocalDate today, LocalDate lastMembershipEnd) {
         List<LocalDate> days = new ArrayList<>();
-        LocalDate last = latestStart(today);
-        for (LocalDate d = earliestStart(today, lastMembershipEnd); !d.isAfter(last); d = d.plusDays(1)) {
+        LocalDate earliest = earliestStart(today, lastMembershipEnd);
+        LocalDate last = earliest.plusDays(MAX_DAYS_AHEAD);
+        for (LocalDate d = earliest; !d.isAfter(last); d = d.plusDays(1)) {
             days.add(d);
         }
         return days;
@@ -79,9 +84,11 @@ public final class PackagePeriod {
      * Ngày chọn có hợp lệ không (nằm trong khoảng được chọn).
      */
     public static boolean isSelectable(LocalDate chosen, LocalDate today, LocalDate lastMembershipEnd) {
+        LocalDate earliest = earliestStart(today, lastMembershipEnd);
+        LocalDate last = earliest.plusDays(MAX_DAYS_AHEAD);
         return chosen != null
-                && !chosen.isBefore(earliestStart(today, lastMembershipEnd))
-                && !chosen.isAfter(latestStart(today));
+                && !chosen.isBefore(earliest)
+                && !chosen.isAfter(last);
     }
 
     /**

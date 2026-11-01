@@ -62,11 +62,12 @@ public class StartDatePicker {
         return lockReason;
     }
 
-    /** Hai hàng lịch (T2..CN) bắt đầu từ thứ Hai của tuần chứa hôm nay, đủ phủ hôm nay + 7 ngày. */
+    /** Hai hàng lịch (T2..CN) bắt đầu từ thứ Hai của tuần chứa ngày có thể chọn, đủ phủ 14 ngày. */
     public List<CalendarCell> getCalendarCells() {
         List<CalendarCell> cells = new ArrayList<>();
         int months = com.gms.util.PackagePeriod.monthsBetween(startDate, endDate);
-        LocalDate monday = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        LocalDate base = (options != null && !options.isEmpty()) ? options.get(0) : (startDate != null ? startDate : today);
+        LocalDate monday = base.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
         for (int i = 0; i < 14; i++) {
             LocalDate day = monday.plusDays(i);
             boolean enabled = options.contains(day);
@@ -79,11 +80,11 @@ public class StartDatePicker {
 
     /**
      * Tiêu đề lịch: một tháng thì "Tháng 10/2026", hai tháng "Tháng 10 – 11/2026",
-     * qua năm "Tháng 12/2026 – 1/2027". Tính theo khoảng hôm nay đến hôm nay + 7 ngày.
+     * qua năm "Tháng 12/2026 – 1/2027". Tính theo khoảng ngày được chọn.
      */
     public String getCalendarTitle() {
-        LocalDate first = today;
-        LocalDate last = today.plusDays(com.gms.util.PackagePeriod.MAX_DAYS_AHEAD);
+        LocalDate first = (options != null && !options.isEmpty()) ? options.get(0) : (startDate != null ? startDate : today);
+        LocalDate last = (options != null && !options.isEmpty()) ? options.get(options.size() - 1) : first.plusDays(com.gms.util.PackagePeriod.MAX_DAYS_AHEAD);
         if (first.getMonth() == last.getMonth() && first.getYear() == last.getYear()) {
             return "Tháng " + last.getMonthValue() + "/" + last.getYear();
         }

@@ -592,6 +592,18 @@
                                                                                                                                 theo
                                                                                                                                 data-dialog-target.
                                                                                                                                 --%>
+                                                                                                                            <c:if test="${not empty pkg.benefitLines}">
+                                                                                                                                <ul class="package-card__benefits">
+                                                                                                                                    <c:forEach var="benefit" items="${pkg.benefitLines}" varStatus="loop">
+                                                                                                                                        <c:if test="${loop.index < 3}">
+                                                                                                                                            <li><i class="fa-solid fa-circle-check" aria-hidden="true"></i><span><c:out value="${benefit}" /></span></li>
+                                                                                                                                        </c:if>
+                                                                                                                                    </c:forEach>
+                                                                                                                                    <c:if test="${fn:length(pkg.benefitLines) > 3}">
+                                                                                                                                        <li class="is-more">+<c:out value="${fn:length(pkg.benefitLines) - 3}" /> quyền lợi khác</li>
+                                                                                                                                    </c:if>
+                                                                                                                                </ul>
+                                                                                                                            </c:if>
                                                                                                                                 <div
                                                                                                                                     class="package-card__actions${option.purchasableOnline or option.singleSession ? '' : ' package-card__actions--single'}">
                                                                                                                                     <c:choose>

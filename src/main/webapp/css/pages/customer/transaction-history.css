@@ -259,3 +259,60 @@ html body.dock .th-dialog .btn.btn-buy {
 @media (max-width: 520px) {
   .th-dialog__body { padding: var(--space-4); }
 }
+
+/* ==================== HIỂN THỊ THỜI HẠN GÓI TRÊN LỊCH SỬ GIAO DỊCH ==================== */
+.th-row__title {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 3px !important;
+}
+
+.th-row__period {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  font-family: "Inter", system-ui, sans-serif !important;
+  font-size: 0.78rem !important;
+  font-weight: 600 !important;
+  color: #38bdf8 !important;
+  white-space: nowrap !important;
+}
+
+.th-row__period i {
+  color: #10b981 !important;
+  font-size: 0.82rem !important;
+}
+
+.th-dialog__validity {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: var(--space-3) !important;
+  margin-top: 0.75rem !important;
+  padding: 0.75rem 1rem !important;
+  background: rgba(56, 189, 248, 0.08) !important;
+  border: 1px solid rgba(56, 189, 248, 0.25) !important;
+  border-radius: 0 !important;
+}
+
+.th-dialog__validity span {
+  color: #94adc5 !important;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+}
+
+.th-dialog__validity strong {
+  color: #38bdf8 !important;
+  font-size: 0.95rem !important;
+  font-weight: 800 !important;
+}
+
+
+.th-dialog__date-highlight {
+  color: #38bdf8 !important;
+  font-weight: 700 !important;
+  font-size: 0.95rem !important;
+  font-variant-numeric: tabular-nums !important;
+}

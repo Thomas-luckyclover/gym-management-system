@@ -16,6 +16,8 @@
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Phiếu thu dịch vụ #<c:out value="${receipt.orderCode}" /> · Super Gym Lễ tân</title>
     <link rel="stylesheet" href="${ctx}/css/pages/receptionist/counter-sale.css?v=20261031_vVoucherDone">
+    <link rel="stylesheet" href="${ctx}/css/pages/customer/start-date-picker.css?v=20261101_vGymResult">
+    <script src="${ctx}/js/pages/customer/start-date-picker.js?v=2" defer></script>
 </head>
 <body class="dock theme-staff counter-sale-page">
 <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
@@ -88,9 +90,28 @@
                             <span class="receipt-label">Gói đăng ký:</span>
                             <strong class="receipt-val"><c:out value="${receipt.packageName}" /> (<c:out value="${receipt.durationText}" />)</strong>
                         </div>
-                        <div class="receipt-row">
+                        <div class="receipt-row receipt-row--validity">
                             <span class="receipt-label">Hiệu lực gói:</span>
-                            <span class="receipt-val"><c:out value="${receipt.startDateText}" /> → <c:out value="${receipt.endDateText}" /></span>
+                            <c:choose>
+                                <c:when test="${not empty startPicker and startPicker.editable}">
+                                    <div class="sdp-anchor receipt-sdp" data-sdp data-sdp-url="${ctx}/receptionist/subscription/start-date"
+                                         data-sdp-sub="${startPicker.subscriptionId}" data-sdp-csrf="<c:out value='${csrfToken}' />">
+                                        <div class="receipt-validity-line">
+                                            <span class="receipt-val">
+                                                <span data-sdp-start><c:out value="${startPicker.startText}" /></span> → <span data-sdp-end><c:out value="${startPicker.endText}" /></span>
+                                            </span>
+                                            <button type="button" class="btn btn-sm sdp-btn no-print" data-sdp-toggle aria-expanded="false" title="Đổi ngày bắt đầu gói">
+                                                <i class="fa-solid fa-calendar-days"></i> Đổi ngày
+                                            </button>
+                                        </div>
+                                        <c:set var="picker" value="${startPicker}" />
+                                        <%@ include file="/WEB-INF/jsp/customer/_start-date-picker.jspf" %>
+                                    </div>
+                                </c:when>
+                                <c:otherwise>
+                                    <span class="receipt-val"><c:out value="${receipt.startDateText}" /> → <c:out value="${receipt.endDateText}" /></span>
+                                </c:otherwise>
+                            </c:choose>
                         </div>
                         <c:if test="${receipt.discountAmount > 0}">
                             <div class="receipt-row">
