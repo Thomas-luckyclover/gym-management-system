@@ -655,7 +655,7 @@ vcode(None, 'yen.doan@gmail.com', 'Claim', '445566', now_(-1), now_(14), note='k
 
 # ============================================================ 13. NHÂN SỰ, THIẾT BỊ
 # BF-05: dữ liệu có cùng cấu trúc với bảng LeaveRequests.
-# Ngày mẫu cố định quanh 26/10/2026 để mở lại được đúng các tình huống đã chốt.
+# Mốc trình bày BF-05: thứ Sáu 06/11/2026, quỹ phép năm 14 ngày.
 def leave_request(employee, leave_type, from_date, to_date, shift, days, reason,
                   status='Pending', reviewer=None, reject_reason=None,
                   submitted=None, reviewed=None, assigned=None, group=None):
@@ -665,68 +665,90 @@ def leave_request(employee, leave_type, from_date, to_date, shift, days, reason,
         Days=days, Reason=reason, Status=status, RejectReason=reject_reason,
         SubmittedAt=submitted, ReviewedAt=reviewed, ReminderSentAt=None, LeaveGroupId=group))
 
-# Bảy đơn gốc: giữ số ngày lịch sử đã xử lý, đơn chờ tính 1 ngày cho mỗi ngày nghỉ.
-leave_request(5, 'Annual', d_(2026, 10, 18), d_(2026, 10, 18), 'Morning', 0.5,
-    'Về quê có việc gia đình',
-    status='Approved', reviewer=2, submitted=dt_(2026, 10, 16, 9, 0), reviewed=dt_(2026, 10, 17, 15, 30), assigned=2)
-leave_request(4, 'Sick', d_(2026, 10, 19), d_(2026, 10, 19), 'Afternoon', 0.5,
-    'Nghỉ khám sức khỏe ca chiều',
-    status='Rejected', reviewer=2, reject_reason='Ca chiều thiếu lễ tân trực quầy, vui lòng đổi ca khác', submitted=dt_(2026, 10, 18, 8, 30), reviewed=dt_(2026, 10, 18, 16, 0), assigned=2)
-leave_request(6, 'Annual', d_(2026, 10, 22), d_(2026, 10, 22), 'Morning', 1.0,
-    'Tham gia hội thảo chuyên môn fitness buổi sáng',
-    submitted=dt_(2026, 10, 20, 8, 30), assigned=2)
-leave_request(3, 'Annual', d_(2026, 10, 23), d_(2026, 10, 24), 'FullDay', 2.0,
-    'Nghỉ phép thường niên cùng gia đình 2 ngày',
-    submitted=dt_(2026, 10, 20, 9, 15), assigned=2)
-leave_request(7, 'Sick', d_(2026, 10, 24), d_(2026, 10, 24), 'Morning', 1.0,
-    'Khám chấn thương cổ tay tại bệnh viện thể thao',
-    submitted=dt_(2026, 10, 20, 10, 0), assigned=2)
-leave_request(9, 'Unpaid', d_(2026, 10, 25), d_(2026, 10, 25), 'Afternoon', 1.0,
-    'Xin nghỉ giải quyết thủ tục giấy tờ hành chính cá nhân',
-    submitted=dt_(2026, 10, 20, 11, 30))
-leave_request(8, 'Annual', d_(2026, 10, 26), d_(2026, 10, 26), 'FullDay', 1.0,
-    'Nghỉ giải quyết việc gia đình đột xuất',
-    submitted=dt_(2026, 10, 20, 13, 45), assigned=2)
+# Mốc demo thứ Sáu 06/11/2026: sắp nghỉ, duyệt muộn và hai đơn cùng đợt.
+leave_request(5, "Annual", d_(2026, 10, 18), d_(2026, 10, 18), "Morning", 0.5,
+    "Về quê có việc gia đình",
+    status="Approved", reviewer=2, submitted=dt_(2026, 10, 16, 9, 0), reviewed=dt_(2026, 10, 17, 15, 30), assigned=2)
+leave_request(4, "Sick", d_(2026, 10, 29), d_(2026, 10, 29), "Afternoon", 0.5,
+    "Nghỉ khám sức khỏe ca chiều",
+    status="Rejected", reviewer=2, reject_reason="Ca chiều thiếu lễ tân trực quầy, vui lòng đổi ca khác", submitted=dt_(2026, 10, 28, 8, 30), reviewed=dt_(2026, 10, 28, 16, 0), assigned=2)
+leave_request(6, "Annual", d_(2026, 11, 4), d_(2026, 11, 4), "Morning", 1,
+    "Tham gia hội thảo chuyên môn fitness buổi sáng",
+    submitted=dt_(2026, 11, 1, 8, 30), assigned=2)
+leave_request(3, "Annual", d_(2026, 11, 9), d_(2026, 11, 10), "FullDay", 2,
+    "Nghỉ phép thường niên cùng gia đình 2 ngày",
+    submitted=dt_(2026, 11, 2, 9, 15), assigned=2)
+leave_request(7, "Unpaid", d_(2026, 11, 10), d_(2026, 11, 10), "Morning", 1,
+    "Xin nghỉ không lương ca sáng để giải quyết việc cá nhân",
+    submitted=dt_(2026, 11, 3, 10, 0), assigned=2)
+leave_request(9, "Unpaid", d_(2026, 11, 11), d_(2026, 11, 11), "Afternoon", 1,
+    "Xin nghỉ giải quyết thủ tục giấy tờ hành chính cá nhân",
+    submitted=dt_(2026, 11, 3, 11, 30))
+leave_request(5, "Annual", d_(2026, 11, 15), d_(2026, 11, 15), "FullDay", 1,
+    "Xin nghỉ theo kế hoạch để giải quyết việc gia đình",
+    submitted=dt_(2026, 11, 3, 13, 45), assigned=2)
+leave_request(9, "Annual", d_(2026, 11, 5), d_(2026, 11, 5), "Morning", 1,
+    "Cần duyệt muộn: ngày nghỉ hôm qua nhưng Manager chưa kịp duyệt.",
+    submitted=dt_(2026, 11, 4, 8, 0))
+leave_request(14, "Annual", d_(2026, 11, 6), d_(2026, 11, 6), "Morning", 1,
+    "Xin nghỉ ca sáng ngày 06/11 để đưa người thân đi khám.",
+    submitted=dt_(2026, 11, 5, 14, 0))
+leave_request(5, "Unpaid", d_(2026, 11, 7), d_(2026, 11, 7), "Morning", 1,
+    "Sắp đến ngày nghỉ: xin nghỉ ngày mai để giải quyết việc cá nhân.",
+    submitted=dt_(2026, 11, 5, 15, 30))
+leave_request(14, "Annual", d_(2026, 11, 2), d_(2026, 11, 2), "Morning", 1,
+    "Đơn đã duyệt: nghỉ giải quyết thủ tục cá nhân.",
+    status="Approved", reviewer=2, submitted=dt_(2026, 10, 30, 8, 0), reviewed=dt_(2026, 10, 31, 8, 0))
+leave_request(5, "Unpaid", d_(2026, 11, 3), d_(2026, 11, 3), "Afternoon", 1,
+    "Đơn từ chối: xin nghỉ để tham gia lớp học cá nhân.",
+    status="Rejected", reviewer=2, reject_reason="Chưa bố trí được người thay ca, vui lòng chọn ngày khác.", submitted=dt_(2026, 11, 1, 8, 30), reviewed=dt_(2026, 11, 1, 9, 0))
+leave_request(6, "Unpaid", d_(2026, 11, 3), d_(2026, 11, 3), "Morning", 1,
+    "Ca nghỉ đã qua nhưng đơn vẫn đang chờ quản lý xác nhận để duyệt muộn.",
+    submitted=dt_(2026, 11, 2, 8, 0))
+leave_request(9, "Annual", d_(2026, 11, 16), d_(2026, 11, 18), "FullDay", 3,
+    "Nghỉ nhiều ngày: về quê dự việc gia đình trong ba ngày.",
+    submitted=dt_(2026, 11, 4, 8, 40))
+leave_request(14, "Unpaid", d_(2026, 11, 18), d_(2026, 12, 2), "FullDay", 15,
+    "Chủ động xin nghỉ không lương 15 ngày, không sử dụng quỹ phép năm.",
+    submitted=dt_(2026, 11, 4, 8, 50))
+leave_request(13, "Annual", d_(2026, 11, 9), d_(2026, 11, 10), "FullDay", 2,
+    "Đợt nghỉ 4 ngày Lý Hoàng Long: phần 1 Phép năm 2 ngày.",
+    submitted=dt_(2026, 11, 4, 9, 0), group="33333333-0524-4620-8000-000000000003")
+leave_request(13, "Unpaid", d_(2026, 11, 11), d_(2026, 11, 12), "FullDay", 2,
+    "Đợt nghỉ 4 ngày Lý Hoàng Long: phần 2 Không lương 2 ngày.",
+    submitted=dt_(2026, 11, 4, 9, 0), group="33333333-0524-4620-8000-000000000003")
+leave_request(3, "Annual", d_(2026, 11, 23), d_(2026, 11, 25), "FullDay", 3,
+    "Phần phép năm đã được duyệt trong đợt 5 ngày.",
+    status="Approved", reviewer=2, submitted=dt_(2026, 11, 4, 9, 0), reviewed=dt_(2026, 11, 4, 10, 0), group="44444444-0524-4620-8000-000000000004")
+leave_request(3, "Unpaid", d_(2026, 11, 26), d_(2026, 11, 27), "FullDay", 2,
+    "Phần không lương bị từ chối trong cùng đợt.",
+    status="Rejected", reviewer=2, reject_reason="Chưa bố trí được nhân sự cho phần không lương.", submitted=dt_(2026, 11, 4, 9, 0), reviewed=dt_(2026, 11, 4, 10, 0), group="44444444-0524-4620-8000-000000000004")
+leave_request(13, "Annual", d_(2026, 8, 16), d_(2026, 8, 27), "FullDay", 12,
+    "Nghỉ phép năm đã được duyệt, còn 2 ngày phép để gửi đợt nghỉ tháng 11.",
+    status="Approved", reviewer=2, submitted=dt_(2026, 8, 15, 9, 0), reviewed=dt_(2026, 8, 15, 10, 0))
+leave_request(3, "Annual", d_(2026, 8, 1), d_(2026, 8, 9), "FullDay", 9,
+    "Nghỉ phép năm đã được duyệt trong tháng 8.",
+    status="Approved", reviewer=2, submitted=dt_(2026, 7, 30, 9, 0), reviewed=dt_(2026, 7, 31, 10, 0))
 
-# Tám mẫu độc lập: sắp nghỉ, một ca, không lương, đã duyệt, từ chối, duyệt muộn, nhiều ngày, thiếu phép.
-leave_request(3, 'Unpaid', d_(2026, 10, 27), d_(2026, 10, 27), 'Morning', 1.0,
-    'Sắp nghỉ: xin nghỉ ca sáng để giải quyết việc gia đình.',
-    submitted=dt_(2026, 10, 26, 8, 0))
-leave_request(5, 'Annual', d_(2026, 10, 28), d_(2026, 10, 28), 'Morning', 1.0,
-    'Phép năm một ca: đưa người thân đi làm thủ tục buổi sáng.',
-    submitted=dt_(2026, 10, 26, 8, 10))
-leave_request(5, 'Unpaid', d_(2026, 11, 1), d_(2026, 11, 1), 'Morning', 1.0,
-    'Chủ động xin nghỉ không lương dù vẫn còn phép năm.',
-    submitted=dt_(2026, 10, 26, 8, 20))
-leave_request(5, 'Annual', d_(2026, 10, 21), d_(2026, 10, 21), 'Morning', 1.0,
-    'Đơn đã duyệt: nghỉ giải quyết thủ tục cá nhân.',
-    status='Approved', reviewer=2, submitted=dt_(2026, 10, 18, 8, 0), reviewed=dt_(2026, 10, 19, 8, 0))
-leave_request(5, 'Unpaid', d_(2026, 10, 30), d_(2026, 10, 30), 'Afternoon', 1.0,
-    'Đơn từ chối: xin nghỉ để tham gia lớp học cá nhân.',
-    status='Rejected', reviewer=2, reject_reason='Chưa bố trí được người thay ca, vui lòng chọn ngày khác.', submitted=dt_(2026, 10, 26, 8, 30), reviewed=dt_(2026, 10, 26, 9, 0))
-leave_request(6, 'Unpaid', d_(2026, 10, 25), d_(2026, 10, 25), 'FullDay', 1.0,
-    'Ngày nghỉ đã qua nhưng đơn vẫn đang chờ xử lý.',
-    submitted=dt_(2026, 10, 23, 8, 0))
-leave_request(9, 'Annual', d_(2026, 11, 3), d_(2026, 11, 5), 'FullDay', 3.0,
-    'Nghỉ nhiều ngày: về quê dự việc gia đình trong ba ngày.',
-    submitted=dt_(2026, 10, 26, 8, 40))
-leave_request(14, 'Annual', d_(2026, 11, 18), d_(2026, 12, 2), 'FullDay', 15.0,
-    'Thiếu phép: xin 15 ngày khi quỹ phép năm được cấu hình 14 ngày.',
-    submitted=dt_(2026, 10, 26, 8, 50))
-
-# Hai cặp cùng đợt nghỉ: A cùng chờ; B phép năm đã duyệt, không lương bị từ chối.
-leave_request(3, 'Annual', d_(2026, 11, 8), d_(2026, 11, 12), 'FullDay', 5.0,
-    'Đợt nghỉ 9 ngày, phần phép năm đang chờ.',
-    submitted=dt_(2026, 10, 26, 9, 0), group='11111111-0524-4620-8000-000000000001')
-leave_request(3, 'Unpaid', d_(2026, 11, 13), d_(2026, 11, 16), 'FullDay', 4.0,
-    'Cùng đợt nghỉ 9 ngày, phần không lương đang chờ.',
-    submitted=dt_(2026, 10, 26, 9, 0), group='11111111-0524-4620-8000-000000000001')
-leave_request(3, 'Annual', d_(2026, 11, 20), d_(2026, 11, 24), 'FullDay', 5.0,
-    'Phần phép năm đã được duyệt trong đợt 9 ngày.',
-    status='Approved', reviewer=2, submitted=dt_(2026, 10, 26, 9, 0), reviewed=dt_(2026, 10, 26, 10, 0), group='22222222-0524-4620-8000-000000000002')
-leave_request(3, 'Unpaid', d_(2026, 11, 25), d_(2026, 11, 28), 'FullDay', 4.0,
-    'Phần không lương bị từ chối trong cùng đợt.',
-    status='Rejected', reviewer=2, reject_reason='Chưa bố trí được nhân sự cho phần không lương.', submitted=dt_(2026, 10, 26, 9, 0), reviewed=dt_(2026, 10, 26, 10, 0), group='22222222-0524-4620-8000-000000000002')
+# PT Long đã chuyển bốn buổi cho PT Sơn trước khi gửi đợt nghỉ 09–12/11.
+for leave_day in (d_(2026, 11, 9), d_(2026, 11, 10), d_(2026, 11, 11), d_(2026, 11, 12)):
+    old_slot = next(row for row in DB['TimeSlots'] if row['PtEmployeeId'] == 13
+                    and row['SlotDate'] == leave_day and row['StartTime'] == time(11, 0))
+    new_slot = next(row for row in DB['TimeSlots'] if row['PtEmployeeId'] == 5
+                    and row['SlotDate'] == leave_day and row['StartTime'] == time(11, 0))
+    moved_session = next(row for row in DB['Sessions'] if row['TimeSlotId'] == old_slot['TimeSlotId']
+                         and row['Status'] == 'Scheduled')
+    assert new_slot['Status'] == 'Free', 'PT Sơn phải trống trước khi nhận buổi'
+    old_slot['Status'] = 'Free'
+    new_slot['Status'] = 'Booked'
+    moved_session['TimeSlotId'] = new_slot['TimeSlotId']
+    moved_session['PtEmployeeId'] = 5
+    moved_session['CommissionAmount'] = round(moved_session['SessionValue'] * pt_rate(5) / 100)
+    add('SessionMoveLogs', dict(SessionId=moved_session['SessionId'], MoveType='PtTransfer',
+        OldTimeSlotId=old_slot['TimeSlotId'], NewTimeSlotId=new_slot['TimeSlotId'],
+        OldPtEmployeeId=13, NewPtEmployeeId=5, RequestedByAccountId=account_of_person(emp_person(13)),
+        Reason='Chuyển buổi cho PT Sơn trước khi gửi đơn nghỉ 09–12/11',
+        MovedAt=dt_(2026, 11, 3, 19, 0)))
 
 FAC = [
     ('Máy chạy bộ Technogym', 'Cardio', 'Khu cardio tầng 1', '/images/facilities/treadmill.jpg', 'máy', 1),
