@@ -39,34 +39,10 @@
     </div>
     <%-- ===== KẾT THÚC tiêu đề và ngày ===== --%>
 
-    <%-- ===== Bên phải: chọn giao diện + tài khoản PT ===== --%>
+    <%-- ===== Bên phải: chuông thông báo + tài khoản PT ===== --%>
     <div class="pt-top-actions">
-
-    <%-- Link tài khoản: contextPath tự ghép gốc app, ví dụ /gms/account.
-         Toàn bộ avatar + tên là một link để mở trang Cài đặt tài khoản. --%>
-    <a class="tb-user" href="${pageContext.request.contextPath}/account">
-        <%-- Avatar và chấm trang trí, không phải kết quả truy vấn trạng thái online của PT. --%>
-        <span class="pt-user-avatar">
-            <c:choose>
-                <c:when test="${not empty sessionScope.avatar}">
-                    <img class="avatar" src="${pageContext.request.contextPath}${sessionScope.avatar}" alt="Avatar" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='';" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
-                    <i class="fa-solid fa-user" aria-hidden="true" style="display:none;"></i>
-                </c:when>
-                <c:otherwise>
-                    <i class="fa-solid fa-user" aria-hidden="true"></i>
-                </c:otherwise>
-            </c:choose>
-            <span class="pt-user-online" aria-hidden="true"></span>
-        </span>
-        <span class="pt-user-details">
-            <%-- sessionScope đọc dữ liệu giữ qua nhiều request, khác request attribute pageTitle.
-                 Tên được c:out escape để ký tự HTML không chạy thành mã.
-                 default chỉ dùng khi giá trị null, hiện chữ "Huấn luyện viên". --%>
-            <strong><c:out value="${sessionScope.displayName}" default="Huấn luyện viên" /></strong>
-            <%-- Dòng phụ chung mọi màn: "PT-0005 · Huấn luyện viên" (mã lấy theo tài khoản đăng nhập, mọi màn PT đều có). --%>
-            <%@ include file="/WEB-INF/jsp/common/_user-badge-line.jspf" %>
-        </span>
-    </a>
+        <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
+        <%@ include file="/WEB-INF/jsp/common/topbar-user.jspf" %>
     </div>
     <%-- ===== KẾT THÚC giao diện và tài khoản ===== --%>
 </header>
