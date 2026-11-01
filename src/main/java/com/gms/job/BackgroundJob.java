@@ -21,7 +21,7 @@ public interface BackgroundJob {
 
     /**
      * Chạy 1 lượt job.
-     * @throws SQLException khi không kết nối được DB — scheduler sẽ thử lại theo SRS 5.0
+     * @throws SQLException khi không kết nối được DB — scheduler sẽ thử lại theo SRS
      */
     void run() throws SQLException;
 }
