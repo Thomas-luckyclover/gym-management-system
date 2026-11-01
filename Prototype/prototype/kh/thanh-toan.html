@@ -30,12 +30,15 @@
       <a href="mua-goi.html" aria-current="page"><i class="fa-solid fa-cart-shopping"></i>Mua gói</a>
       <a href="lich-su-giao-dich.html"><i class="fa-solid fa-receipt"></i>Lịch sử giao dịch</a>
         <h4>Lịch tập</h4>
-      <a href="lich-cua-toi.html"><i class="fa-solid fa-calendar-check"></i>Lịch của tôi</a>
-      <a href="buoi-pt.html"><i class="fa-solid fa-user-check"></i>Buổi PT của tôi</a>
+      <a href="lich-cua-toi.html"><i class="fa-solid fa-box-open"></i>Gói của tôi</a>
+      <a href="buoi-pt.html"><i class="fa-solid fa-calendar-check"></i>Lịch của tôi</a>
       <a href="dat-buoi-le.html"><i class="fa-solid fa-calendar-plus"></i>Đặt buổi lẻ</a>
       <a href="giao-an.html"><i class="fa-solid fa-clipboard-list"></i>Giáo án của tôi</a>
+      <a href="thu-vien-bai-tap.html"><i class="fa-solid fa-person-running"></i>Thư viện bài tập</a>
+      <a href="chi-so-co-the.html"><i class="fa-solid fa-weight-scale"></i>Chỉ số cơ thể</a>
         <h4>Tài khoản</h4>
       <a href="tai-khoan.html"><i class="fa-solid fa-user-gear"></i>Cài đặt tài khoản</a>
+      <a href="../chon-vai-tro.html"><i class="fa-solid fa-repeat"></i>Đổi vai trò</a>
         <h4>Hòm thư</h4>
       <a href="gop-y.html"><i class="fa-solid fa-inbox"></i>Hòm thư góp ý</a>
       </nav>
@@ -68,29 +71,39 @@
 
     <main class="cust-content">
       <div class="step-panel" data-step="pending">
+        <div class="panel-head">
+          <div>
+            <h2>Xác nhận và thanh toán</h2>
+            <p class="muted">Kiểm tra gói tập và ưu đãi trước khi tiếp tục.</p>
+          </div>
+          <div class="countdown-bar" id="countdownBar">
+            <i class="fa-solid fa-clock"></i>
+            <span>Còn lại</span>
+            <b class="tabular" id="payCountdown">20:00</b>
+          </div>
+        </div>
         <div class="split">
           <div class="col-main">
 
             <section class="panel">
-              <div class="panel-head"><h2>Gói đã chọn</h2></div>
+              <div class="panel-head"><h2>Gói tập của bạn</h2><span class="badge badge-warn">Chờ thanh toán</span></div>
               <div class="data-list">
                 <div class="data-row">
                   <div class="row-main">
-                    <div class="row-title">Gói 6 Tháng</div>
-                    <div class="row-meta"><span><i class="fa-solid fa-calendar-days"></i> 6 tháng kể từ ngày kích hoạt</span></div>
+                    <div class="row-title" id="pkgName">Gói 12 Tháng</div>
+                    <div class="row-meta"><span><i class="fa-solid fa-calendar-days"></i> <span id="pkgTerm">12 tháng</span></span></div>
                   </div>
-                  <b class="tabular">3.990.000đ</b>
+                  <b class="tabular" id="pkgPrice">6.990.000đ</b>
                 </div>
               </div>
-            </section>
-
-            <section class="panel">
-              <div class="panel-head"><h2>Mã giảm giá</h2><span class="muted">Mỗi đơn 1 mã</span></div>
-              <form class="voucher-row" id="voucherForm" novalidate>
-                <input id="voucherInput" placeholder="Nhập mã" autocomplete="off" aria-label="Mã voucher">
-                <button class="btn btn-outline" type="submit" id="voucherBtn">Áp dụng</button>
-              </form>
-              <div id="voucherMsg"></div>
+              <div class="data-list">
+                <div class="data-row"><div class="row-main"><div class="row-title">Khách hàng</div></div><b>Nguyễn Minh An · KH-0241</b></div>
+                <div class="data-row"><div class="row-main"><div class="row-title">Mã đơn</div></div><b class="tabular">DH-2026-1191</b></div>
+              </div>
+              <div class="alert-banner info" id="chainNote">
+                <i class="fa-solid fa-link"></i>
+                <span><b>Gói mới nối tiếp gói đang dùng.</b> Gói đang dùng của bạn còn hạn đến <b>14/11/2026</b>. Gói này bắt đầu từ <b>15/11/2026</b>.</span>
+              </div>
             </section>
 
             <section class="panel">
@@ -100,27 +113,33 @@
                 <i class="fa-solid fa-credit-card"></i>
                 <span><b>Cổng thanh toán online</b><small>Thẻ nội địa, thẻ quốc tế, ví điện tử</small></span>
               </label>
+              <div class="msg-banner info" style="margin-top:var(--space-3);font-size:0.875rem">
+                <i class="fa-solid fa-circle-info"></i>
+                <span>Link thanh toán có hiệu lực 5 phút, không quá hạn thanh toán của đơn.</span>
+              </div>
             </section>
 
           </div>
 
           <aside class="col-side">
-            <div class="countdown-bar" id="countdownBar">
-              <i class="fa-solid fa-clock"></i>
-              <span>Đơn tự hủy sau</span>
-              <b class="tabular" id="payCountdown">20:00</b>
-            </div>
-            <div class="msg-banner info" style="margin-top:var(--space-3);font-size:0.875rem">
-              <i class="fa-solid fa-circle-info"></i>
-              <span>Link thanh toán có hiệu lực 5 phút. Quá thời gian này cần tạo đơn mới.</span>
-            </div>
             <div class="side-card">
-              <span class="section-label">Tóm tắt đơn</span>
-              <div class="side-row"><span>Tiền hàng</span><b>3.694.444đ</b></div>
-              <div class="side-row"><span>VAT 8%</span><b>295.556đ</b></div>
-              <div class="side-row" id="discountRow" hidden><span>Giảm <b id="discountCode" style="font-weight:600"></b></span><b id="discountAmount" style="color:var(--success)"></b></div>
-              <div class="sum-row total" style="margin-top:var(--space-3)"><span>Phải trả</span><b class="tabular" id="grandTotal">3.990.000đ</b></div>
-              <button class="btn btn-primary btn-block" type="button" id="payBtn" style="margin-top:var(--space-4)">Thanh toán</button>
+              <span class="section-label">Tóm tắt thanh toán</span>
+              <div class="side-row"><span>Giá gói</span><b id="basePrice">6.990.000đ</b></div>
+              <div class="side-row" id="discountRow" hidden><span>Giảm giá <b id="discountCode" style="font-weight:600"></b></span><b id="discountAmount" style="color:var(--success)"></b></div>
+
+              <label class="field-label" for="voucherInput" style="display:block;margin-top:var(--space-3)">Mã giảm giá</label>
+              <form class="voucher-row" id="voucherForm" novalidate style="margin-top:var(--space-2);flex-wrap:wrap">
+                <input id="voucherInput" style="flex:1;min-width:0" placeholder="Nhập mã giảm giá" maxlength="20" autocomplete="off" aria-label="Mã giảm giá">
+                <button class="btn btn-outline" type="submit" id="voucherBtn">Áp dụng</button>
+                <button class="btn btn-ghost btn-sm" type="button" id="voucherClear" aria-label="Gỡ mã giảm giá" title="Gỡ mã giảm giá" hidden>Gỡ mã giảm giá</button>
+              </form>
+              <div id="voucherMsg"></div>
+              <p class="muted"><small>Mỗi đơn một mã. Mã không áp dụng cho gói PT và buổi PT lẻ.</small></p>
+
+              <div class="sum-row total" style="margin-top:var(--space-3)"><span>Tổng thanh toán</span><b class="tabular" id="grandTotal">6.990.000đ</b></div>
+              <div class="side-row"><span>Đã bao gồm VAT 8%</span><b id="vatAmount">517.778đ</b></div>
+              <div class="side-row"><span>Tiền trước thuế</span><b id="netAmount">6.472.222đ</b></div>
+              <button class="btn btn-primary btn-block" type="button" id="payBtn" style="margin-top:var(--space-4)">Tiến hành thanh toán</button>
             </div>
           </aside>
         </div>
@@ -161,13 +180,14 @@
             <section class="panel">
               <div class="success-icon" style="margin-inline:auto"><i class="fa-solid fa-circle-check"></i></div>
               <h2 style="text-align:center">Gói đã kích hoạt</h2>
-              <p class="muted" style="text-align:center">DH-2026-1191 · Gói 6 Tháng · <b id="paidAmount">3.990.000đ</b></p>
-              <p class="muted" style="text-align:center;margin-top:0.5rem"><small>Giá tại thời điểm đặt: 3.990.000đ (VAT 8% đã gồm)</small></p>
+              <p class="muted" style="text-align:center">DH-2026-1191 · <span id="paidPkg">Gói 12 Tháng</span> · <b id="paidAmount">6.990.000đ</b></p>
+              <p class="muted" style="text-align:center;margin-top:0.5rem"><small>Giá tại thời điểm đặt: <span id="paidSnap">6.990.000đ</span> (gồm VAT 8%)</small></p>
               <div class="note-box">
                 <i class="fa-solid fa-location-dot"></i>
                 <span>Lần đầu tới phòng tập, ghé quầy chụp ảnh check-in.</span>
               </div>
-              <a class="btn btn-primary btn-block" href="trang-ca-nhan.html">Về trang cá nhân</a>
+              <a class="btn btn-primary btn-block" id="resultLink" href="ket-qua-thanh-toan.html?r=success">Xem kết quả thanh toán</a>
+              <a class="btn btn-ghost btn-block" href="trang-ca-nhan.html">Về trang cá nhân</a>
             </section>
           </div>
         </div>
