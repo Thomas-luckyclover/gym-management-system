@@ -131,6 +131,11 @@ public class PtSaleService {
                 }
                 PtSaleView view = newView(input, now);
                 if (orderId != null) {
+                    // Mở lại đơn đang giữ mà URL không có start (link "Tiếp tục thu tiền") → bỏ mặc định "ngày mai",
+                    // để loadHeld lấy ngày của khung đang giữ đầu tiên làm ngày bắt đầu kỳ.
+                    if (parseDate(input.start) == null) {
+                        view.setStartDate(null);
+                    }
                     String problem = loadHeld(connection, view, orderId, now);
                     return problem == null ? ServiceResult.ok(view) : ServiceResult.fail(problem);
                 }
