@@ -17,6 +17,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const consentHint = document.getElementById("unpaidConsentHint");
     const scheduleWarning = document.getElementById("leaveScheduleWarning");
     const scheduleMessage = document.getElementById("leaveScheduleMessage");
+    const conflictingSessions = document.getElementById("leaveConflictingSessions");
     const dateError = document.getElementById("leaveDateClientErr");
     const planTitle = document.getElementById("leavePlanTitle");
     const balanceText = document.getElementById("leaveBalanceText");
@@ -108,6 +109,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (scheduleWarning) {
             scheduleWarning.hidden = true;
             scheduleMessage.textContent = "";
+            conflictingSessions.textContent = "";
         }
         planError.hidden = true;
         planParts.textContent = "";
@@ -147,6 +149,12 @@ document.addEventListener("DOMContentLoaded", function () {
         if (scheduleWarning && plan.sessionConflicts > 0) {
             scheduleMessage.textContent = "Trùng " + plan.sessionConflicts + " buổi dạy. Xử lý lịch trước khi gửi đơn.";
             scheduleWarning.hidden = false;
+            for (const session of plan.conflictingSessions) {
+                const item = document.createElement("li");
+                item.textContent = formatDate(session.slotDate) + " · "
+                        + session.startTime.substring(0, 5) + "–" + session.endTime.substring(0, 5);
+                conflictingSessions.appendChild(item);
+            }
         }
 
     }

@@ -6,6 +6,7 @@ import com.gms.dto.LeaveEmployeeView;
 import com.gms.dto.LeaveRequestFilter;
 import com.gms.dto.LeaveRequestRow;
 import com.gms.dto.LeaveReviewDetailView;
+import com.gms.dto.LeaveSubmissionPreview.ConflictingSession;
 import com.gms.entity.LeaveRequest;
 import com.gms.util.DBContext;
 import com.gms.util.DateTimeUtil;
@@ -646,6 +647,34 @@ public class LeaveRequestDAO {
             }
         }
         return 0;
+    }
+
+    /** Lấy các buổi Scheduled của chính PT trong hai ngày biên và ca nghỉ; rỗng nếu không trùng. */
+    public List<ConflictingSession> findConflictingSessions(Connection connection, int ptEmployeeId,
+            LocalDate fromDate, LocalDate toDate, String shiftType) throws SQLException {
+        String sql = "SELECT ts.SlotDate, ts.StartTime, ts.EndTime FROM Sessions s "
+                + "JOIN TimeSlots ts ON s.TimeSlotId = ts.TimeSlotId "
+                + "WHERE s.PtEmployeeId = ? AND s.Status = 'Scheduled' AND ts.SlotDate BETWEEN ? AND ? ";
+        // Cùng mốc chia ca với countScheduledSessions để danh sách khớp điều kiện chặn POST.
+        if ("Morning".equalsIgnoreCase(shiftType)) {
+            sql += "AND ts.StartTime < " + AppConstants.AFTERNOON_SHIFT_START_SQL + " ";
+        } else if ("Afternoon".equalsIgnoreCase(shiftType)) {
+            sql += "AND ts.StartTime >= " + AppConstants.AFTERNOON_SHIFT_START_SQL + " ";
+        }
+        sql += "ORDER BY ts.SlotDate, ts.StartTime, s.SessionId";
+        List<ConflictingSession> sessions = new ArrayList<>();
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, ptEmployeeId);
+            statement.setDate(2, java.sql.Date.valueOf(fromDate));
+            statement.setDate(3, java.sql.Date.valueOf(toDate));
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    sessions.add(new ConflictingSession(rs.getDate("SlotDate").toLocalDate(),
+                            rs.getTime("StartTime").toLocalTime(), rs.getTime("EndTime").toLocalTime()));
+                }
+            }
+        }
+        return sessions;
     }
 
     /**

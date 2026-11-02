@@ -11,7 +11,7 @@
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Nghỉ phép · Super Gym</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css?v=20261018">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-requests.css?v=20261031-help">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-requests.css?v=20261102-conflicts">
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css?v=20261018">
   <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
 </head>
@@ -54,7 +54,7 @@
               <c:out value="${submitError}" />
             </div>
             <c:if test="${not isReceptionist and not empty fieldErrors.sessions}">
-              <a class="btn btn-sm btn-outline" href="${pageContext.request.contextPath}/pt/dashboard">
+              <a class="btn btn-sm btn-outline" href="${pageContext.request.contextPath}/pt/schedule">
                 Xem lịch dạy →
               </a>
             </c:if>
@@ -164,7 +164,9 @@
                 <c:if test="${not isReceptionist}">
                   <div id="leaveScheduleWarning" class="leave-schedule-warning" role="alert" ${empty fieldErrors.sessions ? 'hidden' : ''}>
                     <span><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> <span id="leaveScheduleMessage"><c:out value="${fieldErrors.sessions}" /></span></span>
-                    <a id="leaveScheduleLink" class="btn btn-sm btn-outline" href="${pageContext.request.contextPath}/pt/dashboard">Xem lịch dạy →</a>
+                    <a id="leaveScheduleLink" class="btn btn-sm btn-outline" href="${pageContext.request.contextPath}/pt/schedule">Xem lịch dạy →</a>
+                    <%-- renderPlan/resetPlan trong leave-request-form.js thêm/xóa từng buổi từ preview.conflictingSessions. --%>
+                    <ul id="leaveConflictingSessions" class="leave-conflicting-sessions"></ul>
                   </div>
                 </c:if>
                 <div class="field leave-reason-field">
@@ -293,6 +295,6 @@
     </div>
   </div>
 
-  <script src="${pageContext.request.contextPath}/js/pages/staff/leave-request-form.js?v=20261031-help"></script>
+  <script src="${pageContext.request.contextPath}/js/pages/staff/leave-request-form.js?v=20261102-conflicts"></script>
 </body>
 </html>
