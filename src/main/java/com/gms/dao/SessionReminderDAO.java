@@ -43,9 +43,9 @@ public class SessionReminderDAO {
      *
      * Gói PT đôi: cả người đứng tên lẫn người tập cùng đều phải dùng được gym, nên xét cả hai.
      * Chỉ lấy khách có tài khoản Active (người không có tài khoản thì không có chuông để nhận).
-     * BỎ QUA ngày phòng nghỉ cả ngày (OperatingHourExceptions.IsClosedAllDay = 1): theo CBR-56 PT phải dời buổi
-     * trước ngày nghỉ (SRS: buổi còn sót do JOB-04 hủy GymClosed — phần này JOB-04 CHƯA code)
-     * → không khuyên khách mua gói / vé ngày cho ngày phòng đóng cửa.
+     * BỎ QUA ngày phòng nghỉ cả ngày và buổi nằm ngoài giờ mở cửa ngày đó (ngoại lệ OperatingHourExceptions,
+     * không có thì P-19): theo CBR-56 PT phải dời các buổi này, buổi còn sót bị JOB-04 hủy GymClosed
+     * → không khuyên khách mua gói / vé ngày cho buổi không thể diễn ra.
      * 4 dấu ?: ngày tập (dùng 4 lần).
      */
     public List<Reminder> findCustomersToRemind(LocalDate sessionDate) throws SQLException {
@@ -56,9 +56,13 @@ public class SessionReminderDAO {
                     FROM Sessions s
                     JOIN TimeSlots t      ON t.TimeSlotId = s.TimeSlotId
                     JOIN Subscriptions pt ON pt.SubscriptionId = s.SubscriptionId
+                    LEFT JOIN OperatingHourExceptions ex ON ex.ApplyDate = t.SlotDate
+                    LEFT JOIN SystemConfigs cfg ON cfg.ConfigKey = 'P-19'
                     WHERE s.Status = 'Scheduled' AND t.SlotDate = ?
-                      AND NOT EXISTS (SELECT 1 FROM OperatingHourExceptions e
-                                      WHERE e.ApplyDate = t.SlotDate AND e.IsClosedAllDay = 1)
+                      -- CBR-56: bỏ ngày nghỉ cả ngày VÀ buổi nằm ngoài giờ mở cửa ngày đó (JOB-04 sẽ hủy GymClosed)
+                      AND ISNULL(ex.IsClosedAllDay, 0) = 0
+                      AND t.StartTime >= COALESCE(ex.OpenTime, TRY_CONVERT(time(0), LEFT(cfg.ConfigValue, 5)))
+                      AND t.EndTime <= COALESCE(ex.CloseTime, TRY_CONVERT(time(0), RIGHT(cfg.ConfigValue, 5)))
 
                     UNION ALL
 
@@ -68,10 +72,14 @@ public class SessionReminderDAO {
                     JOIN TimeSlots t      ON t.TimeSlotId = s.TimeSlotId
                     JOIN Subscriptions pt ON pt.SubscriptionId = s.SubscriptionId
                     JOIN Orders o         ON o.OrderId = pt.OrderId
+                    LEFT JOIN OperatingHourExceptions ex ON ex.ApplyDate = t.SlotDate
+                    LEFT JOIN SystemConfigs cfg ON cfg.ConfigKey = 'P-19'
                     WHERE s.Status = 'Scheduled' AND t.SlotDate = ?
                       AND pt.SubscriptionType = 'PTCouple' AND o.PartnerCustomerId IS NOT NULL
-                      AND NOT EXISTS (SELECT 1 FROM OperatingHourExceptions e
-                                      WHERE e.ApplyDate = t.SlotDate AND e.IsClosedAllDay = 1)
+                      -- CBR-56: bỏ ngày nghỉ cả ngày VÀ buổi nằm ngoài giờ mở cửa ngày đó (JOB-04 sẽ hủy GymClosed)
+                      AND ISNULL(ex.IsClosedAllDay, 0) = 0
+                      AND t.StartTime >= COALESCE(ex.OpenTime, TRY_CONVERT(time(0), LEFT(cfg.ConfigValue, 5)))
+                      AND t.EndTime <= COALESCE(ex.CloseTime, TRY_CONVERT(time(0), RIGHT(cfg.ConfigValue, 5)))
                 )
                 SELECT acc.AccountId, a.StartTime, ptPerson.FullName AS PtName,
                        CASE WHEN EXISTS (
