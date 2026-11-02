@@ -62,6 +62,14 @@ public class ManagerOrderDetailView {
     // DAO: Persons.FullName của người đi kèm (nếu gói couple)
     private final String partnerName;
 
+    // DAO: Subscriptions.StartDate / EndDate / Status, null nếu chưa cấp gói
+    private String packageStartDate;
+    private String packageEndDate;
+    private String packageStatus;
+
+    // DAO: tên PT phụ trách gói (nếu có)
+    private String ptName;
+
     // DAO: Orders.PackageNameSnapshot
     private final String packageName;
 
@@ -263,5 +271,17 @@ public class ManagerOrderDetailView {
             }
         }
         return null;
+    }
+
+    public String getPackageStartDate() { return packageStartDate; }
+    public String getPackageEndDate() { return packageEndDate; }
+    public String getPackageStatus() { return packageStatus; }
+    public String getPtName() { return ptName; }
+
+    public void setSubscriptionInfo(String startDate, String endDate, String status, String ptName) {
+        this.packageStartDate = startDate;
+        this.packageEndDate = endDate;
+        this.packageStatus = status;
+        this.ptName = ptName;
     }
 }
