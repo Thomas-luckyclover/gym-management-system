@@ -262,6 +262,25 @@ class StaffLeaveServiceTest {
     }
 
     @Test
+    void previewListsPtConflictsAcrossTheWholeLeavePeriod() throws Exception {
+        when(employee.getPosition()).thenReturn(Role.PT);
+        var session = new LeaveSubmissionPreview.ConflictingSession(first.plusDays(2),
+                java.time.LocalTime.of(7, 0), java.time.LocalTime.of(8, 30));
+        when(dao.findConflictingSessions(connection, 50, first, first.plusDays(3), "FullDay"))
+                .thenReturn(List.of(session));
+        try (MockedStatic<DBContext> db = mockStatic(DBContext.class)) {
+            db.when(DBContext::getConnection).thenReturn(connection);
+            var result = service.previewSubmission(10, LeaveRequest.LeaveType.UNPAID,
+                    first, first.plusDays(3), LeaveRequest.ShiftType.FULL_DAY);
+            assertTrue(result.isSuccess());
+            assertEquals(1, result.getData().getSessionConflicts());
+            assertEquals(first.plusDays(2), result.getData().getConflictingSessions().get(0).getSlotDate());
+            assertEquals(java.time.LocalTime.of(7, 0), result.getData().getConflictingSessions().get(0).getStartTime());
+            verify(dao, never()).insert(any(), any());
+        }
+    }
+
+    @Test
     void mixedDecisionsCountOnlyApprovedPartInGroup() {
         LeaveRequest annual = new LeaveRequest();
         annual.setLeaveGroupId(UUID.randomUUID().toString());
