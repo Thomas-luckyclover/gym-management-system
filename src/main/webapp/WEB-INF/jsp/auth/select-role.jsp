@@ -32,7 +32,7 @@
             <div class="auth-card">
                 <div class="auth-head">
                     <h1>Chọn vai trò</h1>
-                    <p>Tài khoản của bạn dùng được cho nhiều vai trò. Bạn có thể đổi vai trò bất cứ lúc nào trên menu tài khoản.</p>
+                    <p><c:out value="${chooseRoleMessage}" /> Bạn có thể đổi vai trò bất cứ lúc nào trên menu tài khoản.</p>
                 </div>
 
                 <div class="role-list">

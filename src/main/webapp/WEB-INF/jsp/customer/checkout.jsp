@@ -7,7 +7,7 @@
         <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
         <title>Thanh toán · Super Gym</title>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=7">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/checkout.css?v=20261030_vGymCheckout">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/checkout.css?v=20261101_vGymPay3">
         <script src="${pageContext.request.contextPath}/js/pages/customer/checkout.js?v=5" defer></script>
     </head>
     <body class="dock checkout-page ${themeClass}">
@@ -17,7 +17,10 @@
             <div class="main">
                 <header class="topbar">
                     <div class="tb-left"><h1 class="tb-title">Thanh toán</h1></div>
-                    <div class="top-right"><span class="tb-user-text"><c:out value="${customerName}" /></span></div>
+                    <div class="top-right">
+                        <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
+                        <%@ include file="/WEB-INF/jsp/common/topbar-user.jspf" %>
+                    </div>
                 </header>
                 <main class="content" id="main-content">
                     <a class="checkout-back" href="${pageContext.request.contextPath}/customer/packages">← Quay lại chọn gói</a>
@@ -107,14 +110,6 @@
                                             <span id="preTaxAmount"><c:out value="${gms:formatMoney(order.finalAmount - order.vatAmount)}" /></span>
                                         </p>
                                     </div>
-                                    <%-- Gói Membership mua lúc đang có gói còn hạn: báo trước ngày thật sự bắt đầu (DBR-52). --%>
-                                    <c:if test="${checkout.chained}">
-                                        <div class="checkout-chain">
-                                            <span class="checkout-chain__title">Gói mới nối tiếp gói đang dùng</span>
-                                            <p>Gói đang dùng của bạn còn hạn đến <b><c:out value="${checkout.chainCurrentEndText}" /></b>.
-                                                Gói này sẽ bắt đầu từ <b><c:out value="${checkout.chainStartText}" /></b> và dùng đến <b><c:out value="${checkout.chainEndText}" /></b>.</p> 
-                                        </div>
-                                    </c:if>
                                     <form id="paymentForm"
                                           method="post"
                                           action="${pageContext.request.contextPath}/customer/checkout">

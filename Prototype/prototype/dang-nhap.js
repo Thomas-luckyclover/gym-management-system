@@ -5,10 +5,18 @@
 
 /* --- dữ liệu mẫu --- */
 const USER_DB = {
-  'giabao.tran@email.com': { phone: '0912345678', password: 'matkhau123', hasPassword: true, role: 'customer', name: 'Trần Gia Bảo' },
-  '0912345678': { email: 'giabao.tran@email.com', password: 'matkhau123', hasPassword: true, role: 'customer', name: 'Trần Gia Bảo' },
-  '0901111111': { email: 'lan.nguyen@gmail.com', hasPassword: false, role: 'customer', name: 'Nguyễn Thị Lan' },
-  'lan.nguyen@gmail.com': { phone: '0901111111', hasPassword: false, role: 'customer', name: 'Nguyễn Thị Lan' },
+  'an.nguyen@email.com': { phone: '0905123456', password: 'matkhau123', hasPassword: true, role: 'customer', name: 'Nguyễn Minh An' },
+  '0905123456': { email: 'an.nguyen@email.com', password: 'matkhau123', hasPassword: true, role: 'customer', name: 'Nguyễn Minh An' },
+  'thu.ma@gmail.com': { phone: '0826554433', hasPassword: false, role: 'customer', name: 'Mai Anh Thư' },
+  '0826554433': { email: 'thu.ma@gmail.com', hasPassword: false, role: 'customer', name: 'Mai Anh Thư' },
+  'long.h@gms.vn': { phone: '0978123456', password: 'matkhau123', hasPassword: true, role: 'trainer', name: 'Hoàng Long' },
+  '0978123456': { email: 'long.h@gms.vn', password: 'matkhau123', hasPassword: true, role: 'trainer', name: 'Hoàng Long' },
+  'hoa.nt@gms.vn': { phone: '0356789012', password: 'matkhau123', hasPassword: true, role: 'multi', name: 'Nguyễn Thị Hoa' },
+  '0356789012': { email: 'hoa.nt@gms.vn', password: 'matkhau123', hasPassword: true, role: 'multi', name: 'Nguyễn Thị Hoa' },
+  'an.nv@gms.vn': { phone: '0903456789', password: 'matkhau123', hasPassword: true, role: 'manager', name: 'Nguyễn Văn An' },
+  '0903456789': { email: 'an.nv@gms.vn', password: 'matkhau123', hasPassword: true, role: 'manager', name: 'Nguyễn Văn An' },
+  'quan.tm@gms.vn': { phone: '0912345678', password: 'matkhau123', hasPassword: true, role: 'admin', name: 'Trần Minh Quân' },
+  '0912345678': { email: 'quan.tm@gms.vn', password: 'matkhau123', hasPassword: true, role: 'admin', name: 'Trần Minh Quân' },
 };
 
 /* số điện thoại dùng chung khách + nhân viên (vô hiệu hóa theo yêu cầu) */
@@ -125,6 +133,7 @@ loginForm.addEventListener('submit', e => {
     customer: 'kh/trang-ca-nhan.html',
     trainer: 'pt/trang-chu.html',
     staff: 'lt/check-in.html',
+    multi: 'chon-vai-tro.html',   // một người, nhiều vai trò: Lễ tân + Hội viên
     manager: 'Manager/gms_manager_mockup_v24.html',
     admin: 'Admin/gms_admin_mockup_v24.html',
   };

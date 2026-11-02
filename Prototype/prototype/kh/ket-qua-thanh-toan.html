@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Kết quả thanh toán — Super Gym</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/js/all.min.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../customer.css">
+</head>
+<body class="cust member">
+<div id="toastRoot"></div>
+<div id="modalRoot"></div>
+
+<!-- #70 — Payment Result · payment/payment-result.jsp -->
+<div class="cust-shell" id="custShell">
+
+  <!-- Dock điều hướng: thu gọn mặc định, rê vào tay cầm thì trượt ra. -->
+  <div class="cust-dock" id="custDock">
+    <aside class="cust-sidebar">
+      <a class="cust-brand" href="trang-ca-nhan.html">
+        <b>Super Gym</b><span>Khu vực hội viên</span>
+      </a>
+      <nav class="cust-nav">
+        <h4>Tổng quan</h4>
+      <a href="trang-ca-nhan.html"><i class="fa-solid fa-gauge-high"></i>Trang cá nhân</a>
+        <h4>Gói tập</h4>
+      <a href="mua-goi.html" aria-current="page"><i class="fa-solid fa-cart-shopping"></i>Mua gói</a>
+      <a href="lich-su-giao-dich.html"><i class="fa-solid fa-receipt"></i>Lịch sử giao dịch</a>
+        <h4>Lịch tập</h4>
+      <a href="lich-cua-toi.html"><i class="fa-solid fa-box-open"></i>Gói của tôi</a>
+      <a href="buoi-pt.html"><i class="fa-solid fa-calendar-check"></i>Lịch của tôi</a>
+      <a href="dat-buoi-le.html"><i class="fa-solid fa-calendar-plus"></i>Đặt buổi lẻ</a>
+      <a href="giao-an.html"><i class="fa-solid fa-clipboard-list"></i>Giáo án của tôi</a>
+      <a href="thu-vien-bai-tap.html"><i class="fa-solid fa-person-running"></i>Thư viện bài tập</a>
+      <a href="chi-so-co-the.html"><i class="fa-solid fa-weight-scale"></i>Chỉ số cơ thể</a>
+        <h4>Tài khoản</h4>
+      <a href="tai-khoan.html"><i class="fa-solid fa-user-gear"></i>Cài đặt tài khoản</a>
+      <a href="../chon-vai-tro.html"><i class="fa-solid fa-repeat"></i>Đổi vai trò</a>
+        <h4>Hòm thư</h4>
+      <a href="gop-y.html"><i class="fa-solid fa-inbox"></i>Hòm thư góp ý</a>
+      </nav>
+      <div class="cust-sidebar-foot">
+        <a href="../dang-nhap.html"><i class="fa-solid fa-arrow-right-from-bracket"></i>Đăng xuất</a>
+      </div>
+    </aside>
+    <button class="cust-handle" type="button" id="dockHandle"
+            aria-label="Mở menu điều hướng" aria-expanded="false" aria-controls="custDock">
+      <i class="fa-solid fa-chevron-right"></i>
+    </button>
+  </div>
+
+  <div class="cust-main">
+    <header class="cust-topbar">
+      <div>
+        <h1>Kết quả thanh toán</h1>
+      </div>
+      <div class="cust-topbar-actions">
+        <a class="cust-user" href="tai-khoan.html" title="Cài đặt tài khoản">
+          <span class="avatar">AN</span>
+          <span class="cust-user-text">
+            <b>Nguyễn Minh An</b>
+            <span>KH-0241</span>
+          </span>
+        </a>
+      </div>
+    </header>
+
+    <main class="cust-content">
+
+      <div class="split">
+        <div class="col-main">
+          <div class="toolbar">
+            <label for="resPick">Xem thử trạng thái</label>
+            <select id="resPick">
+              <option value="success">Thành công</option>
+              <option value="failed">Thất bại</option>
+              <option value="cancelled">Đã hủy thanh toán</option>
+              <option value="waiting">Chờ xác nhận</option>
+              <option value="refund">Cần hoàn tiền</option>
+              <option value="error">Chưa xác minh được</option>
+            </select>
+          </div>
+
+          <section class="panel">
+            <div class="success-icon" id="resIcon" style="margin-inline:auto"></div>
+            <div class="alert-banner ok" id="resBanner">
+              <i class="fa-solid fa-circle-info"></i>
+              <span><b id="resHead"></b> <span id="resMsg"></span></span>
+            </div>
+            <div class="data-list">
+              <div class="data-row"><div class="row-main"><div class="row-title">Mã đơn</div></div><b class="tabular" id="resOrder"></b></div>
+              <div class="data-row"><div class="row-main"><div class="row-title">Gói tập</div></div><b id="resPkg"></b></div>
+              <div class="data-row"><div class="row-main"><div class="row-title">Số tiền của đơn</div></div><b class="tabular" id="resAmt"></b></div>
+              <div class="data-row" id="resValidity" hidden>
+                <div class="row-main"><div class="row-title">Hiệu lực</div><div class="row-meta"><b class="tabular" id="resRange"></b></div></div>
+                <button class="btn btn-ghost btn-sm" type="button" id="resChange">Đổi ngày</button>
+              </div>
+            </div>
+            <a class="btn btn-outline" id="resRetry" href="thanh-toan.html" hidden>Quay lại thanh toán</a>
+            <div class="btn-row">
+              <a class="btn btn-outline" href="mua-goi.html">Chọn gói</a>
+              <a class="btn btn-outline" href="trang-ca-nhan.html">Trang cá nhân</a>
+              <a class="btn btn-outline" href="lich-cua-toi.html">Gói của tôi</a>
+              <a class="btn btn-outline" href="lich-su-giao-dich.html">Lịch sử giao dịch</a>
+            </div>
+          </section>
+        </div>
+      </div>
+    
+    </main>
+  </div>
+</div>
+
+<script src="../app.js"></script>
+<script src="customer.js"></script>
+<script src="ket-qua-thanh-toan.js"></script>
+</body>
+</html>

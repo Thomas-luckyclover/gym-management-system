@@ -1,5 +1,7 @@
 package com.gms.dto;
 
+import com.gms.util.DateTimeUtil;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -30,6 +32,10 @@ public class TransactionHistoryItem {
     private final String voucherCode;
     private final int vatRate;
     private final long vatAmount;
+    private final LocalDate startDate;
+    private final LocalDate endDate;
+    private final String durationUnit;
+    private final Integer durationValue;
 
     public TransactionHistoryItem(
             int transactionId,
@@ -49,7 +55,11 @@ public class TransactionHistoryItem {
             long discountAmount,
             String voucherCode,
             int vatRate,
-            long vatAmount) {
+            long vatAmount,
+            LocalDate startDate,
+            LocalDate endDate,
+            String durationUnit,
+            Integer durationValue) {
 
         this.transactionId = transactionId;
         this.orderCode = orderCode;
@@ -69,6 +79,10 @@ public class TransactionHistoryItem {
         this.voucherCode = voucherCode;
         this.vatRate = vatRate;
         this.vatAmount = vatAmount;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.durationUnit = durationUnit;
+        this.durationValue = durationValue;
     }
 
     public int getTransactionId() {
@@ -242,5 +256,61 @@ public class TransactionHistoryItem {
 
     private String formatTime(LocalDateTime value) {
         return value == null ? "—" : value.format(DISPLAY_TIME);
+    }
+
+    public LocalDate getStartDate() {
+        return startDate;
+    }
+
+    public LocalDate getEndDate() {
+        return endDate;
+    }
+
+    public String getDurationUnit() {
+        return durationUnit;
+    }
+
+    public Integer getDurationValue() {
+        return durationValue;
+    }
+
+    /** Có thông tin thời hạn gói (giao dịch thành công và đã được cấp ngày). */
+    public String getStartText() {
+        return startDate == null ? "" : DateTimeUtil.formatDate(startDate);
+    }
+
+    public String getEndText() {
+        return endDate == null ? "" : DateTimeUtil.formatDate(endDate);
+    }
+
+    /** Chuỗi dải ngày hiệu lực: Từ dd/MM/yyyy đến dd/MM/yyyy */
+    public String getFullValidityText() {
+        if (startDate == null || endDate == null) {
+            return "";
+        }
+        if (startDate.equals(endDate)) {
+            return "Ngày " + DateTimeUtil.formatDate(startDate);
+        }
+        return "Từ " + DateTimeUtil.formatDate(startDate) + " đến " + DateTimeUtil.formatDate(endDate);
+    }
+
+ public boolean isHasValidity() {
+        return "Success".equals(status) && startDate != null && endDate != null;
+    }
+
+    /** Chuỗi dải ngày hiệu lực dạng: dd/MM/yyyy – dd/MM/yyyy */
+    public String getValidityRangeText() {
+        if (startDate == null || endDate == null) {
+            return "";
+        }
+        return DateTimeUtil.formatDate(startDate) + " – " + DateTimeUtil.formatDate(endDate);
+    }
+
+    /** Chuỗi thời hạn gói dạng: 3 tháng, 1 ngày */
+    public String getDurationText() {
+        if (durationValue == null || durationValue <= 0) {
+            return "";
+        }
+        return "Days".equalsIgnoreCase(durationUnit) ? durationValue + " ngày" : durationValue + " tháng";
     }
 }

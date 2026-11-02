@@ -42,8 +42,14 @@ public class FreezeRecordItemView {
     // DAO: FreezeRecords.Reason, lý do khách yêu cầu bảo lưu.
     private String reason;
 
-    // DAO: Employees.EmployeeCode + Persons.FullName của Lễ tân tiếp nhận.
+    // DAO: Persons.FullName của Lễ tân tiếp nhận.
     private String handledByEmployeeName;
+
+    // DAO: Employees.EmployeeCode của Lễ tân tiếp nhận.
+    private String handledByEmployeeCode;
+
+    // Service: Hạn thẻ mới sau khi bảo lưu (thực tế hoặc dự kiến).
+    private LocalDate newEndDate;
 
     // DAO: FreezeRecords.CreatedAt, thời điểm lập phiếu bảo lưu.
     private LocalDateTime createdAt;
@@ -157,6 +163,22 @@ public class FreezeRecordItemView {
 
     public void setHandledByEmployeeName(String handledByEmployeeName) {
         this.handledByEmployeeName = handledByEmployeeName;
+    }
+
+    public String getHandledByEmployeeCode() {
+        return handledByEmployeeCode;
+    }
+
+    public void setHandledByEmployeeCode(String handledByEmployeeCode) {
+        this.handledByEmployeeCode = handledByEmployeeCode;
+    }
+
+    public LocalDate getNewEndDate() {
+        return newEndDate;
+    }
+
+    public void setNewEndDate(LocalDate newEndDate) {
+        this.newEndDate = newEndDate;
     }
 
     public LocalDateTime getCreatedAt() {

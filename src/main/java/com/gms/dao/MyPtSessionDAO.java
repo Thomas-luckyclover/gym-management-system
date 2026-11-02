@@ -120,42 +120,26 @@ public class MyPtSessionDAO {
 
     /** Đọc 1 dòng của SESSIONS_SQL thành 1 buổi. */
     private MyPtSessionRow readSessionRow(ResultSet rs) throws SQLException {
-        MyPtSessionRow row = new MyPtSessionRow();
-
-        // Buổi
-        row.setSessionId(rs.getInt("SessionId"));
-        row.setStatus(rs.getString("Status"));
-        row.setMissedReason(rs.getString("MissedReason"));
-        row.setCancelType(rs.getString("CancelType"));
-        row.setCancelReason(rs.getString("CancelReason"));
+        // B1: đọc các cột DAO lấy trực tiếp từ một dòng JOIN.
         Timestamp cancelledAt = rs.getTimestamp("CancelledAt");
-        row.setCancelledAt(cancelledAt == null ? null : cancelledAt.toLocalDateTime());
+        String type = rs.getString("SubscriptionType");
+        java.sql.Date startDate = rs.getDate("StartDate");
+        java.sql.Date endDate = rs.getDate("EndDate");
 
-        // Giờ
-        row.setSlotDate(rs.getDate("SlotDate").toLocalDate());
-        row.setStartTime(rs.getTime("StartTime").toLocalTime());
-        row.setEndTime(rs.getTime("EndTime").toLocalTime());
-
-        // Gói (buổi lẻ không có thời hạn gói, chỉ gói đôi có người đi kèm)
-        row.setSubscriptionId(rs.getInt("SubscriptionId"));
-        row.setType(rs.getString("SubscriptionType"));
-        row.setHolderCustomerId(rs.getInt("CustomerId"));
-        row.setPackageName(rs.getString("PackageNameSnapshot"));
-        row.setSessionNo(rs.getInt("SessionNo"));
-        row.setTotalSessions(rs.getInt("GeneratedSessionCount"));
-        if (!row.isSingleSession()) {
-            row.setPackageStartDate(rs.getDate("StartDate").toLocalDate());
-            row.setPackageEndDate(rs.getDate("EndDate").toLocalDate());
-        }
-        row.setPartnerCustomerId(row.isCouple() ? getNullableInt(rs, "PartnerCustomerId") : null);
-
-        // Người (đã JOIN sẵn)
-        row.setPtEmployeeId(rs.getInt("PtEmployeeId"));
-        row.setPtName(rs.getString("PtName"));
-        row.setPtPhone(rs.getString("PtPhone"));
-        row.setHolderName(rs.getString("HolderName"));
-        row.setPartnerFullName(rs.getString("PartnerFullName"));
-        return row;
+        // B2: constructor gom toàn bộ field DAO đọc; Service sẽ tính field hiển thị ở bước sau.
+        return new MyPtSessionRow(
+                rs.getInt("SessionId"), rs.getString("Status"), rs.getString("MissedReason"),
+                rs.getString("CancelType"), rs.getString("CancelReason"),
+                cancelledAt == null ? null : cancelledAt.toLocalDateTime(),
+                rs.getDate("SlotDate").toLocalDate(), rs.getTime("StartTime").toLocalTime(),
+                rs.getTime("EndTime").toLocalTime(), rs.getInt("SubscriptionId"), type,
+                startDate == null ? null : startDate.toLocalDate(),
+                endDate == null ? null : endDate.toLocalDate(), rs.getInt("CustomerId"),
+                "PTCouple".equals(type) ? getNullableInt(rs, "PartnerCustomerId") : null,
+                rs.getString("PackageNameSnapshot"), rs.getInt("SessionNo"),
+                rs.getInt("GeneratedSessionCount"), rs.getInt("PtEmployeeId"),
+                rs.getString("PtName"), rs.getString("PtPhone"), rs.getString("HolderName"),
+                rs.getString("PartnerFullName"));
     }
 
     // ================================================================================================================

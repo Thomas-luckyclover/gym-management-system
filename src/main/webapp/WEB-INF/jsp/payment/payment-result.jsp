@@ -11,10 +11,9 @@
               href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=7">
 
         <link rel="stylesheet"
-              href="${pageContext.request.contextPath}/css/pages/payment/payment-result.css?v=20261030_vGymPay">
-
-<link rel="stylesheet"
-href="${pageContext.request.contextPath}/css/pages/customer/start-date-picker.css?v=4">
+              href="${pageContext.request.contextPath}/css/pages/customer/start-date-picker.css?v=4">
+        <link rel="stylesheet"
+              href="${pageContext.request.contextPath}/css/pages/payment/payment-result.css?v=20261101_vGymPayResult4">
 <script src="${pageContext.request.contextPath}/js/pages/customer/start-date-picker.js?v=1" defer></script>
     </head>
 <body class="dock ${themeClass}">
@@ -25,7 +24,13 @@ href="${pageContext.request.contextPath}/css/pages/customer/start-date-picker.cs
 
         <div class="main">
             <header class="topbar">
-                <h1 class="tb-title">Kết quả thanh toán</h1>
+                <div class="tb-left">
+                    <h1 class="tb-title">Kết quả thanh toán</h1>
+                </div>
+                <div class="top-right">
+                    <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
+                    <%@ include file="/WEB-INF/jsp/common/topbar-user.jspf" %>
+                </div>
             </header>
 
             <main class="content" id="main-content">

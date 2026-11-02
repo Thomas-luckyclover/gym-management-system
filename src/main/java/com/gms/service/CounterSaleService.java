@@ -42,19 +42,21 @@ import java.util.Locale;
  * SERVICE MÀN LỄ TÂN BÁN GÓI TẠI QUẦY (/receptionist/sales), SRS #37.
  *
  * Điều phối luồng bán gói trực tiếp tại quầy lễ tân:
- *   1. getPackageView    màn Chọn gói: 3 danh sách thẻ theo tab
- *   2. getPackageCard    tải một thẻ gói (cột Tóm tắt đơn ở các bước sau)
- *   3. searchCustomers   tìm khách theo từ khóa (tên / SĐT / mã KH)
- *   4. getCustomer       thông tin khách hàng đã chọn
- *   5. checkout          ghi nhận thanh toán thực tế (tiền mặt/chuyển khoản), lập đơn Orders,
- *                        ghi Transactions, cấp Subscriptions, ghi AuditLog trong 1 transaction
+ * 1. getPackageView màn Chọn gói: 3 danh sách thẻ theo tab
+ * 2. getPackageCard tải một thẻ gói (cột Tóm tắt đơn ở các bước sau)
+ * 3. searchCustomers tìm khách theo từ khóa (tên / SĐT / mã KH)
+ * 4. getCustomer thông tin khách hàng đã chọn
+ * 5. checkout ghi nhận thanh toán thực tế (tiền mặt/chuyển khoản), lập đơn
+ * Orders,
+ * ghi Transactions, cấp Subscriptions, ghi AuditLog trong 1 transaction
  */
 public class CounterSaleService {
 
     // Tối thiểu bao nhiêu ký tự thì mới tìm khách (gõ 1 chữ sẽ ra quá nhiều người).
     private static final int MIN_SEARCH_LENGTH = 2;
 
-    // Chỉ gói tập từ chừng này tháng trở lên mới hiện nhãn "-13%" (so với mua lẻ gói 1 tháng).
+    // Chỉ gói tập từ chừng này tháng trở lên mới hiện nhãn "-13%" (so với mua lẻ
+    // gói 1 tháng).
     private static final int MIN_MONTHS_FOR_SAVING = 3;
 
     private final CounterSaleDAO counterSaleDAO = new CounterSaleDAO();
@@ -71,6 +73,7 @@ public class CounterSaleService {
 
     /**
      * Dựng dữ liệu màn Chọn gói.
+     * 
      * @param accountId mã tài khoản từ session (không lấy từ request)
      * @return 3 danh sách thẻ theo tab, hoặc thông báo lỗi
      */
@@ -85,7 +88,8 @@ public class CounterSaleService {
             // B2: lấy gói đang bán, đã sắp thứ tự hiển thị.
             List<Package> packages = counterSaleDAO.findActivePackages(connection);
 
-            // B3: tìm giá gói 1 tháng để tính % tiết kiệm của các gói dài hơn, và đọc thuế suất VAT (P-10) một lần.
+            // B3: tìm giá gói 1 tháng để tính % tiết kiệm của các gói dài hơn, và đọc thuế
+            // suất VAT (P-10) một lần.
             long oneMonthPrice = findOneMonthPrice(packages);
             int vatRate = configService.getInt(SystemConfigService.VAT_PERCENT);
 
@@ -113,6 +117,7 @@ public class CounterSaleService {
 
     /**
      * Lấy một thẻ gói theo mã, dùng ở các bước sau Chọn gói.
+     * 
      * @param accountId mã tài khoản từ session
      * @param packageId mã gói từ URL
      * @return thẻ gói, hoặc lỗi nếu gói không có / đã tắt bán
@@ -142,9 +147,12 @@ public class CounterSaleService {
 
     /**
      * Tìm khách cho màn Chọn khách.
+     * 
      * @param accountId mã tài khoản từ session
-     * @param keyword chữ lễ tân gõ (tên / SĐT / mã KH); dưới 2 ký tự thì trả danh sách rỗng
-     * @return danh sách khách (rỗng nếu chưa gõ đủ hoặc không khớp), hoặc thông báo lỗi
+     * @param keyword   chữ lễ tân gõ (tên / SĐT / mã KH); dưới 2 ký tự thì trả danh
+     *                  sách rỗng
+     * @return danh sách khách (rỗng nếu chưa gõ đủ hoặc không khớp), hoặc thông báo
+     *         lỗi
      */
     public ServiceResult<List<CounterCustomerRow>> searchCustomers(int accountId, String keyword) {
         // B1: chưa gõ đủ ký tự thì không truy vấn.
@@ -164,7 +172,8 @@ public class CounterSaleService {
             }
 
             // B3: lấy riêng phần chữ số để tìm theo SĐT ("090 123" thành "090123").
-            // receptionist[1] là mã Person của lễ tân, để đánh dấu hồ sơ của chính họ (CBR-115).
+            // receptionist[1] là mã Person của lễ tân, để đánh dấu hồ sơ của chính họ
+            // (CBR-115).
             String digits = text.replaceAll("\\D", "");
             LocalDate today = DateTimeUtil.today();
             List<CounterCustomerRow> rows = counterSaleDAO.searchCustomers(connection, text, digits, today,
@@ -178,9 +187,11 @@ public class CounterSaleService {
 
     /**
      * Lấy khách đã chọn (URL có ?customer=…).
-     * @param accountId mã tài khoản từ session
+     * 
+     * @param accountId  mã tài khoản từ session
      * @param customerId mã khách từ URL
-     * @return khách, hoặc lỗi nếu chưa mở ca / hồ sơ không có / là hồ sơ của chính lễ tân
+     * @return khách, hoặc lỗi nếu chưa mở ca / hồ sơ không có / là hồ sơ của chính
+     *         lễ tân
      */
     public ServiceResult<CounterCustomerRow> getCustomer(int accountId, int customerId) {
         try (Connection connection = DBContext.getConnection()) {
@@ -189,12 +200,18 @@ public class CounterSaleService {
                 return ServiceResult.fail(Messages.MSG07_NO_PERMISSION);
             }
 
-            // SRS 7.2.1 ghi chú 1: phải có ca đang mở thì mới bán (doanh thu tính vào ca đó).
+            // SRS 7.2.1 ghi chú 1: phải có ca đang mở thì mới bán (doanh thu tính vào ca
+            // đó).
             Shift currentShift = shiftDAO.findCurrentOrActiveShift(DateTimeUtil.today());
             boolean noShift = currentShift == null;
             boolean shiftClosed = !noShift && !currentShift.isOpen();
             if (noShift || shiftClosed) {
                 return ServiceResult.fail(Messages.MSG109_SHIFT_NOT_OPEN_FOR_SALE);
+            }
+            // CBR-123: ca đang mở là ca ngày trước (quên chốt) → không bán vào ca đó.
+            String pastDayShift = ShiftService.pastDayShiftMessage(currentShift, DateTimeUtil.today());
+            if (pastDayShift != null) {
+                return ServiceResult.fail(pastDayShift);
             }
 
             LocalDate today = DateTimeUtil.today();
@@ -203,7 +220,8 @@ public class CounterSaleService {
                 return ServiceResult.fail(String.format(Messages.MSG08_NOT_FOUND, "khách hàng"));
             }
 
-            // CBR-115: lễ tân không được bán cho hồ sơ của chính mình (chặn cả khi gõ thẳng ?customer=… lên URL).
+            // CBR-115: lễ tân không được bán cho hồ sơ của chính mình (chặn cả khi gõ thẳng
+            // ?customer=… lên URL).
             if (row.isOwnProfile()) {
                 return ServiceResult.fail(Messages.MSG76_STAFF_OWN_CUSTOMER_PROFILE);
             }
@@ -221,7 +239,8 @@ public class CounterSaleService {
      * Tạo Person và Customer trong 1 Transaction, sinh mã KH-nnnn, ghi AuditLog.
      *
      * @param accountId mã tài khoản lễ tân từ session
-     * @param input thông tin tạo khách (FullName, Phone, DOB, CustomerType, Guardian...)
+     * @param input     thông tin tạo khách (FullName, Phone, DOB, CustomerType,
+     *                  Guardian...)
      * @return CounterCustomerRow thông tin khách vừa tạo để chọn ngay sang Bước 3
      */
     public ServiceResult<CounterCustomerRow> quickCreateCustomer(int accountId, CounterCustomerCreateInput input) {
@@ -271,13 +290,14 @@ public class CounterSaleService {
             guardianName = null;
             guardianRel = null;
             guardianPhone = null;
-            // Hồ sơ Self tại quầy luôn có tài khoản (thay CBR-31) → email bắt buộc để gửi mật khẩu tạm (DBR-23).
+            // Hồ sơ Self tại quầy luôn có tài khoản (thay CBR-31) → email bắt buộc để gửi
+            // mật khẩu tạm (DBR-23).
             if (!ValidationUtil.isValidEmail(email)) {
                 return ServiceResult.failField("email", Messages.MSG119_TEMP_PASSWORD_EMAIL_REQUIRED);
             }
         }
         if (isDependent) {
-            email = null;   // Dependent không có tài khoản (CBR-21), không lưu email ở form này
+            email = null; // Dependent không có tài khoản (CBR-21), không lưu email ở form này
         }
 
         try (Connection connection = DBContext.getConnection()) {
@@ -287,13 +307,16 @@ public class CounterSaleService {
                 return ServiceResult.fail(Messages.MSG07_NO_PERMISSION);
             }
 
-            // B3: kiểm tra trùng số điện thoại (chỉ áp dụng với Self vì Phone cá nhân không được trùng)
+            // B3: kiểm tra trùng số điện thoại (chỉ áp dụng với Self vì Phone cá nhân không
+            // được trùng)
             if (!isDependent) {
                 Person existingPerson = personDAO.findByPhone(phone);
                 if (existingPerson != null) {
-                    return ServiceResult.failField("phone", String.format(Messages.MSG120_PHONE_EXISTS_FOR_CUSTOMER, phone, existingPerson.getFullName()));
+                    return ServiceResult.failField("phone", String.format(Messages.MSG120_PHONE_EXISTS_FOR_CUSTOMER,
+                            phone, existingPerson.getFullName()));
                 }
-                // DBR-23: email không trùng Person đang hoạt động; chỉ báo "đã dùng", không lộ của ai.
+                // DBR-23: email không trùng Person đang hoạt động; chỉ báo "đã dùng", không lộ
+                // của ai.
                 if (personDAO.findByEmail(email) != null) {
                     return ServiceResult.failField("email", Messages.MSG12_EMAIL_USED);
                 }
@@ -337,14 +360,16 @@ public class CounterSaleService {
                         "CustomerCode",
                         null,
                         customerCode,
-                        fullName
-                );
+                        fullName);
 
-                // B4.5: hồ sơ Self → tạo tài khoản + gửi mật khẩu tạm qua email (thay CBR-31, 31/10/2026).
-                //       Gửi TRƯỚC commit: email lỗi → rollback cả hồ sơ, lễ tân thử lại (không có hồ sơ "mồ côi" thiếu tài khoản).
+                // B4.5: hồ sơ Self → tạo tài khoản + gửi mật khẩu tạm qua email (thay CBR-31,
+                // 31/10/2026).
+                // Gửi TRƯỚC commit: email lỗi → rollback cả hồ sơ, lễ tân thử lại (không có hồ
+                // sơ "mồ côi" thiếu tài khoản).
                 String doneMessage = String.format(Messages.MSG121_PROFILE_CREATED, customerCode);
                 if (!isDependent) {
-                    int newAccountId = counterAccountService.createWithTempPassword(connection, personId, email, fullName, customerCode);
+                    int newAccountId = counterAccountService.createWithTempPassword(connection, personId, email,
+                            fullName, customerCode);
                     auditLogService.logInTransaction(connection, accountId, Role.RECEPTIONIST,
                             "Tạo tài khoản tại quầy, gửi mật khẩu tạm qua email", "Accounts", newAccountId,
                             "PersonId", null, String.valueOf(personId), fullName);
@@ -372,15 +397,18 @@ public class CounterSaleService {
 
     /**
      * KIỂM TRA MÃ GIẢM GIÁ TẠI QUẦY (AJAX):
-     * Lễ tân nhập mã ưu đãi của khách, hệ thống tính toán số tiền giảm và giá sau giảm.
+     * Lễ tân nhập mã ưu đãi của khách, hệ thống tính toán số tiền giảm và giá sau
+     * giảm.
      *
-     * @param accountId mã tài khoản lễ tân từ session
-     * @param packageId mã gói tập đang chọn
+     * @param accountId  mã tài khoản lễ tân từ session
+     * @param packageId  mã gói tập đang chọn
      * @param customerId mã khách hàng thụ hưởng
-     * @param rawCode mã voucher do khách đọc
-     * @return CounterVoucherResult kết quả kiểm tra và số tiền cập nhật, hoặc thông báo lỗi
+     * @param rawCode    mã voucher do khách đọc
+     * @return CounterVoucherResult kết quả kiểm tra và số tiền cập nhật, hoặc thông
+     *         báo lỗi
      */
-    public ServiceResult<CounterVoucherResult> checkVoucher(int accountId, int packageId, int customerId, String rawCode) {
+    public ServiceResult<CounterVoucherResult> checkVoucher(int accountId, int packageId, int customerId,
+            String rawCode) {
         // B1: chuẩn hóa mã voucher
         String code = rawCode == null ? "" : rawCode.trim().toUpperCase(Locale.ROOT);
         if (code.isEmpty()) {
@@ -478,8 +506,7 @@ public class CounterSaleService {
                     MoneyUtil.formatMoney(vatAmount),
                     finalAmount,
                     MoneyUtil.formatMoney(finalAmount),
-                    successMsg
-            );
+                    successMsg);
 
             return ServiceResult.ok(result, successMsg);
         } catch (SQLException e) {
@@ -489,20 +516,23 @@ public class CounterSaleService {
     }
 
     /**
-     * THU TIỀN TẠI QUẦY: Lễ tân kiểm tra thực tế (tiền mặt / chuyển khoản) rồi bấm xác nhận.
+     * THU TIỀN TẠI QUẦY: Lễ tân kiểm tra thực tế (tiền mặt / chuyển khoản) rồi bấm
+     * xác nhận.
      * Thực hiện trong 1 transaction ACID:
-     *   B1: kiểm tra đầu vào và quyền Lễ tân đang làm việc.
-     *   B2: kiểm tra ca trực đang mở (SRS 7.2.1 ghi chú 1).
-     *   B3: kiểm tra hồ sơ khách hàng và gói dịch vụ còn bán.
-     *   B4: tính toán ngày bắt đầu và ngày hết hạn theo DBR-52.
-     *   B5: tính toán số tiền và thuế suất VAT P-10 (gồm kiểm tra & giữ lượt Voucher).
-     *   B6: mở transaction ghi nhận Orders, Transactions, Subscriptions, AuditLogs.
-     *   B7: đóng gói CounterSaleReceipt trả về.
+     * B1: kiểm tra đầu vào và quyền Lễ tân đang làm việc.
+     * B2: kiểm tra ca trực đang mở (SRS 7.2.1 ghi chú 1).
+     * B3: kiểm tra hồ sơ khách hàng và gói dịch vụ còn bán.
+     * B4: tính toán ngày bắt đầu và ngày hết hạn theo DBR-52.
+     * B5: tính toán số tiền và thuế suất VAT P-10 (gồm kiểm tra & giữ lượt
+     * Voucher).
+     * B6: mở transaction ghi nhận Orders, Transactions, Subscriptions, AuditLogs.
+     * B7: đóng gói CounterSaleReceipt trả về.
      *
-     * @param accountId mã tài khoản từ session của lễ tân đang thao tác
+     * @param accountId        mã tài khoản từ session của lễ tân đang thao tác
      * @param receptionistName tên hiển thị của lễ tân đang trực ca
-     * @param input thông tin gói, khách, ngày bắt đầu, hình thức thu tiền và mã voucher từ form POST
-     * @param now thời điểm ghi nhận đơn hàng và giao dịch
+     * @param input            thông tin gói, khách, ngày bắt đầu, hình thức thu
+     *                         tiền và mã voucher từ form POST
+     * @param now              thời điểm ghi nhận đơn hàng và giao dịch
      * @return CounterSaleReceipt biên lai thu tiền chi tiết, hoặc lỗi nghiệp vụ
      */
     public ServiceResult<CounterSaleReceipt> checkout(int accountId, String receptionistName,
@@ -540,11 +570,17 @@ public class CounterSaleService {
             if (noShift || shiftClosed) {
                 return ServiceResult.fail(Messages.MSG110_SHIFT_NOT_OPEN_FOR_PAYMENT);
             }
+            // CBR-123: ca đang mở là ca ngày trước (quên chốt) → không thu tiền vào ca đó.
+            String pastDayShift = ShiftService.pastDayShiftMessage(currentShift, DateTimeUtil.today());
+            if (pastDayShift != null) {
+                return ServiceResult.fail(pastDayShift);
+            }
             int shiftId = currentShift.getShiftId();
 
             // B3: kiểm tra hồ sơ khách hàng và gói dịch vụ.
             LocalDate today = DateTimeUtil.today();
-            CounterCustomerRow customer = counterSaleDAO.findCustomer(connection, input.getCustomerId(), today, receptionist[1]);
+            CounterCustomerRow customer = counterSaleDAO.findCustomer(connection, input.getCustomerId(), today,
+                    receptionist[1]);
             if (customer == null) {
                 return ServiceResult.fail(String.format(Messages.MSG08_NOT_FOUND, "khách hàng"));
             }
@@ -567,25 +603,21 @@ public class CounterSaleService {
             boolean isPackageNotExpired = hasPackageEnd && !customer.getCurrentPackageEnd().isBefore(today);
             boolean isChained = isPackageNotExpired;
 
+            LocalDate earliestStart = isChained ? customer.getCurrentPackageEnd().plusDays(1) : today;
+            LocalDate maxAllowedStartDate = earliestStart.plusDays(7);
+
             LocalDate startDate;
-            if (isChained) {
-                // Khách có gói còn hạn: bắt buộc tự động nối tiếp sau ngày hết hạn gói cũ.
-                startDate = customer.getCurrentPackageEnd().plusDays(1);
-            } else {
-                // Khách mới hoặc hết hạn: mặc định hôm nay, hoặc cho phép hẹn trong 7 ngày tới.
-                if (input.getStartDate() != null) {
-                    LocalDate maxAllowedStartDate = today.plusDays(7);
-                    boolean isBeforeToday = input.getStartDate().isBefore(today);
-                    boolean isAfterMaxDate = input.getStartDate().isAfter(maxAllowedStartDate);
-                    boolean isOutOfRange = isBeforeToday || isAfterMaxDate;
-                    if (isOutOfRange) {
-                        return ServiceResult.fail(String.format(Messages.MSG136_COUNTER_START_DATE_RANGE,
-                                DateTimeUtil.formatDate(today), DateTimeUtil.formatDate(maxAllowedStartDate)));
-                    }
-                    startDate = input.getStartDate();
-                } else {
-                    startDate = today;
+            if (input.getStartDate() != null) {
+                boolean isBeforeEarliest = input.getStartDate().isBefore(earliestStart);
+                boolean isAfterMaxDate = input.getStartDate().isAfter(maxAllowedStartDate);
+                if (isBeforeEarliest || isAfterMaxDate) {
+                    return ServiceResult.fail(String.format(Messages.MSG185_START_DATE_RANGE,
+                            DateTimeUtil.formatDate(earliestStart),
+                            DateTimeUtil.formatDate(maxAllowedStartDate)));
                 }
+                startDate = input.getStartDate();
+            } else {
+                startDate = earliestStart;
             }
 
             LocalDate endDate;
@@ -641,7 +673,8 @@ public class CounterSaleService {
                             MoneyUtil.formatMoney(selectedVoucher.getMinOrderValue())));
                 }
                 if (selectedVoucher.getMaxUsagePerCustomer() != null) {
-                    int usedCount = voucherDAO.countCustomerUses(connection, selectedVoucher.getVoucherId(), customer.getCustomerId(), 0);
+                    int usedCount = voucherDAO.countCustomerUses(connection, selectedVoucher.getVoucherId(),
+                            customer.getCustomerId(), 0);
                     if (usedCount >= selectedVoucher.getMaxUsagePerCustomer()) {
                         return ServiceResult.fail(Messages.MSG132_VOUCHER_CUSTOMER_LIMIT);
                     }
@@ -705,7 +738,8 @@ public class CounterSaleService {
                 // B6.2: cập nhật đơn sang Paid với thời điểm thu now.
                 orderDAO.markPaid(connection, orderId, now);
 
-                // B6.3: ghi nhận giao dịch Transactions (người nhận tiền là lễ tân đang trực ca).
+                // B6.3: ghi nhận giao dịch Transactions (người nhận tiền là lễ tân đang trực
+                // ca).
                 ptSaleDAO.insertTransaction(connection, orderId, finalAmount, method, null, receptionist[0], now);
 
                 // B6.4: cấp gói Subscriptions trạng thái Active cho hội viên.
@@ -766,9 +800,9 @@ public class CounterSaleService {
                         DateTimeUtil.formatDateTime(now),
                         finalReceptionistName,
                         discountAmount,
-                        appliedVoucherCode
-                );
-                return ServiceResult.ok(receipt, String.format(Messages.MSG137_COUNTER_PAID, MoneyUtil.formatMoney(finalAmount), orderCode));
+                        appliedVoucherCode);
+                return ServiceResult.ok(receipt,
+                        String.format(Messages.MSG137_COUNTER_PAID, MoneyUtil.formatMoney(finalAmount), orderCode));
             } catch (SQLException | RuntimeException e) {
                 connection.rollback();
                 throw e;
@@ -781,8 +815,10 @@ public class CounterSaleService {
 
     /**
      * Giá của gói tập 1 tháng rẻ nhất đang bán, làm mốc để tính % tiết kiệm.
+     * 
      * @param packages danh sách tất cả các gói đang bán do DAO đọc
-     * @return giá gói 1 tháng; 0 nếu không có gói 1 tháng (khi đó không hiện nhãn tiết kiệm)
+     * @return giá gói 1 tháng; 0 nếu không có gói 1 tháng (khi đó không hiện nhãn
+     *         tiết kiệm)
      */
     private long findOneMonthPrice(List<Package> packages) {
         long oneMonthPrice = 0;
@@ -799,10 +835,13 @@ public class CounterSaleService {
 
     /**
      * Một gói trong DB thành một thẻ trên màn.
-     * Ví dụ "Gói 3 Tháng", 2.190.000đ, mốc 1 tháng 799.000đ: giá mỗi tháng 730.000đ, tiết kiệm 8%.
-     * @param pkg gói do DAO đọc
+     * Ví dụ "Gói 3 Tháng", 2.190.000đ, mốc 1 tháng 799.000đ: giá mỗi tháng
+     * 730.000đ, tiết kiệm 8%.
+     * 
+     * @param pkg           gói do DAO đọc
      * @param oneMonthPrice giá gói 1 tháng (0 nếu không có)
-     * @param vatRate thuế suất % (P-10), dùng tách VAT ra khỏi giá đã gồm VAT (DBR-57)
+     * @param vatRate       thuế suất % (P-10), dùng tách VAT ra khỏi giá đã gồm VAT
+     *                      (DBR-57)
      * @return thẻ gói hoàn chỉnh
      */
     private CounterPackageCard buildCard(Package pkg, long oneMonthPrice, int vatRate) {
@@ -810,7 +849,8 @@ public class CounterSaleService {
         int months = pkg.getDurationMonths();
         long price = pkg.getPrice();
 
-        // B0: tách VAT khỏi giá (giá trong DB đã gồm VAT). Chưa có giảm giá nên số tiền phải trả = giá gói.
+        // B0: tách VAT khỏi giá (giá trong DB đã gồm VAT). Chưa có giảm giá nên số tiền
+        // phải trả = giá gói.
         long vatAmount = MoneyUtil.calculateVatAmount(price, vatRate);
         long preTaxAmount = MoneyUtil.calculatePreTaxAmount(price, vatAmount);
 
@@ -874,9 +914,13 @@ public class CounterSaleService {
     }
 
     /**
-     * Các dòng "QUY ĐỊNH" của thẻ. Số liệu bảo lưu (P-01, P-02) và tuổi tối thiểu (P-05) đọc từ SystemConfigs.
-     * Nội dung theo SRS: gói tập được bảo lưu, áp dụng voucher, chụp ảnh mặt tại quầy;
-     * vé ngày không bảo lưu, không chụp ảnh; gói PT và buổi lẻ không dùng voucher, không gồm quyền vào phòng (CBR-58).
+     * Các dòng "QUY ĐỊNH" của thẻ. Số liệu bảo lưu (P-01, P-02) và tuổi tối thiểu
+     * (P-05) đọc từ SystemConfigs.
+     * Nội dung theo SRS: gói tập được bảo lưu, áp dụng voucher, chụp ảnh mặt tại
+     * quầy;
+     * vé ngày không bảo lưu, không chụp ảnh; gói PT và buổi lẻ không dùng voucher,
+     * không gồm quyền vào phòng (CBR-58).
+     * 
      * @param packageType loại gói dịch vụ
      * @return danh sách các dòng quy định
      */
@@ -901,7 +945,8 @@ public class CounterSaleService {
                 ruleLines.add("Từ " + minAgeForPt + " tuổi");
             }
         } catch (SQLException e) {
-            // Đọc tham số lỗi thì thẻ vẫn hiện, chỉ thiếu phần quy định; lỗi thật ghi ra log cho dev.
+            // Đọc tham số lỗi thì thẻ vẫn hiện, chỉ thiếu phần quy định; lỗi thật ghi ra
+            // log cho dev.
             e.printStackTrace();
         }
         return ruleLines;

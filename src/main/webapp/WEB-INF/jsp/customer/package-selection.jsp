@@ -24,43 +24,18 @@
                             <%@ include file="/WEB-INF/jsp/common/layout-customer.jspf" %>
 
                                 <div class="main">
+                                    <header class="topbar">
+                                        <div class="tb-left">
+                                            <h1 class="tb-title">Chọn gói tập</h1>
+                                            <p class="tb-subtitle">Chọn gói tập hoặc vé ngày, giá đã gồm VAT.</p>
+                                        </div>
+                                        <div class="top-right">
+                                            <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
+                                            <%@ include file="/WEB-INF/jsp/common/topbar-user.jspf" %>
+                                        </div>
+                                    </header>
 
-                    <div class="top-right">
-                        <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
-                        <%@ include file="/WEB-INF/jsp/common/topbar-user.jspf" %>
-                    </div>
-                </header>
-
-                                            <c:if test="${not empty dashboard}">
-                                                <div class="top-right">
-                                                    <a class="tb-user" href="${pageContext.request.contextPath}/account"
-                                                        title="Cài đặt tài khoản">
-                                                        <c:choose>
-                                                            <c:when test="${not empty dashboard.avatar}">
-                                                                <img class="avatar"
-                                                                    src="${pageContext.request.contextPath}${dashboard.avatar}"
-                                                                    alt="Ảnh đại diện">
-                                                            </c:when>
-                                                            <c:otherwise>
-                                                                <span class="avatar">
-                                                                    <c:out value="${dashboard.initials}" />
-                                                                </span>
-                                                            </c:otherwise>
-                                                        </c:choose>
-                                                        <span class="tb-user-text">
-                                                            <b>
-                                                                <c:out value="${dashboard.fullName}" />
-                                                            </b>
-                                                            <span>
-                                                                <c:out value="${dashboard.customerCode}" />
-                                                            </span>
-                                                        </span>
-                                                    </a>
-                                                </div>
-                                            </c:if>
-                                        </header>
-
-                                        <main class="content package-selection">
+                                    <main class="content package-selection">
 
                                             <%--=====Thông báo lỗi (dashboardError, selectionError: chuỗi do Servlet đặt
                                                 khi Service thất bại)=====--%>
@@ -617,6 +592,18 @@
                                                                                                                                 theo
                                                                                                                                 data-dialog-target.
                                                                                                                                 --%>
+                                                                                                                            <c:if test="${not empty pkg.benefitLines}">
+                                                                                                                                <ul class="package-card__benefits">
+                                                                                                                                    <c:forEach var="benefit" items="${pkg.benefitLines}" varStatus="loop">
+                                                                                                                                        <c:if test="${loop.index < 3}">
+                                                                                                                                            <li><i class="fa-solid fa-circle-check" aria-hidden="true"></i><span><c:out value="${benefit}" /></span></li>
+                                                                                                                                        </c:if>
+                                                                                                                                    </c:forEach>
+                                                                                                                                    <c:if test="${fn:length(pkg.benefitLines) > 3}">
+                                                                                                                                        <li class="is-more">+<c:out value="${fn:length(pkg.benefitLines) - 3}" /> quyền lợi khác</li>
+                                                                                                                                    </c:if>
+                                                                                                                                </ul>
+                                                                                                                            </c:if>
                                                                                                                                 <div
                                                                                                                                     class="package-card__actions${option.purchasableOnline or option.singleSession ? '' : ' package-card__actions--single'}">
                                                                                                                                     <c:choose>

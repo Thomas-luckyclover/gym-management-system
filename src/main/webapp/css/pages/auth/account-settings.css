@@ -160,6 +160,8 @@
     height: var(--avatar-size-lg);
 
     border-radius: var(--radius-circle);
+    border: var(--border-width-thick) solid var(--color-surface);
+    outline: var(--border-width) solid var(--color-primary-border);
 }
 
 .account-avatar-image {
@@ -167,14 +169,18 @@
     object-fit: cover;
 }
 
+.account-profile-card .account-avatar-fallback,
 .account-avatar-fallback {
     display: grid;
     place-items: center;
 
-    background: var(--color-primary-tint);
-    color: var(--color-primary);
+    background: var(--arena-800);
+    color: var(--arena-on-dark);
 
+    font-family: var(--font-heading);
+    font-size: var(--font-size-2xl);
     font-weight: var(--font-weight-bold);
+    letter-spacing: var(--letter-spacing-tight);
 }
 
 .account-avatar-info {

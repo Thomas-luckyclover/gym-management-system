@@ -1,6 +1,7 @@
 package com.gms.servlet.customer;
 
 import com.gms.constant.SessionKey;
+import com.gms.dto.CounterSaleReceipt;
 import com.gms.dto.JsonResponse;
 import com.gms.dto.ServiceResult;
 import com.gms.dto.StartDatePicker;
@@ -15,17 +16,20 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * POST khách chọn ngày bắt đầu của gói Membership đã mua (trang kết quả thanh toán và Dashboard).
+ * POST chọn/đổi ngày bắt đầu của gói Membership đã mua (trang kết quả thanh toán, Dashboard và màn bán quầy).
  *
  * <p>
- * Danh tính lấy từ session, mọi POST kiểm CSRF. Trình duyệt chỉ gửi mã gói và ngày bắt đầu; ngày hết hạn do
- * Service tính. Service trả picker mới để JavaScript cập nhật ô ngày mà không phải tải lại trang.</p>
+ * Hỗ trợ cả khách hàng tự đổi (/customer/subscription/start-date)
+ * và lễ tân quầy đổi cho khách (/receptionist/subscription/start-date).
+ * Trình duyệt gửi mã gói và ngày bắt đầu; ngày hết hạn do Service tính toán lại tự động.
+ * Service trả picker mới để JavaScript cập nhật ô ngày mà không phải tải lại trang.</p>
  */
-@WebServlet("/customer/subscription/start-date")
+@WebServlet(urlPatterns = {"/customer/subscription/start-date", "/receptionist/subscription/start-date"})
 public class SubscriptionStartDateServlet extends HttpServlet {
 
     private final SubscriptionStartDateService service = new SubscriptionStartDateService();
@@ -38,7 +42,7 @@ public class SubscriptionStartDateServlet extends HttpServlet {
         HttpSession session = request.getSession(false);
         Integer accountId = session == null ? null : (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
         if (accountId == null) {
-            RequestUtil.redirect(request, response, "/login?returnUrl=/customer/dashboard");
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
         if (!RequestUtil.isValidCsrfToken(request)) {
@@ -46,20 +50,39 @@ public class SubscriptionStartDateServlet extends HttpServlet {
             return;
         }
 
-        // B2: Service kiểm luật và ghi trong một transaction.
-        ServiceResult<StartDatePicker> result = service.changeStartDate(
-                accountId,
-                RequestUtil.getPositiveIntParam(request, "subscriptionId"),
-                DateTimeUtil.parseHtmlDate(request.getParameter("startDate")));
+        String path = request.getServletPath();
+        boolean isReceptionist = path != null && path.startsWith("/receptionist");
+
+        Integer subscriptionId = RequestUtil.getPositiveIntParam(request, "subscriptionId");
+        LocalDate startDate = DateTimeUtil.parseHtmlDate(request.getParameter("startDate"));
+
+        ServiceResult<StartDatePicker> result;
+        if (isReceptionist) {
+            result = service.changeStartDateByStaff(accountId, subscriptionId, startDate);
+            if (result.isSuccess() && result.getData() != null && session != null) {
+                Object lastReceiptObj = session.getAttribute("lastReceipt");
+                if (lastReceiptObj instanceof CounterSaleReceipt) {
+                    CounterSaleReceipt receipt = (CounterSaleReceipt) lastReceiptObj;
+                    StartDatePicker p = result.getData();
+                    session.setAttribute("lastReceipt", receipt.withUpdatedDates(p.getStartText(), p.getEndText()));
+                }
+            }
+        } else {
+            result = service.changeStartDate(accountId, subscriptionId, startDate);
+        }
 
         if (RequestUtil.isAjaxRequest(request)) {
             writeJson(response, result);
             return;
         }
 
-        // B3: không có JavaScript thì báo bằng toast và về Dashboard.
+        // B3: không có JavaScript thì báo bằng toast và chuyển trang.
         RequestUtil.setFlashToast(request, result.isSuccess() ? "success" : "error", result.getMessage());
-        RequestUtil.redirect(request, response, "/customer/dashboard");
+        if (isReceptionist) {
+            RequestUtil.redirect(request, response, "/receptionist/sales");
+        } else {
+            RequestUtil.redirect(request, response, "/customer/dashboard");
+        }
     }
 
     /** Chỉ trả các trường JavaScript cần để cập nhật ô ngày, không trả entity. */

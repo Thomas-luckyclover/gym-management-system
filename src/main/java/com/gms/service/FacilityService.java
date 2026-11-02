@@ -3,6 +3,7 @@ package com.gms.service;
 import com.gms.constant.Messages;
 import com.gms.dao.EquipmentItemDAO;
 import com.gms.dao.FacilityDAO;
+import com.gms.dao.MaintenanceRequestDAO;
 import com.gms.dto.ServiceResult;
 import com.gms.entity.EquipmentItem;
 import com.gms.entity.Facility;
@@ -19,15 +20,24 @@ public class FacilityService {
 
     private final FacilityDAO facilityDAO;
     private final EquipmentItemDAO equipmentItemDAO;
+    private final MaintenanceRequestDAO maintenanceRequestDAO;
 
     public FacilityService() {
         this.facilityDAO = new FacilityDAO();
         this.equipmentItemDAO = new EquipmentItemDAO();
+        this.maintenanceRequestDAO = new MaintenanceRequestDAO();
     }
 
     public FacilityService(FacilityDAO facilityDAO, EquipmentItemDAO equipmentItemDAO) {
         this.facilityDAO = facilityDAO;
         this.equipmentItemDAO = equipmentItemDAO;
+        this.maintenanceRequestDAO = new MaintenanceRequestDAO();
+    }
+
+    public FacilityService(FacilityDAO facilityDAO, EquipmentItemDAO equipmentItemDAO, MaintenanceRequestDAO maintenanceRequestDAO) {
+        this.facilityDAO = facilityDAO;
+        this.equipmentItemDAO = equipmentItemDAO;
+        this.maintenanceRequestDAO = maintenanceRequestDAO;
     }
 
     /**
@@ -222,6 +232,9 @@ public class FacilityService {
             return ServiceResult.fail(Messages.MSG231_ITEM_ID_INVALID);
         }
         try {
+            if (maintenanceRequestDAO.hasActiveRequest(equipmentItemId)) {
+                return ServiceResult.fail("Không thể thanh lý: Thiết bị đang có yêu cầu bảo trì chưa hoàn thành.");
+            }
             boolean updated = equipmentItemDAO.retire(equipmentItemId);
             if (!updated) {
                 return ServiceResult.fail(String.format(Messages.MSG08_NOT_FOUND, "cá thể máy"));

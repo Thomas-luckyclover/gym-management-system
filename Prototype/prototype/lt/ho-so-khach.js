@@ -84,19 +84,19 @@
   /* ---------- đề nghị xoá ---------- */
   document.getElementById('delBtn').addEventListener('click', () => {
     openConfirmModal({
-      title: 'Đề nghị xoá hồ sơ',
+      title: 'Xóa hồ sơ',
       body: `<p>Hồ sơ vẫn hiển thị cho tới khi Quản lý duyệt. Lý do là bắt buộc.</p>
-             <label class="field"><span class="field-label">Lý do xoá</span>
-               <textarea id="delReason" rows="3" placeholder="Khách yêu cầu, hồ sơ trùng, sai thông tin…"></textarea>
+             <label class="field"><span class="field-label">Lý do xóa *</span>
+               <textarea id="delReason" rows="3" minlength="5" maxlength="500" placeholder="Khách yêu cầu, hồ sơ trùng, sai thông tin…"></textarea>
                <span class="field-error" id="delReasonErr" hidden></span></label>`,
       confirmLabel: 'Gửi đề nghị',
       onConfirm() {
         const r = document.getElementById('delReason');
-        if (!r.value.trim()) {
-          fieldError(r, 'delReasonErr', 'Nhập lý do để Quản lý có căn cứ duyệt.');
+        if (r.value.trim().length < 5) {
+          fieldError(r, 'delReasonErr', 'Lý do xóa phải từ 5 ký tự để Quản lý có căn cứ duyệt.');
           return false;
         }
-        showToast('success', 'Đã gửi đề nghị xoá. Chờ Quản lý duyệt.');
+        showToast('success', 'Đã gửi đề nghị xóa. Chờ Quản lý duyệt.');
       },
     });
   });

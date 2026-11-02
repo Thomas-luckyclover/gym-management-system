@@ -32,11 +32,12 @@
         <a href="hoi-vien.html"><i class="fa-solid fa-user-group"></i>Hồ sơ khách</a>
         <a href="bao-luu.html"><i class="fa-solid fa-circle-pause"></i>Bảo lưu</a>
         <h4>Cơ sở vật chất</h4>
-        <a href="co-so-vat-chat.html"><i class="fa-solid fa-boxes-stacked"></i>Danh mục</a>
+        <a href="co-so-vat-chat.html"><i class="fa-solid fa-boxes-stacked"></i>Báo hỏng thiết bị</a>
         <a href="bao-tri.html"><i class="fa-solid fa-screwdriver-wrench"></i>Yêu cầu bảo trì</a>
         <h4>Cá nhân</h4>
         <a href="nghi-phep.html"><i class="fa-solid fa-plane-departure"></i>Nghỉ phép</a>
         <a href="tai-khoan.html"><i class="fa-solid fa-user-gear"></i>Cài đặt tài khoản</a>
+        <a href="../chon-vai-tro.html"><i class="fa-solid fa-repeat"></i>Đổi vai trò</a>
       </nav>
       <div class="cust-sidebar-foot">
         <a href="../dang-nhap.html"><i class="fa-solid fa-arrow-right-from-bracket"></i>Đăng xuất</a>
@@ -70,13 +71,87 @@
         <div class="col-main">
 
           <section class="panel">
-            <div class="panel-head"><h2>1 · Khách mua</h2></div>
+            <div class="panel-head"><h2>1 · Chọn gói cho khách</h2><span class="badge badge-info">Gói tập</span></div>
+            <div class="toolbar">
+              <label class="visually-hidden" for="shpq">Tìm gói theo tên</label>
+              <div class="search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input id="shpq" type="search" placeholder="Tìm gói theo tên…" autocomplete="off" spellcheck="false">
+              </div>
+            </div>
+            <div class="pick-list pick-grid" id="shPkg">
+                            <label class="pick-row" data-price="120000" data-day="1">
+                <input type="radio" name="shpkg" value="P-DAY" data-name="Gói Ngày">
+                <span class="pick-body">
+                  <b>Gói Ngày</b>
+                  <small>1 ngày · Vào một lượt, không cần ảnh check-in</small>
+                </span>
+                <b class="tabular">120.000đ</b>
+              </label>
+              <label class="pick-row" data-price="799000" data-day="0">
+                <input type="radio" name="shpkg" value="P-1M" data-name="Gói 1 Tháng">
+                <span class="pick-body">
+                  <b>Gói 1 Tháng</b>
+                  <small>1 tháng</small>
+                </span>
+                <b class="tabular">799.000đ</b>
+              </label>
+              <label class="pick-row" data-price="2190000" data-day="0">
+                <input type="radio" name="shpkg" value="P-3M" data-name="Gói 3 Tháng">
+                <span class="pick-body">
+                  <b>Gói 3 Tháng</b>
+                  <small>3 tháng · Tiết kiệm 207.000đ</small>
+                </span>
+                <b class="tabular">2.190.000đ</b>
+              </label>
+              <label class="pick-row" data-price="5490000" data-day="0">
+                <input type="radio" name="shpkg" value="P-9M" data-name="Gói 9 Tháng">
+                <span class="pick-body">
+                  <b>Gói 9 Tháng</b>
+                  <small>9 tháng · Tiết kiệm 1.701.000đ</small>
+                </span>
+                <b class="tabular">5.490.000đ</b>
+              </label>
+              <label class="pick-row" data-price="6990000" data-day="0">
+                <input type="radio" name="shpkg" value="P-12M" data-name="Gói 12 Tháng">
+                <span class="pick-body">
+                  <b>Gói 12 Tháng</b>
+                  <small>12 tháng · Tiết kiệm 2.598.000đ</small>
+                </span>
+                <b class="tabular">6.990.000đ</b>
+              </label>
+              <label class="pick-row" data-price="450000" data-day="0" data-single="1">
+                <input type="radio" name="shpkg" value="P-PT1" data-name="Buổi PT lẻ">
+                <span class="pick-body">
+                  <b>Buổi PT lẻ</b>
+                  <small>1 buổi 90 phút, PT chốt giờ với khách · không áp voucher</small>
+                </span>
+                <b class="tabular">450.000đ</b>
+              </label>
+            </div>
+          </section>
+
+          <section class="panel" id="singlePanel" hidden>
+            <div class="panel-head"><h2>2 · Chọn PT và khung giờ hôm nay</h2><span class="badge badge-info">Buổi PT lẻ</span></div>
+            <div class="form-grid form-grid-2">
+              <label class="field"><span class="field-label">Huấn luyện viên</span>
+                <select id="singleCoach"><option value="">Chọn PT</option><option value="PT-01">Hoàng Long</option><option value="PT-02">Phạm Thu Trang</option><option value="PT-03">Đỗ Minh Khoa</option></select>
+              </label>
+              <label class="field"><span class="field-label">Khung giờ hôm nay</span>
+                <select id="singleTime"><option value="">Chọn giờ</option><option value="07:00">07:00 – 08:30</option><option value="09:00">09:00 – 10:30</option><option value="16:30">16:30 – 18:00</option><option value="19:00">19:00 – 20:30</option></select>
+              </label>
+            </div>
+            <p class="field-hint" id="singleHint">Chọn PT và khung 90 phút còn trống hôm nay. Khách vãng lai chưa có gói tập: bán Gói Ngày trước rồi mới bán buổi PT lẻ. Slot được giữ 20 phút để thu tiền.</p>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head"><h2 data-step-no="cust">2 · Chọn khách</h2></div>
             <div class="toolbar">
               <div class="search">
                 <i class="fa-solid fa-magnifying-glass"></i>
-                <input id="shq" type="search" placeholder="Tìm tên, SĐT hoặc mã khách" aria-label="Tìm khách">
+                <input id="shq" type="search" placeholder="Tên, số điện thoại hoặc mã KH (KH-0102)" aria-label="Tìm khách">
               </div>
-              <a class="btn btn-ghost btn-sm" href="ho-so-khach.html"><i class="fa-solid fa-plus"></i> Khách mới</a>
+              <button class="btn btn-outline btn-sm" type="button" id="shQuick">+ Tạo hồ sơ</button>
             </div>
             <div class="pick-list" id="shCust">
               <label class="pick-row" data-q="Trần Bảo Ngọc 0902345678 KH-1001" data-renew="Gói 3 Tháng · hết hạn 15/11/2026">
@@ -95,10 +170,10 @@
                 </span>
                 <span class="badge badge-ok">Đang hoạt động</span>
               </label>
-              <label class="pick-row" data-q="Phạm Thu Trang 0934111222 KH-1003" data-renew="Gói 12 Tháng · hết hạn 01/03/2027">
-                <input type="radio" name="shcust" value="KH-1003" data-name="Phạm Thu Trang">
+              <label class="pick-row" data-q="Phạm Minh Châu 0934111222 KH-1003" data-renew="Gói 12 Tháng · hết hạn 01/03/2027">
+                <input type="radio" name="shcust" value="KH-1003" data-name="Phạm Minh Châu">
                 <span class="pick-body">
-                  <b>Phạm Thu Trang</b>
+                  <b>Phạm Minh Châu</b>
                   <small>KH-1003 · 0934 111 222 · Gói 12 Tháng tới 01/03/2027</small>
                 </span>
                 <span class="badge badge-warn">Đang bảo lưu</span>
@@ -111,10 +186,10 @@
                 </span>
                 <span class="badge badge-muted">Hết hạn</span>
               </label>
-              <label class="pick-row" data-q="Vũ Hải Nam 0971222333 KH-1005">
-                <input type="radio" name="shcust" value="KH-1005" data-name="Vũ Hải Nam">
+              <label class="pick-row" data-q="Vũ Hoài Nam 0971222333 KH-1005">
+                <input type="radio" name="shcust" value="KH-1005" data-name="Vũ Hoài Nam">
                 <span class="pick-body">
-                  <b>Vũ Hải Nam</b>
+                  <b>Vũ Hoài Nam</b>
                   <small>KH-1005 · 0971 222 333 · chưa có gói</small>
                 </span>
                 <span class="badge badge-ok">Đang hoạt động</span>
@@ -176,64 +251,10 @@
           </section>
 
           <section class="panel">
-            <div class="panel-head"><h2>2 · Gói tập</h2></div>
-            <div class="pick-list pick-grid" id="shPkg">
-              <label class="pick-row" data-price="80000" data-day="1">
-                <input type="radio" name="shpkg" value="P-DAY" data-name="Gói Ngày">
-                <span class="pick-body">
-                  <b>Gói Ngày</b>
-                  <small>1 ngày · Vào một lượt, không cần ảnh check-in</small>
-                </span>
-                <b class="tabular">80.000đ</b>
-              </label>
-              <label class="pick-row" data-price="600000" data-day="0">
-                <input type="radio" name="shpkg" value="P-1M" data-name="Gói 1 Tháng">
-                <span class="pick-body">
-                  <b>Gói 1 Tháng</b>
-                  <small>30 ngày</small>
-                </span>
-                <b class="tabular">600.000đ</b>
-              </label>
-              <label class="pick-row" data-price="1650000" data-day="0">
-                <input type="radio" name="shpkg" value="P-3M" data-name="Gói 3 Tháng">
-                <span class="pick-body">
-                  <b>Gói 3 Tháng</b>
-                  <small>90 ngày · Tiết kiệm 150.000đ</small>
-                </span>
-                <b class="tabular">1.650.000đ</b>
-              </label>
-              <label class="pick-row" data-price="3100000" data-day="0">
-                <input type="radio" name="shpkg" value="P-6M" data-name="Gói 6 Tháng">
-                <span class="pick-body">
-                  <b>Gói 6 Tháng</b>
-                  <small>180 ngày · Tiết kiệm 500.000đ</small>
-                </span>
-                <b class="tabular">3.100.000đ</b>
-              </label>
-              <label class="pick-row" data-price="4400000" data-day="0">
-                <input type="radio" name="shpkg" value="P-9M" data-name="Gói 9 Tháng">
-                <span class="pick-body">
-                  <b>Gói 9 Tháng</b>
-                  <small>270 ngày · Tiết kiệm 1.000.000đ</small>
-                </span>
-                <b class="tabular">4.400.000đ</b>
-              </label>
-              <label class="pick-row" data-price="5600000" data-day="0">
-                <input type="radio" name="shpkg" value="P-12M" data-name="Gói 12 Tháng">
-                <span class="pick-body">
-                  <b>Gói 12 Tháng</b>
-                  <small>365 ngày · Tiết kiệm 1.600.000đ</small>
-                </span>
-                <b class="tabular">5.600.000đ</b>
-              </label>
-            </div>
-          </section>
-
-          <section class="panel">
-            <div class="panel-head"><h2>3 · Voucher</h2><span class="muted">Mỗi đơn dùng tối đa một mã</span></div>
+            <div class="panel-head"><h2 data-step-no="vc">3 · Voucher và ngày bắt đầu</h2><span class="muted">Mỗi đơn dùng tối đa một mã</span></div>
             <form id="shVcForm" class="toolbar" novalidate>
               <div class="search no-icon">
-                <input id="shVc" type="text" placeholder="Nhập mã, ví dụ CHAOBAN10" aria-label="Mã voucher">
+                <input id="shVc" type="text" placeholder="Nhập mã ưu đãi..." maxlength="20" autocomplete="off" spellcheck="false" aria-label="Mã ưu đãi / Voucher">
               </div>
               <button class="btn btn-ghost" type="submit">Áp dụng</button>
             </form>
@@ -244,15 +265,25 @@
               <button class="btn btn-link" type="button" id="shVcDrop">Gỡ</button>
             </div>
             <div class="vc-hints">
-              <button class="btn btn-ghost btn-sm" type="button" data-vc="CHAOBAN10"><span class="tabular">CHAOBAN10</span><span>Giảm 10%, đơn từ 500.000đ</span></button>
-              <button class="btn btn-ghost btn-sm" type="button" data-vc="THANG9"><span class="tabular">THANG9</span><span>Giảm 15%, đơn từ 1.500.000đ</span></button>
-              <button class="btn btn-ghost btn-sm" type="button" data-vc="HETHAN"><span class="tabular">HETHAN</span><span>Đã hết hạn 31/08/2026</span></button>
-              <button class="btn btn-ghost btn-sm" type="button" data-vc="DUNGROI"><span class="tabular">DUNGROI</span><span>Khách đã dùng mã này</span></button>
+              <button class="btn btn-ghost btn-sm" type="button" data-vc="GYMVUI10"><span class="tabular">GYMVUI10</span><span>Giảm 10%, đơn từ 500.000đ</span></button>
+              <button class="btn btn-ghost btn-sm" type="button" data-vc="NGAY15K"><span class="tabular">NGAY15K</span><span>Giảm 15.000đ, đơn từ 100.000đ</span></button>
+              <button class="btn btn-ghost btn-sm" type="button" data-vc="HE2026"><span class="tabular">HE2026</span><span>Đã hết hạn 31/08/2026</span></button>
+              <button class="btn btn-ghost btn-sm" type="button" data-vc="HETLUOT25"><span class="tabular">HETLUOT25</span><span>Đã hết lượt sử dụng</span></button>
+            </div>
+            <div id="shStartBox" style="margin-top:var(--space-4)">
+              <span class="field-label" style="display:block;margin-bottom:var(--space-2)">Ngày bắt đầu</span>
+              <div class="pt-picker">
+                <label class="pt-option"><input type="radio" name="shstart" value="auto" checked>
+                  <span class="pt-body"><b id="shStartAuto">Bắt đầu hôm nay</b><small>Gói tập: nối tiếp ngay sau gói hiện tại nếu còn hạn, nếu không thì tính từ ngày thanh toán</small></span></label>
+                <label class="pt-option"><input type="radio" name="shstart" value="custom">
+                  <span class="pt-body"><b>Chọn ngày bắt đầu</b><small>Tối đa 30 ngày kể từ hôm nay</small></span></label>
+              </div>
+              <input id="shStartDate" type="date" min="2026-09-20" max="2026-10-20" value="2026-09-20" hidden>
             </div>
           </section>
 
           <section class="panel">
-            <div class="panel-head"><h2>4 · Thanh toán</h2></div>
+            <div class="panel-head"><h2 data-step-no="pay">4 · Phương thức thanh toán</h2></div>
             <div class="pt-picker">
               <label class="pt-option"><input type="radio" name="shpay" value="cash" checked>
                 <span class="pt-body"><b>Tiền mặt</b><small>Ghi vào ca, đối chiếu khi chốt</small></span></label>
@@ -269,6 +300,7 @@
             <dl class="sum-list" id="shSum">
               <div><dt>Khách</dt><dd data-sum-cust>—</dd></div>
               <div><dt>Gói</dt><dd data-sum-pkg>—</dd></div>
+              <div><dt>Bắt đầu</dt><dd data-sum-start>—</dd></div>
               <div><dt>Giá gói</dt><dd class="tabular" data-sum-sub>0đ</dd></div>
               <div data-sum-discount-row hidden><dt>Giảm giá</dt><dd class="tabular" data-sum-discount>0đ</dd></div>
               <div class="sum-sub"><dt>Giá chưa VAT</dt><dd class="tabular" data-sum-net>0đ</dd></div>
@@ -276,6 +308,11 @@
               <div class="sum-total"><dt>Tổng thu</dt><dd class="tabular" data-sum-total>0đ</dd></div>
             </dl>
             <button class="btn btn-primary btn-block" type="button" id="shPay" disabled>Kết đơn</button>
+            <div id="singleHold" class="alert-banner info" hidden>
+              <span><i class="fa-solid fa-clock"></i> Đang giữ khung <b id="singleHoldClock">20:00</b></span>
+              <button class="btn btn-ghost btn-sm" type="button" id="singleCollect">Thu tiền</button>
+              <button class="btn btn-link btn-sm" type="button" id="singleRelease">Hủy</button>
+            </div>
             <p class="muted" id="shBlock" hidden></p>
           </div>
         </aside>

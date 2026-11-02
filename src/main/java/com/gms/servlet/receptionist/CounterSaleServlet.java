@@ -12,6 +12,8 @@ import com.gms.dto.CounterVoucherResult;
 import com.gms.dto.JsonResponse;
 import com.gms.dto.ServiceResult;
 import com.gms.service.CounterSaleService;
+import com.gms.dto.StartDatePicker;
+import com.gms.service.SubscriptionStartDateService;
 import com.gms.util.DateTimeUtil;
 import com.gms.util.JsonUtil;
 import com.gms.util.RequestUtil;
@@ -52,6 +54,7 @@ public class CounterSaleServlet extends HttpServlet {
     private static final String VIEW_RECEIPT = "receptionist/counter-sale-receipt";
 
     private final CounterSaleService counterSaleService = new CounterSaleService();
+    private final SubscriptionStartDateService startDateService = new SubscriptionStartDateService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -335,8 +338,8 @@ public class CounterSaleServlet extends HttpServlet {
             endDate = startDate;
         }
 
-        LocalDate minStartDate = today;
-        LocalDate maxStartDate = today.plusDays(7);
+        LocalDate minStartDate = isChained ? startDate : today;
+        LocalDate maxStartDate = minStartDate.plusDays(7);
 
         request.setAttribute("today", today);
         request.setAttribute("todayText", DateTimeUtil.formatDate(today));
@@ -348,6 +351,7 @@ public class CounterSaleServlet extends HttpServlet {
         request.setAttribute("defaultEndDateText", DateTimeUtil.formatDate(endDate));
         request.setAttribute("minStartDateIso", minStartDate.toString());
         request.setAttribute("maxStartDateIso", maxStartDate.toString());
+        request.setAttribute("maxStartDateText", DateTimeUtil.formatDate(maxStartDate));
 
         request.setAttribute("csrfToken", RequestUtil.getOrCreateCsrfToken(request.getSession(false)));
 
@@ -375,6 +379,9 @@ public class CounterSaleServlet extends HttpServlet {
             return;
         }
         request.setAttribute("receipt", receipt);
+        StartDatePicker startPicker = startDateService.pickerForOrderId(receipt.getOrderId());
+        request.setAttribute("startPicker", startPicker);
+        request.setAttribute("csrfToken", RequestUtil.getOrCreateCsrfToken(request.getSession(false)));
         RequestUtil.forward(request, response, VIEW_RECEIPT);
     }
 

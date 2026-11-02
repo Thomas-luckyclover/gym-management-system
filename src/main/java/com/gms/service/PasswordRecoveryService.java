@@ -146,7 +146,7 @@ public class PasswordRecoveryService {
      * @param accountId       lấy từ SESSION (lưu ở bước 2), không từ form
      * @param newPassword     giữ nguyên từng ký tự (không trim)
      * @param confirmPassword ô "Nhập lại mật khẩu", phải giống hệt
-     * @return thành công: MSG49 "Đã đổi mật khẩu. Tất cả phiên đăng nhập trước đó đã bị đăng xuất."
+     * @return thành công: MSG95 "Đã đặt lại mật khẩu và đăng xuất mọi phiên. Vui lòng đăng nhập."
      *         lỗi gắn ô "password" / "confirmPassword" → trang giữ form, chữ đỏ dưới ô
      *         lỗi chung: tài khoản vừa bị khóa (MSG37), lỗi hệ thống (MSG04)
      */
@@ -172,7 +172,7 @@ public class PasswordRecoveryService {
             //     null = không chừa phiên nào (khác đổi mật khẩu trong /account: chừa phiên đang dùng).
             SessionRegistryListener.invalidateSessionsOfAccount(accountId, null);
 
-            return ServiceResult.ok(null, Messages.MSG49_PASSWORD_CHANGED);
+            return ServiceResult.ok(null, Messages.MSG95_PASSWORD_RESET_COMPLETED);
 
         } catch (SQLException e) {
             e.printStackTrace();

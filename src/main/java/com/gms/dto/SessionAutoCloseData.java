@@ -2,6 +2,7 @@ package com.gms.dto;
 
 import com.gms.entity.Package;
 import java.time.LocalDate;
+import java.time.LocalTime;
 
 /**
  * Dữ liệu của một buổi JOB-04. DAO tạo, Service đọc để quyết định kết quả.
@@ -48,12 +49,21 @@ public class SessionAutoCloseData {
     // DAO: CheckIns trong sessionDate của holder hoặc partner; Service dùng sau bước xét quyền vào gym.
     private final boolean hasCheckInOnSessionDate;
 
+    // DAO: lịch ngoại lệ và P-19; Service dùng để hủy buổi rơi vào ngày/giờ gym đóng cửa.
+    private final boolean gymClosedAllDay;
+    private final LocalTime slotStartTime;
+    private final LocalTime slotEndTime;
+    private final LocalTime gymOpenTime;
+    private final LocalTime gymCloseTime;
+
 
     /** DAO truyền dữ liệu của một buổi; constructor chỉ gán, không tính trạng thái. */
     public SessionAutoCloseData(int sessionId, LocalDate sessionDate, Package.Type ptSubscriptionType,
             boolean holderHasMembership, boolean holderHasDayPass, boolean holderFrozen,
             boolean partnerHasMembership, boolean partnerHasDayPass, boolean partnerFrozen,
-            boolean hasCheckInOnSessionDate) {
+            boolean hasCheckInOnSessionDate, boolean gymClosedAllDay,
+            LocalTime slotStartTime, LocalTime slotEndTime,
+            LocalTime gymOpenTime, LocalTime gymCloseTime) {
         this.sessionId = sessionId;
         this.sessionDate = sessionDate;
         this.ptSubscriptionType = ptSubscriptionType;
@@ -67,6 +77,11 @@ public class SessionAutoCloseData {
         this.partnerFrozen = partnerFrozen;
 
         this.hasCheckInOnSessionDate = hasCheckInOnSessionDate;
+        this.gymClosedAllDay = gymClosedAllDay;
+        this.slotStartTime = slotStartTime;
+        this.slotEndTime = slotEndTime;
+        this.gymOpenTime = gymOpenTime;
+        this.gymCloseTime = gymCloseTime;
     }
 
 
@@ -121,4 +136,15 @@ public class SessionAutoCloseData {
     public boolean hasCheckInOnSessionDate() {
         return hasCheckInOnSessionDate;
     }
+
+    /** Ngày tập có được Manager khai báo nghỉ cả ngày không. */
+    public boolean isGymClosedAllDay() { return gymClosedAllDay; }
+
+    /** Giờ bắt đầu/kết thúc slot, dùng để so với giờ mở cửa hiệu lực. */
+    public LocalTime getSlotStartTime() { return slotStartTime; }
+    public LocalTime getSlotEndTime() { return slotEndTime; }
+
+    /** Giờ mở/đóng cửa hiệu lực: ngoại lệ theo ngày hoặc P-19 mặc định. */
+    public LocalTime getGymOpenTime() { return gymOpenTime; }
+    public LocalTime getGymCloseTime() { return gymCloseTime; }
 }

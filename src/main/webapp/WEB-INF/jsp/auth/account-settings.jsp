@@ -12,7 +12,7 @@
 
     <link
         rel="stylesheet"
-        href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css?v=2"
+        href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css?v=20261101avatar"
     >
 
 </head>

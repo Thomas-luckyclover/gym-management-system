@@ -142,12 +142,14 @@ public class RegisterServlet extends HttpServlet {
                 // CBR-26: SĐT đã có tài khoản → DỪNG NGAY TẠI MÀN 1
                 req.setAttribute("step", "blocked-account");
                 req.setAttribute("phone", trimmedPhone);
+                req.setAttribute("blockedMessage", Messages.MSG51_PHONE_HAS_ACCOUNT);
                 break;
 
             case PROFILE_NO_EMAIL:
                 // CBR-27: hồ sơ tại quầy chưa có email → DỪNG NGAY TẠI MÀN 1
                 req.setAttribute("step", "blocked-no-email");
                 req.setAttribute("phone", trimmedPhone);
+                req.setAttribute("blockedMessage", Messages.MSG53_PROFILE_NO_EMAIL);
                 break;
 
             case PROFILE_CAN_CLAIM:
@@ -329,6 +331,7 @@ public class RegisterServlet extends HttpServlet {
                 req.setAttribute("step", "blocked-email-mismatch");
                 req.setAttribute("phone", phone);
                 req.setAttribute("maskedEmail", maskedEmail);
+                req.setAttribute("blockedMessage", String.format(Messages.MSG52_PHONE_DIFFERENT_EMAIL, maskedEmail));
                 req.getRequestDispatcher("/WEB-INF/jsp/auth/register.jsp").forward(req, resp);
                 return;
             }

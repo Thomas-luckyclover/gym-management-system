@@ -558,6 +558,37 @@ public class MaintenanceRequestDAO {
         }
     }
 
+    /**
+     * Checks if there are any active (Open or InProgress) maintenance requests for an individual equipment item.
+     * Used to prevent duplicate defect reporting (BR-105) and block liquidation while repair is pending (CBR-99).
+     */
+    public boolean hasActiveRequest(
+            Connection connection,
+            int equipmentItemId
+    ) throws SQLException {
+
+        String sql = "SELECT TOP 1 1 "
+                + "FROM MaintenanceRequests "
+                + "WHERE EquipmentItemId = ? "
+                + "AND Status IN (?, ?)";
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, equipmentItemId);
+            statement.setString(2, MaintenanceRequest.Status.OPEN.getDbValue());
+            statement.setString(3, MaintenanceRequest.Status.IN_PROGRESS.getDbValue());
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next();
+            }
+        }
+    }
+
+    public boolean hasActiveRequest(int equipmentItemId) throws SQLException {
+        try (Connection conn = DBContext.getConnection()) {
+            return hasActiveRequest(conn, equipmentItemId);
+        }
+    }
+
     // ===== Mapping =====
 
     private String buildViewSelect() {

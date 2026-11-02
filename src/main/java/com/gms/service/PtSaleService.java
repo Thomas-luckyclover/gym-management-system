@@ -1,6 +1,5 @@
 package com.gms.service;
 
-import com.gms.constant.AppConstants;
 import com.gms.constant.Messages;
 import com.gms.dao.NotificationDAO;
 import com.gms.dao.PtSaleDAO;
@@ -8,6 +7,7 @@ import com.gms.dao.PtSaleDAO.HeldOrder;
 import com.gms.dao.PtSaleDAO.PackageRow;
 import com.gms.dao.PtSaleDAO.PtRow;
 import com.gms.dao.PtScheduleDAO;
+import com.gms.dao.ShiftDAO;
 import com.gms.dto.HourException;
 import com.gms.dto.LeaveInfo;
 import com.gms.dto.PtSaleCustomer;
@@ -17,6 +17,7 @@ import com.gms.dto.PtSaleOption;
 import com.gms.dto.PtSaleView;
 import com.gms.dto.PtScheduleItem;
 import com.gms.dto.ServiceResult;
+import com.gms.entity.Shift;
 import com.gms.util.DBContext;
 import com.gms.util.DateTimeUtil;
 import com.gms.util.JsonUtil;
@@ -70,12 +71,12 @@ public class PtSaleService {
     static final int START_DAYS_AHEAD = 30;                  // ngày bắt đầu: hôm nay → +30 ngày
     static final int TIME_WINDOW_DAYS = 14;                  // giờ trên bảng tuần: khung PT công bố trong 14 ngày đầu kỳ
     static final int HOLD_MINUTES = 15;                      // giữ chỗ bao lâu
-    static final LocalTime AFTERNOON_FROM = AppConstants.AFTERNOON_SHIFT_START;   // mốc ca chung 13:00
     static final String EXPIRED_REASON = "Hết 15 phút giữ chỗ, chưa thu tiền";
     static final String RELEASE_REASON = "Lễ tân hủy giữ chỗ, chưa thu tiền";
 
     private final PtSaleDAO saleDAO = new PtSaleDAO();
     private final PtScheduleDAO scheduleDAO = new PtScheduleDAO();
+    private final ShiftDAO shiftDAO = new ShiftDAO();
     private final NotificationDAO notificationDAO = new NotificationDAO();
     private final SystemConfigService configService = new SystemConfigService();
 
@@ -130,6 +131,11 @@ public class PtSaleService {
                 }
                 PtSaleView view = newView(input, now);
                 if (orderId != null) {
+                    // Mở lại đơn đang giữ mà URL không có start (link "Tiếp tục thu tiền") → bỏ mặc định "ngày mai",
+                    // để loadHeld lấy ngày của khung đang giữ đầu tiên làm ngày bắt đầu kỳ.
+                    if (parseDate(input.start) == null) {
+                        view.setStartDate(null);
+                    }
                     String problem = loadHeld(connection, view, orderId, now);
                     return problem == null ? ServiceResult.ok(view) : ServiceResult.fail(problem);
                 }
@@ -160,7 +166,7 @@ public class PtSaleService {
 
     /**
      * HÀM CHÍNH — "Giữ lịch 15 phút". Làm lại 4 bước có khóa dòng PT + khung, rồi trong 1 transaction:
-     * ca (tự mở) → mã đơn → đơn Pending → mỗi ngày có buổi: khung Free → Held, hoặc tạo khung Held mới.
+     * ca đang mở (chưa mở → MSG109) → mã đơn → đơn Pending → mỗi ngày có buổi: khung Free → Held, hoặc tạo khung Held mới.
      * Ra: mã đơn (Servlet chuyển sang ?order=…) ; lỗi → câu lỗi, không ghi gì.
      */
     public ServiceResult<Integer> hold(int accountId, Input input, LocalDateTime now) {
@@ -188,8 +194,8 @@ public class PtSaleService {
                         + "Hỏi PT rồi tích \"Đã xác nhận với PT\" trước khi giữ lịch.");
             }
 
-            // Ca hiện tại (đơn tại quầy bắt buộc thuộc 1 ca — tự mở nếu chưa mở).
-            int shiftId = currentShift(connection, receptionist[0], now);
+            // Ca đang mở (đơn tại quầy bắt buộc thuộc 1 ca). Chưa mở ca → MSG109, giống Bán hàng tại quầy.
+            int shiftId = openShiftId(Messages.MSG109_SHIFT_NOT_OPEN_FOR_SALE);
             PackageRow pkg = saleDAO.findPackage(connection, view.getPackageId());
             int vatRate = configService.getInt(SystemConfigService.VAT_PERCENT);
             String code = saleDAO.nextOrderCode(connection, now.getYear());
@@ -237,6 +243,8 @@ public class PtSaleService {
             if (problem != null) {
                 throw new IllegalArgumentException(problem);
             }
+            // B0: phải có ca đang mở mới thu tiền (CBR-105, BR-93) — giống Bán hàng tại quầy.
+            openShiftId(Messages.MSG110_SHIFT_NOT_OPEN_FOR_PAYMENT);
 
             // B1: đơn Paid + giao dịch Success (người nhận = lễ tân đang bấm).
             PackageRow pkg = saleDAO.findPackage(connection, held.packageId);
@@ -337,15 +345,23 @@ public class PtSaleService {
         return receptionist;
     }
 
-    /** Ca hiện tại theo giờ (trước 14:00 = sáng). Chưa có / chưa mở → mở bằng lễ tân này; đã chốt → từ chối. */
-    private int currentShift(Connection connection, int receptionistId, LocalDateTime now) throws SQLException {
-        String type = shiftTypeAt(now.toLocalTime());
-        Integer shiftId = saleDAO.findOrOpenShift(connection, now.toLocalDate(), type, receptionistId, now);
-        if (shiftId == null) {
-            throw new IllegalArgumentException("Ca " + ("Morning".equals(type) ? "sáng" : "chiều")
-                    + " hôm nay đã chốt két, không ghi thêm đơn vào ca này được.");
+    /**
+     * Ca đang mở để ghi đơn — cùng cách với CounterSaleService: lấy ca hiện tại của hôm nay,
+     * chưa có ca hoặc ca chưa Open / đã chốt → từ chối bằng câu lỗi truyền vào (MSG109 khi giữ lịch, MSG110 khi thu tiền);
+     * ca đang mở là ca ngày trước → MSG324 (CBR-123).
+     * Hệ thống KHÔNG tự mở ca hộ lễ tân (CBR-105, BR-93): lễ tân mở ca ở màn Ca làm việc.
+     */
+    private int openShiftId(String notOpenMessage) throws SQLException {
+        Shift shift = shiftDAO.findCurrentOrActiveShift(DateTimeUtil.today());
+        if (shift == null || !shift.isOpen()) {
+            throw new IllegalArgumentException(notOpenMessage);
         }
-        return shiftId;
+        // CBR-123: ca đang mở là ca ngày trước (quên chốt) → không ghi đơn hôm nay vào ca đó.
+        String pastDayShift = ShiftService.pastDayShiftMessage(shift, DateTimeUtil.today());
+        if (pastDayShift != null) {
+            throw new IllegalArgumentException(pastDayShift);
+        }
+        return shift.getShiftId();
     }
 
     /** B4 của pay: 1 thông báo cho khách (+ người tập cùng), 1 cho PT. Hồ sơ không có tài khoản → bỏ qua. */
@@ -1011,11 +1027,6 @@ public class PtSaleService {
     /** Tiền VAT nằm trong giá = giá × VAT ÷ (100 + VAT), làm tròn đồng (DBR-57). */
     static long vatAmount(long price, int vatRate) {
         return Math.round(price * (double) vatRate / (100 + vatRate));
-    }
-
-    /** Ca theo giờ: trước 13:00 là ca sáng (Morning), từ 13:00 là ca chiều (Afternoon) — AppConstants.AFTERNOON_SHIFT_START. */
-    static String shiftTypeAt(LocalTime time) {
-        return time.isBefore(AFTERNOON_FROM) ? "Morning" : "Afternoon";
     }
 
     /** "Đinh Công Sơn" → "ĐS" (chữ đầu họ + chữ đầu tên). */

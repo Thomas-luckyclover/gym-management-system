@@ -2153,3 +2153,65 @@ html body.dock .counter-sale .counter-cell-action .btn.btn-primary {
   align-items: center;
   gap: 8px;
 }
+
+
+/* ===== ĐỔI NGÀY TRÊN BIÊN LAI QUẦY (SRS #37 / START DATE PICKER) ===== */
+.receipt-row--validity {
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 6px !important;
+}
+
+.receipt-validity-line {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  width: 100% !important;
+}
+
+.receipt-sdp {
+  width: 100% !important;
+}
+
+.receipt-sdp .sdp-btn {
+  margin-left: 8px !important;
+  padding: 3px 10px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  background: rgba(14, 165, 233, 0.1) !important;
+  border: 1px solid #0ea5e9 !important;
+  color: #0284c7 !important;
+  border-radius: 4px !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+.theme-staff.dark .receipt-sdp .sdp-btn,
+.dock.theme-staff[data-theme="dark"] .receipt-sdp .sdp-btn {
+  background: rgba(56, 189, 248, 0.15) !important;
+  border-color: #38bdf8 !important;
+  color: #38bdf8 !important;
+}
+
+.receipt-sdp .sdp-btn:hover {
+  background: #0ea5e9 !important;
+  color: #ffffff !important;
+}
+
+.receipt-sdp .sdp-cal {
+  position: static !important;
+  margin-top: 10px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  border: 1px solid var(--arena-chalk-line, rgba(148, 163, 184, 0.25)) !important;
+  border-radius: 6px !important;
+  background: var(--arena-surface, #ffffff) !important;
+  color: var(--arena-ink, #0f172a) !important;
+}
+
+@media print {
+  .receipt-sdp .sdp-cal,
+  .receipt-sdp .sdp-btn {
+    display: none !important;
+  }
+}

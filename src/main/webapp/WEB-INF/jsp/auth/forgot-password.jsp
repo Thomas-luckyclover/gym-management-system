@@ -145,7 +145,7 @@
 
         <%-- ================= BƯỚC 3: ĐẶT MẬT KHẨU MỚI — BẮT ĐẦU =================
              2 ô mật khẩu có nút con mắt (common.js). Lỗi gắn ô: fieldErrors.password (MSG66: 8–64 ký tự, có chữ và số),
-             fieldErrors.confirmPassword (MSG47: không khớp). Lưu xong → về trang đăng nhập với toast MSG49. --%>
+             fieldErrors.confirmPassword (MSG47: không khớp). Lưu xong → về trang đăng nhập với toast MSG95. --%>
         <c:otherwise>
           <div class="auth-head"><h1>Đặt mật khẩu mới</h1></div>
 
