@@ -117,32 +117,32 @@ public class PtScheduleServlet extends HttpServlet {
         LocalDate today = now.toLocalDate(); // Ngày hôm nay
 
         // B2: ngày muốn xem; Nếu thiếu hoặc sai trả về today: hôm nay.
-        //   ?date= đến từ schedule.jsp dòng 77–78 (‹ tuần trước / tuần sau ›), 80–81 (công tắc Tuần / Danh sách giữ ngày).
-        //   Nút "Tuần này" dòng 79 không gửi date → hôm nay.
+        //   ?date= đến từ schedule.jsp dòng 78–79 (‹ tuần trước / tuần sau ›), 81–82 (công tắc Tuần / Danh sách giữ ngày; link in ở _schedule-toolbar.jspf dòng 81–82).
+        //   Nút "Tuần này" (schedule.jsp dòng 80, in ở _schedule-toolbar.jspf dòng 33) không gửi date → hôm nay.
         LocalDate date = PtScheduleService.parseDate(request.getParameter("date"), today);
-        request.setAttribute("today", today);      // → _header.jspf dòng 37 ngày ở topbar (nhúng ở schedule.jsp dòng 55)
-        request.setAttribute("viewDate", date);    // → schedule.jsp dòng 80–81 (link Tuần / Danh sách giữ đúng ngày), _handle-dialog.jspf (nút Đóng + ô ẩn date)
+        request.setAttribute("today", today);      // → _header.jspf dòng 37 ngày ở topbar (nhúng ở schedule.jsp dòng 56)
+        request.setAttribute("viewDate", date);    // → schedule.jsp dòng 81–82 (link Tuần / Danh sách giữ đúng ngày), _handle-dialog.jspf (nút Đóng + ô ẩn date)
 
         // B3: Service dựng tuần. Lỗi thì JSP hiện thông báo, KHÔNG hiện lịch trống.
         ServiceResult<PtScheduleWeek> result = scheduleService.getWeek(accountId, date, now);
         if (result.isSuccess()) {
-            // → schedule.jsp dòng 46 (có week mới nạp schedule.js), 77–78 (‹ ›), 86–95 (data-… cho JS),
+            // → schedule.jsp dòng 47 (có week mới nạp schedule.js), 78–79 (‹ ›), 96–101 (data-… cho JS),
             //   107–135 (tiêu đề tuần, form Thêm khung), 168–179 (trục giờ + 7 cột ngày), 301 (duration gửi khi Công bố)
             request.setAttribute("week", result.getData());
         } else {
-            request.setAttribute("scheduleError", result.getMessage());   // → schedule.jsp dòng 63–66 khung đỏ + nút Tải lại
+            request.setAttribute("scheduleError", result.getMessage());   // → schedule.jsp dòng 64–67 khung đỏ + nút Tải lại
         }
     }
 
     /** HÀM PHỤ — gọi ở B1 của showPage. Chỉ nhận "list"; mọi giá trị khác (kể cả thiếu) → "week". */
     private void loadView(HttpServletRequest request) {
-        // ?view= đến từ schedule.jsp dòng 77–79 (‹ › và "Tuần này" giữ kiểu xem), 80–81 (công tắc Tuần / Danh sách)
+        // ?view= đến từ schedule.jsp dòng 78–80 (‹ › và "Tuần này" giữ kiểu xem), 81–82 (công tắc Tuần / Danh sách)
         String view = "week";
         if ("list".equals(request.getParameter("view"))) {
             view = "list";
         }
-        // → schedule.jsp dòng 77–79 (giữ kiểu xem khi đổi tuần), 92 (class is-list), 148–149 (công tắc tô đậm),
-        //   link thẻ buổi ?handle= (dòng 239), _handle-dialog.jspf (ô ẩn view)
+        // → schedule.jsp dòng 78–80 (giữ kiểu xem khi đổi tuần), 98 (class is-list), _schedule-toolbar.jspf dòng 81–82 (công tắc tô đậm),
+        //   link thẻ buổi ?handle= (_schedule-day.jspf dòng 104), _handle-dialog.jspf (ô ẩn view)
         request.setAttribute("view", view);
     }
 
@@ -153,9 +153,9 @@ public class PtScheduleServlet extends HttpServlet {
     private void loadHandle(HttpServletRequest request, int accountId, int sessionId) {
         ServiceResult<PtHandleView> result = handleService.getHandleForm(accountId, sessionId, DateTimeUtil.now());
         if (result.isSuccess()) {
-            request.setAttribute("handle", result.getData());          // → _handle-dialog.jspf (nhúng ở schedule.jsp dòng 337, KHỐI 4)
+            request.setAttribute("handle", result.getData());          // → _handle-dialog.jspf (nhúng ở schedule.jsp dòng 179, KHỐI 4)
         } else {
-            request.setAttribute("handleError", result.getMessage());  // → schedule.jsp dòng 156–159 dòng báo lỗi đỏ trên lịch
+            request.setAttribute("handleError", result.getMessage());  // → schedule.jsp dòng 115–117 dòng báo lỗi đỏ trên lịch
         }
     }
 
@@ -164,13 +164,13 @@ public class PtScheduleServlet extends HttpServlet {
      * csrfToken cho form Công bố, khóa lưu nháp, menu, tiêu đề + nút (i), mã nhân viên (lỗi thì chỉ không hiện mã).
      */
     private void setPageInfo(HttpServletRequest request, int accountId) {
-        // → schedule.jsp dòng 300 ô ẩn csrfToken trong form Công bố + 3 form của _handle-dialog.jspf (doPost kiểm tra lại ở B2)
+        // → _schedule-pending.jspf dòng 18 ô ẩn csrfToken trong form Công bố + 3 form của _handle-dialog.jspf (doPost kiểm tra lại ở B2)
         request.setAttribute("csrfToken", RequestUtil.getOrCreateCsrfToken(request.getSession(false)));
-        // → schedule.jsp dòng 95 data-draft-key="mãTàiKhoản:ngàyThứ2" — schedule.js dùng làm khóa lưu nháp
+        // → schedule.jsp dòng 101 data-draft-key="mãTàiKhoản:ngàyThứ2" — schedule.js dùng làm khóa lưu nháp
         request.setAttribute("draftAccountId", accountId);
-        // → layout-pt.jspf dòng 64–65 tô mục "Lịch dạy" (nhúng ở schedule.jsp dòng 55)
+        // → layout-pt.jspf dòng 64–65 tô mục "Lịch dạy" (nhúng ở schedule.jsp dòng 53)
         request.setAttribute("activeNav", "schedule");
-        // → _header.jspf dòng 24, 30 tiêu đề topbar; dòng 28–31 nút (i) + chữ hướng dẫn (nhúng ở schedule.jsp dòng 55)
+        // → _header.jspf dòng 24, 30 tiêu đề topbar; dòng 28–31 nút (i) + chữ hướng dẫn (nhúng ở schedule.jsp dòng 56)
         request.setAttribute("pageTitle", "Lịch dạy");
         request.setAttribute("pageHelp", "Bấm vào chỗ trống trên lịch (hoặc nút Thêm khung) để thêm khung rảnh. "
                 + "Bấm vào khung Còn trống để đánh dấu gỡ. Khách chỉ thấy thay đổi sau khi bạn bấm Công bố.");
@@ -193,11 +193,11 @@ public class PtScheduleServlet extends HttpServlet {
      *
      * Tham số nhận — schedule.js (publishPtChanges) gom bằng new FormData(form #pt-publish-form):
      *   slotDate[] + startTime[]   các khung MỚI, đi theo cặp (ví dụ 2026-10-27 + 12:30)
-     *                              ← 2 ô ẩn trong <template> khung nháp, schedule.jsp dòng 324–325
+     *                              ← 2 ô ẩn trong <template> khung nháp, _schedule-draft-template.jspf dòng 17–18
      *   removeSlotId[]             mã các khung muốn GỠ (TimeSlots.TimeSlotId, ví dụ 773)
-     *                              ← ô checkbox trên thẻ khung trống, schedule.jsp dòng 219
-     *   duration                   P-06 trang đang dùng ← ô ẩn schedule.jsp dòng 301
-     *   csrfToken                  chống giả mạo request ← ô ẩn schedule.jsp dòng 300
+     *                              ← ô checkbox trên thẻ khung trống, _schedule-day.jspf dòng 83
+     *   duration                   P-06 trang đang dùng ← ô ẩn _schedule-pending.jspf dòng 19
+     *   csrfToken                  chống giả mạo request ← ô ẩn _schedule-pending.jspf dòng 18
      *
      * KHÔNG nhận mã PT hay giờ kết thúc từ trình duyệt: mã PT lấy từ session, giờ kết thúc Service tự tính.
      */
@@ -239,10 +239,10 @@ public class PtScheduleServlet extends HttpServlet {
 
         // B3: chuyển nguyên các mảng cho Service; Service kiểm tra lại MỌI giá trị.
         //     Không có tham số nào thì getParameterValues trả null.
-        String[] newSlotDates = request.getParameterValues("slotDate");      // ← schedule.jsp dòng 324
-        String[] newStartTimes = request.getParameterValues("startTime");   // ← schedule.jsp dòng 325
-        String[] removeSlotIds = request.getParameterValues("removeSlotId"); // ← schedule.jsp dòng 219
-        Integer duration = RequestUtil.getPositiveIntParam(request, "duration"); // ← schedule.jsp dòng 301
+        String[] newSlotDates = request.getParameterValues("slotDate");      // ← _schedule-draft-template.jspf dòng 17
+        String[] newStartTimes = request.getParameterValues("startTime");   // ← _schedule-draft-template.jspf dòng 18
+        String[] removeSlotIds = request.getParameterValues("removeSlotId"); // ← _schedule-day.jspf dòng 83
+        Integer duration = RequestUtil.getPositiveIntParam(request, "duration"); // ← _schedule-pending.jspf dòng 19
         ServiceResult<Integer> result = scheduleService.publish(accountId, newSlotDates, newStartTimes, removeSlotIds,
                 duration == null ? 0 : duration, DateTimeUtil.now());
 
