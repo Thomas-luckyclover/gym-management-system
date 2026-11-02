@@ -30,7 +30,7 @@ import java.util.List;
  *   findCustomerBusy   giờ các buổi Scheduled khác của khách (+ người tập cùng)
  *
  * PHẦN 2. GHI — chỉ trong transaction của PtSaleService
- *   giữ chỗ    lockPt, findOrOpenShift, nextOrderCode, insertPendingOrder, holdFreeSlot, insertHeldSlot
+ *   giữ chỗ    lockPt, nextOrderCode, insertPendingOrder, holdFreeSlot, insertHeldSlot
  *   đọc giữ    findHeldOrder, findExpiredHoldOrders
  *   thu tiền   markOrderPaid, insertTransaction, insertSubscription, bookHeldSlot, insertSession, findCustomerAccounts
  *   hủy giữ    releaseHold
@@ -344,61 +344,6 @@ public class PtSaleDAO {
             try (ResultSet rs = statement.executeQuery()) {
                 rs.next();
             }
-        }
-    }
-
-    /**
-     * Ca đang dùng để ghi đơn tại quầy (đơn Counter bắt buộc có ShiftId — CK_Orders_ChannelFields).
-     *   Chưa có dòng ca      → tạo ca Open do lễ tân này mở.
-     *   Có nhưng NotOpened   → mở ca (Open) bằng lễ tân này.
-     *   Open                 → dùng luôn.
-     *   Closed               → null: Service báo "Ca đã chốt".
-     */
-    public Integer findOrOpenShift(Connection connection, LocalDate workDate, String shiftType, int employeeId,
-            LocalDateTime now) throws SQLException {
-        String findSql = """
-                SELECT ShiftId, Status FROM Shifts WITH (UPDLOCK, HOLDLOCK)
-                WHERE WorkDate = ? AND ShiftType = ?
-                """;
-        try (PreparedStatement statement = connection.prepareStatement(findSql)) {
-            statement.setDate(1, Date.valueOf(workDate));
-            statement.setString(2, shiftType);
-            try (ResultSet rs = statement.executeQuery()) {
-                if (rs.next()) {
-                    int shiftId = rs.getInt("ShiftId");
-                    String status = rs.getString("Status");
-                    if ("Closed".equals(status)) {
-                        return null;
-                    }
-                    if ("NotOpened".equals(status)) {
-                        openShift(connection, shiftId, employeeId, now);
-                    }
-                    return shiftId;
-                }
-            }
-        }
-
-        String insertSql = """
-                INSERT INTO Shifts (WorkDate, ShiftType, OpenedByEmployeeId, Status, OpenedAt)
-                VALUES (?, ?, ?, 'Open', ?)
-                """;
-        try (PreparedStatement statement = connection.prepareStatement(insertSql, Statement.RETURN_GENERATED_KEYS)) {
-            statement.setDate(1, Date.valueOf(workDate));
-            statement.setString(2, shiftType);
-            statement.setInt(3, employeeId);
-            statement.setTimestamp(4, Timestamp.valueOf(now.withNano(0)));
-            statement.executeUpdate();
-            return generatedId(statement);
-        }
-    }
-
-    private void openShift(Connection connection, int shiftId, int employeeId, LocalDateTime now) throws SQLException {
-        String sql = "UPDATE Shifts SET Status = 'Open', OpenedByEmployeeId = ?, OpenedAt = ? WHERE ShiftId = ?";
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, employeeId);
-            statement.setTimestamp(2, Timestamp.valueOf(now.withNano(0)));
-            statement.setInt(3, shiftId);
-            statement.executeUpdate();
         }
     }
 
