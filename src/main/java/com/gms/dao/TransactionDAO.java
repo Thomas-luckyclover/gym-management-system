@@ -78,7 +78,7 @@ public class TransactionDAO {
      * @throws SQLException khi truy vấn lỗi
      */
     public int countManagerTransactions(String search, String method, String status,
-            String refundFilter, LocalDate fromDate, LocalDate toDate)
+            Boolean needsRefundOnly, LocalDate fromDate, LocalDate toDate)
             throws SQLException {
         StringBuilder sql = new StringBuilder("SELECT COUNT(DISTINCT o.OrderId) FROM Orders o "
                 + "JOIN Customers c ON c.CustomerId = o.HolderCustomerId "
@@ -90,7 +90,7 @@ public class TransactionDAO {
                 + "WHERE 1=1 ");
 
         List<Object> params = new ArrayList<>();
-        appendFilterConditions(sql, params, search, method, status, refundFilter, fromDate, toDate);
+        appendFilterConditions(sql, params, search, method, status, needsRefundOnly, fromDate, toDate);
 
         try (Connection conn = DBContext.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
             for (int i = 0; i < params.size(); i++) {
@@ -121,18 +121,18 @@ public class TransactionDAO {
      * @throws SQLException khi truy vấn lỗi
      */
     public List<ManagerTransactionItem> findManagerTransactionsPage(String search, String method, String status,
-            String refundFilter, LocalDate fromDate,
+            Boolean needsRefundOnly, LocalDate fromDate,
             LocalDate toDate, int offset, int pageSize)
             throws SQLException {
         StringBuilder sql = new StringBuilder(buildSelectManagerTransactionsSql());
         List<Object> params = new ArrayList<>();
 
-        appendFilterConditions(sql, params, search, method, status, refundFilter, fromDate, toDate);
+        appendFilterConditions(sql, params, search, method, status, needsRefundOnly, fromDate, toDate);
 
         sql.append(" ORDER BY "
                 + " CASE WHEN tRefund.TransactionId IS NOT NULL AND tRefund.RefundedAt IS NULL THEN 0 "
-                + "      WHEN o.Status = 'Pending' AND o.Channel = 'Online' THEN 1 "
-                + "      ELSE 2 END, "
+                + "      WHEN o.Status = 'Pending' AND o.Channel = 'Online' THEN 1 ELSE 2 END ASC, "
+                + " CASE WHEN tRefund.TransactionId IS NOT NULL AND tRefund.RefundedAt IS NULL THEN o.CreatedAt END ASC, "
                 + " o.CreatedAt DESC, o.OrderId DESC ");
         sql.append(" OFFSET ? ROWS FETCH NEXT ? ROWS ONLY ");
         params.add(offset);
@@ -166,18 +166,18 @@ public class TransactionDAO {
      * @throws SQLException khi truy vấn lỗi
      */
     public List<ManagerTransactionItem> findAllManagerTransactionsForExport(String search, String method, String status,
-            String refundFilter, LocalDate fromDate,
+            Boolean needsRefundOnly, LocalDate fromDate,
             LocalDate toDate)
             throws SQLException {
         StringBuilder sql = new StringBuilder(buildSelectManagerTransactionsSql());
         List<Object> params = new ArrayList<>();
 
-        appendFilterConditions(sql, params, search, method, status, refundFilter, fromDate, toDate);
+        appendFilterConditions(sql, params, search, method, status, needsRefundOnly, fromDate, toDate);
 
         sql.append(" ORDER BY "
                 + " CASE WHEN tRefund.TransactionId IS NOT NULL AND tRefund.RefundedAt IS NULL THEN 0 "
-                + "      WHEN o.Status = 'Pending' AND o.Channel = 'Online' THEN 1 "
-                + "      ELSE 2 END, "
+                + "      WHEN o.Status = 'Pending' AND o.Channel = 'Online' THEN 1 ELSE 2 END ASC, "
+                + " CASE WHEN tRefund.TransactionId IS NOT NULL AND tRefund.RefundedAt IS NULL THEN o.CreatedAt END ASC, "
                 + " o.CreatedAt DESC, o.OrderId DESC ");
 
         List<ManagerTransactionItem> list = new ArrayList<>();
@@ -235,35 +235,37 @@ public class TransactionDAO {
 
                     List<TransactionAttemptView> attempts = findAttemptsByOrderId(conn, orderId);
 
-                    return new ManagerOrderDetailView(
-                            rs.getInt("OrderId"),
-                            rs.getString("OrderCode"),
-                            rs.getString("Channel"),
-                            readNullableDateTime(rs, "CreatedAt"),
-                            readNullableDateTime(rs, "PaymentDueAt"),
-                            readNullableDateTime(rs, "PaidAt"),
-                            rs.getString("Status"),
-                            rs.getString("CancelType"),
-                            readNullableDateTime(rs, "CancelledAt"),
-                            rs.getString("CancelReason"),
-                            rs.getString("CreatedByEmployeeName"),
-                            readNullableInt(rs, "ShiftId"),
-                            rs.getString("CustomerName"),
-                            rs.getString("CustomerPhone"),
-                            rs.getString("CustomerEmail"),
-                            rs.getString("PartnerName"),
-                            rs.getString("PackageNameSnapshot"),
-                            rs.getString("PackageDescriptionSnapshot"),
-                            rs.getString("PackageBenefitsSnapshot"),
-                            unitPrice,
-                            discountAmount,
-                            rs.getString("VoucherCode"),
-                            rs.getInt("VatRateSnapshot"),
-                            vatAmount,
-                            totalPayable,
-                            preTaxAmount,
-                            attempts
+                    ManagerOrderDetailView view = new ManagerOrderDetailView(
+                            rs.getInt("OrderId"),
+                            rs.getString("OrderCode"),
+                            rs.getString("Channel"),
+                            readNullableDateTime(rs, "CreatedAt"),
+                            readNullableDateTime(rs, "PaymentDueAt"),
+                            readNullableDateTime(rs, "PaidAt"),
+                            rs.getString("Status"),
+                            rs.getString("CancelType"),
+                            readNullableDateTime(rs, "CancelledAt"),
+                            rs.getString("CancelReason"),
+                            rs.getString("CreatedByEmployeeName"),
+                            readNullableInt(rs, "ShiftId"),
+                            rs.getString("CustomerName"),
+                            rs.getString("CustomerPhone"),
+                            rs.getString("CustomerEmail"),
+                            rs.getString("PartnerName"),
+                            rs.getString("PackageNameSnapshot"),
+                            rs.getString("PackageDescriptionSnapshot"),
+                            rs.getString("PackageBenefitsSnapshot"),
+                            unitPrice,
+                            discountAmount,
+                            rs.getString("VoucherCode"),
+                            rs.getInt("VatRateSnapshot"),
+                            vatAmount,
+                            totalPayable,
+                            preTaxAmount,
+                            attempts
                     );
+                    loadSubscriptionInfo(conn, orderId, view);
+                    return view;
                 }
             }
         }
@@ -277,6 +279,31 @@ public class TransactionDAO {
      * @return danh sách TransactionAttemptView sắp xếp theo thời gian tăng dần
      * @throws SQLException khi truy vấn lỗi
      */
+    
+    /** Gói đã cấp cho đơn (nếu có): hiệu lực, trạng thái, PT. Chưa cấp thì giữ null. */
+    private void loadSubscriptionInfo(Connection conn, int orderId, ManagerOrderDetailView view)
+            throws SQLException {
+        String sql = "SELECT TOP 1 s.StartDate, s.EndDate, s.Status, pPt.FullName AS PtName "
+                + "FROM Subscriptions s "
+                + "LEFT JOIN Employees ePt ON ePt.EmployeeId = s.PtEmployeeId "
+                + "LEFT JOIN Persons pPt ON pPt.PersonId = ePt.PersonId "
+                + "WHERE s.OrderId = ? ORDER BY s.SubscriptionId";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, orderId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    Date start = rs.getDate("StartDate");
+                    Date end = rs.getDate("EndDate");
+                    view.setSubscriptionInfo(
+                            start == null ? null : start.toString(),
+                            end == null ? null : end.toString(),
+                            rs.getString("Status"),
+                            rs.getString("PtName"));
+                }
+            }
+        }
+    }
+
     public List<TransactionAttemptView> findAttemptsByOrderId(int orderId) throws SQLException {
         try (Connection conn = DBContext.getConnection()) {
             return findAttemptsByOrderId(conn, orderId);
@@ -388,7 +415,7 @@ public class TransactionDAO {
 
     private void appendFilterConditions(StringBuilder sql, List<Object> params,
             String search, String method, String status,
-            String refundFilter, LocalDate fromDate, LocalDate toDate) {
+            Boolean needsRefundOnly, LocalDate fromDate, LocalDate toDate) {
         // B1: Từ khóa tìm kiếm mã đơn hoặc tên khách
         if (search != null && !search.trim().isEmpty()) {
             sql.append(" AND (o.OrderCode LIKE ? "
@@ -419,14 +446,14 @@ public class TransactionDAO {
                 sql.append(" AND o.Status = 'Pending' ");
             } else if ("cancelled".equalsIgnoreCase(status)) {
                 sql.append(" AND o.Status = 'Cancelled' ");
+            } else if ("refunded".equalsIgnoreCase(status)) {
+                sql.append(" AND tRefund.RefundedAt IS NOT NULL ");
             }
         }
 
         // B4: Lọc giao dịch cần hoàn tiền
-        if ("1".equals(refundFilter)) {
-            sql.append(" AND tRefund.TransactionId IS NOT NULL AND tRefund.RefundedAt IS NULL ");
-        } else if ("done".equals(refundFilter)) {
-            sql.append(" AND tRefund.RefundedAt IS NOT NULL ");
+        if (Boolean.TRUE.equals(needsRefundOnly)) {
+            sql.append(" AND tRefund.NeedsRefund = 1 AND tRefund.RefundedAt IS NULL ");
         }
 
         // B5: Khoảng thời gian
