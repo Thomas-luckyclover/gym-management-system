@@ -342,13 +342,19 @@ public class PtSaleService {
 
     /**
      * Ca đang mở để ghi đơn — cùng cách với CounterSaleService: lấy ca hiện tại của hôm nay,
-     * chưa có ca hoặc ca chưa Open / đã chốt → từ chối bằng câu lỗi truyền vào (MSG109 khi giữ lịch, MSG110 khi thu tiền).
+     * chưa có ca hoặc ca chưa Open / đã chốt → từ chối bằng câu lỗi truyền vào (MSG109 khi giữ lịch, MSG110 khi thu tiền);
+     * ca đang mở là ca ngày trước → MSG324 (CBR-123).
      * Hệ thống KHÔNG tự mở ca hộ lễ tân (CBR-105, BR-93): lễ tân mở ca ở màn Ca làm việc.
      */
     private int openShiftId(String notOpenMessage) throws SQLException {
         Shift shift = shiftDAO.findCurrentOrActiveShift(DateTimeUtil.today());
         if (shift == null || !shift.isOpen()) {
             throw new IllegalArgumentException(notOpenMessage);
+        }
+        // CBR-123: ca đang mở là ca ngày trước (quên chốt) → không ghi đơn hôm nay vào ca đó.
+        String pastDayShift = ShiftService.pastDayShiftMessage(shift, DateTimeUtil.today());
+        if (pastDayShift != null) {
+            throw new IllegalArgumentException(pastDayShift);
         }
         return shift.getShiftId();
     }

@@ -208,6 +208,11 @@ public class CounterSaleService {
             if (noShift || shiftClosed) {
                 return ServiceResult.fail(Messages.MSG109_SHIFT_NOT_OPEN_FOR_SALE);
             }
+            // CBR-123: ca đang mở là ca ngày trước (quên chốt) → không bán vào ca đó.
+            String pastDayShift = ShiftService.pastDayShiftMessage(currentShift, DateTimeUtil.today());
+            if (pastDayShift != null) {
+                return ServiceResult.fail(pastDayShift);
+            }
 
             LocalDate today = DateTimeUtil.today();
             CounterCustomerRow row = counterSaleDAO.findCustomer(connection, customerId, today, receptionist[1]);
@@ -564,6 +569,11 @@ public class CounterSaleService {
             boolean shiftClosed = !noShift && !currentShift.isOpen();
             if (noShift || shiftClosed) {
                 return ServiceResult.fail(Messages.MSG110_SHIFT_NOT_OPEN_FOR_PAYMENT);
+            }
+            // CBR-123: ca đang mở là ca ngày trước (quên chốt) → không thu tiền vào ca đó.
+            String pastDayShift = ShiftService.pastDayShiftMessage(currentShift, DateTimeUtil.today());
+            if (pastDayShift != null) {
+                return ServiceResult.fail(pastDayShift);
             }
             int shiftId = currentShift.getShiftId();
 

@@ -59,6 +59,20 @@ public class ShiftService {
      *   Không có ca đang mở → MSG109 chỉ trên màn bán tại quầy (CBR-105: hiện "Chưa mở ca" + nút Mở ca).
      *   Còn lại → null (không hiện gì). Lỗi đọc DB → null, không chặn trang.
      */
+    /**
+     * CBR-123: ca đang mở là ca của NGÀY TRƯỚC (bị quên chốt) → màn bán tại quầy từ chối giữ chỗ / thu tiền bằng MSG324,
+     * để tiền hôm nay không ghi vào ca hôm trước. Ca quá giờ trong cùng ngày vẫn bán (chỉ cảnh báo MSG323).
+     *
+     * @return câu MSG324 nếu phải từ chối; null nếu được bán
+     */
+    public static String pastDayShiftMessage(Shift shift, LocalDate today) {
+        if (shift == null || !shift.isOpen() || !shift.getWorkDate().isBefore(today)) {
+            return null;
+        }
+        return String.format(Messages.MSG324_SHIFT_PAST_DAY_NOT_CLOSED,
+                shift.getShiftType().getDisplayName(), DateTimeUtil.formatDate(shift.getWorkDate()));
+    }
+
     public String findShiftNotice(LocalDateTime now, boolean saleScreen) {
         try {
             LocalDate today = now.toLocalDate();

@@ -984,6 +984,10 @@ public final class Messages {
     public static final String MSG323_SHIFT_OVERDUE_NOT_CLOSED =
             "%s ngày %s đã quá giờ kết thúc nhưng chưa chốt. Vui lòng kiểm tiền trong két và chốt ca ở màn Ca làm việc.";
 
+    /** CBR-123: bán / thu tiền khi ca đang mở là ca của NGÀY TRƯỚC → từ chối. %s = tên ca, ngày. */
+    public static final String MSG324_SHIFT_PAST_DAY_NOT_CLOSED =
+            "%s ngày %s chưa được chốt. Vui lòng chốt ca cũ và mở ca hôm nay trước khi bán.";
+
     private Messages() {
     }
 }
