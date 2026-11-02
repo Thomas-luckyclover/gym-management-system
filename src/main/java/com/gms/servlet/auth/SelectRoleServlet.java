@@ -59,6 +59,7 @@ public class SelectRoleServlet extends HttpServlet {
         // B3: hiện màn chọn
         request.setAttribute("roles", roles);
         request.setAttribute("currentRole", session.getAttribute(SessionKey.ROLE));
+        request.setAttribute("chooseRoleMessage", Messages.MSG74_CHOOSE_ROLE);   // → select-role.jsp dưới tiêu đề
         String returnUrl = RequestUtil.getTrimmedParam(request, "returnUrl");
         if (RequestUtil.isSafeReturnUrl(returnUrl)) {
             request.setAttribute("returnUrl", returnUrl);
@@ -98,9 +99,13 @@ public class SelectRoleServlet extends HttpServlet {
             return;
         }
 
-        // B3: lưu vai trò đang dùng vào session
+        // B3: lưu vai trò đang dùng vào session. Đã có vai trò trước đó = đổi từ menu tài khoản → toast MSG75.
         HttpSession session = request.getSession(false);
+        boolean switching = session.getAttribute(SessionKey.ROLE) != null;
         session.setAttribute(SessionKey.ROLE, chosen.getDbValue());
+        if (switching) {
+            RequestUtil.setFlashToast(request, "success", String.format(Messages.MSG75_ROLE_SWITCHED, chosen.getDisplayName()));
+        }
         session.setAttribute(SessionKey.AVAILABLE_ROLES, joinRoles(roles));
         session.removeAttribute(SessionKey.PENDING_CONTACT_FIELD);
         session.removeAttribute(SessionKey.PENDING_CONTACT_VALUE);
