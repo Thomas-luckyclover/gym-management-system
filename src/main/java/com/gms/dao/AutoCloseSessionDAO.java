@@ -220,7 +220,8 @@ public class AutoCloseSessionDAO {
 
     /**
      * HÀM CHÍNH — AutoCloseSessionService.closeOneSession gọi ở B3.
-     * Ghi kết quả Service đã chọn vào đúng 1 buổi: Status, MissedReason, IsAutoClosed = 1, AttendanceMarkedAt = bây giờ.
+     * Ghi kết quả Service đã chọn vào đúng 1 buổi: Status, MissedReason, CancelType, CancelledAt (khi hủy), IsAutoClosed = 1,
+     * AttendanceMarkedAt = bây giờ.
      *
      * Bảng ghi: Sessions (JOIN TimeSlots để kiểm tra lại ngày tập đã qua).
      * @return true = UPDATE đổi đúng 1 buổi; false = buổi không còn Scheduled → Service rollback
@@ -235,6 +236,7 @@ public class AutoCloseSessionDAO {
                     MissedReason = ?,
                     CancelType = ?,
                     CommissionAmount = CASE WHEN ? = 'GymClosed' THEN 0 ELSE CommissionAmount END,
+                    CancelledAt = CASE WHEN ? IS NULL THEN NULL ELSE SYSDATETIME() END,
                     IsAutoClosed = 1,
                     AttendanceMarkedAt = SYSDATETIME()
                 FROM Sessions s
@@ -267,8 +269,15 @@ public class AutoCloseSessionDAO {
                 statement.setString(4, cancelType.getDbValue());
             }
 
-            statement.setInt(5, sessionId);
-            statement.setDate(6, Date.valueOf(today));
+            // Buổi bị hủy (GymClosed) phải có CancelledAt — CK_Sessions_Cancel; buổi CheckedIn / Missed để NULL.
+            if (cancelType == null) {
+                statement.setNull(5, Types.VARCHAR);
+            } else {
+                statement.setString(5, cancelType.getDbValue());
+            }
+
+            statement.setInt(6, sessionId);
+            statement.setDate(7, Date.valueOf(today));
 
             // B3: trả số dòng đã đổi thành true/false; DAO chưa tự commit transaction.
             return statement.executeUpdate() == 1;
