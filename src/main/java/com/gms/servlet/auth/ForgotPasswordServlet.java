@@ -223,7 +223,7 @@ public class ForgotPasswordServlet extends HttpServlet {
             // Session đã bị hủy, không còn gì để xóa.
         }
 
-        // B6: toast MSG49 rồi về Đăng nhập (setFlashToast tự tạo session mới nếu session cũ đã hủy).
+        // B6: toast MSG95 rồi về Đăng nhập (setFlashToast tự tạo session mới nếu session cũ đã hủy).
         RequestUtil.setFlashToast(request, "success", result.getMessage());
         RequestUtil.redirect(request, response, "/login");
     }
