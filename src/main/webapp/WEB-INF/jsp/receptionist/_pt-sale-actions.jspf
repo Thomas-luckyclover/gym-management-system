@@ -1,0 +1,84 @@
+<%@ page pageEncoding="UTF-8" %>
+<%--
+================================================================================
+ _pt-sale-actions.jspf — NÚT CHÍNH CỦA BƯỚC HIỆN TẠI (cuối cột Đơn bán)
+ Nhúng vào: pt-sales.jsp (static include → dùng chung biến với trang cha).
+ Đang giữ (sale.held):        form POST action=pay "Xác nhận đã thu tiền" + form POST action=release "Hủy giữ chỗ"
+                              → PtSaleServlet.doPost → PtSaleService.pay / release
+ Có lịch (sale.planJson):     form POST action=hold "Giữ lịch 15 phút" (data-plan-form)
+                              Các ô ẩn t1..t5 + sessions do pt-sale-plan.js (renderSummary) ĐIỀN trước khi gửi;
+                              nút bị khóa (disabled) tới khi có ≥ 1 buổi + đủ khách + (nếu cần) tích "Đã xác nhận với PT".
+                              Server vẫn kiểm lại hết (PtSaleService.hold).
+ Chưa chọn đủ:                1 dòng hướng dẫn.
+ Mọi form POST đều có ô ẩn csrfToken (PtSaleServlet.showPage đặt).
+================================================================================ --%>
+
+<%-- ===== BẮT ĐẦU: NÚT CHÍNH ===== --%>
+                <c:choose>
+                    <%-- Bước 4: đang giữ → thu tiền hoặc hủy giữ. --%>
+                    <c:when test="${sale.held}">
+
+                        <%-- FORM THU TIỀN → POST action=pay. Ô ẩn: order (mã đơn đang giữ), start (ngày bắt đầu kỳ). Ô tích "Đã nhận đủ" chỉ trình duyệt bắt (required). --%>
+                        <form class="sale-pay" method="post" action="${base}">
+                            <input type="hidden" name="csrfToken" value="<c:out value='${csrfToken}' />">
+                            <input type="hidden" name="action" value="pay">
+                            <input type="hidden" name="order" value="${sale.heldOrderId}">
+                            <input type="hidden" name="start" value="${sale.startDate}">
+                            <fieldset class="sale-method">
+                                <legend class="sale-field-label">Cách thu tiền</legend>
+                                <label><input type="radio" name="method" value="Cash" checked> <i class="fa-solid fa-money-bill-wave" aria-hidden="true"></i> Tiền mặt</label>
+                                <label><input type="radio" name="method" value="Transfer"> <i class="fa-solid fa-building-columns" aria-hidden="true"></i> Chuyển khoản</label>
+                            </fieldset>
+                            <label class="sale-field sale-ref"><span class="sale-field-label">Mã giao dịch <small>(không bắt buộc)</small></span>
+                                <input name="reference" type="text" maxlength="50" autocomplete="off"></label>
+                            <label class="sale-confirm"><input type="checkbox" required>
+                                <span>Đã nhận đủ <b><c:out value="${gms:formatMoney(sale.price)}" /></b>.</span></label>
+                            <button class="btn btn-primary sale-main" type="submit">Xác nhận đã thu tiền</button>
+                        </form>
+
+                        <%-- FORM HỦY GIỮ → POST action=release. data-confirm-* trên nút: common.js hiện hộp xác nhận trước khi gửi. --%>
+                        <form method="post" action="${base}">
+                            <input type="hidden" name="csrfToken" value="<c:out value='${csrfToken}' />">
+
+                            <input type="hidden" name="action" value="release">
+                            <input type="hidden" name="order" value="${sale.heldOrderId}">
+                            <button class="btn btn-ghost sale-release" type="submit" data-confirm-message="Hủy giữ chỗ ${sale.heldCode}? Các khung sẽ trả lại cho PT." data-confirm-title="Hủy giữ chỗ" data-confirm-text="Hủy giữ chỗ">Hủy giữ chỗ</button>
+                        </form>
+                    </c:when>
+                    <%-- Bước 3: giữ lịch (khung chuyển "Đang giữ" ngay, người khác không lấy được).
+                         pt-sale-plan.js điền t1..t5 (lịch mẫu) + sessions (các buổi), mở nút khi có ít nhất 1 buổi. --%>
+                    <c:when test="${not empty sale.planJson}">
+
+                        <%-- FORM GIỮ LỊCH → POST action=hold. data-plan-form = chỗ pt-sale-plan.js tìm form này; data-customer-ready = JSP báo cho JS biết đã đủ khách chưa. --%>
+                        <form method="post" action="${base}" data-plan-form data-customer-ready="${customerReady}">
+                            <input type="hidden" name="csrfToken" value="<c:out value='${csrfToken}' />">
+                            <input type="hidden" name="action" value="hold">
+                            <input type="hidden" name="customer" value="${sale.customerId}">
+                            <input type="hidden" name="partner" value="${sale.partnerId}">
+                            <input type="hidden" name="package" value="${sale.packageId}">
+                            <input type="hidden" name="pt" value="${sale.ptId}">
+                            <input type="hidden" name="start" value="${sale.startDate}">
+
+                            <%-- t1..t5 (data-plan-t="1..5") và sessions (data-plan-sessions): RỖNG khi tải trang, pt-sale-plan.js renderSummary điền giờ đã chọn. --%>
+                            <c:forEach var="n" begin="1" end="5"><input type="hidden" name="t${n}" value="" data-plan-t="${n}"></c:forEach>
+                            <input type="hidden" name="sessions" value="" data-plan-sessions>
+                            <%-- Chỉ hiện khi lịch có buổi "PT chưa mở" (pt-sale-plan.js bật / tắt; PtSaleService.hold kiểm tra lại). --%>
+                            <label class="sale-confirm sale-pt-confirm" data-plan-confirm hidden>
+                                <input type="checkbox" name="confirmPt" value="1">
+                                <span><b>Đã xác nhận với PT</b>
+                                    <small data-plan-confirm-text>PT đã đồng ý dạy các buổi chưa mở khung.</small></span>
+                            </label>
+                            <button class="btn btn-primary sale-main" type="submit" disabled data-plan-submit><i class="fa-solid fa-lock" aria-hidden="true"></i> Giữ lịch 15 phút</button>
+                        </form>
+                        <%-- Pumpy + bong bóng nhắc bước kế tiếp (pt-sale-plan.js renderSummary đổi chữ theo trạng thái).
+                             Chữ không nói "bên trái / bên phải" vì iPad / điện thoại xếp 1 cột. --%>
+                        <div class="sale-note">
+                            <%@ include file="/WEB-INF/jsp/receptionist/_sale-pumpy.jspf" %>
+                            <p class="sale-msg sale-bubble" data-plan-note aria-live="polite">Chọn giờ tập ở phần <b>Lịch tập</b>, rồi tìm khách ở ô <b>Khách mua gói</b> để giữ lịch.</p>
+                        </div>
+                    </c:when>
+                    <c:otherwise>
+                        <p class="sale-msg">Chọn gói, PT và ngày bắt đầu ở phần <b>Gói &amp; PT</b> để xếp lịch.</p>
+                    </c:otherwise>
+                </c:choose>
+<%-- ===== KẾT THÚC: NÚT CHÍNH ===== --%>

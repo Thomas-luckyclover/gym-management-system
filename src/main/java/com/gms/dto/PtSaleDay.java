@@ -4,10 +4,13 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 /**
- * MỘT NGÀY T2–T6 trong kỳ gói, trên bảng "Lịch dự kiến".
+ * MỘT BUỔI (1 ngày T2–T6 + 1 giờ) của gói đang bán.
  *
- *   Ai tạo?   PtSaleService.checkDay (không đọc DB, test được) — 1 ngày + 1 giờ.
- *   Ai dùng?  pt-sales.jsp in lịch dự kiến; PtSaleService.hold giữ khung theo action.
+ *   AI TẠO?   SERVICE, bằng constructor (không có setter):
+ *               PtSaleService.checkDay  — khi Giữ lịch: kiểm lại từng buổi gửi lên (không đọc DB, test được)
+ *               PtSaleService.loadHeld  — trang ?order=: mỗi khung đang Held thành 1 buổi "book"
+ *   AI DÙNG?  PtSaleService.hold: "book" → holdFreeSlot, "create" → insertHeldSlot.
+ *             _pt-sale-held.jspf: lưới "N buổi tập · Đang giữ" (ô ngày + giờ, ghi chú dưới lưới).
  *
  *   action = "book"    PT đã công bố khung Free đúng giờ → giữ khung đó (slotId có giá trị)
  *            "create"  PT chưa có khung giờ này ngày đó → tạo khung mới (Held)
@@ -16,14 +19,15 @@ import java.time.LocalTime;
  */
 public class PtSaleDay {
 
-    private final LocalDate date;
-    private final String dayLabel;     // "Thứ 3 · 27/10"
-    private final LocalTime startTime;
-    private final LocalTime endTime;
-    private final String action;
-    private final Integer slotId;
-    private final String reason;       // chỉ khi action = skip
-    private final String warning;      // có thể null
+    //                                                                           In ra màn?
+    private final LocalDate date;      // ngày của buổi → "27/10" trên ô lưới, cột theo thứ                CÓ
+    private final String dayLabel;     // "Thứ 3 · 27/10" → đầu dòng ghi chú, tooltip ô                     CÓ
+    private final LocalTime startTime; // giờ bắt đầu → "18:00" trên ô                                      CÓ
+    private final LocalTime endTime;   // giờ kết thúc = start + P-06 phút                                   KHÔNG
+    private final String action;       // book | create | skip (xem trên)                                    KHÔNG (qua isSession)
+    private final Integer slotId;      // TimeSlots.TimeSlotId khi "book"; null khi "create"                 KHÔNG
+    private final String reason;       // chỉ khi skip: vì sao không có buổi                                 CÓ (ghi chú đỏ)
+    private final String warning;      // có buổi nhưng PT cần dời (phòng nghỉ / PT nghỉ); có thể null       CÓ (ghi chú vàng)
 
     public PtSaleDay(LocalDate date, String dayLabel, LocalTime startTime, LocalTime endTime,
             String action, Integer slotId, String reason, String warning) {

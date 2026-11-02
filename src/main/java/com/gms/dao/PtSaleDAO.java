@@ -18,50 +18,91 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * DAO MÀN BÁN GÓI PT TẠI QUẦY (/receptionist/pt-sales). Mọi hàm nhận connection của Service.
+ * DAO MÀN BÁN GÓI PT TẠI QUẦY (/receptionist/pt-sales). Chỉ PtSaleService gọi.
  *
- * PHẦN 1. ĐỌC — PtSaleService.prepare (xem trước) và PtSaleService.sell (kiểm tra lại) đều gọi
- *   findReceptionist   tài khoản đăng nhập → mã lễ tân
- *   findCustomer       1 khách theo mã, kèm gói thành viên hôm nay
- *   searchCustomers    ô tìm kiếm gợi ý: tên (không dấu) / SĐT / mã KH, tối đa 8 người
- *   findPtPackages / findPackage   gói PT đang bán
- *   findWorkingPts / findPt        PT đang làm việc
- *   findPtSlots        mọi khung của PT trong kỳ (lock = true khi bán: không ai chen vào)
- *   findCustomerBusy   giờ các buổi Scheduled khác của khách (+ người tập cùng)
+ * QUY ƯỚC: mọi hàm NHẬN connection của Service, không tự mở / commit / đóng.
+ *   → Service quyết định khi nào là 1 transaction (hold, pay, release đều là 1 transaction).
+ * KHÓA: hàm có "WITH (UPDLOCK, HOLDLOCK)" giữ dòng tới hết transaction → người thứ 2 phải chờ:
+ *   lockPt (dòng PT) · findPtSlots(lock = true) (khung của PT trong kỳ) · nextOrderCode (mã đơn) · findHeldOrder(lock = true).
  *
- * PHẦN 2. GHI — chỉ trong transaction của PtSaleService
- *   giữ chỗ    lockPt, nextOrderCode, insertPendingOrder, holdFreeSlot, insertHeldSlot
- *   đọc giữ    findHeldOrder, findExpiredHoldOrders
- *   thu tiền   markOrderPaid, insertTransaction, insertSubscription, bookHeldSlot, insertSession, findCustomerAccounts
- *   hủy giữ    releaseHold
+ * BỐ CỤC: xếp theo HÀM CHÍNH của Service dùng tới (search / prepare → hold → pay → release).
+ *   Cuối mỗi hàm ghi: bảng nào, đọc (R) / thêm (C) / sửa (U) / xóa (D).
  */
 public class PtSaleDAO {
 
-    /** Một gói PT đang bán (bảng Packages). */
+
+    // ============================================================================================================
+    // KIỂU DỮ LIỆU DAO TRẢ VỀ (Service đọc field trực tiếp: pkg.price, pt.fullName, held.slots …)
+    // ============================================================================================================
+
+    /**
+     * 1 gói PT đang bán — DAO tạo bằng constructor trong readPackage (findPtPackages, findPackage).
+     * Service đọc: loadPackage (ô chọn gói, giá, số tháng), hold (chép vào đơn), pay (số tháng → ngày kết thúc).
+     */
     public static class PackageRow {
-        public int packageId;
-        public String name;
-        public String description;
-        public String benefits;
-        public String type;          // PTSingle | PTCouple
-        public int months;           // DurationValue (đơn vị Month)
-        public long price;           // đã gồm VAT
+        public final int packageId;        // Packages.PackageId → value ô chọn gói
+        public final String name;          // Packages.PackageName → IN tên gói; chép vào Orders.PackageNameSnapshot
+        public final String description;   // Packages.Description → chép vào đơn (không in)
+        public final String benefits;      // Packages.Benefits → chép vào đơn (không in)
+        public final String type;          // Packages.PackageType: PTSingle | PTCouple → "1 người" / "Gói đôi"
+        public final int months;           // Packages.DurationValue (đơn vị Month) → IN "· 2 tháng"
+        public final long price;           // Packages.Price, đã gồm VAT → IN "Phải thu"
+
+        public PackageRow(int packageId, String name, String description, String benefits, String type, int months,
+                long price) {
+            this.packageId = packageId;
+            this.name = name;
+            this.description = description;
+            this.benefits = benefits;
+            this.type = type;
+            this.months = months;
+            this.price = price;
+        }
     }
 
-    /** Một PT đang làm việc (bảng Employees + Persons). */
+    /**
+     * 1 PT đang làm việc — DAO tạo bằng constructor trong readPt (findWorkingPts, findPt).
+     * Service đọc: loadPt (ô chọn PT, chặn PT là chính khách), pay (hoa hồng), notifySale (tên PT).
+     */
     public static class PtRow {
-        public int employeeId;
-        public int personId;
-        public String fullName;
-        public int commissionRate;
+        public final int employeeId;       // Employees.EmployeeId → value ô chọn PT (?pt=)
+        public final int personId;         // Employees.PersonId → so với khách (PT không tự bán cho mình)
+        public final String fullName;      // Persons.FullName → IN tên PT, chữ tắt "ĐS"
+        public final int commissionRate;   // Employees.CommissionRate (%) → Sessions.CommissionAmount khi thu tiền
+
+        public PtRow(int employeeId, int personId, String fullName, int commissionRate) {
+            this.employeeId = employeeId;
+            this.personId = personId;
+            this.fullName = fullName;
+            this.commissionRate = commissionRate;
+        }
+    }
+
+    /** Một đơn đang giữ chỗ (đọc từ Orders + khung Held của đơn). */
+    public static class HeldOrder {
+        public int orderId;
+        public String orderCode;
+        public String status;           // Pending | Paid | Cancelled
+        public int holderId;
+        public Integer partnerId;
+        public int packageId;
+        public long price;
+        public LocalDateTime createdAt;
+        public LocalDateTime expiresAt; // hạn giữ sớm nhất trong các khung (null = không còn khung nào giữ)
+        public int ptId;
+        public List<PtScheduleItem> slots = new ArrayList<>();   // khung đang giữ, theo ngày giờ
     }
 
 
-    // ================================================================================================================
-    // PHẦN 1. ĐỌC
-    // ================================================================================================================
+    // ============================================================================================================
+    // PHỤC VỤ HÀM CHÍNH search + prepare (bước Khách) — ĐỌC, không khóa
+    //   findReceptionist · searchCustomers · findCustomer (+ readCustomer, MEMBERSHIP_COLUMNS, escapeLike)
+    // ============================================================================================================
 
-    /** Tài khoản → [EmployeeId, PersonId] của Lễ tân đang làm việc; không phải → null. */
+    /**
+     * [search, prepare, hold, pay, release] Accounts + Employees: R 1 dòng.
+     * Tài khoản → [EmployeeId, PersonId] của Lễ tân đang làm việc; không phải → null.
+     */
     public int[] findReceptionist(Connection connection, int accountId) throws SQLException {
         String sql = """
                 SELECT e.EmployeeId, e.PersonId
@@ -78,38 +119,8 @@ public class PtSaleDAO {
         }
     }
 
-    /** 2 cột tính sẵn cho NGÀY ? (dùng chung findCustomer + searchCustomers). */
-    private static final String MEMBERSHIP_COLUMNS = """
-            (SELECT MAX(m.EndDate) FROM Subscriptions m
-             WHERE m.CustomerId = c.CustomerId AND m.SubscriptionType = 'Membership'
-               AND m.Status IN ('Active', 'Frozen') AND ? BETWEEN m.StartDate AND m.EndDate) AS MembershipEnd,
-            CASE WHEN EXISTS (SELECT 1 FROM Subscriptions m
-                              JOIN FreezeRecords f ON f.SubscriptionId = m.SubscriptionId
-                              WHERE m.CustomerId = c.CustomerId AND m.SubscriptionType = 'Membership'
-                                AND ? BETWEEN f.StartDate AND COALESCE(f.ActualEndDate, f.PlannedEndDate))
-                 THEN 1 ELSE 0 END AS IsFrozen
-            """;
-
     /**
-     * 1 khách theo mã CustomerId (ô gợi ý đã chọn → ?customer=12). Hồ sơ đã xóa → null.
-     * Kèm MembershipEnd (gói thành viên Active/Frozen phủ hôm nay) và IsFrozen (hôm nay đang bảo lưu).
-     */
-    public PtSaleCustomer findCustomer(Connection connection, int customerId, LocalDate today) throws SQLException {
-        String sql = "SELECT c.CustomerId, c.PersonId, c.CustomerCode, c.CustomerType, p.FullName, p.Phone, p.DateOfBirth, "
-                + MEMBERSHIP_COLUMNS
-                + " FROM Customers c JOIN Persons p ON p.PersonId = c.PersonId"
-                + " WHERE c.DeletedAt IS NULL AND c.CustomerId = ?";
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setDate(1, Date.valueOf(today));
-            statement.setDate(2, Date.valueOf(today));
-            statement.setInt(3, customerId);
-            try (ResultSet rs = statement.executeQuery()) {
-                return rs.next() ? readCustomer(rs) : null;
-            }
-        }
-    }
-
-    /**
+     * [search; prepare khi tắt JS] Customers + Persons (+ Subscriptions, FreezeRecords): R tối đa 8 dòng.
      * Ô tìm khách kiểu Google: tối đa 8 khách khớp MỘT trong 3 cách (không phân biệt hoa thường, dấu):
      *   tên chứa các từ gõ theo đúng thứ tự ("mai", "do mai" đều khớp "Đỗ Thị Mai")
      *   ·  SĐT / SĐT giám hộ chứa dãy số  ·  mã KH chứa chữ gõ.
@@ -162,22 +173,64 @@ public class PtSaleDAO {
         return text.replace("[", "[[]").replace("%", "[%]").replace("_", "[_]");
     }
 
-    private PtSaleCustomer readCustomer(ResultSet rs) throws SQLException {
-        PtSaleCustomer row = new PtSaleCustomer();
-        row.setCustomerId(rs.getInt("CustomerId"));
-        row.setPersonId(rs.getInt("PersonId"));
-        row.setCustomerCode(rs.getString("CustomerCode"));
-        row.setCustomerType(rs.getString("CustomerType"));
-        row.setFullName(rs.getString("FullName"));
-        row.setPhone(rs.getString("Phone"));
-        row.setDateOfBirth(rs.getDate("DateOfBirth").toLocalDate());
-        Date end = rs.getDate("MembershipEnd");
-        row.setMembershipEnd(end == null ? null : end.toLocalDate());
-        row.setFrozen(rs.getBoolean("IsFrozen"));
-        return row;
+    /**
+     * [prepare → loadHolder / loadPartner / loadHeld; pay → notifySale] Customers + Persons: R 1 dòng.
+     * 1 khách theo mã CustomerId (ô gợi ý đã chọn → ?customer=12). Hồ sơ đã xóa → null.
+     * Kèm MembershipEnd (gói thành viên Active/Frozen phủ hôm nay) và IsFrozen (hôm nay đang bảo lưu).
+     */
+    public PtSaleCustomer findCustomer(Connection connection, int customerId, LocalDate today) throws SQLException {
+        String sql = "SELECT c.CustomerId, c.PersonId, c.CustomerCode, c.CustomerType, p.FullName, p.Phone, p.DateOfBirth, "
+                + MEMBERSHIP_COLUMNS
+                + " FROM Customers c JOIN Persons p ON p.PersonId = c.PersonId"
+                + " WHERE c.DeletedAt IS NULL AND c.CustomerId = ?";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setDate(1, Date.valueOf(today));
+            statement.setDate(2, Date.valueOf(today));
+            statement.setInt(3, customerId);
+            try (ResultSet rs = statement.executeQuery()) {
+                return rs.next() ? readCustomer(rs) : null;
+            }
+        }
     }
 
-    /** Các gói PT đang bán (gói 1 người + gói đôi), rẻ trước. */
+    /** 2 cột tính sẵn cho NGÀY ? (dùng chung findCustomer + searchCustomers). */
+    private static final String MEMBERSHIP_COLUMNS = """
+            (SELECT MAX(m.EndDate) FROM Subscriptions m
+             WHERE m.CustomerId = c.CustomerId AND m.SubscriptionType = 'Membership'
+               AND m.Status IN ('Active', 'Frozen') AND ? BETWEEN m.StartDate AND m.EndDate) AS MembershipEnd,
+            CASE WHEN EXISTS (SELECT 1 FROM Subscriptions m
+                              JOIN FreezeRecords f ON f.SubscriptionId = m.SubscriptionId
+                              WHERE m.CustomerId = c.CustomerId AND m.SubscriptionType = 'Membership'
+                                AND ? BETWEEN f.StartDate AND COALESCE(f.ActualEndDate, f.PlannedEndDate))
+                 THEN 1 ELSE 0 END AS IsFrozen
+            """;
+
+    /** HÀM PHỤ (findCustomer, searchCustomers) — 1 dòng kết quả → PtSaleCustomer (constructor). blockReason để Service điền. */
+    private PtSaleCustomer readCustomer(ResultSet rs) throws SQLException {
+        Date end = rs.getDate("MembershipEnd");
+        return new PtSaleCustomer(
+                rs.getInt("CustomerId"),
+                rs.getInt("PersonId"),
+                rs.getString("CustomerCode"),
+                rs.getString("CustomerType"),
+                rs.getString("FullName"),
+                rs.getString("Phone"),
+                rs.getDate("DateOfBirth").toLocalDate(),
+                end == null ? null : end.toLocalDate(),
+                rs.getBoolean("IsFrozen"));
+    }
+
+
+    // ============================================================================================================
+    // PHỤC VỤ prepare (bước Gói & PT + Lịch tập) — ĐỌC
+    //   findPtPackages · findPackage · findWorkingPts · findPt · findPtSlots (lock khi hold) · findCustomerBusy
+    //   findActiveHoldOrders (danh sách "Đơn đang giữ chỗ") · findHeldOrder (trang ?order=; lock khi pay / release)
+    // ============================================================================================================
+
+    /**
+     * [prepare → loadPackage] Packages: R nhiều dòng.
+     * Các gói PT đang bán (gói 1 người + gói đôi), rẻ trước.
+     */
     public List<PackageRow> findPtPackages(Connection connection) throws SQLException {
         String sql = """
                 SELECT PackageId, PackageName, Description, Benefits, PackageType, DurationValue, Price
@@ -195,7 +248,10 @@ public class PtSaleDAO {
         return rows;
     }
 
-    /** 1 gói PT đang bán theo mã; không có / đã ngừng bán / không phải gói PT → null. */
+    /**
+     * [prepare, hold, pay] Packages: R 1 dòng.
+     * 1 gói PT đang bán theo mã; không có / đã ngừng bán / không phải gói PT → null.
+     */
     public PackageRow findPackage(Connection connection, int packageId) throws SQLException {
         String sql = """
                 SELECT PackageId, PackageName, Description, Benefits, PackageType, DurationValue, Price
@@ -210,19 +266,22 @@ public class PtSaleDAO {
         }
     }
 
+    /** HÀM PHỤ (findPtPackages, findPackage) — 1 dòng Packages → PackageRow. */
     private PackageRow readPackage(ResultSet rs) throws SQLException {
-        PackageRow row = new PackageRow();
-        row.packageId = rs.getInt("PackageId");
-        row.name = rs.getString("PackageName");
-        row.description = rs.getString("Description");
-        row.benefits = rs.getString("Benefits");
-        row.type = rs.getString("PackageType");
-        row.months = rs.getInt("DurationValue");
-        row.price = rs.getLong("Price");
-        return row;
+        return new PackageRow(
+                rs.getInt("PackageId"),
+                rs.getString("PackageName"),
+                rs.getString("Description"),
+                rs.getString("Benefits"),
+                rs.getString("PackageType"),
+                rs.getInt("DurationValue"),
+                rs.getLong("Price"));
     }
 
-    /** PT đang làm việc VÀ có tài khoản Active (PT bị khóa tài khoản không xem được lịch để dạy). */
+    /**
+     * [prepare → loadPt] Employees + Persons + Accounts: R nhiều dòng.
+     * PT đang làm việc VÀ có tài khoản Active (PT bị khóa tài khoản không xem được lịch để dạy).
+     */
     public List<PtRow> findWorkingPts(Connection connection) throws SQLException {
         List<PtRow> rows = new ArrayList<>();
         try (PreparedStatement statement = connection.prepareStatement(PT_SQL + " ORDER BY p.FullName");
@@ -234,7 +293,10 @@ public class PtSaleDAO {
         return rows;
     }
 
-    /** 1 PT theo mã, cùng điều kiện với findWorkingPts; không hợp lệ → null. */
+    /**
+     * [prepare → loadPt / loadHeld; pay] Employees + Persons + Accounts: R 1 dòng.
+     * 1 PT theo mã, cùng điều kiện với findWorkingPts; không hợp lệ → null.
+     */
     public PtRow findPt(Connection connection, int employeeId) throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement(PT_SQL + " AND e.EmployeeId = ?")) {
             statement.setInt(1, employeeId);
@@ -252,16 +314,17 @@ public class PtSaleDAO {
             WHERE e.Position = 'PT' AND e.Status = 'Working'
             """;
 
+    /** HÀM PHỤ (findWorkingPts, findPt) — 1 dòng Employees + Persons → PtRow. */
     private PtRow readPt(ResultSet rs) throws SQLException {
-        PtRow row = new PtRow();
-        row.employeeId = rs.getInt("EmployeeId");
-        row.personId = rs.getInt("PersonId");
-        row.fullName = rs.getString("FullName");
-        row.commissionRate = rs.getInt("CommissionRate");
-        return row;
+        return new PtRow(
+                rs.getInt("EmployeeId"),
+                rs.getInt("PersonId"),
+                rs.getString("FullName"),
+                rs.getInt("CommissionRate"));
     }
 
     /**
+     * [prepare / hold → loadPlan] TimeSlots (+ Sessions): R nhiều dòng; lock = true khi hold.
      * MỌI khung của PT từ fromDate đến toDate, kể cả Withdrawn. kind = Status trong DB, nhưng khung đã có
      * buổi Scheduled luôn coi là 'Booked'. lock = true (lúc bán): UPDLOCK + HOLDLOCK giữ cả khoảng ngày,
      * không ai thêm / giữ / đặt khung của PT này cho tới khi bán xong.
@@ -298,6 +361,7 @@ public class PtSaleDAO {
     }
 
     /**
+     * [prepare / hold → loadPlan] Sessions + TimeSlots + Subscriptions + Orders: R nhiều dòng.
      * Giờ các buổi Scheduled của khách (đứng tên hoặc tập cùng trong gói đôi), với BẤT KỲ PT nào, trong kỳ.
      * Gói 1 người: truyền partnerId = customerId.
      */
@@ -332,140 +396,8 @@ public class PtSaleDAO {
     }
 
 
-    // ================================================================================================================
-    // PHẦN 2. GHI — trong transaction, KHÔNG tự commit
-    // ================================================================================================================
-
-    /** Khóa dòng PT: hai lễ tân bán cùng PT, hoặc PT đang Công bố / xử lý buổi, phải xếp hàng. */
-    public void lockPt(Connection connection, int ptId) throws SQLException {
-        String sql = "SELECT EmployeeId FROM Employees WITH (UPDLOCK, HOLDLOCK) WHERE EmployeeId = ?";
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, ptId);
-            try (ResultSet rs = statement.executeQuery()) {
-                rs.next();
-            }
-        }
-    }
-
     /**
-     * Mã đơn kế tiếp DH-yyyy-nnnn của năm. UPDLOCK + HOLDLOCK: hai đơn tạo cùng lúc không lấy trùng số
-     * (người sau chờ người trước commit).
-     */
-    public String nextOrderCode(Connection connection, int year) throws SQLException {
-        String prefix = "DH-" + year + "-";
-        String sql = "SELECT MAX(OrderCode) FROM Orders WITH (UPDLOCK, HOLDLOCK) WHERE OrderCode LIKE ?";
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, prefix + "%");
-            try (ResultSet rs = statement.executeQuery()) {
-                int next = 1;
-                if (rs.next() && rs.getString(1) != null) {
-                    next = Integer.parseInt(rs.getString(1).substring(prefix.length())) + 1;
-                }
-                if (next > 9999) {
-                    throw new SQLException("Hết dải mã đơn của năm " + year);
-                }
-                return prefix + String.format("%04d", next);
-            }
-        }
-    }
-
-    // ----- GIỮ CHỖ (bấm "Giữ lịch 15 phút") -----
-
-    /**
-     * Đơn tại quầy CHỜ THANH TOÁN (Pending): giữ chỗ trước, thu tiền sau. Không voucher (CBR-76).
-     * Đơn tại quầy không có hạn online (PaymentDueAt NULL — CHECK); hạn 15 phút nằm ở TimeSlots.HoldExpiresAt.
-     * Chép tên, mô tả, quyền lợi, giá của gói vào đơn (DBR-50).
-     */
-    public int insertPendingOrder(Connection connection, String orderCode, int holderId, Integer partnerId,
-            PackageRow pkg, int receptionistId, int shiftId, int vatRate, long vatAmount, LocalDateTime now)
-            throws SQLException {
-        String sql = """
-                INSERT INTO Orders (OrderCode, HolderCustomerId, PartnerCustomerId, PackageId, VoucherId,
-                                    CreatedByEmployeeId, ShiftId, Channel, PackageNameSnapshot,
-                                    PackageDescriptionSnapshot, PackageBenefitsSnapshot, UnitPriceSnapshot,
-                                    DiscountAmount, VatRateSnapshot, VatAmount, Status, PaymentDueAt, CreatedAt)
-                VALUES (?, ?, ?, ?, NULL, ?, ?, 'Counter', ?, ?, ?, ?, 0, ?, ?, 'Pending', NULL, ?)
-                """;
-        try (PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            statement.setString(1, orderCode);
-            statement.setInt(2, holderId);
-            if (partnerId == null) {
-                statement.setNull(3, Types.INTEGER);
-            } else {
-                statement.setInt(3, partnerId);
-            }
-            statement.setInt(4, pkg.packageId);
-            statement.setInt(5, receptionistId);
-            statement.setInt(6, shiftId);
-            statement.setNString(7, pkg.name);
-            statement.setNString(8, pkg.description);
-            statement.setNString(9, pkg.benefits);
-            statement.setLong(10, pkg.price);
-            statement.setInt(11, vatRate);
-            statement.setLong(12, vatAmount);
-            statement.setTimestamp(13, Timestamp.valueOf(now.withNano(0)));
-            statement.executeUpdate();
-            return generatedId(statement);
-        }
-    }
-
-    /** Khung PT đã công bố: Free → Held cho đơn này tới hạn. false = khung vừa bị người khác lấy. */
-    public boolean holdFreeSlot(Connection connection, int slotId, int ptId, int orderId, LocalDateTime expiresAt)
-            throws SQLException {
-        String sql = """
-                UPDATE TimeSlots SET Status = 'Held', HeldByOrderId = ?, HoldExpiresAt = ?
-                WHERE TimeSlotId = ? AND PtEmployeeId = ? AND Status = 'Free' AND HeldByOrderId IS NULL
-                  AND NOT EXISTS (SELECT 1 FROM Sessions s WHERE s.TimeSlotId = TimeSlots.TimeSlotId AND s.Status = 'Scheduled')
-                """;
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, orderId);
-            statement.setTimestamp(2, Timestamp.valueOf(expiresAt.withNano(0)));
-            statement.setInt(3, slotId);
-            statement.setInt(4, ptId);
-            return statement.executeUpdate() == 1;
-        }
-    }
-
-    /** Ngày PT chưa có khung giờ đó: tạo khung mới ở trạng thái Held cho đơn này (hủy giữ chỗ thì xóa khung này). */
-    public void insertHeldSlot(Connection connection, int ptId, LocalDate date, LocalTime start, LocalTime end,
-            int orderId, LocalDateTime expiresAt, LocalDateTime now) throws SQLException {
-        // DBR-33: chặn chồng giờ NGAY TRONG SQL (lớp cuối — Service có thể lọt do race hay khung Withdrawn).
-        // Công thức nửa mở [start, end): khung cũ trùng khi cũ.StartTime < mới.EndTime AND cũ.EndTime > mới.StartTime.
-        // INSERT ... SELECT ... WHERE NOT EXISTS: nếu trùng thì SELECT trả 0 dòng → không ghi gì → ta báo lỗi.
-        String sql = """
-                INSERT INTO TimeSlots (PtEmployeeId, SlotDate, StartTime, EndTime, Status, HeldByOrderId, HoldExpiresAt, CreatedAt)
-                SELECT ?, ?, CAST(? AS time), CAST(? AS time), 'Held', ?, ?, ?
-                WHERE NOT EXISTS (
-                    SELECT 1 FROM TimeSlots t
-                    WHERE t.PtEmployeeId = ? AND t.SlotDate = ? AND t.Status <> 'Withdrawn'
-                      AND t.StartTime < CAST(? AS time) AND t.EndTime > CAST(? AS time)
-                )
-                """;
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, ptId);
-            statement.setDate(2, Date.valueOf(date));
-            statement.setString(3, start.toString());
-            statement.setString(4, end.toString());
-            statement.setInt(5, orderId);
-            statement.setTimestamp(6, Timestamp.valueOf(expiresAt.withNano(0)));
-            statement.setTimestamp(7, Timestamp.valueOf(now.withNano(0)));
-            // Các dấu ? trong NOT EXISTS (theo đúng thứ tự xuất hiện trong SQL):
-            statement.setInt(8, ptId);                                   // t.PtEmployeeId = ?
-            statement.setDate(9, Date.valueOf(date));                    // t.SlotDate = ?
-            statement.setString(10, end.toString());                     // t.StartTime < @end
-            statement.setString(11, start.toString());                   // t.EndTime  > @start
-            int inserted = statement.executeUpdate();
-            if (inserted == 0) {
-                // IllegalArgumentException (không phải SQLException) để Service trả đúng câu lỗi cho lễ tân.
-                throw new IllegalArgumentException("Khung giờ này trùng với khung giờ đã có của PT ("
-                        + start + "–" + end + ").");
-            }
-        }
-    }
-
-    // ----- ĐỌC ĐƠN ĐANG GIỮ -----
-
-    /**
+     * [prepare → loadPendingHolds] Orders + TimeSlots: R nhiều dòng.
      * Các đơn tại quầy còn Pending có khung Held CHƯA quá hạn.
      * Dùng cho màn Bán gói PT hiện danh sách "Đơn đang giữ" để lễ tân tìm lại sau khi mất URL ?order= (bấm Back).
      */
@@ -495,22 +427,8 @@ public class PtSaleDAO {
         return rows;
     }
 
-    /** Một đơn đang giữ chỗ (đọc từ Orders + khung Held của đơn). */
-    public static class HeldOrder {
-        public int orderId;
-        public String orderCode;
-        public String status;           // Pending | Paid | Cancelled
-        public int holderId;
-        public Integer partnerId;
-        public int packageId;
-        public long price;
-        public LocalDateTime createdAt;
-        public LocalDateTime expiresAt; // hạn giữ sớm nhất trong các khung (null = không còn khung nào giữ)
-        public int ptId;
-        public List<PtScheduleItem> slots = new ArrayList<>();   // khung đang giữ, theo ngày giờ
-    }
-
     /**
+     * [prepare → loadHeld (lock = false); pay, release, releaseExpired (lock = true)] Orders + Packages + TimeSlots: R.
      * Đơn tại quầy theo mã + mọi khung đang Held cho đơn đó. lock = true (khi thu tiền / hủy): khóa đơn và khung.
      * Không phải đơn tại quầy gói PT → null.
      */
@@ -571,29 +489,160 @@ public class PtSaleDAO {
         return held;
     }
 
-    /** Đơn tại quầy còn Pending có khung giữ đã quá hạn (để Service tự nhả). */
-    public List<Integer> findExpiredHoldOrders(Connection connection, LocalDateTime now) throws SQLException {
-        String sql = """
-                SELECT DISTINCT o.OrderId
-                FROM Orders o
-                JOIN TimeSlots t ON t.HeldByOrderId = o.OrderId AND t.Status = 'Held'
-                WHERE o.Status = 'Pending' AND o.Channel = 'Counter' AND t.HoldExpiresAt < ?
-                """;
-        List<Integer> ids = new ArrayList<>();
+
+    // ============================================================================================================
+    // PHỤC VỤ HÀM CHÍNH hold ("Giữ lịch 15 phút") — GHI, trong transaction của Service, KHÔNG tự commit
+    //   lockPt → nextOrderCode → insertPendingOrder → holdFreeSlot / insertHeldSlot
+    // ============================================================================================================
+
+    /**
+     * [hold] Employees: khóa 1 dòng (UPDLOCK, HOLDLOCK), không đổi dữ liệu.
+     * Khóa dòng PT: hai lễ tân bán cùng PT, hoặc PT đang Công bố / xử lý buổi, phải xếp hàng.
+     */
+    public void lockPt(Connection connection, int ptId) throws SQLException {
+        String sql = "SELECT EmployeeId FROM Employees WITH (UPDLOCK, HOLDLOCK) WHERE EmployeeId = ?";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setTimestamp(1, Timestamp.valueOf(now.withNano(0)));
+            statement.setInt(1, ptId);
             try (ResultSet rs = statement.executeQuery()) {
-                while (rs.next()) {
-                    ids.add(rs.getInt("OrderId"));
-                }
+                rs.next();
             }
         }
-        return ids;
     }
 
-    // ----- THU TIỀN / HỦY GIỮ -----
+    /**
+     * [hold] Orders: R MAX(OrderCode) có khóa.
+     * Mã đơn kế tiếp DH-yyyy-nnnn của năm. UPDLOCK + HOLDLOCK: hai đơn tạo cùng lúc không lấy trùng số
+     * (người sau chờ người trước commit).
+     */
+    public String nextOrderCode(Connection connection, int year) throws SQLException {
+        String prefix = "DH-" + year + "-";
+        String sql = "SELECT MAX(OrderCode) FROM Orders WITH (UPDLOCK, HOLDLOCK) WHERE OrderCode LIKE ?";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, prefix + "%");
+            try (ResultSet rs = statement.executeQuery()) {
+                int next = 1;
+                if (rs.next() && rs.getString(1) != null) {
+                    next = Integer.parseInt(rs.getString(1).substring(prefix.length())) + 1;
+                }
+                if (next > 9999) {
+                    throw new SQLException("Hết dải mã đơn của năm " + year);
+                }
+                return prefix + String.format("%04d", next);
+            }
+        }
+    }
 
-    /** Đơn Pending → Paid. false = đơn không còn Pending (đã thu hoặc đã hủy). */
+
+    /**
+     * [hold] Orders: C 1 dòng (Status Pending, Channel Counter, ShiftId = ca đang mở).
+     * Đơn tại quầy CHỜ THANH TOÁN (Pending): giữ chỗ trước, thu tiền sau. Không voucher (CBR-76).
+     * Đơn tại quầy không có hạn online (PaymentDueAt NULL — CHECK); hạn 15 phút nằm ở TimeSlots.HoldExpiresAt.
+     * Chép tên, mô tả, quyền lợi, giá của gói vào đơn (DBR-50).
+     */
+    public int insertPendingOrder(Connection connection, String orderCode, int holderId, Integer partnerId,
+            PackageRow pkg, int receptionistId, int shiftId, int vatRate, long vatAmount, LocalDateTime now)
+            throws SQLException {
+        String sql = """
+                INSERT INTO Orders (OrderCode, HolderCustomerId, PartnerCustomerId, PackageId, VoucherId,
+                                    CreatedByEmployeeId, ShiftId, Channel, PackageNameSnapshot,
+                                    PackageDescriptionSnapshot, PackageBenefitsSnapshot, UnitPriceSnapshot,
+                                    DiscountAmount, VatRateSnapshot, VatAmount, Status, PaymentDueAt, CreatedAt)
+                VALUES (?, ?, ?, ?, NULL, ?, ?, 'Counter', ?, ?, ?, ?, 0, ?, ?, 'Pending', NULL, ?)
+                """;
+        try (PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            statement.setString(1, orderCode);
+            statement.setInt(2, holderId);
+            if (partnerId == null) {
+                statement.setNull(3, Types.INTEGER);
+            } else {
+                statement.setInt(3, partnerId);
+            }
+            statement.setInt(4, pkg.packageId);
+            statement.setInt(5, receptionistId);
+            statement.setInt(6, shiftId);
+            statement.setNString(7, pkg.name);
+            statement.setNString(8, pkg.description);
+            statement.setNString(9, pkg.benefits);
+            statement.setLong(10, pkg.price);
+            statement.setInt(11, vatRate);
+            statement.setLong(12, vatAmount);
+            statement.setTimestamp(13, Timestamp.valueOf(now.withNano(0)));
+            statement.executeUpdate();
+    /** [insertPendingOrder, insertSubscription] đọc khóa IDENTITY vừa sinh. */
+            return generatedId(statement);
+        }
+    }
+
+    /**
+     * [hold, buổi "book"] TimeSlots: U 1 dòng Free → Held.
+     * Khung PT đã công bố: Free → Held cho đơn này tới hạn. false = khung vừa bị người khác lấy.
+     */
+    public boolean holdFreeSlot(Connection connection, int slotId, int ptId, int orderId, LocalDateTime expiresAt)
+            throws SQLException {
+        String sql = """
+                UPDATE TimeSlots SET Status = 'Held', HeldByOrderId = ?, HoldExpiresAt = ?
+                WHERE TimeSlotId = ? AND PtEmployeeId = ? AND Status = 'Free' AND HeldByOrderId IS NULL
+                  AND NOT EXISTS (SELECT 1 FROM Sessions s WHERE s.TimeSlotId = TimeSlots.TimeSlotId AND s.Status = 'Scheduled')
+                """;
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, orderId);
+            statement.setTimestamp(2, Timestamp.valueOf(expiresAt.withNano(0)));
+            statement.setInt(3, slotId);
+            statement.setInt(4, ptId);
+            return statement.executeUpdate() == 1;
+        }
+    }
+
+    /**
+     * [hold, buổi "create"] TimeSlots: C 1 dòng Held.
+     * Ngày PT chưa có khung giờ đó: tạo khung mới ở trạng thái Held cho đơn này (hủy giữ chỗ thì xóa khung này).
+     */
+    public void insertHeldSlot(Connection connection, int ptId, LocalDate date, LocalTime start, LocalTime end,
+            int orderId, LocalDateTime expiresAt, LocalDateTime now) throws SQLException {
+        // DBR-33: chặn chồng giờ NGAY TRONG SQL (lớp cuối — Service có thể lọt do race hay khung Withdrawn).
+        // Công thức nửa mở [start, end): khung cũ trùng khi cũ.StartTime < mới.EndTime AND cũ.EndTime > mới.StartTime.
+        // INSERT ... SELECT ... WHERE NOT EXISTS: nếu trùng thì SELECT trả 0 dòng → không ghi gì → ta báo lỗi.
+        String sql = """
+                INSERT INTO TimeSlots (PtEmployeeId, SlotDate, StartTime, EndTime, Status, HeldByOrderId, HoldExpiresAt, CreatedAt)
+                SELECT ?, ?, CAST(? AS time), CAST(? AS time), 'Held', ?, ?, ?
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM TimeSlots t
+                    WHERE t.PtEmployeeId = ? AND t.SlotDate = ? AND t.Status <> 'Withdrawn'
+                      AND t.StartTime < CAST(? AS time) AND t.EndTime > CAST(? AS time)
+                )
+                """;
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, ptId);
+            statement.setDate(2, Date.valueOf(date));
+            statement.setString(3, start.toString());
+            statement.setString(4, end.toString());
+            statement.setInt(5, orderId);
+            statement.setTimestamp(6, Timestamp.valueOf(expiresAt.withNano(0)));
+            statement.setTimestamp(7, Timestamp.valueOf(now.withNano(0)));
+            // Các dấu ? trong NOT EXISTS (theo đúng thứ tự xuất hiện trong SQL):
+            statement.setInt(8, ptId);                                   // t.PtEmployeeId = ?
+            statement.setDate(9, Date.valueOf(date));                    // t.SlotDate = ?
+            statement.setString(10, end.toString());                     // t.StartTime < @end
+            statement.setString(11, start.toString());                   // t.EndTime  > @start
+            int inserted = statement.executeUpdate();
+            if (inserted == 0) {
+                // IllegalArgumentException (không phải SQLException) để Service trả đúng câu lỗi cho lễ tân.
+                throw new IllegalArgumentException("Khung giờ này trùng với khung giờ đã có của PT ("
+                        + start + "–" + end + ").");
+            }
+        }
+    }
+
+
+    // ============================================================================================================
+    // PHỤC VỤ HÀM CHÍNH pay ("Xác nhận đã thu tiền") — GHI, trong transaction của Service
+    //   markOrderPaid → insertTransaction → insertSubscription → bookHeldSlot + insertSession → findCustomerAccounts (thông báo)
+    // ============================================================================================================
+
+    /**
+     * [pay] Orders: U 1 dòng Pending → Paid.
+     * Đơn Pending → Paid. false = đơn không còn Pending (đã thu hoặc đã hủy).
+     */
     public boolean markOrderPaid(Connection connection, int orderId, LocalDateTime now) throws SQLException {
         String sql = "UPDATE Orders SET Status = 'Paid', PaidAt = ? WHERE OrderId = ? AND Status = 'Pending'";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -603,7 +652,10 @@ public class PtSaleDAO {
         }
     }
 
-    /** Giao dịch Success: tiền mặt hoặc chuyển khoản, lễ tân là người nhận (CBR-77). */
+    /**
+     * [pay] Transactions: C 1 dòng Success.
+     * Giao dịch Success: tiền mặt hoặc chuyển khoản, lễ tân là người nhận (CBR-77).
+     */
     public void insertTransaction(Connection connection, int orderId, long amount, String method, String reference,
             int receptionistId, LocalDateTime now) throws SQLException {
         String sql = """
@@ -628,7 +680,10 @@ public class PtSaleDAO {
         }
     }
 
-    /** Gói PT của khách: khung giờ cố định, số buổi đã sinh, trần đổi buổi (P-08 × số tháng, chốt lúc bán). */
+    /**
+     * [pay] Subscriptions: C 1 dòng Active.
+     * Gói PT của khách: khung giờ cố định, số buổi đã sinh, trần đổi buổi (P-08 × số tháng, chốt lúc bán).
+     */
     public int insertSubscription(Connection connection, int orderId, int customerId, String type, int ptId,
             LocalDate start, LocalDate end, LocalTime fixedTime, int sessionCount, int maxSwaps) throws SQLException {
         String sql = """
@@ -651,7 +706,10 @@ public class PtSaleDAO {
         }
     }
 
-    /** Khung đang giữ cho đơn → Booked, bỏ thông tin giữ. */
+    /**
+     * [pay] TimeSlots: U 1 dòng Held → Booked.
+     * Khung đang giữ cho đơn → Booked, bỏ thông tin giữ.
+     */
     public boolean bookHeldSlot(Connection connection, int slotId, int orderId) throws SQLException {
         String sql = """
                 UPDATE TimeSlots SET Status = 'Booked', HeldByOrderId = NULL, HoldExpiresAt = NULL
@@ -664,7 +722,10 @@ public class PtSaleDAO {
         }
     }
 
-    /** 1 buổi Scheduled: giá trị buổi (DBR-59) + hoa hồng theo tỷ lệ PT (DBR-58). */
+    /**
+     * [pay] Sessions: C 1 dòng Scheduled.
+     * 1 buổi Scheduled: giá trị buổi (DBR-59) + hoa hồng theo tỷ lệ PT (DBR-58).
+     */
     public void insertSession(Connection connection, int subscriptionId, int slotId, int ptId, long value,
             long commission) throws SQLException {
         String sql = """
@@ -682,6 +743,60 @@ public class PtSaleDAO {
     }
 
     /**
+     * [pay → notifySale] Customers + Accounts: R tối đa 2 dòng.
+     * Tài khoản Active của khách + người tập cùng (để gửi thông báo). Hồ sơ không có tài khoản → bỏ qua.
+     */
+    public List<Integer> findCustomerAccounts(Connection connection, int customerId, int partnerId) throws SQLException {
+        String sql = """
+                SELECT DISTINCT a.AccountId
+                FROM Customers c
+                JOIN Accounts a ON a.PersonId = c.PersonId AND a.Status = 'Active'
+                WHERE c.CustomerId IN (?, ?)
+                """;
+        List<Integer> ids = new ArrayList<>();
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, customerId);
+            statement.setInt(2, partnerId);
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    ids.add(rs.getInt("AccountId"));
+                }
+            }
+        }
+        return ids;
+    }
+
+
+    // ============================================================================================================
+    // PHỤC VỤ HÀM CHÍNH release ("Hủy giữ chỗ") + releaseExpired (nhả đơn quá 15 phút)
+    //   findExpiredHoldOrders · releaseHold
+    // ============================================================================================================
+
+    /**
+     * [releaseExpired] Orders + TimeSlots: R nhiều dòng.
+     * Đơn tại quầy còn Pending có khung giữ đã quá hạn (để Service tự nhả).
+     */
+    public List<Integer> findExpiredHoldOrders(Connection connection, LocalDateTime now) throws SQLException {
+        String sql = """
+                SELECT DISTINCT o.OrderId
+                FROM Orders o
+                JOIN TimeSlots t ON t.HeldByOrderId = o.OrderId AND t.Status = 'Held'
+                WHERE o.Status = 'Pending' AND o.Channel = 'Counter' AND t.HoldExpiresAt < ?
+                """;
+        List<Integer> ids = new ArrayList<>();
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setTimestamp(1, Timestamp.valueOf(now.withNano(0)));
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    ids.add(rs.getInt("OrderId"));
+                }
+            }
+        }
+        return ids;
+    }
+
+    /**
+     * [release, releaseExpired] Orders: U → Cancelled · TimeSlots: D khung do lần giữ tạo, U còn lại → Free.
      * Hủy giữ chỗ (lễ tân bấm Hủy, hoặc quá 15 phút): đơn → Cancelled (CancelledByReceptionist, lý do ≥ 5 ký tự),
      * khung do lần giữ này TẠO RA (CreatedAt ≥ lúc tạo đơn) → xóa; khung PT đã công bố từ trước → về Free.
      */
@@ -710,26 +825,10 @@ public class PtSaleDAO {
         }
     }
 
-    /** Tài khoản Active của khách + người tập cùng (để gửi thông báo). Hồ sơ không có tài khoản → bỏ qua. */
-    public List<Integer> findCustomerAccounts(Connection connection, int customerId, int partnerId) throws SQLException {
-        String sql = """
-                SELECT DISTINCT a.AccountId
-                FROM Customers c
-                JOIN Accounts a ON a.PersonId = c.PersonId AND a.Status = 'Active'
-                WHERE c.CustomerId IN (?, ?)
-                """;
-        List<Integer> ids = new ArrayList<>();
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, customerId);
-            statement.setInt(2, partnerId);
-            try (ResultSet rs = statement.executeQuery()) {
-                while (rs.next()) {
-                    ids.add(rs.getInt("AccountId"));
-                }
-            }
-        }
-        return ids;
-    }
+
+    // ============================================================================================================
+    // DÙNG CHUNG
+    // ============================================================================================================
 
     private int generatedId(PreparedStatement statement) throws SQLException {
         try (ResultSet rs = statement.getGeneratedKeys()) {

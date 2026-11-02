@@ -24,15 +24,19 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * SERVLET MÀN LỄ TÂN BÁN GÓI PT — /receptionist/pt-sales (UC-21, bản đơn giản hóa). ReceptionistAreaFilter kiểm quyền.
+ * SERVLET MÀN LỄ TÂN BÁN GÓI PT — /receptionist/pt-sales (UC-21 bản đơn giản hóa).
  *
- *   GET  /receptionist/pt-sales?customer=12&partner=&package=9&pt=5&start=2026-10-26&t1=18:00…&t5=
- *        mỗi lần đổi khách / gói / PT / ngày: Service đi các bước → pt-sales.jsp (t1..t5 = lịch mẫu, trống = Nghỉ)
- *   GET  /receptionist/pt-sales?order=1001&start=…    đang giữ chỗ: đồng hồ 15 phút + thu tiền
- *   GET  /receptionist/pt-sales/customers?q=mai       ô tìm kiếm gợi ý (pt-sales.js gọi) → JSON tối đa 8 khách
- *   POST action=hold     "Giữ lịch 15 phút" + sessions=2026-10-27@09:30,…   → redirect ?order=…
- *   POST action=pay      "Xác nhận đã thu tiền" → toast + trang trống
- *   POST action=release  "Hủy giữ chỗ"        → toast + trang trống
+ * VIỆC CỦA SERVLET: đọc tham số → gọi PtSaleService → đặt attribute / toast → forward JSP hoặc redirect.
+ *   Servlet KHÔNG kiểm luật nghiệp vụ (tuổi, gói thành viên, trùng giờ, ca…): Service làm hết.
+ * TRƯỚC SERVLET: ReceptionistAreaFilter chặn vai trò khác (403) và đặt "shiftNotice" (thanh cảnh báo ca).
+ *
+ *   URL / nút                                               Servlet gọi                          Kết quả
+ *   GET  /receptionist/pt-sales?package=&pt=&start=&t1..t5   showPage → saleService.prepare       forward pt-sales.jsp (attribute "sale")
+ *   GET  /receptionist/pt-sales?order=1001                   showPage → saleService.prepare       trang đang giữ: đồng hồ + thu tiền
+ *   GET  /receptionist/pt-sales/customers?q=mai              writeSuggestions → saleService.search JSON tối đa 8 khách (pt-sales.js)
+ *   POST action=hold     "Giữ lịch 15 phút"                  saleService.hold                     redirect ?order=… / chữ đỏ "saleError"
+ *   POST action=pay      "Xác nhận đã thu tiền"              saleService.pay                      toast + redirect trang trống / ?order=
+ *   POST action=release  "Hủy giữ chỗ"                       saleService.release                  toast + redirect trang trống
  */
 @WebServlet(urlPatterns = {"/receptionist/pt-sales", "/receptionist/pt-sales/customers"})
 public class PtSaleServlet extends HttpServlet {
@@ -42,6 +46,18 @@ public class PtSaleServlet extends HttpServlet {
 
     private final PtSaleService saleService = new PtSaleService();
 
+
+    // ============================================================================================================
+    // HÀM CHÍNH 1. doGet — mở màn (GET /receptionist/pt-sales) hoặc ô gợi ý khách (GET …/customers?q=)
+    //   Hàm phụ ngay dưới: writeSuggestions (JSON gợi ý) · showPage (dựng trang) · readInput (đọc tham số)
+    // ============================================================================================================
+
+    /**
+     * HÀM CHÍNH 1 — mọi GET của màn.
+     *   1. accountId = SessionKey.ACCOUNT_ID trong session; null (hết phiên) → /login?returnUrl=…
+     *   2. đường dẫn kết thúc "/customers" → writeSuggestions (JSON, không forward JSP)
+     *   3. còn lại → showPage (gọi prepare 1 lần → pt-sales.jsp)
+     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -57,6 +73,96 @@ public class PtSaleServlet extends HttpServlet {
         showPage(request, response, accountId);
     }
 
+    /**
+     * HÀM PHỤ — JSON cho ô gợi ý. Chỉ trả đủ để hiện 1 dòng gợi ý, không trả ngày sinh / mã Person.
+     * [{id, name, code, phone, note, ok}] — note = "Gói tập tới 21/01/2027" hoặc lý do không bán được.
+     */
+    private void writeSuggestions(HttpServletResponse response, int accountId, String query) throws IOException {
+        ServiceResult<List<PtSaleCustomer>> result = saleService.search(accountId, query, DateTimeUtil.now());
+        if (!result.isSuccess()) {
+            JsonUtil.writeJson(response, JsonResponse.error(result.getMessage()));
+            return;
+        }
+        List<Map<String, Object>> rows = new ArrayList<>();
+        for (PtSaleCustomer c : result.getData()) {
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("id", c.getCustomerId());
+            row.put("name", c.getFullName());
+            row.put("code", c.getCustomerCode());
+            row.put("phone", c.getPhone() == null ? "Hồ sơ phụ thuộc" : c.getPhone());
+            row.put("ok", c.getBlockReason() == null);
+            row.put("note", c.getBlockReason() == null
+                    ? "Gói tập tới " + DateTimeUtil.formatDate(c.getMembershipEnd()) : c.getBlockReason());
+            rows.add(row);
+        }
+        JsonUtil.writeJson(response, JsonResponse.success(rows));
+    }
+
+    /**
+     * HÀM PHỤ (doGet; doPost khi Giữ lịch bị từ chối) — dựng trang.
+     *   Gọi saleService.prepare ĐÚNG 1 lần, rồi đặt attribute cho JSP:
+     *     "sale"       PtSaleView — mọi khối của pt-sales.jsp đọc từ đây
+     *     "pageError"  prepare lỗi (MSG07 / MSG04) → khung đỏ cả trang
+     *     "csrfToken"  ô ẩn của 3 form POST · "activeNav" tô menu
+     *   Mở ?order= mà đơn hết giữ → không vẽ trang, toast vàng + redirect trang trống.
+     */
+    private void showPage(HttpServletRequest request, HttpServletResponse response, int accountId)
+            throws ServletException, IOException {
+        Integer orderId = RequestUtil.getPositiveIntParam(request, "order");
+        ServiceResult<PtSaleView> result = saleService.prepare(accountId, readInput(request), orderId, DateTimeUtil.now());
+        if (result.isSuccess()) {
+            request.setAttribute("sale", result.getData());          // → pt-sales.jsp mọi khối
+        } else if (orderId != null) {
+            // Mở ?order=<id> mà đơn không còn giữ (đã thu tiền / hủy / quá hạn) → về thẳng trang bán gói + toast,
+            // không hiện khung lỗi (lễ tân bán lại từ đầu).
+            RequestUtil.setFlashToast(request, "warning", result.getMessage());
+            RequestUtil.redirect(request, response, PAGE_URL);
+            return;
+        } else {
+            request.setAttribute("pageError", result.getMessage());  // → pt-sales.jsp khung báo lỗi
+        }
+        request.setAttribute("csrfToken", RequestUtil.getOrCreateCsrfToken(request.getSession(false)));
+        request.setAttribute("activeNav", "pt-sales");
+        RequestUtil.forward(request, response, VIEW);
+    }
+
+    /**
+     * HÀM PHỤ (showPage, doPost hold) — gom tham số URL / form thành PtSaleService.Input (CHỮ THÔ, chưa kiểm).
+     *   customer, partner, package, pt, start, q · t1..t5 = giờ lịch mẫu Thứ 2..Thứ 6 (trống = Nghỉ)
+     *   sessions = "2026-11-03@09:30,…" (ô ẩn form Giữ lịch) · confirmPt = có tích "Đã xác nhận với PT"
+     */
+    private PtSaleService.Input readInput(HttpServletRequest request) {
+        PtSaleService.Input input = new PtSaleService.Input();
+        input.customer = request.getParameter("customer");
+        input.partner = request.getParameter("partner");
+        input.packageId = request.getParameter("package");
+        input.pt = request.getParameter("pt");
+        input.start = request.getParameter("start");
+        input.query = request.getParameter("q");
+        input.sessions = request.getParameter("sessions");
+        input.confirmPt = request.getParameter("confirmPt") != null;   // ô tích "Đã xác nhận với PT"
+        for (int i = 0; i < 5; i++) {
+            input.times[i] = request.getParameter("t" + (i + 1));
+        }
+        return input;
+    }
+
+
+    // ============================================================================================================
+    // HÀM CHÍNH 2. doPost — 3 nút: "Giữ lịch 15 phút" (hold) · "Xác nhận đã thu tiền" (pay) · "Hủy giữ chỗ" (release)
+    // ============================================================================================================
+
+    /**
+     * HÀM CHÍNH 2 — 3 nút POST của màn (ô ẩn "action" trong form JSP quyết định nút nào).
+     *   1. hết phiên → /login · sai csrfToken → 403
+     *   2. action=hold    → saleService.hold(accountId, readInput, now)
+     *        được → toast xanh MSG307 + redirect ?order=<mã đơn>&start=…   (trang đang giữ)
+     *        bị từ chối → attribute "saleError" + showPage (vẽ lại trang, giữ nguyên lựa chọn, chữ đỏ ở cột phải)
+     *   3. action=pay / release cần ô ẩn "order" (thiếu → 400)
+     *        pay     → saleService.pay(accountId, orderId, start, method, reference, now)
+     *        release → saleService.release(accountId, orderId, now)
+     *        → toast; pay thất bại thì quay lại ?order= để thử lại, còn lại về trang trống
+     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -103,75 +209,17 @@ public class PtSaleServlet extends HttpServlet {
                 : PAGE_URL);
     }
 
-    /** HÀM PHỤ — đọc lựa chọn trên URL / form rồi gọi Service.prepare 1 lần → JSP. */
-    private void showPage(HttpServletRequest request, HttpServletResponse response, int accountId)
-            throws ServletException, IOException {
-        Integer orderId = RequestUtil.getPositiveIntParam(request, "order");
-        ServiceResult<PtSaleView> result = saleService.prepare(accountId, readInput(request), orderId, DateTimeUtil.now());
-        if (result.isSuccess()) {
-            request.setAttribute("sale", result.getData());          // → pt-sales.jsp mọi khối
-        } else if (orderId != null) {
-            // Mở ?order=<id> mà đơn không còn giữ (đã thu tiền / hủy / quá hạn) → về thẳng trang bán gói + toast,
-            // không hiện khung lỗi (lễ tân bán lại từ đầu).
-            RequestUtil.setFlashToast(request, "warning", result.getMessage());
-            RequestUtil.redirect(request, response, PAGE_URL);
-            return;
-        } else {
-            request.setAttribute("pageError", result.getMessage());  // → pt-sales.jsp khung báo lỗi
-        }
-        request.setAttribute("csrfToken", RequestUtil.getOrCreateCsrfToken(request.getSession(false)));
-        request.setAttribute("activeNav", "pt-sales");
-        RequestUtil.forward(request, response, VIEW);
-    }
 
-    /** HÀM PHỤ — tham số chung của GET và POST action=hold. t1..t5 = giờ tập Thứ 2..Thứ 6. */
-    private PtSaleService.Input readInput(HttpServletRequest request) {
-        PtSaleService.Input input = new PtSaleService.Input();
-        input.customer = request.getParameter("customer");
-        input.partner = request.getParameter("partner");
-        input.packageId = request.getParameter("package");
-        input.pt = request.getParameter("pt");
-        input.start = request.getParameter("start");
-        input.query = request.getParameter("q");
-        input.sessions = request.getParameter("sessions");
-        input.confirmPt = request.getParameter("confirmPt") != null;   // ô tích "Đã xác nhận với PT"
-        for (int i = 0; i < 5; i++) {
-            input.times[i] = request.getParameter("t" + (i + 1));
-        }
-        return input;
-    }
-
-    /**
-     * HÀM PHỤ — JSON cho ô gợi ý. Chỉ trả đủ để hiện 1 dòng gợi ý, không trả ngày sinh / mã Person.
-     * [{id, name, code, phone, note, ok}] — note = "Gói tập tới 21/01/2027" hoặc lý do không bán được.
-     */
-    private void writeSuggestions(HttpServletResponse response, int accountId, String query) throws IOException {
-        ServiceResult<List<PtSaleCustomer>> result = saleService.search(accountId, query, DateTimeUtil.now());
-        if (!result.isSuccess()) {
-            JsonUtil.writeJson(response, JsonResponse.error(result.getMessage()));
-            return;
-        }
-        List<Map<String, Object>> rows = new ArrayList<>();
-        for (PtSaleCustomer c : result.getData()) {
-            Map<String, Object> row = new LinkedHashMap<>();
-            row.put("id", c.getCustomerId());
-            row.put("name", c.getFullName());
-            row.put("code", c.getCustomerCode());
-            row.put("phone", c.getPhone() == null ? "Hồ sơ phụ thuộc" : c.getPhone());
-            row.put("ok", c.getBlockReason() == null);
-            row.put("note", c.getBlockReason() == null
-                    ? "Gói tập tới " + DateTimeUtil.formatDate(c.getMembershipEnd()) : c.getBlockReason());
-            rows.add(row);
-        }
-        JsonUtil.writeJson(response, JsonResponse.success(rows));
-    }
-
-    private static String encode(String value) {
-        return value == null ? "" : URLEncoder.encode(value, StandardCharsets.UTF_8);
-    }
+    // ============================================================================================================
+    // DÙNG CHUNG
+    // ============================================================================================================
 
     private Integer getAccountId(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         return session == null ? null : (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
+    }
+
+    private static String encode(String value) {
+        return value == null ? "" : URLEncoder.encode(value, StandardCharsets.UTF_8);
     }
 }

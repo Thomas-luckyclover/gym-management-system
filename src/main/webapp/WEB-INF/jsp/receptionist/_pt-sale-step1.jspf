@@ -1,0 +1,61 @@
+<%@ page pageEncoding="UTF-8" %>
+<%--
+================================================================================
+ _pt-sale-step1.jspf — BƯỚC 1. GÓI, PT, NGÀY BẮT ĐẦU (cột trái)
+ Nhúng vào: pt-sales.jsp (static include → dùng chung biến với trang cha).
+ Hiện khi:  CHƯA giữ chỗ (not sale.held).
+ Form GET id="sale-form" có data-auto-submit: đổi gói / PT / ngày là pt-sales.js (initSaleAutoSubmit) tự gửi
+   → GET /receptionist/pt-sales?customer=&partner=&package=&pt=&start= → PtSaleServlet.showPage → prepare.
+ Dữ liệu:   sale.packages / sale.pts (PtSaleOption: value · label · note) ← loadPackage / loadPt
+            sale.startDate, minStart, maxStart ← newView · sale.choiceError ← loadPackage / loadPt
+================================================================================ --%>
+
+<%-- ===== BẮT ĐẦU: BƯỚC 1 — GÓI & PT ===== --%>
+            <c:if test="${not sale.held}">
+            <form id="sale-form" class="sale-flow" method="get" action="${base}" data-auto-submit>
+                <input type="hidden" name="customer" value="${sale.customerId}">
+                <input type="hidden" name="partner" value="${sale.partnerId}">
+                <section class="sale-card" aria-labelledby="sale-h2">
+                    <header class="sale-card-head"><h2 id="sale-h2">Gói &amp; PT</h2>
+                        <c:if test="${done2}"><p><c:out value="${gms:formatDate(sale.startDate)}" /> – <c:out value="${gms:formatDate(sale.endDate)}" /> · <c:out value="${sale.months}" /> tháng</p></c:if></header>
+
+                    <fieldset class="sale-packages">
+                        <legend class="sale-field-label">Gói</legend>
+                        <div class="sale-tiles">
+                        <c:forEach var="o" items="${sale.packages}">
+                            <label class="sale-tile">
+                                <input type="radio" name="package" value="${o.value}" ${o.value eq sale.packageId ? 'checked' : ''}>
+                                <strong><c:out value="${o.label}" /></strong>
+                                <small><c:out value="${o.note}" /></small>
+                            </label>
+                        </c:forEach>
+                        </div>
+                    </fieldset>
+
+                    <c:if test="${not empty sale.pts}">
+                        <fieldset>
+                            <legend class="sale-field-label">PT khách chọn</legend>
+                            <div class="sale-pts">
+                            <c:forEach var="o" items="${sale.pts}">
+                                <label class="sale-pt">
+                                    <input type="radio" name="pt" value="${o.value}" ${o.value eq sale.ptId ? 'checked' : ''}>
+                                    <span class="sale-avatar" aria-hidden="true"><c:out value="${o.note}" /></span>
+                                    <span><c:out value="${o.label}" /></span>
+                                </label>
+                            </c:forEach>
+                            </div>
+                        </fieldset>
+                        <label class="sale-field sale-start"><span class="sale-field-label">Ngày bắt đầu kỳ</span>
+                            <input name="start" type="date" value="${sale.startDate}" min="${sale.minStart}" max="${sale.maxStart}"
+                                   aria-describedby="sale-start-error" data-start-field>
+                        </label>
+                        <%-- pt-sales.js hiện câu này khi ngày gõ vào nằm ngoài min–max (form KHÔNG gửi đi). --%>
+                        <p class="sale-msg is-error" id="sale-start-error" role="alert" hidden>Ngày bắt đầu phải từ <c:out value="${gms:formatDate(sale.minStart)}" /> đến <c:out value="${gms:formatDate(sale.maxStart)}" />.</p>
+                    </c:if>
+                    <c:if test="${not empty sale.choiceError}"><p class="sale-msg is-error" role="alert"><c:out value="${sale.choiceError}" /></p></c:if>
+                    <noscript><button class="btn btn-outline" type="submit">Tiếp</button></noscript>
+                </section>
+
+            </form>
+            </c:if>
+<%-- ===== KẾT THÚC: BƯỚC 1 — GÓI & PT ===== --%>

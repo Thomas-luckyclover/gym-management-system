@@ -6,8 +6,11 @@ import java.util.List;
 /**
  * DỮ LIỆU BƯỚC 3 "LỊCH TẬP" của màn Bán gói PT — gửi xuống trình duyệt dạng JSON (pt-sale-plan.js đọc).
  *
- *   Ai tạo?   PtSaleService.buildPlan (không đọc DB, test được) từ khung của PT, đơn nghỉ, ngày phòng nghỉ,
- *             các buổi khác của khách trong kỳ.
+ *   AI TẠO?   SERVICE: PtSaleService.buildPlan tạo rỗng rồi SET (không đọc DB, test được); loadPlan set thêm
+ *             unpublished / published / open / close / pattern / requested. Option và Day: constructor.
+ *   AI ĐỌC?   KHÔNG phải JSP: loadPlan đổi object này thành JSON (view.planJson) → JSP nhúng vào
+ *             <script type="application/json" id="sale-plan-data"> → pt-sale-plan.js đọc data.days, data.times …
+ *             Tên field Java = tên khóa JSON mà JS dùng (đổi tên field là phải đổi JS).
  *   Ý tưởng:  server tính SẴN cho từng ngày T2–T6 trong kỳ: mỗi giờ có thể tập được hay không (+ lý do).
  *             Trình duyệt chỉ ghép "lịch mẫu" + "sửa từng buổi" trên dữ liệu này → bấm là thấy ngay, không tải lại.
  *             Lúc bấm "Giữ lịch", PtSaleService.hold vẫn KIỂM TRA LẠI từng buổi có khóa (không tin trình duyệt).

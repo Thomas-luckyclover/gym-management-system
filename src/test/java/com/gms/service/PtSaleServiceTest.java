@@ -24,12 +24,13 @@ class PtSaleServiceTest {
     private static final LocalTime SIX_PM = LocalTime.of(18, 0);
 
     private PtSaleCustomer customer() {
-        PtSaleCustomer c = new PtSaleCustomer();
-        c.setPersonId(50);
-        c.setFullName("Nguyễn Văn An");
-        c.setDateOfBirth(LocalDate.of(1995, 3, 12));
-        c.setMembershipEnd(LocalDate.of(2027, 7, 16));
-        return c;
+        return customer(LocalDate.of(1995, 3, 12), LocalDate.of(2027, 7, 16), false);
+    }
+
+    /** Khách mẫu (personId 50) — chỉ đổi ngày sinh / gói thành viên / bảo lưu để thử từng luật. */
+    private PtSaleCustomer customer(LocalDate dateOfBirth, LocalDate membershipEnd, boolean frozen) {
+        return new PtSaleCustomer(1, 50, "KH-1001", "Self", "Nguyễn Văn An", "0901234567",
+                dateOfBirth, membershipEnd, frozen);
     }
 
     private PtScheduleItem slot(int id, LocalDate date, String start, String kind) {
@@ -47,16 +48,13 @@ class PtSaleServiceTest {
         assertNull(PtSaleService.whyCannotBuy(customer(), NOW.toLocalDate(), 10, 19));
         assertTrue(PtSaleService.whyCannotBuy(customer(), NOW.toLocalDate(), 10, 50).contains("chính mình"));
 
-        PtSaleCustomer child = customer();
-        child.setDateOfBirth(LocalDate.of(2017, 1, 1));
+        PtSaleCustomer child = customer(LocalDate.of(2017, 1, 1), LocalDate.of(2027, 7, 16), false);
         assertTrue(PtSaleService.whyCannotBuy(child, NOW.toLocalDate(), 10, 19).contains("10 tuổi"));
 
-        PtSaleCustomer noMembership = customer();
-        noMembership.setMembershipEnd(null);
+        PtSaleCustomer noMembership = customer(LocalDate.of(1995, 3, 12), null, false);
         assertTrue(PtSaleService.whyCannotBuy(noMembership, NOW.toLocalDate(), 10, 19).contains("gói thành viên"));
 
-        PtSaleCustomer frozen = customer();
-        frozen.setFrozen(true);
+        PtSaleCustomer frozen = customer(LocalDate.of(1995, 3, 12), LocalDate.of(2027, 7, 16), true);
         assertTrue(PtSaleService.whyCannotBuy(frozen, NOW.toLocalDate(), 10, 19).contains("bảo lưu"));
     }
 
