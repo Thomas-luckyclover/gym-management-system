@@ -201,8 +201,16 @@ public class PtScheduleServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
+        // B0: form trong hộp Xử lý buổi (có ô action) là POST thường, không phải AJAX
+        //     → hết phiên / sai quyền / sai CSRF thì về trang kèm toast, không trả JSON thô cho trình duyệt.
+        boolean handleForm = request.getParameter("action") != null;
+
         // B1: phải đăng nhập.
         Integer accountId = getAccountId(request);
+        if (accountId == null && handleForm) {
+            RequestUtil.redirect(request, response, "/login?returnUrl=" + PAGE_URL);
+            return;
+        }
         if (accountId == null) {
             JsonUtil.writeJson(response, 401, JsonResponse.error(Messages.MSG06_SESSION_EXPIRED));
             return;
@@ -210,6 +218,11 @@ public class PtScheduleServlet extends HttpServlet {
 
         // B2: phải là PT và có CSRF token đúng.
         if (!isPtWithValidToken(request)) {
+            if (handleForm) {
+                RequestUtil.setFlashToast(request, "error", Messages.MSG07_NO_PERMISSION);
+                RequestUtil.redirect(request, response, PAGE_URL);
+                return;
+            }
             JsonUtil.writeJson(response, 403, JsonResponse.error(Messages.MSG07_NO_PERMISSION));
             return;
         }
