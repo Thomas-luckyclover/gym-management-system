@@ -980,6 +980,14 @@ public final class Messages {
     /** Công bố chỉ gỡ khung. %d = số khung. */
     public static final String MSG322_PT_SLOTS_REMOVED = "Đã gỡ %d khung giờ.";
 
+    /** CBR-123: ca còn mở sau giờ kết thúc (ca sáng 13:00, ca chiều giờ đóng cửa). %s = tên ca, ngày. Hiện trên mọi màn lễ tân. */
+    public static final String MSG323_SHIFT_OVERDUE_NOT_CLOSED =
+            "%s ngày %s đã quá giờ kết thúc nhưng chưa chốt. Vui lòng kiểm tiền trong két và chốt ca ở màn Ca làm việc.";
+
+    /** CBR-123: bán / thu tiền khi ca đang mở là ca của NGÀY TRƯỚC → từ chối. %s = tên ca, ngày. */
+    public static final String MSG324_SHIFT_PAST_DAY_NOT_CLOSED =
+            "%s ngày %s chưa được chốt. Vui lòng chốt ca cũ và mở ca hôm nay trước khi bán.";
+
     private Messages() {
     }
 }
