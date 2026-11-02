@@ -24,6 +24,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -50,6 +51,35 @@ public class ShiftService {
     private final EmployeeDAO employeeDAO;
     private final SelfServiceGuard selfServiceGuard;
     private final AuditLogService auditLogService;
+
+    /**
+     * Thanh cảnh báo ca trên các màn lễ tân (ReceptionistAreaFilter gọi trước khi mở trang).
+     *   Ca đang mở nhưng đã quá giờ kết thúc (ca ngày cũ, ca sáng sau 13:00, ca chiều sau giờ đóng cửa P-19)
+     *     → MSG323 trên MỌI màn lễ tân (CBR-123). Hệ thống không tự chốt ca.
+     *   Không có ca đang mở → MSG109 chỉ trên màn bán tại quầy (CBR-105: hiện "Chưa mở ca" + nút Mở ca).
+     *   Còn lại → null (không hiện gì). Lỗi đọc DB → null, không chặn trang.
+     */
+    public String findShiftNotice(LocalDateTime now, boolean saleScreen) {
+        try {
+            LocalDate today = now.toLocalDate();
+            Shift shift = shiftDAO.findCurrentOrActiveShift(today);
+            if (shift == null || !shift.isOpen()) {
+                return saleScreen ? Messages.MSG109_SHIFT_NOT_OPEN_FOR_SALE : null;
+            }
+            LocalTime end = shift.getShiftType() == Shift.ShiftType.MORNING
+                    ? AppConstants.AFTERNOON_SHIFT_START
+                    : PtScheduleService.parseOpeningHours(
+                            new SystemConfigService().getString(SystemConfigService.OPENING_HOURS))[1];
+            boolean overdue = shift.getWorkDate().isBefore(today) || !now.toLocalTime().isBefore(end);
+            return overdue
+                    ? String.format(Messages.MSG323_SHIFT_OVERDUE_NOT_CLOSED,
+                            shift.getShiftType().getDisplayName(), DateTimeUtil.formatDate(shift.getWorkDate()))
+                    : null;
+        } catch (SQLException | RuntimeException exception) {
+            exception.printStackTrace();
+            return null;
+        }
+    }
 
     public ShiftService() {
         this.shiftDAO = new ShiftDAO();

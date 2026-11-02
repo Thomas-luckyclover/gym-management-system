@@ -7,6 +7,24 @@
 <%@ page pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 
+<%-- Thanh cảnh báo ca (ReceptionistAreaFilter đặt shiftNotice):
+     MSG323 ca quá giờ chưa chốt — mọi màn lễ tân (CBR-123); MSG109 chưa mở ca — màn Bán hàng / Bán gói PT (CBR-105).
+     Màn Ca làm việc đã có banner riêng nên không hiện ở đó. --%>
+<c:if test="${not empty shiftNotice and activeNav != 'shifts'}">
+  <style>
+    .shift-notice{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:1000;
+      display:flex;gap:12px;align-items:center;max-width:min(720px,calc(100vw - 32px));
+      padding:12px 16px;border-radius:12px;background:#FFF4E5;color:#7A4100;border:1px solid #F5B971;
+      box-shadow:0 6px 20px rgba(0,0,0,.12);font-size:14px;line-height:1.4}
+    .shift-notice a{flex:none;font-weight:600;color:#7A4100;text-decoration:underline;white-space:nowrap}
+  </style>
+  <div class="shift-notice" role="status">
+    <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+    <span><c:out value="${shiftNotice}" /></span>
+    <a href="${pageContext.request.contextPath}/receptionist/shift">Ca làm việc</a>
+  </div>
+</c:if>
+
 <a class="skip-link" href="#main-content">Bỏ qua menu, đến nội dung</a>
 <div class="dockwrap" id="dock">
   <aside class="sidebar">
