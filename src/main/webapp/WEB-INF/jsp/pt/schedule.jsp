@@ -21,11 +21,12 @@
    view            "week" | "list" (kiểu xem); viewDate = ngày đang xem; today = hôm nay
    csrfToken, draftAccountId   cho form Công bố và khóa lưu nháp trong trình duyệt
 
- BỐ CỤC
-   1. Panel lịch: thanh công cụ (‹ tuần ›, Thêm khung, Tuần/Danh sách) → lưới 7 ngày → chú thích màu
-   2. Thanh "Chờ công bố" dính đáy: CSS tự hiện khi có nháp hoặc khung chờ gỡ
-   3. <template> khung nháp: JS sao chép khi PT thêm khung
-   4. Hộp "Xử lý buổi" (_handle-dialog.jspf): có khi URL có ?handle=<mã buổi>; biến "handle" ← PtSessionHandleService
+ BỐ CỤC — mỗi khối lớn là 1 file riêng cùng thư mục pt/:
+   1. Panel lịch: _schedule-toolbar.jspf (‹ tuần ›, Thêm khung, Tuần/Danh sách) → chú thích màu
+                  → lưới 7 ngày, mỗi cột ngày = _schedule-day.jspf
+   2. _schedule-pending.jspf         thanh "Chờ công bố" dính đáy: CSS tự hiện khi có nháp hoặc khung chờ gỡ
+   3. _schedule-draft-template.jspf  <template> khung nháp: JS sao chép khi PT thêm khung
+   4. _handle-dialog.jspf            hộp "Xử lý buổi": có khi URL có ?handle=<mã buổi>; biến "handle" ← PtSessionHandleService
 
  AI LÀM GÌ
    Gỡ khung   = ô checkbox trong thẻ khung trống. Không cần JS: CSS đổi kiểu thẻ khi được tích.
@@ -105,78 +106,9 @@
                                  ========================================================================== --%>
                             <section class="panel pt-plan-board" aria-labelledby="pt-plan-range">
 
-                                <%-- ----- 1.1 Thanh công cụ (cùng kiểu với màn Lịch tập của khách) ----- --%>
-                                <header class="pt-plan-toolbar">
-                                    <nav class="pt-plan-period" aria-label="Chọn tuần">
-                                        <a class="btn btn-outline pt-plan-step" href="${prevWeekUrl}" aria-label="Tuần trước"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></a>
-                                        <%-- Khoảng tuần: week.weekStart cắt "dd/MM" + " – " + week.weekEnd đủ "dd/MM/yyyy" → "26/10 – 01/11/2026". --%>
-                                        <h2 id="pt-plan-range"><c:out value="${fn:substring(gms:formatDate(week.weekStart), 0, 5)}" /> – <c:out value="${gms:formatDate(week.weekEnd)}" /></h2>
-                                        <a class="btn btn-outline pt-plan-step" href="${nextWeekUrl}" aria-label="Tuần sau"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></a>
-                                        <%-- Nhảy thẳng tới ngày bất kỳ (khỏi bấm ‹ › nhiều lần): chọn ngày → schedule.js gửi form GET
-                                             ?date=…&view=… → Service dựng tuần chứa ngày đó. Tắt JS: nút "Xem". --%>
-                                        <form class="pt-plan-jump" method="get" action="${pageContext.request.contextPath}/pt/schedule">
-                                            <input type="hidden" name="view" value="${view}">
-                                            <label class="pt-plan-jump-field" title="Chọn ngày để xem tuần đó">
-                                                <i class="fa-regular fa-calendar" aria-hidden="true"></i>
-                                                <span class="visually-hidden">Xem tuần của ngày</span>
-                                                <input type="date" name="date" value="${viewDate}" required data-jump-date>
-                                            </label>
-                                            <noscript><button class="btn btn-outline" type="submit">Xem</button></noscript>
-                                        </form>
-                                        <%-- week.currentWeek = false (đang xem tuần khác) → hiện nút "Tuần này". --%>
-                                        <c:if test="${not week.currentWeek}"><a class="btn btn-ghost" href="${thisWeekUrl}">Tuần này</a></c:if>
-                                    </nav>
 
-                                    <div class="pt-plan-actions">
-                                        <c:choose>
-                                            <c:when test="${canAddAny}">
-                                                <%-- Nút "Thêm khung" mở form nhỏ: cách chính trên điện thoại, cách bàn phím trên máy tính. --%>
-                                                <details class="pt-plan-add">
-                                                    <summary class="btn btn-outline"><i class="fa-solid fa-calendar-plus" aria-hidden="true"></i> Thêm khung</summary>
-                                                    <form id="pt-add-form" class="pt-plan-add-form">
-                                                        <%-- Ô chọn ngày: chỉ ngày còn thêm được; mỗi lựa chọn "Thứ 3 · 27/10" (day.dayName · day.date). --%>
-                                                        <label>Ngày
-                                                            <select name="date">
-                                                                <c:forEach var="day" items="${week.days}">
-                                                                    <c:if test="${not empty day.firstStartMinute}">
-                                                                        <option value="${day.date}" ${day.today ? 'selected' : ''}><c:out value="${day.dayName}" /> · <c:out value="${fn:substring(gms:formatDate(day.date), 0, 5)}" /></option>
-                                                                    </c:if>
-                                                                </c:forEach>
-                                                            </select>
-                                                        </label>
-                                                        <%-- Giờ bắt đầu: step 900 giây = mốc 15 phút. --%>
-                                                        <label>Giờ bắt đầu
-                                                            <input type="time" name="start" step="900" required>
-                                                        </label>
-                                                        <%-- "Kết thúc 19:30 · 90 phút": JS điền giờ kết thúc; week.sessionMinutes = P-06. --%>
-                                                        <p class="pt-plan-add-end">Kết thúc <output name="end">--:--</output> · <c:out value="${week.sessionMinutes}" /> phút</p>
-                                                        <button class="btn btn-primary" type="submit">Thêm vào nháp</button>
-                                                    </form>
-                                                </details>
-                                            </c:when>
-                                            <c:otherwise>
-                                                <%-- Tuần đã qua / không còn ngày thêm được → chỉ một dòng chữ. --%>
-                                                <p class="pt-plan-readonly">Tuần này chỉ xem: không còn ngày nào thêm được khung.</p>
-                                            </c:otherwise>
-                                        </c:choose>
+                                <%@ include file="/WEB-INF/jsp/pt/_schedule-toolbar.jspf" %>
 
-                                        <%-- Thao tác nhanh — chỉ tạo NHÁP (thanh Chờ công bố), PT xem lại rồi mới Công bố:
-                                               Gỡ hết khung trống  tích mọi ô gỡ (chỉ khung Còn trống, không khách, không bị giữ) + bỏ nháp
-                                               Chép sang tuần sau  khung của tuần này → nháp tuần sau (cùng thứ, cùng giờ), rồi mở tuần sau --%>
-                                        <div class="pt-plan-tools" role="group" aria-label="Thao tác nhanh">
-                                            <c:if test="${canRemoveAny}">
-                                                <button type="button" class="btn btn-ghost" data-plan-action="clear-free"><i class="fa-solid fa-calendar-xmark" aria-hidden="true"></i> Gỡ hết khung trống</button>
-                                            </c:if>
-                                            <button type="button" class="btn btn-ghost" data-plan-action="copy-next"><i class="fa-regular fa-copy" aria-hidden="true"></i> Chép sang tuần sau</button>
-                                        </div>
-
-                                        <%-- Công tắc kiểu xem: link đang chọn có aria-current="page" → CSS tô nền. --%>
-                                        <nav class="pt-plan-switch" aria-label="Kiểu xem">
-                                            <a href="${weekViewUrl}" aria-current="${view eq 'week' ? 'page' : 'false'}">Tuần</a>
-                                            <a href="${listViewUrl}" aria-current="${view eq 'list' ? 'page' : 'false'}">Danh sách</a>
-                                        </nav>
-                                    </div>
-                                </header>
 
                                 <%-- ----- 1.1b Buổi trên ?handle= không xử lý được (không phải buổi của bạn, đã bắt đầu…)
                                      handleError ← PtScheduleServlet.loadHandle; handleFormError ← Lưu bị từ chối mà hộp không mở lại được. ----- --%>
@@ -221,141 +153,9 @@
                                         <%-- Mỗi ngày 1 cột. --%>
                                         <c:forEach var="day" items="${week.days}">
                                             <c:set var="dayLabel" value="${day.dayName} ${fn:substring(gms:formatDate(day.date), 0, 5)}" />
-                                            <section class="pt-day ${day.today ? 'is-today' : ''} ${day.past ? 'is-past' : ''} ${day.closedAllDay ? 'is-closed' : ''}" aria-label="${dayLabel}">
 
-                                                <%-- Đầu cột: "Thứ 3" + "27/10" + nhãn nhỏ:
-                                                       "Hôm nay" (day.today), "Phòng nghỉ" (day.closedAllDay ← OperatingHourExceptions),
-                                                       day.leaveLabel ← LeaveRequests, VD "Nghỉ phép ca sáng · chờ duyệt". --%>
-                                                <div class="pt-day-head">
-                                                    <h3 class="pt-day-title">
-                                                    <span class="pt-day-name"><c:out value="${day.dayName}" /></span>
-                                                    <span class="pt-day-date"><c:out value="${fn:substring(gms:formatDate(day.date), 0, 5)}" /></span>
-                                                    </h3>
-                                                    <c:if test="${day.today}"><small class="pt-day-note is-today">Hôm nay</small></c:if>
-                                                    <c:if test="${day.closedAllDay}"><small class="pt-day-note is-closed">Phòng nghỉ</small></c:if>
-                                                    <c:if test="${not empty day.leaveLabel}">
-                                                        <details class="pt-day-leave">
-                                                            <summary><c:out value="${day.leaveLabel}" /></summary>
-                                                            <div class="pt-day-leave-details">
-                                                                <p class="pt-day-leave-reason"><c:out value="${day.leaveDetails}" /></p>
-                                                                <p>Đơn chờ duyệt cũng tạm khóa khung trống trong ca nghỉ. Buổi đã có khách không tự hủy.</p>
-                                                                <c:if test="${not empty day.leaveBookings}">
-                                                                    <p>Buổi có khách trùng ca nghỉ:</p>
-                                                                    <ul><c:forEach var="booking" items="${day.leaveBookings}"><li><c:out value="${booking}" /></li></c:forEach></ul>
-                                                                </c:if>
-                                                                <p>“Chưa chốt” nghĩa là buổi đã kết thúc nhưng chưa có kết quả, không có nghĩa là đã hủy hoặc khách vắng.</p>
-                                                            </div>
-                                                        </details>
-                                                        <c:if test="${not empty day.leaveBookings}"><small class="pt-day-note is-conflict"><c:out value="${fn:length(day.leaveBookings)}" /> buổi trùng ca nghỉ</small></c:if>
-                                                    </c:if>
-                                                </div>
+                                            <%@ include file="/WEB-INF/jsp/pt/_schedule-day.jspf" %>
 
-                                                <%-- Vùng thả khung. data-first / data-last: khoảng giờ được thêm khung (phút trong ngày,
-                                                     VD 330 = 05:30, 1230 = 20:30); thiếu 2 thuộc tính này = ngày không thêm được. --%>
-                                                <div class="pt-day-track" data-date="${day.date}" data-label="${fn:escapeXml(dayLabel)}"
-                                                     <c:if test="${not empty day.firstStartMinute}">data-first="${day.firstStartMinute}" data-last="${day.lastStartMinute}"</c:if>>
-                                                    <%-- Kiểu danh sách (điện thoại / nút Danh sách): dòng ngăn "Ca sáng" / "Ca chiều".
-                                                         Khung trong danh sách xếp bằng CSS order = --start (phút từ đầu trục), nên dòng ngăn cũng dùng order:
-                                                         "Ca sáng" order −1 (luôn đầu), "Ca chiều" order = phút của mốc 13:00 (đứng trước khung 13:00 vì nằm trước trong HTML).
-                                                         Chỉ in ca nào ngày đó có khung. Lưới tuần ẩn 2 dòng này (CSS) vì đã có vạch ca. --%>
-                                                    <c:set var="hasAm" value="false" />
-                                                    <c:set var="hasPm" value="false" />
-                                                    <c:forEach var="item" items="${day.items}">
-                                                        <c:if test="${item.startTime.hour lt week.shiftSplitHour}"><c:set var="hasAm" value="true" /></c:if>
-                                                        <c:if test="${item.startTime.hour ge week.shiftSplitHour}"><c:set var="hasPm" value="true" /></c:if>
-                                                    </c:forEach>
-                                                    <c:if test="${hasAm}"><p class="pt-list-shift" style="order: -1">Ca sáng</p></c:if>
-                                                    <c:if test="${hasPm}"><p class="pt-list-shift is-pm" style="order: ${(week.shiftSplitHour - week.axisStartHour) * 60}">Ca chiều</p></c:if>
-
-                                                    <c:forEach var="item" items="${day.items}">
-                                                        <%-- timeText "18:00 – 19:30" ← item.startTime / endTime (DAO TimeSlots.StartTime / EndTime). --%>
-                                                        <c:set var="timeText" value="${gms:formatTime(item.startTime)} – ${gms:formatTime(item.endTime)}" />
-                                                        <%-- Thẻ khung. Màu theo item.kind (Service chọn): free = còn trống, booked = có khách,
-                                                             held = đang giữ cho đơn online, locked = tạm khóa vì nghỉ phép.
-                                                             --start / --length: vị trí + chiều cao thẻ trên lưới (Service tính bằng phút).
-                                                             data-start / data-end chỉ có ở thẻ CHIẾM giờ: JS dùng để báo trùng khi thêm khung.
-                                                             title (rê chuột): "18:00 – 19:30 · Đỗ Thị Mai · Sắp tới". --%>
-                                                        <%-- id="session-120": sau khi dời / hủy, Servlet redirect về #session-120 → trình duyệt cuộn tới, CSS :target tô viền. --%>
-                                                        <article class="pt-slot is-${item.kind} ${item.past ? 'is-past' : ''} ${item.canHandle ? 'is-handleable' : ''}"
-                                                                 <c:if test="${item.booked}">id="session-${item.sessionId}"</c:if>
-                                                                 data-status="<c:out value='${item.sessionStatus}' />"
-                                                                 style="--start: ${item.startMinute}; --length: ${item.lengthMinutes}"
-                                                                 <c:if test="${item.blocking}">data-start="${item.startOfDay}" data-end="${item.endOfDay}"</c:if>
-                                                                 title="${fn:escapeXml(timeText)}${item.booked ? ' · ' : ''}${fn:escapeXml(item.customerNames)} · ${fn:escapeXml(item.statusLabel)}">
-                                                            <c:choose>
-                                                                <%-- Khung trống gỡ được (item.canRemove, Service xét): cả thẻ là <label>, bấm thẻ = tích ô "gỡ".
-                                                                     Ô tích gửi removeSlotId = item.timeSlotId (TimeSlots.TimeSlotId) khi Công bố.
-                                                                     Tích ô chỉ đánh dấu Chờ gỡ; Giữ lại bỏ lựa chọn, Lưu thay đổi mới ghi DB. --%>
-                                                                <c:when test="${item.canRemove}">
-                                                                    <label class="pt-slot-body pt-slot-toggle">
-                                                                        <input type="checkbox" class="pt-remove" name="removeSlotId" value="${item.timeSlotId}" form="pt-publish-form"
-                                                                               aria-label="Gỡ khung ${timeText}, ${dayLabel}">
-                                                                        <span class="pt-slot-time"><c:out value="${timeText}" /></span>
-                                                                        <span class="pt-slot-info"><strong>Khung rảnh</strong></span>
-                                                                        <span class="pt-slot-state"><c:out value="${item.statusLabel}" /></span>
-                                                                        <span class="pt-slot-flag">Chờ gỡ</span>
-                                                                        <span class="pt-slot-hint" aria-hidden="true">
-                                                                            <span class="when-off">Gỡ khung</span>
-                                                                            <span class="when-on">Giữ lại</span>
-                                                                        </span>
-                                                                    </label>
-                                                                </c:when>
-
-                                                                <%-- Các thẻ khác chỉ để xem. Khung có khách (item.booked) hiện thêm:
-                                                                       item.customerNames ← Persons.FullName (gói đôi "A & B"), in đậm
-                                                                       item.packageName   ← Orders.PackageNameSnapshot (tên gói lúc mua)
-                                                                       "Buổi 20/45"       ← sessionNo (ROW_NUMBER trong SQL) / totalSessions (Subscriptions.GeneratedSessionCount)
-                                                                     item.statusLabel (Service): "Còn trống", "Sắp tới", "Đã check-in", "Vắng"… --%>
-                                                                <%-- Buổi có khách còn xử lý được (item.canHandle: Scheduled + chưa tới giờ) → cả thẻ là LINK
-                                                                     ?date=…&view=…&handle=<mã buổi> → doGet mở hộp Xử lý buổi (_handle-dialog.jspf). Không cần JS. --%>
-                                                                <c:when test="${item.canHandle}">
-                                                                    <c:url var="handleUrl" value="/pt/schedule"><c:param name="date" value="${day.date}" /><c:param name="view" value="${view}" /><c:param name="handle" value="${item.sessionId}" /></c:url>
-                                                                    <a class="pt-slot-body pt-slot-link" href="${handleUrl}" aria-label="Xử lý buổi ${timeText}, ${dayLabel}, ${fn:escapeXml(item.customerNames)}">
-                                                                        <span class="pt-slot-time"><c:out value="${timeText}" /></span>
-                                                                        <span class="pt-slot-info">
-                                                                            <strong class="pt-slot-person"><c:out value="${item.customerNames}" /></strong>
-                                                                            <span class="pt-slot-package"><c:out value="${item.packageName}" /> · Buổi <c:out value="${item.sessionNo}" />/<c:out value="${item.totalSessions}" /></span>
-                                                                        </span>
-                                                                        <span class="pt-slot-state"><c:out value="${item.statusLabel}" /></span>
-                                                                        <span class="pt-slot-hint" aria-hidden="true">Bấm để xử lý</span>
-                                                                    </a>
-                                                                </c:when>
-
-                                                                <c:otherwise>
-                                                                    <div class="pt-slot-body">
-                                                                        <span class="pt-slot-time"><c:out value="${timeText}" /></span>
-                                                                        <span class="pt-slot-info">
-                                                                            <c:choose>
-                                                                                <c:when test="${item.booked}">
-                                                                                    <strong class="pt-slot-person"><c:out value="${item.customerNames}" /></strong>
-                                                                                    <span class="pt-slot-package"><c:out value="${item.packageName}" /> · Buổi <c:out value="${item.sessionNo}" />/<c:out value="${item.totalSessions}" /></span>
-                                                                                </c:when>
-                                                                                <c:when test="${item.kind eq 'held'}"><strong>Đơn chờ thanh toán</strong></c:when>
-                                                                                <c:when test="${item.kind eq 'locked'}"><strong>Nghỉ phép</strong></c:when>
-                                                                                <c:otherwise><strong>Khung rảnh</strong></c:otherwise>
-                                                                            </c:choose>
-                                                                        </span>
-                                                                        <span class="pt-slot-state">
-                                                                            <c:choose>
-                                                                                <c:when test="${item.kind eq 'held'}">Đang giữ</c:when>
-                                                                                <c:otherwise><c:out value="${item.statusLabel}" /></c:otherwise>
-                                                                            </c:choose>
-                                                                        </span>
-                                                                    </div>
-                                                                </c:otherwise>
-                                                            </c:choose>
-                                                        </article>
-                                                    </c:forEach>
-
-                                                    <%-- Chữ hiện khi cột không có thẻ nào (CSS ẩn nếu có thẻ). --%>
-                                                    <p class="pt-day-empty">
-                                                        <c:choose>
-                                                            <c:when test="${day.closedAllDay}">Phòng nghỉ cả ngày</c:when>
-                                                            <c:otherwise>Chưa có khung</c:otherwise>
-                                                        </c:choose>
-                                                    </p>
-                                                </div>
-                                            </section>
                                         </c:forEach>
                                     </div>
                                 </div>
@@ -368,47 +168,11 @@
                             </section>
                             <%-- KHỐI 1. PANEL LỊCH — KẾT THÚC --%>
 
-                            <%-- ==========================================================================
-                                 KHỐI 2. THANH CHỜ CÔNG BỐ (dính đáy) — BẮT ĐẦU
-                                 Số "2 khung mới / 1 khung gỡ" do CSS tự đếm (counter), JS không phải vẽ danh sách.
-                                 Gửi lên: csrfToken, duration (P-06 trang đang dùng), removeSlotId…, slotDate + startTime của nháp.
-                                 ========================================================================== --%>
-                            <form id="pt-publish-form" class="pt-plan-pending" aria-label="Thay đổi chờ lưu">
-                                <input type="hidden" name="csrfToken" value="<c:out value='${csrfToken}' />">
-                                <input type="hidden" name="duration" value="${week.sessionMinutes}">
-                                <div class="pt-pending-text">
-                                    <p class="pt-pending-count">
-                                        <span class="pt-pending-add"><b class="pt-count-add"></b> khung mới</span>
-                                        <span class="pt-pending-remove"><b class="pt-count-remove"></b> khung gỡ</span>
-                                    </p>
-                                    <p class="pt-pending-note">Thay đổi chưa áp dụng vào lịch của khách.</p>
-                                    <%-- Lỗi do server trả về khi Công bố (VD trùng giờ) — JS điền chữ vào đây. --%>
-                                    <p class="pt-pending-error" id="pt-publish-error" role="alert"></p>
-                                </div>
-                                <div class="pt-pending-actions">
-                                    <button class="btn btn-ghost" type="button" id="pt-clear">Bỏ tất cả</button>
-                                    <button class="btn btn-primary" type="submit" id="pt-publish">Công bố</button>
-                                </div>
-                            </form>
-                            <%-- KHỐI 2. THANH CHỜ CÔNG BỐ — KẾT THÚC --%>
+                            <%@ include file="/WEB-INF/jsp/pt/_schedule-pending.jspf" %>
 
-                            <%-- ==========================================================================
-                                 KHỐI 3. MẪU KHUNG NHÁP (JS sao chép) — BẮT ĐẦU
-                                 Không hiện cho tới khi PT thêm khung; JS điền giờ vào .pt-slot-time và 2 ô ẩn.
-                                 ========================================================================== --%>
-                            <template id="pt-draft-template">
-                                <article class="pt-slot pt-draft">
-                                    <input type="hidden" name="slotDate" form="pt-publish-form">
-                                    <input type="hidden" name="startTime" form="pt-publish-form">
-                                    <div class="pt-slot-body">
-                                        <span class="pt-slot-time"></span>
-                                        <span class="pt-slot-info"><strong>Khung rảnh mới</strong></span>
-                                        <span class="pt-slot-state">Nháp mới</span>
-                                    </div>
-                                    <button type="button" class="pt-draft-remove" aria-label="Bỏ khung nháp"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
-                                </article>
-                            </template>
-                            <%-- KHỐI 3. MẪU KHUNG NHÁP — KẾT THÚC --%>
+
+                            <%@ include file="/WEB-INF/jsp/pt/_schedule-draft-template.jspf" %>
+
 
                             <%-- KHỐI 4. HỘP XỬ LÝ BUỔI — chỉ có khi URL có ?handle= và Service trả "handle". --%>
                             <c:if test="${not empty handle}">

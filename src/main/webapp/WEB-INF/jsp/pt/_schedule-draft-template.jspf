@@ -1,0 +1,28 @@
+<%@ page pageEncoding="UTF-8" %>
+<%--
+================================================================================
+ _schedule-draft-template.jspf — MẪU THẺ KHUNG NHÁP (<template>, trình duyệt không hiển thị)
+ Nhúng vào: pt/schedule.jsp (static include → dùng chung biến với trang cha: week, view, các *Url, canAddAny …).
+ schedule.js sao chép (template.content.cloneNode) mỗi khi PT thêm 1 khung mới, điền giờ + 2 ô ẩn slotDate / startTime,
+ rồi đặt vào đúng cột ngày. Khung nháp chỉ thành thật khi bấm "Công bố".
+================================================================================ --%>
+
+<%-- ===== BẮT ĐẦU: MẪU KHUNG NHÁP ===== --%>
+                            <%-- ==========================================================================
+                                 KHỐI 3. MẪU KHUNG NHÁP (JS sao chép) — BẮT ĐẦU
+                                 Không hiện cho tới khi PT thêm khung; JS điền giờ vào .pt-slot-time và 2 ô ẩn.
+                                 ========================================================================== --%>
+                            <template id="pt-draft-template">
+                                <article class="pt-slot pt-draft">
+                                    <input type="hidden" name="slotDate" form="pt-publish-form">
+                                    <input type="hidden" name="startTime" form="pt-publish-form">
+                                    <div class="pt-slot-body">
+                                        <span class="pt-slot-time"></span>
+                                        <span class="pt-slot-info"><strong>Khung rảnh mới</strong></span>
+                                        <span class="pt-slot-state">Nháp mới</span>
+                                    </div>
+                                    <button type="button" class="pt-draft-remove" aria-label="Bỏ khung nháp"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+                                </article>
+                            </template>
+                            <%-- KHỐI 3. MẪU KHUNG NHÁP — KẾT THÚC --%>
+<%-- ===== KẾT THÚC: MẪU KHUNG NHÁP ===== --%>

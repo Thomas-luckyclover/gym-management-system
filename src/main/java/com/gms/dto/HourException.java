@@ -6,17 +6,29 @@ import java.time.LocalTime;
 /**
  * GIỜ MỞ CỬA NGOẠI LỆ của một ngày (bảng OperatingHourExceptions).
  *
- *   Ai tạo?   PtScheduleDAO.findHourExceptions.
+ *   Ai tạo?   PtScheduleDAO.findHourExceptions → readHourException → CONSTRUCTOR.
  *   Ai dùng?  PtScheduleService.buildDay: ngày có ngoại lệ thì dùng giờ này thay cho P-19.
  *
  * Ví dụ: 01/11 phòng nghỉ → closedAllDay=true, openTime=null, closeTime=null.
  */
 public class HourException {
 
-    private LocalDate applyDate;     // ngày áp dụng
-    private boolean closedAllDay;    // true = phòng nghỉ cả ngày
-    private LocalTime openTime;      // giờ mở cửa riêng ngày này; null khi nghỉ cả ngày
-    private LocalTime closeTime;     // giờ đóng cửa riêng ngày này; null khi nghỉ cả ngày
+    /** DAO tạo (PtScheduleDAO.readHourException): 1 dòng OperatingHourExceptions. */
+    public HourException(LocalDate applyDate, boolean closedAllDay, LocalTime openTime, LocalTime closeTime) {
+        this.applyDate = applyDate;
+        this.closedAllDay = closedAllDay;
+        this.openTime = openTime;
+        this.closeTime = closeTime;
+    }
+
+    /** Constructor rỗng: Service / test tạo object nhỏ rồi set từng field cần. */
+    public HourException() {
+    }
+
+    private LocalDate applyDate;     // ngày áp dụng   · không in (JSP không đọc object này, chỉ Service dùng)
+    private boolean closedAllDay;    // true = phòng nghỉ cả ngày   · không in (JSP không đọc object này, chỉ Service dùng)
+    private LocalTime openTime;      // giờ mở cửa riêng ngày này; null khi nghỉ cả ngày   · không in (JSP không đọc object này, chỉ Service dùng)
+    private LocalTime closeTime;     // giờ đóng cửa riêng ngày này; null khi nghỉ cả ngày   · không in (JSP không đọc object này, chỉ Service dùng)
 
 
     // ===== Getter / Setter: chỉ đọc và gán, không có nghiệp vụ =====

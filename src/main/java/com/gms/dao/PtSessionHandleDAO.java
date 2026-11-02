@@ -30,79 +30,6 @@ import java.util.List;
 public class PtSessionHandleDAO {
 
 
-    // ================================================================================================================
-    // PHẦN 1. ĐỌC
-    // ================================================================================================================
-
-    /**
-     * HÀM CHÍNH — Service gọi đầu mỗi hàm (mở hộp, dời, chuyển, hủy).
-     * Chỉ tìm buổi có Sessions.PtEmployeeId = ptId → PT không mở được buổi của PT khác dù sửa ?handle= trên URL.
-     * lock = true (khi Lưu): UPDLOCK giữ dòng buổi tới hết transaction, 2 lần bấm Lưu phải xếp hàng.
-     * Không thấy → null.
-     */
-    public PtHandleView findSession(Connection connection, int sessionId, int ptId, boolean lock) throws SQLException {
-        String sql = """
-                SELECT s.SessionId, s.Status, s.TimeSlotId, s.PtEmployeeId, s.SessionValue, s.CommissionAmount,
-                       t.SlotDate, t.StartTime, t.EndTime,
-                       sub.SubscriptionId, sub.SubscriptionType, sub.CustomerId, sub.StartDate, sub.EndDate,
-                       o.PackageNameSnapshot,
-                       CASE WHEN sub.SubscriptionType = 'PTCouple' THEN o.PartnerCustomerId END AS PartnerCustomerId,
-                       CASE WHEN partnerPerson.FullName IS NULL THEN holderPerson.FullName
-                            ELSE CONCAT(holderPerson.FullName, N' & ', partnerPerson.FullName) END AS CustomerNames,
-                       ptPerson.FullName AS PtName
-                FROM Sessions s %s
-                JOIN TimeSlots t       ON t.TimeSlotId = s.TimeSlotId
-                JOIN Subscriptions sub ON sub.SubscriptionId = s.SubscriptionId
-                JOIN Orders o          ON o.OrderId = sub.OrderId
-                JOIN Customers holder  ON holder.CustomerId = sub.CustomerId
-                JOIN Persons holderPerson ON holderPerson.PersonId = holder.PersonId
-                LEFT JOIN Customers partner ON partner.CustomerId = o.PartnerCustomerId AND sub.SubscriptionType = 'PTCouple'
-                LEFT JOIN Persons partnerPerson ON partnerPerson.PersonId = partner.PersonId
-                JOIN Employees e       ON e.EmployeeId = s.PtEmployeeId
-                JOIN Persons ptPerson  ON ptPerson.PersonId = e.PersonId
-                WHERE s.SessionId = ? AND s.PtEmployeeId = ?
-                """.formatted(lock ? "WITH (UPDLOCK, HOLDLOCK)" : "");
-
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, sessionId);
-            statement.setInt(2, ptId);    // ? = mã PT lấy từ session đăng nhập, không lấy từ URL
-
-            try (ResultSet rs = statement.executeQuery()) {
-                return rs.next() ? readSession(rs) : null;
-            }
-        }
-    }
-
-    /** HÀM PHỤ — findSession gọi. Một dòng SQL → PtHandleView (phần 1 + 2). */
-    private PtHandleView readSession(ResultSet rs) throws SQLException {
-        PtHandleView row = new PtHandleView();
-
-        // Buổi + khung + PT dạy
-        row.setSessionId(rs.getInt("SessionId"));
-        row.setSessionStatus(rs.getString("Status"));
-        row.setTimeSlotId(rs.getInt("TimeSlotId"));
-        row.setPtEmployeeId(rs.getInt("PtEmployeeId"));
-        row.setPtName(rs.getString("PtName"));
-        row.setSessionValue(rs.getInt("SessionValue"));
-        row.setCommissionAmount(rs.getInt("CommissionAmount"));
-        row.setSlotDate(rs.getDate("SlotDate").toLocalDate());
-        row.setStartTime(rs.getTime("StartTime").toLocalTime());
-        row.setEndTime(rs.getTime("EndTime").toLocalTime());
-
-        // Gói + khách
-        row.setSubscriptionId(rs.getInt("SubscriptionId"));
-        row.setSubscriptionType(rs.getString("SubscriptionType"));
-        row.setCustomerId(rs.getInt("CustomerId"));
-        int partnerId = rs.getInt("PartnerCustomerId");
-        row.setPartnerCustomerId(rs.wasNull() ? null : partnerId);
-        row.setTermStart(rs.getDate("StartDate").toLocalDate());
-        row.setTermEnd(rs.getDate("EndDate").toLocalDate());
-        row.setPackageName(rs.getString("PackageNameSnapshot"));
-        row.setCustomerNames(rs.getString("CustomerNames"));
-        return row;
-    }
-
-
     /**
      * Câu SQL CHUNG đọc khung trống + 4 cờ, dùng cho cả 3 hàm tìm khung bên dưới (khác nhau ở dòng lọc cuối, %s).
      * Nhờ dùng chung, lúc MỞ HỘP và lúc BẤM LƯU kiểm tra đúng cùng một luật.
@@ -163,7 +90,79 @@ public class PtSessionHandleDAO {
             ORDER BY t.SlotDate, t.StartTime, p.FullName
             """;
 
+
+    // ============================================================================================================
+    // PHỤC VỤ PtSessionHandleService.getHandleForm (mở hộp) — ĐỌC
+    // Cũng dùng lại khi Lưu (lock = true) để kiểm lại có khóa
+    // ============================================================================================================
+
     /**
+     * [getHandleForm (lock = false); reschedule / transfer / cancel (lock = true)] Sessions + TimeSlots + Subscriptions + Orders + Customers + Persons + Employees: R 1 dòng.
+     * HÀM CHÍNH — Service gọi đầu mỗi hàm (mở hộp, dời, chuyển, hủy).
+     * Chỉ tìm buổi có Sessions.PtEmployeeId = ptId → PT không mở được buổi của PT khác dù sửa ?handle= trên URL.
+     * lock = true (khi Lưu): UPDLOCK giữ dòng buổi tới hết transaction, 2 lần bấm Lưu phải xếp hàng.
+     * Không thấy → null.
+     */
+    public PtHandleView findSession(Connection connection, int sessionId, int ptId, boolean lock) throws SQLException {
+        String sql = """
+                SELECT s.SessionId, s.Status, s.TimeSlotId, s.PtEmployeeId, s.SessionValue, s.CommissionAmount,
+                       t.SlotDate, t.StartTime, t.EndTime,
+                       sub.SubscriptionId, sub.SubscriptionType, sub.CustomerId, sub.StartDate, sub.EndDate,
+                       o.PackageNameSnapshot,
+                       CASE WHEN sub.SubscriptionType = 'PTCouple' THEN o.PartnerCustomerId END AS PartnerCustomerId,
+                       CASE WHEN partnerPerson.FullName IS NULL THEN holderPerson.FullName
+                            ELSE CONCAT(holderPerson.FullName, N' & ', partnerPerson.FullName) END AS CustomerNames,
+                       ptPerson.FullName AS PtName
+                FROM Sessions s %s
+                JOIN TimeSlots t       ON t.TimeSlotId = s.TimeSlotId
+                JOIN Subscriptions sub ON sub.SubscriptionId = s.SubscriptionId
+                JOIN Orders o          ON o.OrderId = sub.OrderId
+                JOIN Customers holder  ON holder.CustomerId = sub.CustomerId
+                JOIN Persons holderPerson ON holderPerson.PersonId = holder.PersonId
+                LEFT JOIN Customers partner ON partner.CustomerId = o.PartnerCustomerId AND sub.SubscriptionType = 'PTCouple'
+                LEFT JOIN Persons partnerPerson ON partnerPerson.PersonId = partner.PersonId
+                JOIN Employees e       ON e.EmployeeId = s.PtEmployeeId
+                JOIN Persons ptPerson  ON ptPerson.PersonId = e.PersonId
+                WHERE s.SessionId = ? AND s.PtEmployeeId = ?
+                """.formatted(lock ? "WITH (UPDLOCK, HOLDLOCK)" : "");
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, sessionId);
+            statement.setInt(2, ptId);    // ? = mã PT lấy từ session đăng nhập, không lấy từ URL
+
+            try (ResultSet rs = statement.executeQuery()) {
+                return rs.next() ? readSession(rs) : null;
+            }
+        }
+    }
+
+    /** HÀM PHỤ — findSession gọi. Một dòng SQL → PtHandleView (phần 1 + 2). */
+    private PtHandleView readSession(ResultSet rs) throws SQLException {
+        int partnerId = rs.getInt("PartnerCustomerId");
+        Integer partner = rs.wasNull() ? null : partnerId;
+        return new PtHandleView(
+                rs.getInt("SessionId"),                          // Buổi + khung + PT dạy
+                rs.getString("Status"),
+                rs.getInt("TimeSlotId"),
+                rs.getInt("PtEmployeeId"),
+                rs.getString("PtName"),
+                rs.getInt("SessionValue"),
+                rs.getInt("CommissionAmount"),
+                rs.getDate("SlotDate").toLocalDate(),
+                rs.getTime("StartTime").toLocalTime(),
+                rs.getTime("EndTime").toLocalTime(),
+                rs.getInt("SubscriptionId"),                     // Gói + khách
+                rs.getString("SubscriptionType"),
+                rs.getInt("CustomerId"),
+                partner,
+                rs.getDate("StartDate").toLocalDate(),
+                rs.getDate("EndDate").toLocalDate(),
+                rs.getString("PackageNameSnapshot"),
+                rs.getString("CustomerNames"));
+    }
+
+    /**
+     * [getHandleForm] TimeSlots của chính PT (+ ngày nghỉ, đơn nghỉ, buổi khác của khách): R nhiều dòng → tab "Dời buổi".
      * HÀM CHÍNH — Service gọi khi mở hộp (phần "Dời buổi").
      * Khung Free của CHÍNH PT từ fromDate đến toDate. Service lọc tiếp (đã qua giờ, ngoài hạn gói, 4 cờ).
      */
@@ -177,42 +176,6 @@ public class PtSessionHandleDAO {
             statement.setDate(next + 1, Date.valueOf(fromDate));
             statement.setDate(next + 2, Date.valueOf(toDate));
             return readSlots(statement);
-        }
-    }
-
-    /**
-     * HÀM CHÍNH — Service gọi khi mở hộp (phần "Chuyển PT").
-     * Khung Free của PT KHÁC có ĐÚNG ngày + giờ bắt đầu + giờ kết thúc của buổi (chuyển PT giữ nguyên giờ).
-     */
-    public List<PtHandleSlot> findTransferSlots(Connection connection, PtHandleView session, int ptId)
-            throws SQLException {
-        String sql = SLOT_SQL.formatted("", "t.PtEmployeeId <> ? AND t.SlotDate = ? "
-                + "AND t.StartTime = CAST(? AS time) AND t.EndTime = CAST(? AS time)");
-
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            int next = setCommonParams(statement, session);
-            statement.setInt(next, ptId);
-            statement.setDate(next + 1, Date.valueOf(session.getSlotDate()));
-            statement.setString(next + 2, session.getStartTime().toString());
-            statement.setString(next + 3, session.getEndTime().toString());
-            return readSlots(statement);
-        }
-    }
-
-    /**
-     * HÀM CHÍNH — Service gọi khi bấm Lưu (Dời buổi / Chuyển PT).
-     * Đọc lại ĐÚNG khung PT đã chọn, có khóa dòng: từ lúc này tới commit không ai giữ/đặt/gỡ được khung đó.
-     * Khung không còn Free (vừa có người lấy) → null → Service báo MSG103.
-     */
-    public PtHandleSlot findSlotById(Connection connection, PtHandleView session, int timeSlotId)
-            throws SQLException {
-        String sql = SLOT_SQL.formatted("WITH (UPDLOCK, HOLDLOCK)", "t.TimeSlotId = ?");
-
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            int next = setCommonParams(statement, session);
-            statement.setInt(next, timeSlotId);
-            List<PtHandleSlot> rows = readSlots(statement);
-            return rows.isEmpty() ? null : rows.get(0);
         }
     }
 
@@ -240,59 +203,71 @@ public class PtSessionHandleDAO {
 
         try (ResultSet rs = statement.executeQuery()) {
             while (rs.next()) {
-                PtHandleSlot slot = new PtHandleSlot();
-                slot.setTimeSlotId(rs.getInt("TimeSlotId"));
-                slot.setPtEmployeeId(rs.getInt("PtEmployeeId"));
-                slot.setPtName(rs.getString("PtName"));
-                slot.setCommissionRate(rs.getInt("CommissionRate"));
-                slot.setSlotDate(rs.getDate("SlotDate").toLocalDate());
-                slot.setStartTime(rs.getTime("StartTime").toLocalTime());
-                slot.setEndTime(rs.getTime("EndTime").toLocalTime());
-                slot.setGymClosed(rs.getBoolean("GymClosed"));
-                slot.setPtOnLeave(rs.getBoolean("PtOnLeave"));
-                slot.setCustomerBusy(rs.getBoolean("CustomerBusy"));
-                slot.setHasGymAccess(rs.getBoolean("HasGymAccess"));
+                PtHandleSlot slot = new PtHandleSlot(
+                        rs.getInt("TimeSlotId"),
+                        rs.getInt("PtEmployeeId"),
+                        rs.getString("PtName"),
+                        rs.getInt("CommissionRate"),
+                        rs.getDate("SlotDate").toLocalDate(),
+                        rs.getTime("StartTime").toLocalTime(),
+                        rs.getTime("EndTime").toLocalTime(),
+                        rs.getBoolean("GymClosed"),
+                        rs.getBoolean("PtOnLeave"),
+                        rs.getBoolean("CustomerBusy"),
+                        rs.getBoolean("HasGymAccess"));
                 rows.add(slot);
             }
         }
         return rows;
     }
 
-
     /**
-     * HÀM CHÍNH — Service gọi sau khi ghi xong, để gửi thông báo.
-     * Tài khoản Active của khách + người tập cùng. Người không có tài khoản (hồ sơ phụ thuộc) → không có trong danh sách.
+     * [getHandleForm] TimeSlots của PT khác đúng giờ buổi: R nhiều dòng → tab "Chuyển PT".
+     * HÀM CHÍNH — Service gọi khi mở hộp (phần "Chuyển PT").
+     * Khung Free của PT KHÁC có ĐÚNG ngày + giờ bắt đầu + giờ kết thúc của buổi (chuyển PT giữ nguyên giờ).
      */
-    public List<Integer> findCustomerAccounts(Connection connection, PtHandleView session) throws SQLException {
-        String sql = """
-                SELECT DISTINCT a.AccountId
-                FROM Customers c
-                JOIN Accounts a ON a.PersonId = c.PersonId AND a.Status = 'Active'
-                WHERE c.CustomerId IN (?, ?)
-                """;
-
-        List<Integer> accountIds = new ArrayList<>();
+    public List<PtHandleSlot> findTransferSlots(Connection connection, PtHandleView session, int ptId)
+            throws SQLException {
+        String sql = SLOT_SQL.formatted("", "t.PtEmployeeId <> ? AND t.SlotDate = ? "
+                + "AND t.StartTime = CAST(? AS time) AND t.EndTime = CAST(? AS time)");
 
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            int customer = session.getCustomerId();
-            statement.setInt(1, customer);
-            statement.setInt(2, session.getPartnerCustomerId() == null ? customer : session.getPartnerCustomerId());
-
-            try (ResultSet rs = statement.executeQuery()) {
-                while (rs.next()) {
-                    accountIds.add(rs.getInt("AccountId"));
-                }
-            }
+            int next = setCommonParams(statement, session);
+            statement.setInt(next, ptId);
+            statement.setDate(next + 1, Date.valueOf(session.getSlotDate()));
+            statement.setString(next + 2, session.getStartTime().toString());
+            statement.setString(next + 3, session.getEndTime().toString());
+            return readSlots(statement);
         }
-        return accountIds;
+    }
+
+    /**
+     * [reschedule, transfer] TimeSlots: R 1 dòng có khóa (khung đích phải còn trống lúc Lưu).
+     * HÀM CHÍNH — Service gọi khi bấm Lưu (Dời buổi / Chuyển PT).
+     * Đọc lại ĐÚNG khung PT đã chọn, có khóa dòng: từ lúc này tới commit không ai giữ/đặt/gỡ được khung đó.
+     * Khung không còn Free (vừa có người lấy) → null → Service báo MSG103.
+     */
+    public PtHandleSlot findSlotById(Connection connection, PtHandleView session, int timeSlotId)
+            throws SQLException {
+        String sql = SLOT_SQL.formatted("WITH (UPDLOCK, HOLDLOCK)", "t.TimeSlotId = ?");
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            int next = setCommonParams(statement, session);
+            statement.setInt(next, timeSlotId);
+            List<PtHandleSlot> rows = readSlots(statement);
+            return rows.isEmpty() ? null : rows.get(0);
+        }
     }
 
 
-    // ================================================================================================================
-    // PHẦN 2. GHI — mỗi hàm trả true khi đổi đúng 1 dòng; false = dữ liệu vừa bị người khác đổi
-    // ================================================================================================================
+    // ============================================================================================================
+    // PHỤC VỤ reschedule / transfer / cancel (bấm Lưu trong hộp) — GHI trong transaction của Service
+    // ============================================================================================================
 
-    /** Khung đích Free → Booked. Điều kiện Status = 'Free' chặn 2 người cùng lấy 1 khung. */
+    /**
+     * [reschedule, transfer] TimeSlots: U khung đích Free → Booked.
+     * Khung đích Free → Booked. Điều kiện Status = 'Free' chặn 2 người cùng lấy 1 khung.
+     */
     public boolean bookSlot(Connection connection, int timeSlotId) throws SQLException {
         String sql = """
                 UPDATE TimeSlots SET Status = 'Booked'
@@ -305,7 +280,10 @@ public class PtSessionHandleDAO {
         }
     }
 
-    /** Khung cũ Booked → Free: khung lại hiện "Còn trống" trên lịch PT (chốt A: cả dời, chuyển, hủy). */
+    /**
+     * [reschedule, transfer, cancel] TimeSlots: U khung cũ Booked → Free.
+     * Khung cũ Booked → Free: khung lại hiện "Còn trống" trên lịch PT (chốt A: cả dời, chuyển, hủy).
+     */
     public void releaseSlot(Connection connection, int timeSlotId) throws SQLException {
         String sql = "UPDATE TimeSlots SET Status = 'Free' WHERE TimeSlotId = ? AND Status = 'Booked'";
 
@@ -316,6 +294,7 @@ public class PtSessionHandleDAO {
     }
 
     /**
+     * [reschedule, transfer] Sessions: U TimeSlotId / PtEmployeeId / CommissionAmount (buổi còn Scheduled).
      * Gắn buổi sang khung mới (+ PT mới, hoa hồng mới khi chuyển PT).
      * Dời buổi: newPtId = PT cũ, commission = hoa hồng cũ. Chỉ đổi khi buổi còn Scheduled.
      */
@@ -336,6 +315,7 @@ public class PtSessionHandleDAO {
     }
 
     /**
+     * [reschedule, transfer] SessionMoveLogs: C 1 dòng (ai dời, từ đâu → đâu, lý do).
      * Ghi 1 dòng SessionMoveLogs. Màn khách (Gói của tôi) đọc bảng này để hiện "PT dời lịch" / "Chuyển PT dạy thay".
      * moveType: PtReschedule (PT cũ = PT mới) | PtTransfer (PT khác) — CHECK trong DB bắt đúng cặp này.
      */
@@ -366,6 +346,7 @@ public class PtSessionHandleDAO {
     }
 
     /**
+     * [cancel] Sessions: U Scheduled → Cancelled (CancelType = ByPt, lý do, CancelledAt).
      * PT hủy buổi (CancelType = ByPt). CHECK trong DB bắt buộc: lý do ≥ 5 ký tự, RefundAgreed = 1, có người hủy.
      * Vẫn tính là buổi đã dùng và PT vẫn có hoa hồng (CommissionAmount không đổi).
      */
@@ -385,5 +366,35 @@ public class PtSessionHandleDAO {
             statement.setInt(4, sessionId);
             return statement.executeUpdate() == 1;
         }
+    }
+
+
+    /**
+     * [reschedule, transfer, cancel → notify] Customers + Accounts: R tài khoản khách để gửi thông báo.
+     * HÀM CHÍNH — Service gọi sau khi ghi xong, để gửi thông báo.
+     * Tài khoản Active của khách + người tập cùng. Người không có tài khoản (hồ sơ phụ thuộc) → không có trong danh sách.
+     */
+    public List<Integer> findCustomerAccounts(Connection connection, PtHandleView session) throws SQLException {
+        String sql = """
+                SELECT DISTINCT a.AccountId
+                FROM Customers c
+                JOIN Accounts a ON a.PersonId = c.PersonId AND a.Status = 'Active'
+                WHERE c.CustomerId IN (?, ?)
+                """;
+
+        List<Integer> accountIds = new ArrayList<>();
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            int customer = session.getCustomerId();
+            statement.setInt(1, customer);
+            statement.setInt(2, session.getPartnerCustomerId() == null ? customer : session.getPartnerCustomerId());
+
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    accountIds.add(rs.getInt("AccountId"));
+                }
+            }
+        }
+        return accountIds;
     }
 }

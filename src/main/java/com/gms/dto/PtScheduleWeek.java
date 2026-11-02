@@ -13,23 +13,24 @@ import java.util.List;
  *
  * Ví dụ xem ngày 27/10/2026:
  *   weekStart=26/10 (Thứ 2), weekEnd=01/11 (Chủ nhật), axisStartHour=5, axisEndHour=22.
+ *   "· IN" cuối mỗi field = JSP Lịch dạy có in field này; "· không in" = chỉ dùng để tính / dựng link.
  */
 public class PtScheduleWeek {
 
     // ===== Mốc tuần (dùng cho thanh ‹ tuần trước / tuần sau ›) =====
-    private LocalDate weekStart;     // Thứ 2 của tuần đang xem
-    private LocalDate weekEnd;       // Chủ nhật của tuần đang xem
-    private LocalDate prevWeek;      // Thứ 2 tuần trước → link ‹
-    private LocalDate nextWeek;      // Thứ 2 tuần sau  → link ›
-    private boolean currentWeek;     // tuần đang xem có chứa hôm nay không → ẩn nút "Tuần này"
+    private LocalDate weekStart;     // Thứ 2 của tuần đang xem   · IN
+    private LocalDate weekEnd;       // Chủ nhật của tuần đang xem   · IN
+    private LocalDate prevWeek;      // Thứ 2 tuần trước → link ‹   · IN
+    private LocalDate nextWeek;      // Thứ 2 tuần sau  → link ›   · IN
+    private boolean currentWeek;     // tuần đang xem có chứa hôm nay không → ẩn nút "Tuần này"   · IN
 
     // ===== Trục giờ của lưới (chung cho cả 7 cột) =====
-    private int axisStartHour;       // giờ đầu trục, ví dụ 5 = 05:00
-    private int axisEndHour;         // giờ cuối trục, ví dụ 22 = 22:00
-    private int sessionMinutes;      // P-06: mỗi khung dài bao nhiêu phút, ví dụ 90
+    private int axisStartHour;       // giờ đầu trục, ví dụ 5 = 05:00   · IN
+    private int axisEndHour;         // giờ cuối trục, ví dụ 22 = 22:00   · IN
+    private int sessionMinutes;      // P-06: mỗi khung dài bao nhiêu phút, ví dụ 90   · IN
 
     // ===== 7 ngày, Thứ 2 → Chủ nhật =====
-    private List<PtScheduleDay> days = List.of();
+    private List<PtScheduleDay> days = List.of();   // · IN
 
 
     // ===== Getter / Setter: chỉ đọc và gán, không có nghiệp vụ =====

@@ -48,9 +48,10 @@ public class PtScheduleServlet extends HttpServlet {
     private final PtSessionHandleService handleService = new PtSessionHandleService(); // hộp Xử lý buổi
 
 
-    // ================================================================================================================
-    // 1. MỞ TRANG (GET)
-    // ================================================================================================================
+    // ============================================================================================================
+    // HÀM CHÍNH 1. doGet — mở trang Lịch dạy (tuần / ngày) + hộp "Xử lý buổi" nếu có ?handle=
+    //   Hàm phụ ngay dưới (theo thứ tự gọi): getAccountId, showPage, loadWeek, loadView, loadHandle, setPageInfo
+    // ============================================================================================================
 
     /**
      * HÀM CHÍNH — trình duyệt gọi khi mở /pt/schedule hoặc bấm ‹ › / Tuần / Danh sách.
@@ -75,6 +76,15 @@ public class PtScheduleServlet extends HttpServlet {
         showPage(request, response, accountId, handleId);
     }
 
+    /** HÀM PHỤ — gọi ở B1 của doGet và doPost. Mã tài khoản trong session; chưa đăng nhập → null. */
+    private Integer getAccountId(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);   // false = không tạo session mới
+        if (session == null) {
+            return null;
+        }
+        return (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
+    }
+
     /**
      * HÀM PHỤ — gọi ở B3 của doGet, và ở doPost (handleSession) khi Lưu bị từ chối để mở lại hộp kèm câu lỗi.
      * Thứ tự: tuần → kiểu xem → hộp xử lý (nếu có) → thông tin đầu trang → JSP.
@@ -95,15 +105,6 @@ public class PtScheduleServlet extends HttpServlet {
 
         // B4: mở JSP.
         RequestUtil.forward(request, response, VIEW);
-    }
-
-    /** HÀM PHỤ — gọi ở B1 của doGet và doPost. Mã tài khoản trong session; chưa đăng nhập → null. */
-    private Integer getAccountId(HttpServletRequest request) {
-        HttpSession session = request.getSession(false);   // false = không tạo session mới
-        if (session == null) {
-            return null;
-        }
-        return (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
     }
 
     /**
@@ -181,9 +182,11 @@ public class PtScheduleServlet extends HttpServlet {
     }
 
 
-    // ================================================================================================================
-    // 2. CÔNG BỐ (POST)
-    // ================================================================================================================
+    // ============================================================================================================
+    // HÀM CHÍNH 2. doPost — nút "Công bố" (AJAX → JSON) hoặc 3 form trong hộp Xử lý buổi (Dời / Chuyển PT / Hủy)
+    //   Hàm phụ ngay dưới (theo thứ tự gọi): isPtWithValidToken, handleSession
+    //   Dùng lại hàm phụ đã viết ở trên: getAccountId, showPage
+    // ============================================================================================================
 
     /**
      * HÀM CHÍNH — JS publishPtChanges gửi POST khi PT bấm Công bố.
@@ -251,6 +254,16 @@ public class PtScheduleServlet extends HttpServlet {
     }
 
     /**
+     * HÀM PHỤ — gọi ở B2 của doPost.
+     * Vai trò đang chọn trong session phải là PT VÀ csrfToken gửi lên phải khớp token trong session.
+     */
+    private boolean isPtWithValidToken(HttpServletRequest request) {
+        Object role = request.getSession(false).getAttribute(SessionKey.ROLE);
+        boolean isPt = Role.PT.getDbValue().equals(role);
+        return isPt && RequestUtil.isValidCsrfToken(request);
+    }
+
+    /**
      * HÀM PHỤ — gọi ở B2b của doPost. Tham số nhận từ _handle-dialog.jspf (mỗi phương án 1 form):
      *   action        reschedule | transfer | cancel
      *   sessionId     mã buổi (Sessions.SessionId) đang xử lý
@@ -303,15 +316,5 @@ public class PtScheduleServlet extends HttpServlet {
         } catch (ServletException exception) {
             throw new IOException(exception);
         }
-    }
-
-    /**
-     * HÀM PHỤ — gọi ở B2 của doPost.
-     * Vai trò đang chọn trong session phải là PT VÀ csrfToken gửi lên phải khớp token trong session.
-     */
-    private boolean isPtWithValidToken(HttpServletRequest request) {
-        Object role = request.getSession(false).getAttribute(SessionKey.ROLE);
-        boolean isPt = Role.PT.getDbValue().equals(role);
-        return isPt && RequestUtil.isValidCsrfToken(request);
     }
 }
