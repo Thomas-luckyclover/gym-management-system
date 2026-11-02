@@ -28,15 +28,20 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Controller màn hình Giao dịch toàn hệ thống cho Quản lý (Màn #41 - UC-26, SRS 7.4.2).
+ * Controller màn hình Giao dịch toàn hệ thống cho Quản lý (Màn #43 - UC-26, SRS
+ * 7.4.2).
  *
- * <p>Các tính năng hỗ trợ:</p>
+ * <p>
+ * Các tính năng hỗ trợ:</p>
  * <ul>
- *   <li>Tab 1: Đơn hàng & Giao dịch - Tra cứu, lọc theo kênh/phương thức/trạng thái/ngày/hoàn tiền.</li>
- *   <li>Tab 2: Lịch sử ca làm việc đã đóng - Đối soát tiền mặt & chênh lệch ca.</li>
- *   <li>Chi tiết đơn hàng & lịch sử lần thanh toán (AJAX modal - ?action=detail).</li>
- *   <li>Xuất file Excel danh sách giao dịch (.xlsx - ?action=export).</li>
- *   <li>Ghi nhận xác nhận hoàn tiền offline (POST action=refund).</li>
+ * <li>Tab 1: Đơn hàng & Giao dịch - Tra cứu, lọc theo kênh/phương thức/trạng
+ * thái/ngày/hoàn tiền.</li>
+ * <li>Tab 2: Lịch sử ca làm việc đã đóng - Đối soát tiền mặt & chênh lệch
+ * ca.</li>
+ * <li>Chi tiết đơn hàng & lịch sử lần thanh toán (AJAX modal -
+ * ?action=detail).</li>
+ * <li>Xuất file Excel danh sách giao dịch (.xlsx - ?action=export).</li>
+ * <li>Ghi nhận xác nhận hoàn tiền offline (POST action=refund).</li>
  * </ul>
  *
  * @author Le Cong Minh
@@ -151,8 +156,10 @@ public class SystemTransactionServlet extends HttpServlet {
         String paymentMethod = RequestUtil.getTrimmedParam(request, "method");
         String orderStatus = RequestUtil.getTrimmedParam(request, "status");
 
-        String refundParam = RequestUtil.getTrimmedParam(request, "needsRefund");
-        Boolean needsRefundOnly = "1".equals(refundParam) ? Boolean.TRUE : null;
+        String refundFilter = RequestUtil.getTrimmedParam(request, "needsRefund");
+        if (!"1".equals(refundFilter) && !"done".equals(refundFilter)) {
+            refundFilter = null;
+        }
 
         LocalDate from = DateTimeUtil.parseHtmlDate(request.getParameter("from"));
         LocalDate to = DateTimeUtil.parseHtmlDate(request.getParameter("to"));
@@ -160,7 +167,7 @@ public class SystemTransactionServlet extends HttpServlet {
         int pageSize = RequestUtil.getIntParam(request, "pageSize", 10);
 
         ServiceResult<PageResult<ManagerTransactionItem>> result = managerTransactionService.getTransactionPage(
-                keyword, paymentMethod, orderStatus, needsRefundOnly, from, to, page, pageSize);
+                keyword, paymentMethod, orderStatus, refundFilter, from, to, page, pageSize);
 
         if (result.isSuccess()) {
             request.setAttribute("orderPage", result.getData());
@@ -172,7 +179,7 @@ public class SystemTransactionServlet extends HttpServlet {
         request.setAttribute("searchKeyword", keyword);
         request.setAttribute("filterMethod", paymentMethod);
         request.setAttribute("filterStatus", orderStatus);
-        request.setAttribute("filterNeedsRefund", "1".equals(refundParam) ? 1 : null);
+        request.setAttribute("filterNeedsRefund", refundFilter);
         request.setAttribute("fromDate", from);
         request.setAttribute("toDate", to);
     }
@@ -263,8 +270,10 @@ public class SystemTransactionServlet extends HttpServlet {
         String paymentMethod = RequestUtil.getTrimmedParam(request, "method");
         String orderStatus = RequestUtil.getTrimmedParam(request, "status");
 
-        String refundParam = RequestUtil.getTrimmedParam(request, "needsRefund");
-        Boolean needsRefundOnly = "1".equals(refundParam) ? Boolean.TRUE : null;
+        String refundFilter = RequestUtil.getTrimmedParam(request, "needsRefund");
+        if (!"1".equals(refundFilter) && !"done".equals(refundFilter)) {
+            refundFilter = null;
+        }
 
         LocalDate from = DateTimeUtil.parseHtmlDate(request.getParameter("from"));
         LocalDate to = DateTimeUtil.parseHtmlDate(request.getParameter("to"));
@@ -277,7 +286,7 @@ public class SystemTransactionServlet extends HttpServlet {
         response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
 
         try (OutputStream out = response.getOutputStream()) {
-            managerTransactionService.exportToExcel(keyword, paymentMethod, orderStatus, needsRefundOnly, from, to, out);
+            managerTransactionService.exportToExcel(keyword, paymentMethod, orderStatus, refundFilter, from, to, out);
             out.flush();
         } catch (java.sql.SQLException e) {
             e.printStackTrace();

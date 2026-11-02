@@ -15,7 +15,7 @@
 <head>
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Phiếu thu dịch vụ #<c:out value="${receipt.orderCode}" /> · Super Gym Lễ tân</title>
-    <link rel="stylesheet" href="${ctx}/css/pages/receptionist/counter-sale.css?v=20261031_vVoucherDone">
+    <link rel="stylesheet" href="${ctx}/css/pages/receptionist/counter-sale.css?v=20261102_v2">
     <link rel="stylesheet" href="${ctx}/css/pages/customer/start-date-picker.css?v=20261101_vGymResult">
     <script src="${ctx}/js/pages/customer/start-date-picker.js?v=2" defer></script>
 </head>

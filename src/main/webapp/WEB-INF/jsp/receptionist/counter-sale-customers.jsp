@@ -19,8 +19,8 @@
 <head>
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Chọn khách · Super Gym Lễ tân</title>
-    <link rel="stylesheet" href="${ctx}/css/pages/receptionist/counter-sale.css?v=20261031_quickmodal">
-    <script src="${ctx}/js/pages/receptionist/counter-sale.js?v=20261031_tempPwd" defer></script>
+    <link rel="stylesheet" href="${ctx}/css/pages/receptionist/counter-sale.css?v=20261102_v2">
+    <script src="${ctx}/js/pages/receptionist/counter-sale.js?v=20261102_v2" defer></script>
 </head>
 <body class="dock theme-staff counter-sale-page">
 <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>

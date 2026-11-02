@@ -10,13 +10,15 @@ document.addEventListener("DOMContentLoaded", function () {
     const detailCloseButtons = document.querySelectorAll(".trans-modal-close, [data-modal-close]");
 
     function openModal(modal) {
-        if (!modal) return;
+        if (!modal)
+            return;
         modal.classList.add("open");
         document.body.style.overflow = "hidden";
     }
 
     function closeModal(modal) {
-        if (!modal) return;
+        if (!modal)
+            return;
         modal.classList.remove("open");
         document.body.style.overflow = "";
     }
@@ -48,7 +50,8 @@ document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll(".btn-view-detail").forEach(btn => {
         btn.addEventListener("click", function () {
             const orderId = this.dataset.orderId;
-            if (!orderId) return;
+            if (!orderId)
+                return;
 
             loadOrderDetail(orderId);
         });
@@ -62,26 +65,26 @@ document.addEventListener("DOMContentLoaded", function () {
                 "X-Requested-With": "XMLHttpRequest"
             }
         })
-        .then(res => res.json())
-        .then(res => {
-            if (!res.success || !res.data) {
-                if (typeof showToast === "function") {
-                    showToast("error", res.message || "Không thể tải chi tiết đơn hàng.");
-                } else {
-                    alert(res.message || "Lỗi tải chi tiết đơn hàng.");
-                }
-                return;
-            }
+                .then(res => res.json())
+                .then(res => {
+                    if (!res.success || !res.data) {
+                        if (typeof showToast === "function") {
+                            showToast("error", res.message || "Không thể tải chi tiết đơn hàng.");
+                        } else {
+                            alert(res.message || "Lỗi tải chi tiết đơn hàng.");
+                        }
+                        return;
+                    }
 
-            renderOrderDetail(res.data);
-            openModal(detailModal);
-        })
-        .catch(err => {
-            console.error("Lỗi xem chi tiết đơn:", err);
-            if (typeof showToast === "function") {
-                showToast("error", "Lỗi kết nối máy chủ khi lấy chi tiết đơn.");
-            }
-        });
+                    renderOrderDetail(res.data);
+                    openModal(detailModal);
+                })
+                .catch(err => {
+                    console.error("Lỗi xem chi tiết đơn:", err);
+                    if (typeof showToast === "function") {
+                        showToast("error", "Lỗi kết nối máy chủ khi lấy chi tiết đơn.");
+                    }
+                });
     }
 
     function renderOrderDetail(data) {
@@ -196,7 +199,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     <td>${methodBadge}</td>
                     <td>${statusBadge}</td>
                     <td class="money font-weight-bold">${formatMoneyVal(att.amount)}</td>
-                    <td>${escapeHtmlVal(att.responseCode || att.transactionReference || '---')}</td>
+                    <td>${escapeHtmlVal(att.gatewayReference || '---')}</td>
                     <td>${formatDateTimeVal(att.createdAt)}</td>
                     <td>${refundInfo}</td>
                 `;
@@ -254,10 +257,10 @@ document.addEventListener("DOMContentLoaded", function () {
             const note = (noteInput.value || "").trim();
             const errorEl = document.getElementById("refundNoteError");
 
-            if (!note) {
+            if (note.length < 5) {
                 if (errorEl) {
                     errorEl.hidden = false;
-                    errorEl.textContent = "Vui lòng nhập lý do / ghi chú hoàn tiền (bắt buộc).";
+                    errorEl.textContent = "Ghi chú phải có ít nhất 5 ký tự.";
                 }
                 noteInput.focus();
                 return;
@@ -272,10 +275,12 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
 
-            if (errorEl) errorEl.hidden = true;
+            if (errorEl)
+                errorEl.hidden = true;
 
             const submitBtn = refundForm.querySelector("button[type='submit']");
-            if (submitBtn) submitBtn.disabled = true;
+            if (submitBtn)
+                submitBtn.disabled = true;
 
             const params = new URLSearchParams();
             params.append("action", "refund");
@@ -294,33 +299,35 @@ document.addEventListener("DOMContentLoaded", function () {
                 },
                 body: params.toString()
             })
-            .then(res => res.json())
-            .then(res => {
-                if (submitBtn) submitBtn.disabled = false;
-                if (res.success) {
-                    closeModal(refundModal);
-                    if (typeof showToast === "function") {
-                        showToast("success", res.data || "Đã xác nhận hoàn tiền thành công.");
-                    }
-                    // Tải lại trang sau 800ms để cập nhật bảng và badge counter
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 800);
-                } else {
-                    if (errorEl) {
-                        errorEl.hidden = false;
-                        errorEl.textContent = res.message || "Lỗi xử lý hoàn tiền.";
-                    }
-                }
-            })
-            .catch(err => {
-                if (submitBtn) submitBtn.disabled = false;
-                console.error("Lỗi gửi xác nhận hoàn tiền:", err);
-                if (errorEl) {
-                    errorEl.hidden = false;
-                    errorEl.textContent = "Lỗi kết nối máy chủ. Vui lòng thử lại sau.";
-                }
-            });
+                    .then(res => res.json())
+                    .then(res => {
+                        if (submitBtn)
+                            submitBtn.disabled = false;
+                        if (res.success) {
+                            closeModal(refundModal);
+                            if (typeof showToast === "function") {
+                                showToast("success", res.data || "Đã xác nhận hoàn tiền thành công.");
+                            }
+                            // Tải lại trang sau 800ms để cập nhật bảng và badge counter
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 800);
+                        } else {
+                            if (errorEl) {
+                                errorEl.hidden = false;
+                                errorEl.textContent = res.message || "Lỗi xử lý hoàn tiền.";
+                            }
+                        }
+                    })
+                    .catch(err => {
+                        if (submitBtn)
+                            submitBtn.disabled = false;
+                        console.error("Lỗi gửi xác nhận hoàn tiền:", err);
+                        if (errorEl) {
+                            errorEl.hidden = false;
+                            errorEl.textContent = "Lỗi kết nối máy chủ. Vui lòng thử lại sau.";
+                        }
+                    });
         });
     }
 
@@ -330,12 +337,14 @@ document.addEventListener("DOMContentLoaded", function () {
             return formatMoney(val);
         }
         const num = Number(val);
-        if (isNaN(num)) return "0đ";
+        if (isNaN(num))
+            return "0đ";
         return Math.round(num).toLocaleString("vi-VN") + "đ";
     }
 
     function formatDateTimeVal(val) {
-        if (!val) return "---";
+        if (!val)
+            return "---";
         if (typeof formatDateTime === "function") {
             return formatDateTime(val);
         }
@@ -352,16 +361,17 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function escapeHtmlVal(str) {
-        if (!str) return "";
+        if (!str)
+            return "";
         if (typeof escapeHtml === "function") {
             return escapeHtml(str);
         }
         return String(str)
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
     }
 
     // Kiểm tra khoảng ngày bộ lọc

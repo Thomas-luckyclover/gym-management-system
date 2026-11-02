@@ -35,7 +35,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * Service xử lý các nghiệp vụ của màn hình Giao dịch toàn hệ thống cho Quản lý (Màn #41 - UC-26, SRS 7.4.2).
+ * Service xử lý các nghiệp vụ của màn hình Giao dịch toàn hệ thống cho Quản lý (Màn #43 - UC-26, SRS 7.4.2).
  *
  * <p>Quy tắc kỹ thuật & nghiệp vụ:</p>
  * <ul>
@@ -81,7 +81,7 @@ public class ManagerTransactionService {
      * @param search          từ khóa tìm kiếm
      * @param method          phương thức thanh toán
      * @param status          trạng thái đơn
-     * @param needsRefundOnly true nếu chỉ lọc giao dịch cần hoàn tiền
+     * @param refundFilter "1" = cần hoàn, "done" = đã hoàn, null = tất cả
      * @param fromDate        từ ngày
      * @param toDate          đến ngày
      * @param page            trang hiện tại (>= 1)
@@ -89,7 +89,7 @@ public class ManagerTransactionService {
      * @return ServiceResult chứa PageResult của ManagerTransactionItem
      */
     public ServiceResult<PageResult<ManagerTransactionItem>> getTransactionPage(
-            String search, String method, String status, Boolean needsRefundOnly,
+            String search, String method, String status, String refundFilter,
             LocalDate fromDate, LocalDate toDate, int page, int pageSize) {
 
         // B1: Kiểm tra khoảng ngày hợp lệ (fromDate <= toDate)
@@ -100,13 +100,13 @@ public class ManagerTransactionService {
         try {
             // B2: Đếm tổng số bản ghi khớp bộ lọc
             int totalItems = transactionDAO.countManagerTransactions(
-                    search, method, status, needsRefundOnly, fromDate, toDate
+                    search, method, status, refundFilter, fromDate, toDate
             );
 
             // B3: Tính offset và lấy danh sách bản ghi trang hiện tại
             int offset = (page - 1) * pageSize;
             List<ManagerTransactionItem> items = transactionDAO.findManagerTransactionsPage(
-                    search, method, status, needsRefundOnly, fromDate, toDate, offset, pageSize
+                    search, method, status, refundFilter, fromDate, toDate, offset, pageSize
             );
 
             // B4: Gói kết quả phân trang trả về cho Servlet
@@ -264,20 +264,20 @@ public class ManagerTransactionService {
      * @param search          từ khóa tìm kiếm
      * @param method          phương thức thanh toán
      * @param status          trạng thái đơn
-     * @param needsRefundOnly lọc đơn cần hoàn
+     * @param refundFilter "1" = cần hoàn, "done" = đã hoàn, null = tất cả
      * @param fromDate        từ ngày
      * @param toDate          đến ngày
      * @param out             OutputStream để ghi file excel trả về client
      * @throws IOException  khi xuất file lỗi
      * @throws SQLException khi truy vấn CSDL lỗi
      */
-    public void exportToExcel(String search, String method, String status, Boolean needsRefundOnly,
+    public void exportToExcel(String search, String method, String status, String refundFilter,
                               LocalDate fromDate, LocalDate toDate, OutputStream out)
             throws IOException, SQLException {
 
         // B1: Lấy toàn bộ danh sách thỏa mãn điều kiện lọc
         List<ManagerTransactionItem> list = transactionDAO.findAllManagerTransactionsForExport(
-                search, method, status, needsRefundOnly, fromDate, toDate
+                search, method, status, refundFilter, fromDate, toDate
         );
 
         // B2: Khởi tạo Workbook và Sheet
