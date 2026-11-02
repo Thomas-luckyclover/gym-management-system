@@ -16,7 +16,7 @@
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Bảo lưu gói tập · Super Gym Lễ tân</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/customer-list.css?v=20261031-fixed-page">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/freeze-membership.css?v=20261101_v33">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/freeze-membership.css?v=20261101_v38">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
     <script src="${pageContext.request.contextPath}/js/pages/receptionist/freeze-membership.js?v=20261101_v23" defer></script>
     <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
@@ -449,7 +449,7 @@
                                     <th style="width: 22%;">Hội viên</th>
                                     <th style="width: 20%;">Gói hội viên</th>
                                     <th class="th-dates" style="width: 26%;">Thời hạn gói tập</th>
-                                    <th style="width: 18%; text-align: center;">Tình trạng bảo lưu</th>
+                                    <th style="width: 18%; text-align: left;">Tình trạng bảo lưu</th>
                                     <th style="width: 14%; text-align: center;">Thao tác</th>
                                 </tr>
                             </thead>
@@ -501,7 +501,7 @@
                                                         </c:choose>
                                                     </div>
                                                 </td>
-                                                <td class="gym-status-cell" style="text-align: center;">
+                                                <td class="gym-status-cell" style="text-align: left;">
                                                     <span class="badge ${row.freezeStatusBadgeClass}">
                                                         <c:out value="${row.freezeStatusLabel}" />
                                                     </span>
@@ -739,8 +739,8 @@
                                     <th style="width: 15%;">Gói tập</th>
                                     <th style="width: 17%;">Thời gian bảo lưu</th>
                                     <th style="width: 11%; text-align: center;">Hạn mới</th>
-                                    <th style="width: 11%; text-align: center;">Trạng thái</th>
-                                    <th style="width: 10%; text-align: center;">Lý do bảo lưu</th>
+                                    <th style="width: 11%; text-align: left;">Trạng thái</th>
+                                    <th style="width: 10%; text-align: center;">Lý do</th>
                                     <th style="width: 17%;">Lễ tân tiếp nhận</th>
                                 </tr>
                             </thead>
@@ -780,9 +780,7 @@
                                                                 </c:otherwise>
                                                             </c:choose>
                                                         </div>
-                                                        <div class="gym-history-days" style="margin-top: 3px;">
-                                                            <span class="badge badge-info">${item.daysFrozen} ngày</span>
-                                                        </div>
+                                                        <div class="gym-history-days">Số ngày: <b>${item.daysFrozen} ngày</b></div>
                                                     </div>
                                                 </td>
                                                 <td class="gym-new-date-cell" style="text-align: center;">
@@ -791,7 +789,7 @@
                                                         <div class="text-soft" style="font-size: 11px;">(Dự kiến)</div>
                                                     </c:if>
                                                 </td>
-                                                <td class="gym-status-cell" style="text-align: center;">
+                                                <td class="gym-status-cell" style="text-align: left;">
                                                     <span class="badge ${item.statusBadgeClass}"><c:out value="${item.statusLabel}" /></span>
                                                 </td>
                                                 <td class="gym-reason-cell" style="text-align: center;">
