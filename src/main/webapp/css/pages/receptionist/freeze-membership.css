@@ -1201,6 +1201,19 @@
   color: var(--color-text);
 }
 
+.gym-history-days {
+  margin-top: 3px;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-soft);
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.gym-history-days b {
+  color: var(--color-text);
+  font-weight: var(--font-weight-semibold);
+}
+
 .gym-days-left {
   display: inline-block;
   font-size: 11px;
@@ -1680,9 +1693,9 @@
   color: var(--color-text);
 }
 
-/* Ô trạng thái: Giãn khoảng cách với cột số ngày */
+/* Ô trạng thái: Căn lề trái */
 .gym-status-cell {
-  text-align: center;
+  text-align: left;
   vertical-align: middle;
   padding: 10px 16px;
 }
@@ -2173,7 +2186,7 @@
   padding: 7px 14px;
 }
 
-.badge-danger {
+.freeze-ineligible-card .badge-danger {
   background: rgba(239, 68, 68, 0.15) !important;
   border: 1px solid rgba(239, 68, 68, 0.35) !important;
   color: #fca5a5 !important;
@@ -2186,16 +2199,16 @@
   gap: 5px;
 }
 
-/* Nút thao tác bị mờ & vô hiệu hóa khi không đủ điều kiện bảo lưu */
+/* Nút thao tác bị mờ & vô hiệu hóa khi không đủ điều kiện bảo lưu (làm mờ vừa phải, dễ đọc, viền rõ) */
 .bf07-table .btn-disabled,
 .btn.btn-disabled,
 .btn[disabled],
 button[disabled].btn-outline {
-  opacity: 0.35 !important;
+  opacity: 0.6 !important;
   cursor: not-allowed !important;
-  border-color: rgba(255, 255, 255, 0.12) !important;
-  color: var(--color-text-muted, #64748b) !important;
-  background: rgba(255, 255, 255, 0.02) !important;
+  border: var(--border-width) solid var(--color-border-strong) !important;
+  color: var(--color-text-soft) !important;
+  background: transparent !important;
   box-shadow: none !important;
   pointer-events: auto !important;
 }
@@ -2204,9 +2217,10 @@ button[disabled].btn-outline {
 .btn.btn-disabled:hover,
 .btn[disabled]:hover,
 button[disabled].btn-outline:hover {
-  background: rgba(255, 255, 255, 0.02) !important;
-  border-color: rgba(255, 255, 255, 0.12) !important;
-  color: var(--color-text-muted, #64748b) !important;
+  background: transparent !important;
+  border-color: var(--color-border-strong) !important;
+  color: var(--color-text-soft) !important;
   cursor: not-allowed !important;
   box-shadow: none !important;
+  opacity: 0.6 !important;
 }
