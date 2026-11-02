@@ -687,7 +687,7 @@
 
                 <div class="msg-banner warning" role="alert">
                     <i class="fa-solid fa-triangle-exclamation"></i>
-                    <span>Số điện thoại này đã có tài khoản. Vui lòng đăng nhập hoặc dùng chức năng Quên mật khẩu.</span>
+                    <span><c:out value="${blockedMessage}" /></span>
                 </div>
 
                 <div class="btn-row">
@@ -707,7 +707,7 @@
 
             <%-- ==========================================================
                  NHÁNH CHẶN: EMAIL KHÔNG KHỚP HỒ SƠ (CBR-25) — BẮT ĐẦU   (step = "blocked-email-mismatch")
-                 maskedEmail = email thật của hồ sơ đã che bớt, VD "(ma***@gmail.com)" để khách nhớ ra.
+                 blockedMessage = MSG52 (Servlet ghép sẵn email đã che, VD "ma***@gmail.com") để khách nhớ ra.
                  Hộp địa chỉ quầy lễ tân là chữ cố định.
                  ========================================================== --%>
             <c:if test="${step eq 'blocked-email-mismatch'}">
@@ -717,13 +717,7 @@
 
                 <div class="msg-banner warning" role="alert">
                     <i class="fa-solid fa-triangle-exclamation"></i>
-                    <span>
-                        Số điện thoại này đã đăng ký với một email khác
-                        (<strong>
-                            <c:out value="${maskedEmail}" />
-                        </strong>).
-                        Dùng đúng email đó, hoặc ra quầy để được hỗ trợ.
-                    </span>
+                    <span><c:out value="${blockedMessage}" /></span>
                 </div>
 
                 <div class="counter-box">
@@ -765,9 +759,7 @@
 
                 <div class="msg-banner warning" role="alert">
                     <i class="fa-solid fa-triangle-exclamation"></i>
-                    <span>Hồ sơ của số điện thoại này chưa có email.
-                        Vui lòng ra quầy gặp Lễ tân để bổ sung trước
-                        khi tạo tài khoản.</span>
+                    <span><c:out value="${blockedMessage}" /></span>
                 </div>
 
                 <div class="counter-box">
