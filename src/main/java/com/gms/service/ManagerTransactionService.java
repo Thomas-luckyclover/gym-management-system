@@ -13,6 +13,10 @@ import com.gms.dto.PageResult;
 import com.gms.dto.ServiceResult;
 import com.gms.entity.Account;
 import com.gms.entity.Employee;
+import com.gms.entity.Transaction;
+import com.gms.integration.VnPayClient;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import com.gms.util.DBContext;
 import com.gms.util.DateTimeUtil;
 import com.gms.util.ValidationUtil;
@@ -53,6 +57,7 @@ public class ManagerTransactionService {
     private final AccountDAO accountDAO;
     private final EmployeeDAO employeeDAO;
     private final AuditLogService auditLogService;
+    private final VnPayClient vnPayClient = new VnPayClient();
 
     public ManagerTransactionService() {
         this.transactionDAO = new TransactionDAO();
@@ -89,7 +94,7 @@ public class ManagerTransactionService {
      * @return ServiceResult chứa PageResult của ManagerTransactionItem
      */
     public ServiceResult<PageResult<ManagerTransactionItem>> getTransactionPage(
-            String search, String method, String status, String refundFilter,
+            String search, String method, String status, Boolean needsRefundOnly,
             LocalDate fromDate, LocalDate toDate, int page, int pageSize) {
 
         // B1: Kiểm tra khoảng ngày hợp lệ (fromDate <= toDate)
@@ -100,13 +105,13 @@ public class ManagerTransactionService {
         try {
             // B2: Đếm tổng số bản ghi khớp bộ lọc
             int totalItems = transactionDAO.countManagerTransactions(
-                    search, method, status, refundFilter, fromDate, toDate
+                    search, method, status, needsRefundOnly, fromDate, toDate
             );
 
             // B3: Tính offset và lấy danh sách bản ghi trang hiện tại
             int offset = (page - 1) * pageSize;
             List<ManagerTransactionItem> items = transactionDAO.findManagerTransactionsPage(
-                    search, method, status, refundFilter, fromDate, toDate, offset, pageSize
+                    search, method, status, needsRefundOnly, fromDate, toDate, offset, pageSize
             );
 
             // B4: Gói kết quả phân trang trả về cho Servlet
@@ -271,13 +276,13 @@ public class ManagerTransactionService {
      * @throws IOException  khi xuất file lỗi
      * @throws SQLException khi truy vấn CSDL lỗi
      */
-    public void exportToExcel(String search, String method, String status, String refundFilter,
+    public void exportToExcel(String search, String method, String status, Boolean needsRefundOnly,
                               LocalDate fromDate, LocalDate toDate, OutputStream out)
             throws IOException, SQLException {
 
         // B1: Lấy toàn bộ danh sách thỏa mãn điều kiện lọc
         List<ManagerTransactionItem> list = transactionDAO.findAllManagerTransactionsForExport(
-                search, method, status, refundFilter, fromDate, toDate
+                search, method, status, needsRefundOnly, fromDate, toDate
         );
 
         // B2: Khởi tạo Workbook và Sheet
@@ -480,5 +485,78 @@ public class ManagerTransactionService {
         }
 
         return employee;
+    }
+
+    /**
+     * Tra cứu kết quả thật tại VNPay cho một lần thanh toán online (API-06, chỉ đọc).
+     * Trả về: gatewayReference, success, statusLabel, amount (VND VNPay thực thu),
+     * orderAmount (số tiền link), bankCode, payDate.
+     */
+    public ServiceResult<Map<String, Object>> lookupGateway(int transactionId) {
+        if (transactionId <= 0) {
+            return ServiceResult.fail(Messages.MSG158_TRANSACTION_ID_INVALID);
+        }
+
+        Transaction tx;
+        try (Connection conn = DBContext.getConnection()) {
+            tx = transactionDAO.findById(conn, transactionId, false);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+        }
+
+        if (tx == null || tx.getPaymentMethod() != Transaction.PaymentMethod.ONLINE_GATEWAY
+                || tx.getGatewayReference() == null) {
+            return ServiceResult.fail(Messages.MSG158_TRANSACTION_ID_INVALID);
+        }
+
+        try {
+            Map<String, String> vn = vnPayClient.queryTransaction(tx.getGatewayReference(), tx.getCreatedAt());
+
+            boolean success = vnPayClient.isPaymentSuccess(vn);
+            String responseCode = vn.get("vnp_ResponseCode");
+            String txnStatus = vn.get("vnp_TransactionStatus");
+
+            String label;
+            if (success) {
+                label = "Thành công";
+            } else if ("91".equals(responseCode)) {
+                label = "VNPay không có giao dịch này";
+            } else if ("99".equals(responseCode)) {
+                label = "VNPay chưa ghi nhận (mã 99)";
+            } else if ("00".equals(responseCode) && "01".equals(txnStatus)) {
+                label = "Chưa thanh toán";
+            } else if ("00".equals(responseCode) && "02".equals(txnStatus)) {
+                label = "Giao dịch lỗi";
+            } else {
+                label = "Chưa thành công (mã " + responseCode + ")";
+            }
+
+            Map<String, Object> data = new LinkedHashMap<>();
+            data.put("gatewayReference", tx.getGatewayReference());
+            data.put("success", success);
+            data.put("statusLabel", label);
+            data.put("amount", Math.max(vnPayClient.getAmountVnd(vn), 0));
+            data.put("orderAmount", tx.getAmount());
+            data.put("bankCode", vn.get("vnp_BankCode"));
+            data.put("payDate", formatVnPayDate(vn.get("vnp_PayDate")));
+            return ServiceResult.ok(data);
+
+        } catch (java.io.IOException | RuntimeException e) {
+            e.printStackTrace();
+            return ServiceResult.fail("Không tra cứu được VNPay lúc này. Vui lòng thử lại sau.");
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return ServiceResult.fail("Không tra cứu được VNPay lúc này. Vui lòng thử lại sau.");
+        }
+    }
+
+    /** vnp_PayDate dạng yyyyMMddHHmmss → dd/MM HH:mm:ss; rỗng thì trả "---". */
+    private String formatVnPayDate(String raw) {
+        if (raw == null || raw.length() != 14) {
+            return "---";
+        }
+        return raw.substring(6, 8) + "/" + raw.substring(4, 6) + " "
+                + raw.substring(8, 10) + ":" + raw.substring(10, 12) + ":" + raw.substring(12, 14);
     }
 }

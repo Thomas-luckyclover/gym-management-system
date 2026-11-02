@@ -118,6 +118,7 @@ public class PaymentCallbackService {
             return reply("99", "Processing error");
         }
     }
+    
 
     /**
      * Rút gọn mã giao dịch để ghi log, không lộ đầy đủ.
@@ -667,31 +668,22 @@ public class PaymentCallbackService {
     }
 
     /**
-     * Nhận kết quả QueryDR từ job. Chỉ chuyển kết quả thanh toán thành công đã
-     * xác minh sang phần xử lý DB dùng chung.
+     * CBR-125: xử lý kết quả QueryDR như một IPN. Chữ ký đã được
+     * VnPayClient.queryTransaction kiểm. Chỉ đi tiếp khi VNPay báo đã thu tiền;
+     * trường hợp khác không đổi gì.
+     *
+     * @return true nếu giao dịch đã được ghi nhận (Paid hoặc cần hoàn), hoặc đã được IPN ghi trước đó
      */
-    public IpnResult handleQueryResult(Map<String, String> params) {
-        try {
-            if (!vnPayClient.verifyQuerySignature(params)) {
-                return reply("97", "Invalid query signature");
-            }
-
-            if (!"querydr".equals(params.get("vnp_Command"))
-                    || !AppConfig.get("vnpay.tmn-code")
-                            .equals(params.get("vnp_TmnCode"))) {
-                return reply("99", "Invalid query response");
-            }
-
-            if (!"00".equals(params.get("vnp_ResponseCode"))
-                    || !"00".equals(params.get("vnp_TransactionStatus"))
-                    || !"01".equals(params.get("vnp_TransactionType"))) {
-                return reply("99", "Payment not confirmed");
-            }
-
-            return processVerifiedResult(params);
-
-        } catch (RuntimeException e) {
-            return reply("99", "Query processing error");
+    public boolean handleQueryResult(Map<String, String> queryResult) {
+        if (queryResult == null || !vnPayClient.isPaymentSuccess(queryResult)) {
+            return false;
         }
+
+        IpnResult result = processVerifiedResult(queryResult);
+        String code = result.getCode();
+
+        // 00: đã ghi nhận. 02: IPN đã ghi trước đó.
+        // 04: thu tiền nhưng sai số tiền, nhánh này đã commit "cần hoàn" rồi mới trả 04.
+        return "00".equals(code) || "02".equals(code) || "04".equals(code);
     }
 }

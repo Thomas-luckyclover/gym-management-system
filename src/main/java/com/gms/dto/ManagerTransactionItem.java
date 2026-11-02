@@ -275,4 +275,13 @@ public class ManagerTransactionItem {
     public boolean isRefundCompleted() {
         return needsRefund && refundedAt != null;
     }
+
+    /** Số ngày đơn đã tạo (dùng cho chữ "Chờ N ngày" ở dòng cần hoàn tiền). */
+    public long getWaitDays() {
+        if (createdAt == null) {
+            return 0;
+        }
+        return java.time.temporal.ChronoUnit.DAYS.between(
+                createdAt.toLocalDate(), java.time.LocalDate.now());
+    }
 }
