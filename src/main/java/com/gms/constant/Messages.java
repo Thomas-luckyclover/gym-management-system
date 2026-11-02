@@ -519,7 +519,7 @@ public final class Messages {
     public static final String MSG170_ORDER_CODE_INVALID_FULL = "Mã đơn hàng không hợp lệ.";
 
     /** Xác nhận hoàn tiền: ghi chú sai độ dài. */
-    public static final String MSG171_REFUND_NOTE_LENGTH = "Ghi chú hoàn tiền phải từ 5 đến 500 ký tự (ghi rõ số TK hoặc mã giao dịch hoàn).";
+    public static final String MSG171_REFUND_NOTE_LENGTH = "Ghi chú hoàn tiền phải từ 5 đến 480 ký tự (ghi rõ số TK hoặc mã giao dịch hoàn).";
 
     /** Không phải Quản lý mà xác nhận hoàn tiền. */
     public static final String MSG172_REFUND_NO_PERMISSION = "Bạn không có quyền thực hiện xác nhận hoàn tiền.";
