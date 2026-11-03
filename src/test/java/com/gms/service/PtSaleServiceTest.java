@@ -169,6 +169,36 @@ class PtSaleServiceTest {
     }
 
     @Test
+    void customTimeOnlyAddsToItsOwnWeekdayOrDateAndIsCheckedLikeHold() {
+        LocalDate end = MON.plusDays(11);   // 2 tuần, 10 ngày T2–T6
+        LocalTime quarterPast = LocalTime.of(17, 15);
+        List<PtScheduleItem> slots = List.of(
+                slot(30, MON, "17:00", "Booked"));                 // T2 tuần 1: PT có khách 17:00–18:30
+        // Lịch mẫu: Thứ 2 tự thêm 17:15 · Sửa riêng: chỉ Thứ 4 tuần 2 (04/11) tự thêm 07:00.
+        PtSalePlan plan = PtSaleService.buildPlan(MON, end, 90, 8_800_000, List.of(SIX_PM),
+                Map.of(1, quarterPast), Map.of(MON.plusDays(9), LocalTime.of(7, 0)),
+                slots, List.of(), List.of(), List.of(), NOW);
+
+        assertEquals(List.of("18:00"), plan.getTimes());            // giờ tự thêm KHÔNG thành giờ chung của mọi thứ
+        for (PtSalePlan.Day day : plan.getDays()) {
+            boolean has1715 = day.getOptions().stream().anyMatch(o -> o.getTime().equals("17:15"));
+            boolean has0700 = day.getOptions().stream().anyMatch(o -> o.getTime().equals("07:00"));
+            assertEquals(day.getWeekday() == 1, has1715, day.getDate());          // 17:15 chỉ ở các Thứ 2
+            assertEquals(day.getDate().equals("2026-11-04"), has0700, day.getDate()); // 07:00 chỉ ở 04/11
+        }
+        // Thứ 2 tuần 1: 17:15 chồng buổi 17:00 của PT → đỏ, không phải "xếp được".
+        PtSalePlan.Option clash = plan.getDays().get(0).getOptions().stream()
+                .filter(o -> o.getTime().equals("17:15")).findFirst().orElseThrow();
+        assertFalse(clash.isOk());
+        assertEquals("PT có khung khác chồng giờ", clash.getReason());
+        // Thứ 2 tuần 2: PT trống → xếp được nhưng là khung PT chưa mở.
+        PtSalePlan.Option free = plan.getDays().get(5).getOptions().stream()
+                .filter(o -> o.getTime().equals("17:15")).findFirst().orElseThrow();
+        assertTrue(free.isOk());
+        assertTrue(free.isFresh());
+    }
+
+    @Test
     void customTimesMergeOnlyValidTimesWithinOpeningHours() {
         LocalTime open = LocalTime.of(5, 30);
         LocalTime close = LocalTime.of(22, 0);

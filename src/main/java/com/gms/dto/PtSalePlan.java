@@ -79,6 +79,8 @@ public class PtSalePlan {
     private List<String> published = new ArrayList<>();    // giờ PT đã công bố (JS tô xanh); giờ ngoài list này = lễ tân tự nhập ("PT chưa mở")
     private String open;                                    // giờ mở cửa P-19 ("05:30") → min cho ô nhập giờ tự do
     private String close;                                   // giờ bắt đầu muộn nhất hợp lệ (đóng cửa − thời lượng buổi, "20:30") → max cho ô nhập giờ tự do
+    private String[] custom = new String[5];             // giờ lịch mẫu LỄ TÂN TỰ NHẬP của từng thứ (đã qua kiểm giờ mở cửa); null = không có
+    private String notice;                               // giờ tự nhập không dùng được (ngoài giờ mở cửa / lệch mốc 15 phút) → JS in khung đỏ
     private int minutes;                                    // độ dài 1 buổi (P-06, phút) → JS tính giờ kết thúc cho giờ tự nhập
 
     public String getStart() { return start; }
@@ -103,6 +105,10 @@ public class PtSalePlan {
     public void setOpen(String open) { this.open = open; }
     public String getClose() { return close; }
     public void setClose(String close) { this.close = close; }
+    public String[] getCustom() { return custom; }
+    public void setCustom(String[] custom) { this.custom = custom; }
+    public String getNotice() { return notice; }
+    public void setNotice(String notice) { this.notice = notice; }
     public int getMinutes() { return minutes; }
     public void setMinutes(int minutes) { this.minutes = minutes; }
 }

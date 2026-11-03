@@ -34,9 +34,11 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
@@ -382,34 +384,70 @@ public class PtSaleService {
         List<LocalTime> published = candidateTimes(slots, start, minutes, now);
         LocalTime[] hours = PtScheduleService.parseOpeningHours(configService.getString(SystemConfigService.OPENING_HOURS));
         Map<LocalDate, LocalTime> requested = parseSessions(input.sessions);
-        List<LocalTime> custom = new ArrayList<>();
-        for (LocalTime time : view.getWeekTimes()) {
-            custom.add(time);                       // giờ lịch mẫu (t1..t5 trên URL)
-        }
-        if (requested != null) {
-            custom.addAll(requested.values());      // giờ sửa riêng từng buổi (sessions trên URL)
-        }
-        List<LocalTime> candidates = mergeCustomTimes(published, custom, minutes, hours[0], hours[1]);
         // Thứ PT chưa công bố khung nào → chỉ là gợi ý (nhãn "PT chưa công bố"), KHÔNG chặn: lễ tân vẫn tự nhập giờ được.
         List<Integer> unpublished = unpublishedWeekdays(slots, start, now);
         view.setUnpublishedWeekdays(unpublished);
 
         if (!lock) {
-            PtSalePlan plan = buildPlan(start, end, minutes, view.getPrice(), candidates, slots, leaves, exceptions, busy, now);
+            // Giờ tự nhập CHỈ áp đúng chỗ lễ tân thêm: giờ lịch mẫu Thứ X → các ngày Thứ X; giờ sửa riêng → đúng ngày đó.
+            // Mỗi ngày vẫn chạy checkDay (khách trùng giờ, PT có khách / chồng giờ, đã qua giờ, PT nghỉ…) như lúc Giữ lịch.
+            Set<String> invalid = new LinkedHashSet<>();
+            Map<Integer, LocalTime> weekdayExtra = new HashMap<>();
+            LocalTime[] weekTimes = view.getWeekTimes();
+            for (int i = 0; i < 5; i++) {
+                LocalTime time = weekTimes[i];
+                if (time == null || published.contains(time)) {
+                    continue;
+                }
+                if (isValidStartTime(time, minutes, hours[0], hours[1])) {
+                    weekdayExtra.put(i + 1, time);
+                } else {
+                    invalid.add(DateTimeUtil.formatTime(time));
+                }
+            }
+            Map<LocalDate, LocalTime> dateExtra = new HashMap<>();
+            if (requested != null) {
+                requested.forEach((date, time) -> {
+                    if (isValidStartTime(time, minutes, hours[0], hours[1])) {
+                        dateExtra.put(date, time);
+                    } else {
+                        invalid.add(DateTimeUtil.formatTime(time));
+                    }
+                });
+            }
+            PtSalePlan plan = buildPlan(start, end, minutes, view.getPrice(), published, weekdayExtra, dateExtra,
+                    slots, leaves, exceptions, busy, now);
             plan.setUnpublished(unpublished);
             plan.setPublished(formatTimes(published));                       // JS: giờ ngoài danh sách này = "PT chưa mở"
             plan.setOpen(DateTimeUtil.formatTime(hours[0]));                 // min cho ô nhập giờ tự do
             plan.setClose(DateTimeUtil.formatTime(hours[1].minusMinutes(minutes))); // max = giờ bắt đầu muộn nhất hợp lệ (đóng cửa − thời lượng buổi)
             for (int i = 0; i < 5; i++) {
-                LocalTime time = view.getWeekTimes()[i];
-                plan.getPattern()[i] = time != null && candidates.contains(time) ? DateTimeUtil.formatTime(time) : null;
+                LocalTime time = weekTimes[i];
+                boolean usable = time != null && (published.contains(time) || weekdayExtra.containsKey(i + 1));
+                plan.getPattern()[i] = usable ? DateTimeUtil.formatTime(time) : null;
+                LocalTime extra = weekdayExtra.get(i + 1);
+                plan.getCustom()[i] = extra == null ? null : DateTimeUtil.formatTime(extra);
             }
             if (requested != null) {
                 requested.forEach((date, time) -> plan.getRequested().add(date + "@" + DateTimeUtil.formatTime(time)));
             }
+            if (!invalid.isEmpty()) {
+                plan.setNotice("Giờ " + String.join(", ", invalid) + " không dùng được: giờ bắt đầu phải từ "
+                        + plan.getOpen() + " đến " + plan.getClose() + " (buổi " + minutes
+                        + " phút kết thúc trước giờ đóng cửa) và theo mốc 15 phút (:00, :15, :30, :45).");
+            }
             view.setPlanJson(JsonUtil.toJson(plan));
             return;
         }
+
+        List<LocalTime> custom = new ArrayList<>();
+        for (LocalTime time : view.getWeekTimes()) {
+            custom.add(time);                       // giờ lịch mẫu (t1..t5)
+        }
+        if (requested != null) {
+            custom.addAll(requested.values());      // giờ sửa riêng từng buổi (sessions)
+        }
+        List<LocalTime> candidates = mergeCustomTimes(published, custom, minutes, hours[0], hours[1]);
 
         if (requested == null) {
             view.setPlanError("Không đọc được lịch vừa chọn. Chọn lại lịch rồi bấm Giữ lịch.");
@@ -520,6 +558,17 @@ public class PtSaleService {
     static PtSalePlan buildPlan(LocalDate start, LocalDate end, int minutes, long price, List<LocalTime> candidates,
             List<PtScheduleItem> slots, List<LeaveInfo> leaves, List<HourException> exceptions,
             List<TimeRange> busy, LocalDateTime now) {
+        return buildPlan(start, end, minutes, price, candidates, Map.of(), Map.of(), slots, leaves, exceptions, busy, now);
+    }
+
+    /**
+     * Như trên, thêm giờ LỄ TÂN TỰ NHẬP đúng chỗ: weekdayExtra (1 = Thứ 2 … → giờ lịch mẫu tự nhập của thứ đó)
+     * và dateExtra (ngày → giờ sửa riêng tự nhập). Giờ tự nhập KHÔNG lan sang thứ / ngày khác.
+     */
+    static PtSalePlan buildPlan(LocalDate start, LocalDate end, int minutes, long price, List<LocalTime> candidates,
+            Map<Integer, LocalTime> weekdayExtra, Map<LocalDate, LocalTime> dateExtra,
+            List<PtScheduleItem> slots, List<LeaveInfo> leaves, List<HourException> exceptions,
+            List<TimeRange> busy, LocalDateTime now) {
         PtSalePlan plan = new PtSalePlan();
         plan.setStart(start.toString());
         plan.setEnd(end.toString());
@@ -536,7 +585,16 @@ public class PtSaleService {
             List<PtScheduleItem> sameDay = byDate.getOrDefault(date, List.of());
             PtSalePlan.Day day = new PtSalePlan.Day(date.toString(), date.getDayOfWeek().getValue(),
                     PtSessionHandleService.dayLabel(date));
-            for (LocalTime time : dayTimes(candidates, sameDay, minutes)) {
+            TreeSet<LocalTime> times = new TreeSet<>(dayTimes(candidates, sameDay, minutes));
+            LocalTime weekdayTime = weekdayExtra.get(date.getDayOfWeek().getValue());
+            if (weekdayTime != null) {
+                times.add(weekdayTime);
+            }
+            LocalTime dateTime = dateExtra.get(date);
+            if (dateTime != null) {
+                times.add(dateTime);
+            }
+            for (LocalTime time : times) {
                 PtSaleDay check = checkDay(date, time, minutes, sameDay, leaves, exceptions, busy, now);
                 boolean fresh = "create".equals(check.getAction());   // PT chưa có khung giờ này ngày đó → sẽ tạo mới
                 day.getOptions().add(new PtSalePlan.Option(DateTimeUtil.formatTime(time),
