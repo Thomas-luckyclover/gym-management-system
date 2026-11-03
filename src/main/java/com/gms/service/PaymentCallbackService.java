@@ -307,9 +307,7 @@ public class PaymentCallbackService {
                             conn,
                             order,
                             "Thanh toán cần đối soát",
-                            "Đơn " + order.getOrderCode()
-                            + " chưa được cấp gói. "
-                            + "Giao dịch đã đưa vào danh sách cần hoàn tiền.");
+                            String.format(Messages.MSG335_NOTIFICATION_PAYMENT_NEEDS_RECONCILIATION, order.getOrderCode()));
 
                     conn.commit();
 
@@ -358,10 +356,7 @@ public class PaymentCallbackService {
                         conn,
                         order,
                         "Mua gói thành công",
-                        "Đơn " + order.getOrderCode()
-                        + " đã thanh toán. Gói "
-                        + order.getPackageNameSnapshot()
-                        + " đã được cấp.");
+                        String.format(Messages.MSG333_NOTIFICATION_ONLINE_PAYMENT_SUCCESS, order.getOrderCode(), order.getPackageNameSnapshot()));
 
                 conn.commit();
                 return reply("00", "Confirm Success");

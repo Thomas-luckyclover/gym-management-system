@@ -2,6 +2,7 @@ package com.gms.servlet.receptionist;
 
 import com.gms.constant.Messages;
 import com.gms.constant.SessionKey;
+import com.gms.entity.Package;
 import com.gms.dto.CounterCheckoutInput;
 import com.gms.dto.CounterCustomerCreateInput;
 import com.gms.dto.CounterCustomerRow;
@@ -347,6 +348,11 @@ public class CounterSaleServlet extends HttpServlet {
         LocalDate minStartDate = isChained ? startDate : today;
         LocalDate maxStartDate = minStartDate.plusDays(7);
 
+        boolean isDayPass = card != null && (card.getPackageType() == Package.Type.DAY_PASS || card.getDurationMonths() == 0);
+        boolean canPickDate = !isDayPass && !isChained;
+
+        request.setAttribute("isDayPass", isDayPass);
+        request.setAttribute("canPickDate", canPickDate);
         request.setAttribute("today", today);
         request.setAttribute("todayText", DateTimeUtil.formatDate(today));
         request.setAttribute("isChained", isChained);

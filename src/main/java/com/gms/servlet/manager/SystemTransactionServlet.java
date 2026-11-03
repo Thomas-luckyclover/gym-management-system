@@ -1,3 +1,4 @@
+
 package com.gms.servlet.manager;
 
 import com.gms.constant.Messages;
@@ -32,7 +33,8 @@ import java.time.format.DateTimeFormatter;
  * 7.4.2).
  *
  * <p>
- * Các tính năng hỗ trợ:</p>
+ * Các tính năng hỗ trợ:
+ * </p>
  * <ul>
  * <li>Tab 1: Đơn hàng & Giao dịch - Tra cứu, lọc theo kênh/phương thức/trạng
  * thái/ngày/hoàn tiền.</li>
@@ -212,7 +214,8 @@ public class SystemTransactionServlet extends HttpServlet {
         if (result.isSuccess()) {
             request.setAttribute("orderPage", result.getData());
         } else {
-            request.setAttribute("orderPage", new PageResult<ManagerTransactionItem>(java.util.Collections.emptyList(), page, pageSize, 0));
+            request.setAttribute("orderPage",
+                    new PageResult<ManagerTransactionItem>(java.util.Collections.emptyList(), page, pageSize, 0));
             request.setAttribute("pageError", result.getMessage());
         }
 
@@ -238,7 +241,8 @@ public class SystemTransactionServlet extends HttpServlet {
         if (shiftResult.isSuccess()) {
             request.setAttribute("shiftPage", shiftResult.getData());
         } else {
-            request.setAttribute("shiftPage", new PageResult<ClosedShiftHistoryItem>(java.util.Collections.emptyList(), page, pageSize, 0));
+            request.setAttribute("shiftPage",
+                    new PageResult<ClosedShiftHistoryItem>(java.util.Collections.emptyList(), page, pageSize, 0));
             request.setAttribute("pageError", shiftResult.getMessage());
         }
 
@@ -340,11 +344,13 @@ public class SystemTransactionServlet extends HttpServlet {
         response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
 
         try (OutputStream out = response.getOutputStream()) {
-            managerTransactionService.exportToExcel(keyword, paymentMethod, orderStatus, needsRefundOnly, from, to, out);
+            managerTransactionService.exportToExcel(keyword, paymentMethod, orderStatus, needsRefundOnly, from, to,
+                    out);
             out.flush();
         } catch (java.sql.SQLException e) {
             e.printStackTrace();
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Lỗi truy vấn cơ sở dữ liệu khi xuất Excel.");
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "Lỗi truy vấn cơ sở dữ liệu khi xuất Excel.");
         }
     }
 

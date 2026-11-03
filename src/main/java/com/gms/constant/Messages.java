@@ -979,6 +979,18 @@ public final class Messages {
 
     /** Công bố chỉ gỡ khung. %d = số khung. */
     public static final String MSG322_PT_SLOTS_REMOVED = "Đã gỡ %d khung giờ.";
+    /** CBR-123: Ca làm việc quá giờ kết thúc nhưng chưa chốt. %s = tên ca, ngày. */
+    public static final String MSG323_SHIFT_OVERDUE =
+            "%s ngày %s đã quá giờ kết thúc nhưng chưa chốt. Vui lòng kiểm tiền trong két và chốt ca ở màn Ca làm việc.";
+
+    /** CBR-123: Ca của ngày trước chưa được chốt. %s = tên ca, ngày. */
+    public static final String MSG324_SHIFT_PREVIOUS_DAY_UNCLOSED =
+            "%s ngày %s chưa được chốt. Vui lòng chốt ca cũ và mở ca hôm nay trước khi bán.";
+
+    /** API-06: Tra cứu giao dịch VNPay thất bại. */
+    public static final String MSG325_VNPAY_LOOKUP_FAILED =
+            "Không tra cứu được VNPay lúc này. Vui lòng thử lại sau.";
+
     /** CBR-77: chuyển khoản phải được lễ tân xác nhận tiền đã về. */
     public static final String MSG326_TRANSFER_NOT_CONFIRMED =
             "Vui lòng tick xác nhận đã nhận đủ tiền trong tài khoản trước khi hoàn tất.";
@@ -986,6 +998,38 @@ public final class Messages {
     /** Mã giao dịch chuyển khoản quá dài. */
     public static final String MSG327_TRANSFER_REFERENCE_TOO_LONG =
             "Mã giao dịch chuyển khoản tối đa 50 ký tự.";
+
+    /** BR-81: Quản lý xác nhận hoàn tiền: số tiền hoàn không hợp lệ. */
+    public static final String MSG328_REFUND_AMOUNT_INVALID =
+            "Số tiền hoàn không hợp lệ.";
+
+    /** CBR-119: Đã đổi ngày bắt đầu một lần rồi. */
+    public static final String MSG329_START_DATE_ALREADY_CHANGED =
+            "Start date already changed once (CBR-119)";
+
+    /** CBR-119: Gói đã bắt đầu sử dụng hoặc đã check-in. */
+    public static final String MSG330_PACKAGE_ALREADY_STARTED =
+            "Gói đã bắt đầu sử dụng nên không đổi được ngày bắt đầu.";
+
+    /** CBR-119: Đã có gói hội viên nối tiếp sau gói này. */
+    public static final String MSG331_LATER_MEMBERSHIP_FOLLOWS =
+            "Bạn đã có gói nối tiếp sau gói này nên không đổi được ngày bắt đầu.";
+
+    /** CBR-119: Gói tự nối sau gói đang dùng và không còn ngày hợp lệ nào khác. */
+    public static final String MSG332_PACKAGE_CHAINS_NO_DAYS_LEFT =
+            "Gói này tự nối sau gói đang dùng nên không đổi được ngày bắt đầu.";
+
+    /** UC-PAY: Thông báo cho khách hàng sau khi thanh toán online thành công. %s = mã đơn, tên gói. */
+    public static final String MSG333_NOTIFICATION_ONLINE_PAYMENT_SUCCESS =
+            "Mua gói thành công: Đơn %s đã thanh toán. Gói %s đã được cấp.";
+
+    /** JOB-05, CBR-70: Thông báo cho khách hàng khi đơn hàng bị hủy do quá hạn thanh toán. %s = mã đơn. */
+    public static final String MSG334_NOTIFICATION_ORDER_CANCELLED_DEADLINE =
+            "Đơn hàng đã hết hạn thanh toán: Đơn %s đã bị hủy do quá hạn thanh toán. Bạn có thể chọn lại gói để tạo đơn mới.";
+
+    /** CBR-72: Thông báo cho khách hàng khi thanh toán cần đối soát hoàn tiền. %s = mã đơn. */
+    public static final String MSG335_NOTIFICATION_PAYMENT_NEEDS_RECONCILIATION =
+            "Thanh toán cần đối soát: Đơn %s chưa được cấp gói. Giao dịch đã đưa vào danh sách cần hoàn tiền.";
     private Messages() {
     }
 }

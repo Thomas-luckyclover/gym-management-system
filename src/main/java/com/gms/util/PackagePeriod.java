@@ -6,6 +6,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
+import com.gms.constant.Messages;
 
 /**
  * Quy tắc ngày bắt đầu / hết hạn của gói Membership mua online (DBR-52,
@@ -130,13 +131,13 @@ public final class PackagePeriod {
     public static String lockReason(LocalDate today, LocalDate currentStart, boolean checkedIn,
             int changesDone, boolean hasLaterMembership) {
         if (changesDone >= 1) {
-            return "Bạn đã chọn ngày bắt đầu một lần, không đổi lại được.";
+            return Messages.MSG329_START_DATE_ALREADY_CHANGED;
         }
         if (checkedIn || currentStart.isBefore(today)) {
-            return "Gói đã bắt đầu sử dụng nên không đổi được ngày bắt đầu.";
+            return Messages.MSG330_PACKAGE_ALREADY_STARTED;
         }
         if (hasLaterMembership) {
-            return "Bạn đã có gói nối tiếp sau gói này nên không đổi được ngày bắt đầu.";
+            return Messages.MSG331_LATER_MEMBERSHIP_FOLLOWS;
         }
         return null;
     }
