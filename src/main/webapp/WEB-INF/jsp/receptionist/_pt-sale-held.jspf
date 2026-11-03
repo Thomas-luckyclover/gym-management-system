@@ -17,7 +17,7 @@
                     <div class="sale-cal" role="list">
                         <c:forEach var="n" begin="2" end="6"><span class="sale-cal-head" aria-hidden="true">T<c:out value="${n}" /></span></c:forEach>
                         <c:forEach var="d" items="${sale.days}" varStatus="loop">
-                            <span role="listitem" <c:if test="${loop.first}">style="grid-column-start: ${d.date.dayOfWeek.value}"</c:if>
+                            <span role="listitem" style="grid-column-start: ${d.date.dayOfWeek.value}"
                                   class="sale-day ${d.session ? (empty d.warning ? 'is-on' : 'is-warn') : 'is-off'}"
                                   title="${fn:escapeXml(d.session ? (empty d.warning ? d.dayLabel : d.warning) : d.reason)}">
                                 <b><c:out value="${fn:substring(gms:formatDate(d.date), 0, 5)}" /></b>

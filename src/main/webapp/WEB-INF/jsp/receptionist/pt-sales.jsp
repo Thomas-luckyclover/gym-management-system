@@ -33,8 +33,8 @@
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Bán gói PT · Super Gym Lễ tân</title>
     <link rel="stylesheet" href="${ctx}/css/pages/receptionist/pt-sales.css?v=20261103c">
-    <script src="${ctx}/js/pages/receptionist/pt-sales.js?v=20261103b" defer></script>
-    <script src="${ctx}/js/pages/receptionist/pt-sale-plan.js?v=20261103c" defer></script>
+    <script src="${ctx}/js/pages/receptionist/pt-sales.js?v=20261103d" defer></script>
+    <script src="${ctx}/js/pages/receptionist/pt-sale-plan.js?v=20261103d" defer></script>
 </head>
 <body class="dock theme-staff pt-sale-page">
 <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>

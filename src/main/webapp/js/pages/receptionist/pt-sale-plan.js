@@ -281,6 +281,18 @@ function initPlan(root, data) {
     /** URL hiện tại + t1..t5 = lịch mẫu + sessions = mọi buổi dự định (chỉ khi có sửa riêng) → F5 / tải lại không mất lịch. */
     function planUrl(currentPattern, currentOverrides) {
         const url = new URL(window.location.href);
+        // Giữ lịch bị từ chối → trang vẽ lại từ POST, URL chỉ còn /pt-sales (mất gói, PT, ngày, khách).
+        // Lấy lại từ ô ẩn của form Giữ lịch để F5 / thêm giờ / chọn khách không quay về trang trống.
+        if (form) {
+            for (const name of ["customer", "partner", "package", "pt", "start"]) {
+                const input = form.querySelector("input[name='" + name + "']");
+                if (input && input.value) {
+                    url.searchParams.set(name, input.value);
+                } else if (input) {
+                    url.searchParams.delete(name);
+                }
+            }
+        }
         for (let weekday = 1; weekday <= 5; weekday++) {
             url.searchParams.set("t" + weekday, currentPattern[weekday - 1]);
         }

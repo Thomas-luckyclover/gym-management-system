@@ -1007,6 +1007,13 @@ public class PtSaleService {
 
             // B2: gói PT. Số buổi = số khung đang giữ; giá trị buổi = giá ÷ số buổi (DBR-59).
             LocalDate end = DateTimeUtil.calculateEndDateByMonths(start, pkg.months);
+            // Ngày bắt đầu gửi lên sớm hơn kỳ đã giữ → kỳ kết thúc sớm hơn, buổi cuối rơi RA NGOÀI gói (gói hết hạn mà còn buổi).
+            LocalDate last = held.slots.get(held.slots.size() - 1).getSlotDate();
+            if (last.isAfter(end)) {
+                throw new IllegalArgumentException("Ngày bắt đầu không khớp lịch đang giữ: buổi "
+                        + DateTimeUtil.formatDate(last) + " nằm sau ngày hết gói " + DateTimeUtil.formatDate(end)
+                        + ". Hủy giữ chỗ rồi làm lại.");
+            }
             int count = held.slots.size();
             int maxSwaps = configService.getInt(SystemConfigService.MAX_SWAP_COUNT) * pkg.months;
             int subscriptionId = saleDAO.insertSubscription(connection, orderId, held.holderId, pkg.type, held.ptId,

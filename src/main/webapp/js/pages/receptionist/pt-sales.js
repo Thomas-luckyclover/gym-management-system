@@ -245,9 +245,13 @@ function withPlan(href) {
             url.searchParams.set("t" + n, time);
         }
     }
-    const sessions = document.querySelector("[data-plan-sessions]");
-    if (sessions && sessions.value) {
-        url.searchParams.set("sessions", sessions.value);
+    // sessions lấy từ URL (pt-sale-plan.js ghi MỌI buổi dự định khi có sửa riêng), KHÔNG lấy ô ẩn của form Giữ lịch:
+    // ô ẩn chỉ có buổi xếp được → ngày đang đỏ sẽ bị server hiểu thành "Bỏ buổi này" sau khi chọn khách.
+    const sessions = current.searchParams.get("sessions");
+    if (sessions) {
+        url.searchParams.set("sessions", sessions);
+    } else {
+        url.searchParams.delete("sessions");
     }
     return url.toString();
 }
@@ -287,20 +291,40 @@ function initSaleAutoSubmit(form) {
             const isValid = field.value !== "" && field.checkValidity();
             showStartError(field, !isValid);
             if (isValid) {
-                dateTimer = setTimeout(function () { submitSteps(form); }, SALE_DATE_DELAY);
+                dateTimer = setTimeout(function () { submitSteps(form, true); }, SALE_DATE_DELAY);
             }
             return;
         }
-        submitSteps(form);
+        // Đổi gói → giữ lịch mẫu (cùng PT, giờ vẫn đúng). Đổi PT → bỏ lịch mẫu (giờ của PT cũ không còn nghĩa).
+        submitSteps(form, field.name === "package");
     });
 
 }
 
-/** Gửi form các bước (server tính lại bước sau). Mờ form chỉ khi chắc chắn gửi được. */
-function submitSteps(form) {
+/**
+ * Gửi form các bước (server tính lại bước sau). Mờ form chỉ khi chắc chắn gửi được.
+ * keepPattern = true (đổi ngày bắt đầu / đổi gói): gửi kèm t1..t5 đang có trên URL để KHÔNG mất lịch mẫu đã xếp.
+ * Buổi sửa riêng (sessions) không gửi theo vì gắn với ngày cụ thể của kỳ cũ.
+ */
+function submitSteps(form, keepPattern) {
     if (!form.checkValidity()) {
         form.reportValidity();
         return;
+    }
+    form.querySelectorAll("input[data-kept-pattern]").forEach(function (input) { input.remove(); });
+    if (keepPattern) {
+        const current = new URL(window.location.href);
+        for (let n = 1; n <= 5; n++) {
+            const time = current.searchParams.get("t" + n);
+            if (time) {
+                const input = document.createElement("input");
+                input.type = "hidden";
+                input.name = "t" + n;
+                input.value = time;
+                input.dataset.keptPattern = "";
+                form.append(input);
+            }
+        }
     }
     form.classList.add("is-busy");
     form.requestSubmit();
