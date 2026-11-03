@@ -32,11 +32,14 @@ import java.util.List;
  *   getWeek  — khi mở trang:   đọc DB → dựng 7 ngày → xếp từng thẻ vào đúng ngày.
  *   publish  — khi bấm Công bố: gỡ các khung đã chọn + thêm khung mới, trong MỘT transaction.
  *
- * MỤC LỤC
- *   PHẦN 1. MỞ TRANG          getWeek → buildEmptyWeek → buildDay, buildLeaveLabel, setAddRange
- *   PHẦN 2. XẾP THẺ VÀO NGÀY  merge, fillWeek → classify → sessionLabel, isOnLeave
- *   PHẦN 3. CÔNG BỐ           publish → publishInTransaction → parseRemoveIds, buildDrafts, validateDrafts
- *   PHẦN 4. HÀM DÙNG CHUNG    parseDate, weekStartOf, parseOpeningHours, đổi giờ ↔ phút
+ * AI GỌI?  PtScheduleServlet (doGet → loadWeek → getWeek; doPost → publish). PtSaleService, PtSessionHandleService,
+ *          PtDashboardService, AutoCloseSessionService còn gọi vài hàm static (parseOpeningHours, isOnLeave, …).
+ * GỌI AI?  PtScheduleDAO (đọc khung, buổi, đơn nghỉ, giờ mở cửa ngoại lệ; khóa + ghi khi Công bố) · SystemConfigService (P-06, P-19).
+ *
+ * BỐ CỤC FILE — mỗi HÀM CHÍNH đứng trước, hàm phụ của nó ngay bên dưới (theo thứ tự được gọi):
+ *   HÀM CHÍNH 1  getWeek   → buildEmptyWeek → buildDay, buildLeaveLabel, setAddRange → merge, fillWeek → classify → sessionLabel, isOnLeave
+ *   HÀM CHÍNH 2  publish   → publishInTransaction → parseRemoveIds, buildDrafts, validateDrafts
+ *   DÙNG CHUNG             parseDate, weekStartOf, parseOpeningHours, dayName, đổi giờ ↔ phút, làm tròn mốc 15 phút
  *
  * Các hàm "static" không đọc DB nên test được trực tiếp (xem PtScheduleServiceTest, PtSchedulePublishTest).
  *
@@ -52,9 +55,10 @@ public class PtScheduleService {
     private final SystemConfigService configService = new SystemConfigService(); // đọc P-06, P-19
 
 
-    // ================================================================================================================
-    // PHẦN 1. MỞ TRANG — getWeek là hàm chính; các hàm phụ dựng tuần nằm ngay dưới
-    // ================================================================================================================
+    // ============================================================================================================
+    // HÀM CHÍNH 1. getWeek — mở trang: đọc DB → dựng 7 ngày → xếp từng thẻ vào đúng ngày
+    //   Hàm phụ ngay dưới (theo thứ tự gọi): buildEmptyWeek, buildDay, buildLeaveLabel, isActiveLeave, buildLeaveDetails, setAddRange, merge, fillWeek, classify, sessionLabel, isOnLeave
+    // ============================================================================================================
 
     /**
      * HÀM CHÍNH — PtScheduleServlet.doGet gọi (qua loadWeek) mỗi lần mở trang.
@@ -187,6 +191,51 @@ public class PtScheduleService {
 
     /**
      * HÀM PHỤ — gọi ở B3 của buildEmptyWeek.
+     * Ghép nhãn nghỉ phép của một ngày, ví dụ "Nghỉ phép ca sáng · chờ duyệt".
+     * Không có đơn Pending/Approved nào → chuỗi rỗng.
+     */
+    static String buildLeaveLabel(LocalDate date, List<LeaveInfo> leaves) {
+        List<String> labels = new ArrayList<>();
+
+        for (LeaveInfo leave : leaves) {
+            boolean sameDay = date.equals(leave.getLeaveDate());
+            if (!sameDay || !isActiveLeave(leave)) {
+                continue;
+            }
+
+            String shift = switch (leave.getShiftType()) {
+                case "Morning" -> "ca sáng";
+                case "Afternoon" -> "ca chiều";
+                case "FullDay" -> "cả ngày";
+                default -> throw new IllegalStateException("Ca nghỉ không hợp lệ");
+            };
+            String status = "Pending".equals(leave.getStatus()) ? "chờ duyệt" : "đã duyệt";
+            labels.add("Nghỉ phép " + shift + " · " + status);
+        }
+
+        // Một ngày có thể nghỉ cả ca sáng lẫn ca chiều → nối bằng "; ".
+        return String.join("; ", labels);
+    }
+
+    /** HÀM PHỤ — đơn chờ duyệt và đã duyệt đều khóa khung; đơn bị từ chối thì không. */
+    private static boolean isActiveLeave(LeaveInfo leave) {
+        return "Pending".equals(leave.getStatus()) || "Approved".equals(leave.getStatus());
+    }
+
+    static String buildLeaveDetails(LocalDate date, List<LeaveInfo> leaves) {
+        List<String> details = new ArrayList<>();
+        for (LeaveInfo leave : leaves) {
+            if (date.equals(leave.getLeaveDate()) && isActiveLeave(leave)) {
+                String reason = leave.getReason();
+                details.add(buildLeaveLabel(date, List.of(leave)) + "\nLý do: "
+                        + (reason == null || reason.isBlank() ? "Không có thông tin." : reason));
+            }
+        }
+        return String.join("\n\n", details);
+    }
+
+    /**
+     * HÀM PHỤ — gọi ở B3 của buildEmptyWeek.
      * Tính khoảng giờ PT được THÊM khung mới trong ngày (đơn vị: phút trong ngày).
      * JSP in ra data-first / data-last; JS chỉ việc so sánh, không phải tự tính giờ mở cửa.
      *
@@ -217,59 +266,6 @@ public class PtScheduleService {
         day.setLastStartMinute(last);
     }
 
-    /**
-     * HÀM PHỤ — gọi ở B3 của buildEmptyWeek.
-     * Ghép nhãn nghỉ phép của một ngày, ví dụ "Nghỉ phép ca sáng · chờ duyệt".
-     * Không có đơn Pending/Approved nào → chuỗi rỗng.
-     */
-    static String buildLeaveLabel(LocalDate date, List<LeaveInfo> leaves) {
-        List<String> labels = new ArrayList<>();
-
-        for (LeaveInfo leave : leaves) {
-            boolean sameDay = date.equals(leave.getLeaveDate());
-            if (!sameDay || !isActiveLeave(leave)) {
-                continue;
-            }
-
-            String shift = switch (leave.getShiftType()) {
-                case "Morning" -> "ca sáng";
-                case "Afternoon" -> "ca chiều";
-                case "FullDay" -> "cả ngày";
-                default -> throw new IllegalStateException("Ca nghỉ không hợp lệ");
-            };
-            String status = "Pending".equals(leave.getStatus()) ? "chờ duyệt" : "đã duyệt";
-            labels.add("Nghỉ phép " + shift + " · " + status);
-        }
-
-        // Một ngày có thể nghỉ cả ca sáng lẫn ca chiều → nối bằng "; ".
-        return String.join("; ", labels);
-    }
-
-    static String buildLeaveDetails(LocalDate date, List<LeaveInfo> leaves) {
-        List<String> details = new ArrayList<>();
-        for (LeaveInfo leave : leaves) {
-            if (date.equals(leave.getLeaveDate()) && isActiveLeave(leave)) {
-                String reason = leave.getReason();
-                details.add(buildLeaveLabel(date, List.of(leave)) + "\nLý do: "
-                        + (reason == null || reason.isBlank() ? "Không có thông tin." : reason));
-            }
-        }
-        return String.join("\n\n", details);
-    }
-
-    /** HÀM PHỤ — gọi ở B1 của buildDay. Thứ 2 ... Thứ 7, Chủ nhật (Java đánh số Thứ 2 = 1). */
-    private static String dayName(LocalDate date) {
-        DayOfWeek dayOfWeek = date.getDayOfWeek();
-        if (dayOfWeek == DayOfWeek.SUNDAY) {
-            return "Chủ nhật";
-        }
-        return "Thứ " + (dayOfWeek.getValue() + 1);
-    }
-
-
-    // ================================================================================================================
-    // PHẦN 2. XẾP THẺ VÀO NGÀY — fillWeek gọi classify cho từng thẻ
-    // ================================================================================================================
 
     /**
      * HÀM PHỤ — gọi ở B5 của getWeek.
@@ -426,15 +422,12 @@ public class PtScheduleService {
         return false;
     }
 
-    /** HÀM PHỤ — đơn chờ duyệt và đã duyệt đều khóa khung; đơn bị từ chối thì không. */
-    private static boolean isActiveLeave(LeaveInfo leave) {
-        return "Pending".equals(leave.getStatus()) || "Approved".equals(leave.getStatus());
-    }
 
-
-    // ================================================================================================================
-    // PHẦN 3. CÔNG BỐ — publish là hàm chính; mọi kiểm tra và ghi nằm trong publishInTransaction
-    // ================================================================================================================
+    // ============================================================================================================
+    // HÀM CHÍNH 2. publish — nút "Công bố": gỡ khung đã chọn + thêm khung mới trong MỘT transaction
+    //   Hàm phụ ngay dưới (theo thứ tự gọi): publishInTransaction, parseRemoveIds, buildDrafts, validateDrafts
+    //   Dùng lại hàm phụ đã viết ở trên: buildDay, isOnLeave
+    // ============================================================================================================
 
     /**
      * HÀM CHÍNH — PtScheduleServlet.doPost gọi khi PT bấm Công bố.
@@ -690,9 +683,20 @@ public class PtScheduleService {
     }
 
 
-    // ================================================================================================================
-    // PHẦN 4. HÀM DÙNG CHUNG — ngày trên URL, tuần, giờ mở cửa, đổi giờ ↔ phút
-    // ================================================================================================================
+    // ============================================================================================================
+    // DÙNG CHUNG — hàm nhỏ nhiều hàm chính gọi, hoặc class khác gọi
+    //   dayName, parseDate, weekStartOf, parseOpeningHours, endHour, minuteOfDay, roundUpTo15, roundDownTo15
+    // ============================================================================================================
+
+    /** HÀM PHỤ — gọi ở B1 của buildDay. Thứ 2 ... Thứ 7, Chủ nhật (Java đánh số Thứ 2 = 1). */
+    private static String dayName(LocalDate date) {
+        DayOfWeek dayOfWeek = date.getDayOfWeek();
+        if (dayOfWeek == DayOfWeek.SUNDAY) {
+            return "Chủ nhật";
+        }
+        return "Thứ " + (dayOfWeek.getValue() + 1);
+    }
+
 
     /**
      * HÀM PHỤ — PtScheduleServlet.loadWeek gọi.

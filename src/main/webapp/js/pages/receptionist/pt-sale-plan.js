@@ -19,6 +19,31 @@
  *   Giờ của 1 ngày = overrides (nếu có) → không thì pattern của thứ đó.
  * RA: form "Giữ lịch" (cột phải) nhận t1..t5 = pattern và sessions = "2026-10-27@09:30,…" (chỉ buổi xếp được).
  *     Server KIỂM TRA LẠI từng buổi lúc giữ (PtSaleService.checkRequested), JS chỉ để xem nhanh.
+ *
+ * JS TÌM PHẦN TỬ NÀO TRÊN TRANG?  (querySelector("…") = "tìm phần tử HTML khớp mẫu này"; JSP in sẵn các ô RỖNG, JS vẽ vào)
+ *   Mẫu tìm                     Ở file JSP nào                         JS làm gì
+ *   #sale-plan-data             _pt-sale-plan.jspf  <script json>       đọc dữ liệu (JSON.parse) — chỉ đọc 1 lần
+ *   .sale-plan                  _pt-sale-plan.jspf  <section> bọc ngoài  = root: mọi tìm kiếm bên dưới đều trong root
+ *     [data-pattern]            ô rỗng "Lịch mẫu hằng tuần"             renderPattern vẽ 5 dòng Thứ 2…Thứ 6
+ *     [data-week-tabs]          ô rỗng các tab tuần                      renderWeek vẽ nút "Tuần 1…N"
+ *     [data-week]               ô rỗng 5 ngày của tuần                   renderWeek / dayCell vẽ ô ngày
+ *     [data-editor]             ô rỗng (hidden) "sửa riêng 1 ngày"       renderEditor vẽ khi bấm 1 ô ngày
+ *     [data-week-label]         <p> "Tuần 1 · 03/11 – 07/11"             renderWeek ghi chữ
+ *     [data-week-step]          2 nút ‹ ›                                 click → showWeek; renderWeek khóa nút ở đầu / cuối
+ *     [data-plan-total]         <p> cạnh tiêu đề "Lịch tập"              renderSummary ghi "24 buổi · 3 buổi/tuần"
+ *   [data-plan-form]            _pt-sale-actions.jspf form Giữ lịch      = form
+ *     [data-plan-t='1'..'5']    5 ô ẩn t1..t5                             renderSummary điền giờ lịch mẫu
+ *     [data-plan-sessions]      ô ẩn sessions                             renderSummary điền "ngày@giờ,…"
+ *     [data-plan-confirm]       ô tích "Đã xác nhận với PT" (hidden)      hiện khi có buổi "PT chưa mở"
+ *     [data-plan-submit]        nút "Giữ lịch 15 phút" (disabled)         mở khi đủ điều kiện
+ *   [data-plan-count]           pt-sales.jsp ô "Buổi" ở Đơn bán            "24 buổi · 687.500đ/buổi"
+ *   [data-step-plan]            _pt-sale-stepper.jspf bước 2              tô xong / đang làm
+ *   [data-plan-note]            _pt-sale-actions.jspf bong bóng Pumpy     câu nhắc bước kế tiếp
+ *   Các phần tử JS TỰ TẠO mang data-day, data-week-tab, data-reset, data-close-editor, data-jump-issue, data-focus-key
+ *   → bắt bằng 1 listener click / change / keydown gắn trên root ("ủy quyền sự kiện"), không gắn từng nút.
+ *
+ * BỐ CỤC: HÀM CHÍNH (DOMContentLoaded → initPlan) → bên trong initPlan: dữ liệu · trạng thái · chỗ vẽ · sự kiện
+ *         → hàm phụ: đổi trạng thái → tính (không đụng HTML) → vẽ → cuối file: hàm phụ dùng chung không cần trạng thái.
  */
 
 const PLAN_DAY_NAMES = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6"];
@@ -34,15 +59,22 @@ const PLAN_SHORT_REASON = {
     "Đã qua giờ": "Đã qua giờ"
 };
 
+/* ==================== HÀM CHÍNH — chạy khi HTML tải xong ==================== */
 document.addEventListener("DOMContentLoaded", function () {
-    const dataNode = document.getElementById("sale-plan-data");
-    const root = document.querySelector(".sale-plan");
+    const dataNode = document.getElementById("sale-plan-data");   // <script type="application/json"> chứa PtSalePlan
+    const root = document.querySelector(".sale-plan");            // <section> thẻ "Lịch tập"
+    // Không có (chưa chọn đủ gói / PT / ngày, hoặc đang giữ chỗ) → trang không có Lịch tập, không làm gì.
     if (!dataNode || !root) {
         return;
     }
     initPlan(root, JSON.parse(dataNode.textContent));
 });
 
+/**
+ * HÀM CHÍNH 2 — dựng cả phần Lịch tập. root = <section class="sale-plan">, data = PtSalePlan (JSON server gửi).
+ * Mọi hàm phụ bên dưới nằm TRONG initPlan để dùng chung biến pattern, overrides, weekIndex, editingDate.
+ * Vòng lặp duy nhất: người dùng bấm → đổi trạng thái (setPatternDay / setOverride / showWeek) → render() vẽ lại tất cả.
+ */
 function initPlan(root, data) {
     // ===== Dữ liệu tính 1 lần =====
     const days = data.days;
@@ -63,13 +95,13 @@ function initPlan(root, data) {
     restoreRequested();
 
     // ===== Chỗ vẽ =====
-    const patternBox = root.querySelector("[data-pattern]");
-    const tabsBox = root.querySelector("[data-week-tabs]");
-    const weekBox = root.querySelector("[data-week]");
-    const editorBox = root.querySelector("[data-editor]");
-    const weekLabel = root.querySelector("[data-week-label]");
-    const totalBox = root.querySelector("[data-plan-total]");
-    const form = document.querySelector("[data-plan-form]");
+    const patternBox = root.querySelector("[data-pattern]");       // ô rỗng "Lịch mẫu hằng tuần"
+    const tabsBox = root.querySelector("[data-week-tabs]");        // ô rỗng các tab "Tuần 1…N"
+    const weekBox = root.querySelector("[data-week]");             // ô rỗng 5 ngày của tuần đang xem
+    const editorBox = root.querySelector("[data-editor]");         // ô rỗng sửa riêng 1 ngày
+    const weekLabel = root.querySelector("[data-week-label]");     // chữ "Tuần 1 · 03/11 – 07/11"
+    const totalBox = root.querySelector("[data-plan-total]");      // chữ "24 buổi · 3 buổi/tuần"
+    const form = document.querySelector("[data-plan-form]");       // form Giữ lịch ở cột phải (ngoài root); null nếu thiếu
     const unpublished = data.unpublished || [];
     // Tích / bỏ tích "Đã xác nhận với PT" → tính lại nút Giữ lịch.
     if (form) {
@@ -133,8 +165,9 @@ function initPlan(root, data) {
     render();
 
 
-    /* ---------- Trạng thái → thay đổi ---------- */
+    /* ---------- HÀM PHỤ 1: ĐỔI TRẠNG THÁI (gọi từ các listener ở trên) rồi render() ---------- */
 
+    /** Đổi giờ lịch mẫu của 1 thứ (chip trong [data-pattern]); ngày sửa riêng trùng giờ mới thì bỏ "sửa riêng". */
     function setPatternDay(weekday, time) {
         pattern[weekday - 1] = time;
         // Ngày đã sửa riêng mà nay trùng lịch mẫu → không còn là "sửa riêng".
@@ -146,6 +179,7 @@ function initPlan(root, data) {
         render();
     }
 
+    /** Sửa riêng 1 ngày (chip trong ô sửa riêng); trùng giờ mẫu thì xóa sửa riêng. "" = bỏ buổi ngày đó. */
     function setOverride(date, time) {
         const day = dayByDate.get(date);
         if (time === pattern[day.weekday - 1]) {
@@ -157,6 +191,7 @@ function initPlan(root, data) {
         focusKey("edit-current");
     }
 
+    /** Chuyển sang tuần thứ index (tab / ‹ › / phím ← →), đóng ô sửa riêng. */
     function showWeek(index) {
         weekIndex = Math.max(0, Math.min(weeks.length - 1, index));
         editingDate = null;
@@ -164,6 +199,7 @@ function initPlan(root, data) {
         focusKey("tab-" + weekIndex);
     }
 
+    /** Nút "N ngày chưa xếp được — xem": nhảy tới ngày lỗi đầu tiên và mở ô sửa riêng của nó. */
     function jumpToFirstIssue() {
         for (let i = 0; i < weeks.length; i++) {
             const bad = weeks[i].days.find(function (day) { return stateOf(day).kind === "bad"; });
@@ -196,7 +232,7 @@ function initPlan(root, data) {
     }
 
 
-    /* ---------- Tính (không đụng DOM) ---------- */
+    /* ---------- HÀM PHỤ 2: TÍNH (chỉ đọc data + trạng thái, không đụng HTML) ---------- */
 
     /** Trạng thái 1 ngày: off (Nghỉ theo mẫu) · skipped (bỏ riêng) · ok · warn (có buổi, PT cần dời sau) · bad (không xếp được). */
     function stateOf(day) {
@@ -276,6 +312,7 @@ function initPlan(root, data) {
         };
     }
 
+    /** Đếm cả kỳ: số buổi xếp được, ngày lỗi, ngày sửa riêng, buổi "PT chưa mở"; picked = ["2026-11-03@09:30", …] gửi server. */
     function summary() {
         let sessions = 0;
         let bad = 0;
@@ -301,8 +338,9 @@ function initPlan(root, data) {
     }
 
 
-    /* ---------- Vẽ ---------- */
+    /* ---------- HÀM PHỤ 3: VẼ (xóa ô rỗng rồi tạo lại HTML từ trạng thái) ---------- */
 
+    /** Vẽ lại MỌI phần sau mỗi thay đổi: lịch mẫu → tuần → ô sửa riêng → tóm tắt + form Giữ lịch. */
     function render() {
         renderPattern();
         renderWeek();
@@ -310,6 +348,7 @@ function initPlan(root, data) {
         renderSummary();
     }
 
+    /** Vẽ "Lịch mẫu hằng tuần" vào [data-pattern]: mỗi Thứ 2…6 một dòng chip "Nghỉ" + các giờ (kèm "Còn x/9 buổi"). */
     function renderPattern() {
         patternBox.replaceChildren();
         for (let weekday = 1; weekday <= 5; weekday++) {
@@ -443,6 +482,7 @@ function initPlan(root, data) {
         return String(Math.floor(total / 60)).padStart(2, "0") + ":" + String(total % 60).padStart(2, "0");
     }
 
+    /** Vẽ tab tuần [data-week-tabs] + 5 ô ngày của tuần đang xem [data-week] + chữ [data-week-label]. */
     function renderWeek() {
         const week = weeks[weekIndex];
         weekLabel.textContent = "Tuần " + (weekIndex + 1) + "/" + weeks.length + " · " + shortDate(week.days[0].date)
@@ -483,6 +523,7 @@ function initPlan(root, data) {
         }
     }
 
+    /** 1 ô ngày trong tuần: nút data-day="2026-11-03" (bấm → mở ô sửa riêng), màu theo stateOf(day).kind. */
     function dayCell(day) {
         const state = stateOf(day);
         const cell = el("button", "plan-day is-" + state.kind + (state.edited ? " is-edited" : ""));
@@ -525,6 +566,7 @@ function initPlan(root, data) {
         return cell;
     }
 
+    /** Ô xám cho ngày nằm ngoài kỳ (tuần đầu / tuần cuối không đủ 5 ngày). */
     function outCell(monday, weekday) {
         const date = addDays(monday, weekday - 1);
         const cell = el("div", "plan-day is-out");
@@ -645,6 +687,10 @@ function initPlan(root, data) {
         return wrap;
     }
 
+    /**
+     * Tóm tắt + đẩy kết quả sang server: chữ "N buổi", ô "Buổi" ở Đơn bán, 5 ô ẩn t1..t5 + ô ẩn sessions,
+     * ô tích "Đã xác nhận với PT", khóa / mở nút "Giữ lịch 15 phút", thanh bước 2, bong bóng Pumpy, URL (syncUrl).
+     */
     function renderSummary() {
         const result = summary();
         totalBox.replaceChildren();
@@ -727,6 +773,7 @@ function initPlan(root, data) {
         window.history.replaceState(null, "", url);
     }
 
+    /** Trong kỳ có bao nhiêu ngày Thứ X ("Tối đa 9 buổi"). */
     function countWeekday(weekday) {
         return days.filter(function (day) { return day.weekday === weekday; }).length;
     }
@@ -741,7 +788,7 @@ function initPlan(root, data) {
 }
 
 
-/* ---------- Hàm phụ dùng chung (không cần trạng thái) ---------- */
+/* ==================== HÀM PHỤ DÙNG CHUNG (ngoài initPlan, không cần trạng thái) ==================== */
 
 /** 1 nút chọn dạng chip = <label> bọc radio thật (Tab / mũi tên / Space dùng được như radio thường). */
 function chip(name, value, text, meta, checked, disabled, focusKey, weekday, extraClass) {
@@ -793,6 +840,7 @@ function shortDate(isoDate) {
     return isoDate.slice(8, 10) + "/" + isoDate.slice(5, 7);
 }
 
+/** Tạo thẻ HTML có chữ (textContent → an toàn, không chèn HTML). */
 function el(tag, className, text) {
     const element = document.createElement(tag);
     if (className) {

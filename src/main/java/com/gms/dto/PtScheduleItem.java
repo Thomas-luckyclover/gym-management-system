@@ -6,7 +6,8 @@ import java.time.LocalTime;
 /**
  * MỘT KHỐI GIỜ trên Lịch dạy PT: hoặc là khung trống, hoặc là buổi có khách.
  *
- *   Ai tạo?   PtScheduleDAO đọc từ DB (phần 1 + 2 bên dưới).
+ *   Ai tạo?   PtScheduleDAO đọc từ DB → CONSTRUCTOR (2 kiểu: buổi có khách / khung chưa có buổi), phần 1 + 2 bên dưới.
+ *   "· IN" cuối mỗi field = JSP Lịch dạy có in field này; "· không in" = chỉ dùng để tính.
  *   Ai điền?  PtScheduleService.classify điền phần 3 (loại khối, nhãn, quyền, vị trí).
  *   Ai đọc?   schedule.jsp in ra thẻ khung; Service dùng lại khi Công bố.
  *
@@ -15,29 +16,59 @@ import java.time.LocalTime;
  */
 public class PtScheduleItem {
 
+    /** DAO tạo KHUNG CHƯA CÓ BUỔI (PtScheduleDAO.readSlot): phần 1 + kind = TimeSlots.Status (Free | Held). Service.classify đổi kind sau. */
+    public PtScheduleItem(int timeSlotId, LocalDate slotDate, LocalTime startTime, LocalTime endTime, String kind) {
+        this.timeSlotId = timeSlotId;
+        this.slotDate = slotDate;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.kind = kind;
+    }
+
+    /** DAO tạo BUỔI CÓ KHÁCH (PtScheduleDAO.readSessionRow): phần 1 + 2. Phần 3 Service.classify set sau. */
+    public PtScheduleItem(Integer sessionId, String sessionStatus, int timeSlotId, LocalDate slotDate, LocalTime startTime,
+            LocalTime endTime, String packageName, int sessionNo, int totalSessions, String customerNames,
+            String customerPhone) {
+        this.sessionId = sessionId;
+        this.sessionStatus = sessionStatus;
+        this.timeSlotId = timeSlotId;
+        this.slotDate = slotDate;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.packageName = packageName;
+        this.sessionNo = sessionNo;
+        this.totalSessions = totalSessions;
+        this.customerNames = customerNames;
+        this.customerPhone = customerPhone;
+    }
+
+    /** Constructor rỗng: Service / test tạo object nhỏ rồi set từng field cần. */
+    public PtScheduleItem() {
+    }
+
     // ===== 1. Khung giờ (bảng TimeSlots) =====
-    private int timeSlotId;          // mã khung, dùng khi gỡ khung. KHÁC mã buổi sessionId
-    private LocalDate slotDate;      // ngày của khung
-    private LocalTime startTime;     // giờ bắt đầu, ví dụ 09:30
-    private LocalTime endTime;       // giờ kết thúc, ví dụ 11:00
+    private int timeSlotId;          // mã khung, dùng khi gỡ khung. KHÁC mã buổi sessionId   · IN
+    private LocalDate slotDate;      // ngày của khung   · IN
+    private LocalTime startTime;     // giờ bắt đầu, ví dụ 09:30   · IN
+    private LocalTime endTime;       // giờ kết thúc, ví dụ 11:00   · IN
 
     // ===== 2. Buổi có khách (bảng Sessions + gói). Khung trống thì phần này để null/0 =====
-    private Integer sessionId;       // mã buổi; null nếu khung chưa có khách
-    private String sessionStatus;    // Scheduled | CheckedIn | Missed | Cancelled
-    private String customerNames;    // tên khách; gói đôi ghép "A & B"
-    private String customerPhone;    // SĐT người đứng tên gói
-    private String packageName;      // tên gói lúc mua
-    private int sessionNo;           // buổi thứ mấy trong gói, ví dụ 20 trong "20/45"
-    private int totalSessions;       // tổng số buổi của gói, ví dụ 45
+    private Integer sessionId;       // mã buổi; null nếu khung chưa có khách   · IN
+    private String sessionStatus;    // Scheduled | CheckedIn | Missed | Cancelled   · IN
+    private String customerNames;    // tên khách; gói đôi ghép "A & B"   · IN
+    private String customerPhone;    // SĐT người đứng tên gói   · IN
+    private String packageName;      // tên gói lúc mua   · IN
+    private int sessionNo;           // buổi thứ mấy trong gói, ví dụ 20 trong "20/45"   · IN
+    private int totalSessions;       // tổng số buổi của gói, ví dụ 45   · IN
 
     // ===== 3. Service tính để JSP hiển thị =====
-    private String kind;             // free | held | booked | locked → chọn màu thẻ
-    private boolean past;            // đã hết giờ → thẻ mờ
-    private String statusLabel;      // chữ trạng thái: Còn trống, Sắp tới, Vắng...
-    private int startMinute;         // số phút tính từ ĐẦU TRỤC GIỜ của tuần → vị trí thẻ trên lưới
-    private int lengthMinutes;       // độ dài khung (phút) → chiều cao thẻ
-    private boolean canRemove;       // true → JSP in ô "Gỡ khung" cho thẻ này
-    private boolean canHandle;       // true → buổi có thể xử lý (bước 11 sẽ dùng)
+    private String kind;             // free | held | booked | locked → chọn màu thẻ   · IN
+    private boolean past;            // đã hết giờ → thẻ mờ   · IN
+    private String statusLabel;      // chữ trạng thái: Còn trống, Sắp tới, Vắng...   · IN
+    private int startMinute;         // số phút tính từ ĐẦU TRỤC GIỜ của tuần → vị trí thẻ trên lưới   · IN
+    private int lengthMinutes;       // độ dài khung (phút) → chiều cao thẻ   · IN
+    private boolean canRemove;       // true → JSP in ô "Gỡ khung" cho thẻ này   · IN
+    private boolean canHandle;       // true → buổi có thể xử lý (bước 11 sẽ dùng)   · IN
 
 
     // ===== Giá trị tính sẵn cho JSP (không lưu, tính từ giờ) =====

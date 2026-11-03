@@ -40,31 +40,27 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 /**
- * SERVICE MÀN LỄ TÂN BÁN GÓI PT (/receptionist/pt-sales) — UC-21 bản đơn giản hóa (docs/notes.md 25/10/2026).
+ * SERVICE MÀN LỄ TÂN BÁN GÓI PT — /receptionist/pt-sales (UC-21 bản đơn giản hóa, docs/notes.md 25/10/2026).
  *
- * Luồng giống mua vé có giữ chỗ:
- *   search   ô tìm kiếm gợi ý (AJAX): tên không dấu / SĐT / mã KH
- *   prepare  mỗi lần đổi lựa chọn (GET): Khách → Gói, PT, ngày bắt đầu → dữ liệu Lịch tập (JSON, trình duyệt ghép lịch)
- *   hold     "Giữ lịch 15 phút": tạo đơn Pending + khung Held (PT và lễ tân khác thấy "Đang giữ")
- *   pay      "Xác nhận đã thu tiền": đơn Paid, giao dịch, gói PT, các buổi (Held → Booked)
- *   release  "Hủy giữ chỗ": đơn Cancelled, khung về như cũ
- *   Giữ quá 15 phút chưa thu tiền → tự nhả ở lần mở màn kế tiếp (releaseExpired).
+ * AI GỌI SERVICE NÀY?  Chỉ PtSaleServlet. Servlet đưa chữ thô (Input) + accountId; Service tự kiểm tra hết.
+ * SERVICE GỌI AI?      PtSaleDAO (đọc / ghi đơn, khung, buổi) · PtScheduleDAO (ngày nghỉ PT, giờ mở cửa ngoại lệ)
+ *                      · ShiftDAO (ca đang mở) · NotificationDAO (thông báo sau thu tiền) · SystemConfigService (P-05, P-06, P-08, P-10, P-19).
  *
- * MỤC LỤC
- *   PHẦN 1. HÀM CHÍNH       search, prepare, hold, pay, release
- *   PHẦN 2. 4 BƯỚC          build → loadCustomers, loadPackage, loadPt, loadPlan · loadHeld
- *   PHẦN 3. LUẬT (static)   whyCannotBuy, candidateTimes, checkDay, buildPlan, checkRequested, sessionValue, …
+ * BỐ CỤC FILE — mỗi HÀM CHÍNH đứng trước, các hàm phụ của nó nằm ngay bên dưới:
+ *   HÀM CHÍNH 1  search    ô gợi ý khách (AJAX)                         → whyCannotBuy
+ *   HÀM CHÍNH 2  prepare   mở màn / đổi lựa chọn / mở đơn đang giữ      → newView, build, load…, buildPlan, checkDay, loadHeld …
+ *   HÀM CHÍNH 3  hold      "Giữ lịch 15 phút": đơn Pending + khung Held → firstProblem, countNewSlots, checkRequested, openShiftId
+ *   HÀM CHÍNH 4  pay       "Xác nhận đã thu tiền": Paid + gói + buổi    → whyCannotPay, mostCommonStart, notifySale
+ *   HÀM CHÍNH 5  release   "Hủy giữ chỗ": đơn Cancelled, trả khung      → (dùng releaseHold của DAO)
+ *   DÙNG CHUNG             releaseExpired, inTransaction, requireReceptionist, tiền / ngày giờ
  *
- * ❓ VẤN ĐÁP (mỗi câu kèm luồng file để mở theo khi trả lời):
- *   1) Luồng bán gói PT? → 4 bước: 1 Gói & PT → 2 Lịch tập → 3 Khách → 4 Giữ chỗ & thu tiền (kiểu máy POS: trái tư vấn, phải "Đơn bán").
- *      File: servlet/receptionist/PtSaleServlet.java → service/PtSaleService.java → dao/PtSaleDAO.java → WEB-INF/jsp/receptionist/pt-sales.jsp.
- *   2) Giữ chỗ 15 phút hoạt động thế nào? → hold: khóa dòng PT (UPDLOCK) → tạo đơn Pending → khung Free→Held (HoldExpiresAt +15');
- *      quá hạn thì releaseExpired nhả (khung về Free, đơn Cancelled). Vì vậy PT không thấy "Đang giữ" nếu đã hết 15 phút.
- *      File: service/PtSaleService.java (hold / release / releaseExpired) → dao/PtScheduleDAO.java (khóa khung) + dao/PtSaleDAO.java (đơn).
- *   3) Chống trùng giờ ở đâu? → Service checkDay/whySkip kiểm tra trước; PtSaleDAO.insertHeldSlot kiểm tra NOT EXISTS trước khi tạo khung Held.
- *      File: service/PtSaleService.java (checkDay) → dao/PtSaleDAO.java (insertHeldSlot).
- *   4) Vì sao có tick "Đã xác nhận với PT"? → khi xếp buổi vào giờ PT CHƯA mở khung (buổi "create"): hệ thống tự tạo khung mới, nên bắt buộc có xác nhận PT đồng ý.
- *      File: service/PtSaleService.java (buildPlan / hold) → dao/PtSaleDAO.java (insertHeldSlot) → WEB-INF/jsp/receptionist/pt-sales.jsp.
+ * LUẬT QUAN TRỌNG
+ *   - prepare (xem) và hold (giữ) đi CÙNG hàm build → luật lúc xem và lúc giữ là một.
+ *   - hold khóa dòng PT (PtSaleDAO.lockPt) rồi mới đọc lại khung → 2 lễ tân giữ cùng khung: người sau bị từ chối.
+ *   - Giữ / thu tiền bắt buộc có ca Open hôm nay (openShiftId): chưa mở ca → MSG109 / MSG110, ca ngày trước → MSG324.
+ *     Hệ thống KHÔNG tự mở ca.
+ *   - Quá 15 phút: không có JOB. releaseExpired chạy đầu prepare và hold ("nhả lười").
+ *   - Các hàm static (whyCannotBuy, checkDay, buildPlan, checkRequested, …) không đọc DB → PtSaleServiceTest gọi thẳng.
  */
 public class PtSaleService {
 
@@ -74,6 +70,7 @@ public class PtSaleService {
     static final String EXPIRED_REASON = "Hết 15 phút giữ chỗ, chưa thu tiền";
     static final String RELEASE_REASON = "Lễ tân hủy giữ chỗ, chưa thu tiền";
 
+    // Lớp dưới mà Service này gọi (xem "SERVICE GỌI AI?" ở đầu file)
     private final PtSaleDAO saleDAO = new PtSaleDAO();
     private final PtScheduleDAO scheduleDAO = new PtScheduleDAO();
     private final ShiftDAO shiftDAO = new ShiftDAO();
@@ -89,11 +86,23 @@ public class PtSaleService {
     }
 
 
-    // ================================================================================================================
-    // PHẦN 1. HÀM CHÍNH
-    // ================================================================================================================
+    // ============================================================================================================
+    // HÀM CHÍNH 1. search — ô "Tên, SĐT hoặc mã khách" (AJAX)
+    //   Ai gọi: PtSaleServlet.writeSuggestions  ·  Gọi xuống: PtSaleDAO.findReceptionist, searchCustomers
+    //   Hàm phụ ngay dưới: whyCannotBuy
+    // ============================================================================================================
 
-    /** HÀM CHÍNH — PtSaleServlet (GET …/pt-sales/customers?q=) gọi khi Lễ tân gõ. Dưới 2 ký tự → danh sách rỗng. */
+    /**
+     * HÀM CHÍNH 1 — gợi ý khách khi lễ tân gõ vào ô "Tên, SĐT hoặc mã khách".
+     *   AI GỌI   PtSaleServlet.writeSuggestions (GET /receptionist/pt-sales/customers?q=…)
+     *   VÀO      accountId (tài khoản đăng nhập), query (chữ thô vừa gõ), now
+     *   RA       tối đa 8 PtSaleCustomer, mỗi khách có blockReason (null = bán được) → Servlet đổi sang JSON
+     *   BƯỚC     1. dưới 2 ký tự → danh sách rỗng (không hỏi DB)
+     *            2. findReceptionist: tài khoản phải là lễ tân đang làm → không thì MSG07
+     *            3. searchCustomers: tên không dấu / SĐT / mã KH
+     *            4. mỗi khách: whyCannotBuy → blockReason (chữ đỏ trên gợi ý)
+     *   GHI DB   không
+     */
     public ServiceResult<List<PtSaleCustomer>> search(int accountId, String query, LocalDateTime now) {
         String text = query == null ? "" : query.trim();
         if (text.length() < 2) {
@@ -117,9 +126,49 @@ public class PtSaleService {
         }
     }
 
+
     /**
-     * HÀM CHÍNH — PtSaleServlet.doGet gọi. orderId != null → đang giữ chỗ (bước 4), đọc từ đơn.
-     * Trước khi đọc: nhả mọi lần giữ đã quá 15 phút (để bảng tuần thấy đúng khung trống).
+     * HÀM PHỤ (search, loadHolder, loadPartner) — khách có mua được gói PT không? null = được.
+     * Chữ trả về in thẳng ra màn: dòng gợi ý (pt-sales.js) và thẻ khách (_sale-customer.jspf).
+     *   không phải hồ sơ khách của chính lễ tân · đủ tuổi (P-05) · có gói thành viên phủ hôm nay (vé ngày không tính)
+     *   · hôm nay không bảo lưu (CBR-59, BR-37).
+     */
+    static String whyCannotBuy(PtSaleCustomer customer, LocalDate today, int minAge, int receptionistPersonId) {
+        if (customer.getPersonId() == receptionistPersonId) {
+            return "Lễ tân không tự bán gói cho hồ sơ khách của chính mình.";
+        }
+        if (DateTimeUtil.calculateAge(customer.getDateOfBirth(), today) < minAge) {
+            return "Chưa đủ " + minAge + " tuổi để mua gói PT.";
+        }
+        if (customer.getMembershipEnd() == null) {
+            return "Chưa có gói thành viên còn hạn hôm nay. Bán gói thành viên trước.";
+        }
+        if (customer.isFrozen()) {
+            return "Đang bảo lưu gói thành viên.";
+        }
+        return null;
+    }
+
+
+    // ============================================================================================================
+    // HÀM CHÍNH 2. prepare — mở màn / đổi gói, PT, ngày / mở đơn đang giữ (?order=)
+    //   Ai gọi: PtSaleServlet.showPage  ·  Ra: PtSaleView → JSP biến "sale"
+    //   Hàm phụ ngay dưới, theo thứ tự prepare gọi:
+    //     newView → build → loadHolder · loadPackage · loadPartner · loadPt → loadPlan → buildPlan / checkDay …
+    //     loadPendingHolds (danh sách "Đơn đang giữ chỗ") · loadHeld (trang ?order=)
+    // ============================================================================================================
+
+    /**
+     * HÀM CHÍNH 2 — dựng dữ liệu cho cả màn (mỗi lần mở trang hoặc đổi gói / PT / ngày / khách).
+     *   AI GỌI   PtSaleServlet.showPage (GET /receptionist/pt-sales, và khi Giữ lịch bị từ chối)
+     *   VÀO      accountId · input = chữ thô trên URL (customer, package, pt, start, t1..t5, sessions)
+     *            · orderId = ?order= (null nếu không mở đơn đang giữ)
+     *   RA       PtSaleView → Servlet đặt request attribute "sale" → pt-sales.jsp
+     *   BƯỚC     1. releaseExpired: nhả đơn giữ quá 15 phút (để bảng tuần thấy đúng khung trống)
+     *            2. findReceptionist → không phải lễ tân: MSG07
+     *            3a. có orderId → loadHeld (trang "đang giữ": đồng hồ + thu tiền). URL thiếu start → lấy ngày khung giữ đầu tiên
+     *            3b. không có → build (4 bước, lock = false) + loadPendingHolds (danh sách "Đơn đang giữ chỗ")
+     *   GHI DB   chỉ releaseExpired (nếu có đơn quá hạn); còn lại chỉ đọc, không khóa
      */
     public ServiceResult<PtSaleView> prepare(int accountId, Input input, Integer orderId, LocalDateTime now) {
         try {
@@ -149,253 +198,8 @@ public class PtSaleService {
         }
     }
 
-    /**
-     * HÀM PHỤ — gọi ở cuối prepare (khi KHÔNG mở đơn cụ thể ?order=).
-     * Liệt kê đơn tại quầy đang giữ chỗ chưa hết hạn → JSP hiện danh sách "Đơn đang giữ" để lễ tân tìm lại
-     * sau khi bấm Back / đăng xuất mà mất URL ?order= (không mất dữ liệu, chỉ mất đường dẫn).
-     */
-    private List<PtSaleView.PendingHold> loadPendingHolds(Connection connection, LocalDateTime now) throws SQLException {
-        List<PtSaleDAO.HeldOrder> active = saleDAO.findActiveHoldOrders(connection, now);
-        List<PtSaleView.PendingHold> holds = new ArrayList<>();
-        for (PtSaleDAO.HeldOrder order : active) {
-            long secondsLeft = Math.max(0, Duration.between(now, order.expiresAt).getSeconds());
-            holds.add(new PtSaleView.PendingHold(order.orderId, order.orderCode, secondsLeft));
-        }
-        return holds;
-    }
 
-    /**
-     * HÀM CHÍNH — "Giữ lịch 15 phút". Làm lại 4 bước có khóa dòng PT + khung, rồi trong 1 transaction:
-     * ca đang mở (chưa mở → MSG109) → mã đơn → đơn Pending → mỗi ngày có buổi: khung Free → Held, hoặc tạo khung Held mới.
-     * Ra: mã đơn (Servlet chuyển sang ?order=…) ; lỗi → câu lỗi, không ghi gì.
-     */
-    public ServiceResult<Integer> hold(int accountId, Input input, LocalDateTime now) {
-        try {
-            releaseExpired(now);
-        } catch (SQLException exception) {
-            exception.printStackTrace();
-            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
-        }
-        return inTransaction(connection -> {
-            int[] receptionist = requireReceptionist(connection, accountId);
-            PtSaleView view = newView(input, now);
-            if (view.getPtId() != null) {
-                saleDAO.lockPt(connection, view.getPtId());      // xếp hàng với lễ tân khác / PT đang Công bố
-            }
-            build(connection, view, input, receptionist[1], now, true);
-            String problem = firstProblem(view);
-            if (problem != null) {
-                throw new IllegalArgumentException(problem);
-            }
-            // Buổi PT chưa mở khung (giữ lịch sẽ tự tạo khung mới) → lễ tân phải hỏi PT rồi tích xác nhận.
-            int unconfirmed = countNewSlots(view.getDays());
-            if (unconfirmed > 0 && !input.confirmPt) {
-                throw new IllegalArgumentException("Có " + unconfirmed + " buổi PT chưa mở khung giờ đó. "
-                        + "Hỏi PT rồi tích \"Đã xác nhận với PT\" trước khi giữ lịch.");
-            }
-
-            // Ca đang mở (đơn tại quầy bắt buộc thuộc 1 ca). Chưa mở ca → MSG109, giống Bán hàng tại quầy.
-            int shiftId = openShiftId(Messages.MSG109_SHIFT_NOT_OPEN_FOR_SALE);
-            PackageRow pkg = saleDAO.findPackage(connection, view.getPackageId());
-            int vatRate = configService.getInt(SystemConfigService.VAT_PERCENT);
-            String code = saleDAO.nextOrderCode(connection, now.getYear());
-            Integer partnerId = view.getPartner() == null ? null : view.getPartner().getCustomerId();
-            int orderId = saleDAO.insertPendingOrder(connection, code, view.getHolder().getCustomerId(), partnerId, pkg,
-                    receptionist[0], shiftId, vatRate, vatAmount(pkg.price, vatRate), now);
-
-            LocalDateTime expires = now.plusMinutes(HOLD_MINUTES);
-            for (PtSaleDay day : view.getDays()) {
-                if (!day.isSession()) {
-                    continue;
-                }
-                if ("book".equals(day.getAction())) {
-                    if (!saleDAO.holdFreeSlot(connection, day.getSlotId(), view.getPtId(), orderId, expires)) {
-                        throw new IllegalArgumentException(day.getDayLabel() + ": " + Messages.MSG103_SLOT_ALREADY_TAKEN);
-                    }
-                } else {
-                    saleDAO.insertHeldSlot(connection, view.getPtId(), day.getDate(), day.getStartTime(), day.getEndTime(),
-                            orderId, expires, now);
-                }
-            }
-            return ServiceResult.ok(orderId, String.format(Messages.MSG307_PT_SALE_HELD, view.getSessionCount(), HOLD_MINUTES, code));
-        });
-    }
-
-    /**
-     * HÀM CHÍNH — "Xác nhận đã thu tiền" của đơn đang giữ.
-     * startText = ngày bắt đầu kỳ (form mang theo). Đơn phải còn Pending, khung còn giữ và chưa quá hạn.
-     */
-    public ServiceResult<Integer> pay(int accountId, int orderId, String startText, String method, String reference,
-            LocalDateTime now) {
-        if (!"Cash".equals(method) && !"Transfer".equals(method)) {
-            return ServiceResult.fail(Messages.MSG308_PT_SALE_METHOD_REQUIRED);
-        }
-        String ref = reference == null || reference.isBlank() || "Cash".equals(method) ? null : reference.trim();
-        if (ref != null && ref.length() > 50) {
-            return ServiceResult.fail(Messages.MSG309_PT_SALE_REFERENCE_LENGTH);
-        }
-        LocalDate start = parseDate(startText);
-
-        return inTransaction(connection -> {
-            int[] receptionist = requireReceptionist(connection, accountId);
-            HeldOrder held = saleDAO.findHeldOrder(connection, orderId, true);
-            String problem = whyCannotPay(held, start, now);
-            if (problem != null) {
-                throw new IllegalArgumentException(problem);
-            }
-            // B0: phải có ca đang mở mới thu tiền (CBR-105, BR-93) — giống Bán hàng tại quầy.
-            openShiftId(Messages.MSG110_SHIFT_NOT_OPEN_FOR_PAYMENT);
-
-            // B1: đơn Paid + giao dịch Success (người nhận = lễ tân đang bấm).
-            PackageRow pkg = saleDAO.findPackage(connection, held.packageId);
-            if (pkg == null) {
-                throw new IllegalArgumentException("Gói này không còn bán. Hủy giữ chỗ rồi chọn gói khác.");
-            }
-            if (!saleDAO.markOrderPaid(connection, orderId, now)) {
-                throw new IllegalArgumentException("Đơn này không còn chờ thu tiền.");
-            }
-            saleDAO.insertTransaction(connection, orderId, held.price, method, ref, receptionist[0], now);
-
-            // B2: gói PT. Số buổi = số khung đang giữ; giá trị buổi = giá ÷ số buổi (DBR-59).
-            LocalDate end = DateTimeUtil.calculateEndDateByMonths(start, pkg.months);
-            int count = held.slots.size();
-            int maxSwaps = configService.getInt(SystemConfigService.MAX_SWAP_COUNT) * pkg.months;
-            int subscriptionId = saleDAO.insertSubscription(connection, orderId, held.holderId, pkg.type, held.ptId,
-                    start, end, mostCommonStart(held.slots), count, maxSwaps);
-
-            // B3: từng buổi: khung Held → Booked + buổi Scheduled.
-            PtRow pt = saleDAO.findPt(connection, held.ptId);
-            int rate = pt == null ? 0 : pt.commissionRate;
-            long value = sessionValue(held.price, count);
-            long commission = Math.round(value * rate / 100.0);
-            for (PtScheduleItem slot : held.slots) {
-                if (!saleDAO.bookHeldSlot(connection, slot.getTimeSlotId(), orderId)) {
-                    throw new IllegalArgumentException(Messages.MSG103_SLOT_ALREADY_TAKEN);
-                }
-                saleDAO.insertSession(connection, subscriptionId, slot.getTimeSlotId(), held.ptId, value, commission);
-            }
-
-            // B4: thông báo khách (+ người tập cùng) và PT.
-            notifySale(connection, held, pkg, pt == null ? "PT" : pt.fullName, start, end, count, now);
-            return ServiceResult.ok(orderId, String.format(Messages.MSG310_PT_SALE_PAID, money(held.price), held.orderCode, count));
-        });
-    }
-
-    /** HÀM CHÍNH — "Hủy giữ chỗ": đơn Cancelled (lễ tân hủy), khung về như trước khi giữ. */
-    public ServiceResult<Integer> release(int accountId, int orderId, LocalDateTime now) {
-        return inTransaction(connection -> {
-            requireReceptionist(connection, accountId);
-            HeldOrder held = saleDAO.findHeldOrder(connection, orderId, true);
-            if (held == null || !"Pending".equals(held.status)) {
-                throw new IllegalArgumentException("Đơn này không còn giữ chỗ.");
-            }
-            saleDAO.releaseHold(connection, orderId, held.createdAt, RELEASE_REASON, now);
-            return ServiceResult.ok(orderId, String.format(Messages.MSG311_PT_SALE_RELEASED, held.orderCode));
-        });
-    }
-
-    /** Nhả mọi đơn giữ chỗ đã quá hạn (mỗi đơn 1 transaction nhỏ). */
-    void releaseExpired(LocalDateTime now) throws SQLException {
-        List<Integer> expired;
-        try (Connection connection = DBContext.getConnection()) {
-            expired = saleDAO.findExpiredHoldOrders(connection, now);
-        }
-        for (int orderId : expired) {
-            inTransaction(connection -> {
-                HeldOrder held = saleDAO.findHeldOrder(connection, orderId, true);
-                if (held != null && "Pending".equals(held.status)) {
-                    saleDAO.releaseHold(connection, orderId, held.createdAt, EXPIRED_REASON, now);
-                }
-                return ServiceResult.ok(orderId);
-            });
-        }
-    }
-
-    @FunctionalInterface
-    interface Work {
-        ServiceResult<Integer> run(Connection connection) throws SQLException;
-    }
-
-    /** Chạy work trong 1 transaction; IllegalArgumentException = từ chối có lý do (rollback, trả câu lỗi). */
-    private ServiceResult<Integer> inTransaction(Work work) {
-        try (Connection connection = DBContext.getConnection()) {
-            connection.setAutoCommit(false);
-            try {
-                ServiceResult<Integer> result = work.run(connection);
-                connection.commit();
-                return result;
-            } catch (IllegalArgumentException exception) {
-                connection.rollback();
-                return ServiceResult.fail(exception.getMessage());
-            } catch (SQLException | RuntimeException exception) {
-                connection.rollback();
-                throw exception;
-            }
-        } catch (SQLException | IllegalStateException | DateTimeException exception) {
-            exception.printStackTrace();
-            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
-        }
-    }
-
-    private int[] requireReceptionist(Connection connection, int accountId) throws SQLException {
-        int[] receptionist = saleDAO.findReceptionist(connection, accountId);
-        if (receptionist == null) {
-            throw new IllegalArgumentException(Messages.MSG07_NO_PERMISSION);
-        }
-        return receptionist;
-    }
-
-    /**
-     * Ca đang mở để ghi đơn — cùng cách với CounterSaleService: lấy ca hiện tại của hôm nay,
-     * chưa có ca hoặc ca chưa Open / đã chốt → từ chối bằng câu lỗi truyền vào (MSG109 khi giữ lịch, MSG110 khi thu tiền);
-     * ca đang mở là ca ngày trước → MSG324 (CBR-123).
-     * Hệ thống KHÔNG tự mở ca hộ lễ tân (CBR-105, BR-93): lễ tân mở ca ở màn Ca làm việc.
-     */
-    private int openShiftId(String notOpenMessage) throws SQLException {
-        Shift shift = shiftDAO.findCurrentOrActiveShift(DateTimeUtil.today());
-        if (shift == null || !shift.isOpen()) {
-            throw new IllegalArgumentException(notOpenMessage);
-        }
-        // CBR-123: ca đang mở là ca ngày trước (quên chốt) → không ghi đơn hôm nay vào ca đó.
-        String pastDayShift = ShiftService.pastDayShiftMessage(shift, DateTimeUtil.today());
-        if (pastDayShift != null) {
-            throw new IllegalArgumentException(pastDayShift);
-        }
-        return shift.getShiftId();
-    }
-
-    /** B4 của pay: 1 thông báo cho khách (+ người tập cùng), 1 cho PT. Hồ sơ không có tài khoản → bỏ qua. */
-    private void notifySale(Connection connection, HeldOrder held, PackageRow pkg, String ptName, LocalDate start,
-            LocalDate end, int count, LocalDateTime now) throws SQLException {
-        String term = DateTimeUtil.formatDate(start) + " – " + DateTimeUtil.formatDate(end);
-        int partnerId = held.partnerId == null ? held.holderId : held.partnerId;
-        notify(connection, saleDAO.findCustomerAccounts(connection, held.holderId, partnerId), "Gói PT mới đã kích hoạt",
-                pkg.name + " với " + ptName + ": " + count + " buổi, " + term + ". Mã đơn " + held.orderCode + ".");
-        Integer ptAccount = notificationDAO.findActiveAccountIdByEmployeeId(connection, held.ptId);
-        if (ptAccount != null) {
-            PtSaleCustomer holder = saleDAO.findCustomer(connection, held.holderId, now.toLocalDate());
-            notify(connection, List.of(ptAccount), "Bạn có khách gói PT mới",
-                    (holder == null ? "Khách" : holder.getFullName()) + " mua " + pkg.name + ": " + count
-                            + " buổi, " + term + ". Xem trên Lịch dạy.");
-        }
-    }
-
-    private void notify(Connection connection, List<Integer> accountIds, String title, String content) throws SQLException {
-        if (accountIds.isEmpty()) {
-            return;
-        }
-        String text = content.length() > 500 ? content.substring(0, 497) + "..." : content;
-        int notificationId = notificationDAO.insertSystemNotification(connection, title, text);
-        for (int accountId : accountIds) {
-            notificationDAO.insertRecipient(connection, notificationId, accountId);
-        }
-    }
-
-
-    // ================================================================================================================
-    // PHẦN 2. 4 BƯỚC — prepare (xem) và hold (giữ) dùng CHUNG nên kiểm tra đúng một luật
-    // ================================================================================================================
-
+    /** HÀM PHỤ (prepare, hold) — chữ thô trên URL → PtSaleView rỗng: đọc mã, ngày (trống = ngày mai), giờ t1..t5, min / max ngày bắt đầu. */
     private PtSaleView newView(Input input, LocalDateTime now) {
         PtSaleView view = new PtSaleView();
         view.setCustomerId(parseId(input.customer));
@@ -415,7 +219,11 @@ public class PtSaleService {
         return view;
     }
 
-    /** Đi lần lượt 4 bước; bước nào thiếu / sai thì dừng (bước sau để trống). lock = true khi giữ chỗ. */
+    /**
+     * HÀM PHỤ (prepare, hold) — đi lần lượt các bước; bước nào thiếu / sai thì dừng, bước sau để trống.
+     *   loadHolder (khách) → loadPackage (gói) → loadPartner (người tập cùng, chỉ gói đôi) → loadPt (PT + ngày) → loadPlan (lịch)
+     *   lock = false khi xem (prepare) · lock = true khi giữ (hold): đọc khung có UPDLOCK và kiểm lại từng buổi.
+     */
     private void build(Connection connection, PtSaleView view, Input input, int receptionistPersonId,
             LocalDateTime now, boolean lock) throws SQLException {
         LocalDate today = now.toLocalDate();
@@ -435,7 +243,7 @@ public class PtSaleService {
         loadPlan(connection, view, input, now, lock);
     }
 
-    /** Người đứng tên: đã chọn (?customer=) → hồ sơ + lý do không bán được; chưa chọn mà có chữ tìm (tắt JS) → danh sách. */
+    /** HÀM PHỤ (build) — người đứng tên: đã chọn (?customer=) → hồ sơ + lý do không bán được; chưa chọn mà có chữ tìm (tắt JS) → danh sách. */
     private void loadHolder(Connection connection, PtSaleView view, LocalDate today, int minAge, int receptionistPersonId)
             throws SQLException {
         if (view.getCustomerId() == null) {
@@ -460,6 +268,7 @@ public class PtSaleService {
         view.setHolder(holder);
     }
 
+    /** HÀM PHỤ (build) — danh sách gói (ô chọn gói) + gói đang chọn (tên, giá, số tháng, gói đôi?). false = chưa chọn / gói ngừng bán. */
     private boolean loadPackage(Connection connection, PtSaleView view) throws SQLException {
         List<PtSaleOption> options = new ArrayList<>();
         for (PackageRow row : saleDAO.findPtPackages(connection)) {
@@ -483,6 +292,7 @@ public class PtSaleService {
         return true;
     }
 
+    /** HÀM PHỤ (build, chỉ gói đôi) — người tập cùng: phải chọn, phải khác người đứng tên, phải mua được. */
     private boolean loadPartner(Connection connection, PtSaleView view, LocalDate today, int minAge,
             int receptionistPersonId) throws SQLException {
         if (view.getPartnerId() == null) {
@@ -501,6 +311,7 @@ public class PtSaleService {
         return partner.getBlockReason() == null;
     }
 
+    /** HÀM PHỤ (build) — danh sách PT (bỏ PT là chính khách) + PT đang chọn + kiểm ngày bắt đầu → tính ngày kết thúc kỳ. */
     private boolean loadPt(Connection connection, PtSaleView view) throws SQLException {
         List<PtSaleOption> options = new ArrayList<>();
         for (PtRow row : saleDAO.findWorkingPts(connection)) {
@@ -529,8 +340,23 @@ public class PtSaleService {
         return true;
     }
 
+    /** HÀM PHỤ (loadPt) — personId này có phải khách đứng tên / người tập cùng không (PT không tự bán cho mình). */
+    private boolean isCustomerPerson(PtSaleView view, int personId) {
+        boolean holder = view.getHolder() != null && view.getHolder().getPersonId() == personId;
+        boolean partner = view.getPartner() != null && view.getPartner().getPersonId() == personId;
+        return holder || partner;
+    }
+
+    /** HÀM PHỤ (loadPt) — "Đinh Công Sơn" → "ĐS" (chữ đầu họ + chữ đầu tên). */
+    static String initials(String fullName) {
+        String[] parts = fullName.trim().split("\\s+");
+        String first = parts[0].substring(0, 1);
+        return parts.length == 1 ? first : first + parts[parts.length - 1].substring(0, 1);
+    }
+
     /**
-     * Bước 3. Xem (prepare): dựng PtSalePlan → JSON cho trình duyệt (pt-sale-plan.js).
+     * HÀM PHỤ (build) — lịch tập.
+     * Xem (prepare): dựng PtSalePlan → JSON cho trình duyệt (pt-sale-plan.js).
      * Giữ (hold, lock = true): kiểm tra lại các buổi lễ tân gửi lên (input.sessions) → view.days.
      */
     private void loadPlan(Connection connection, PtSaleView view, Input input, LocalDateTime now, boolean lock)
@@ -601,7 +427,239 @@ public class PtSaleService {
         view.setSessionValue(sessionValue(view.getPrice(), days.size()));
     }
 
-    /** Bước 4: dựng màn từ đơn đang giữ (không cần URL đủ 6 lựa chọn). Đơn hết giữ → câu lỗi. */
+    /**
+     * HÀM PHỤ (loadPlan) — giờ của "lịch mẫu" = giờ bắt đầu của các khung Free (đúng P-06 phút, chưa qua giờ) PT đã công bố
+     * vào T2–T6 trong 14 ngày đầu kỳ (CBR-52: lịch phải nằm trong giờ PT đã công bố). Xếp tăng dần.
+     */
+    static List<LocalTime> candidateTimes(List<PtScheduleItem> slots, LocalDate start, int minutes, LocalDateTime now) {
+        LocalDate windowEnd = start.plusDays(TIME_WINDOW_DAYS - 1);
+        TreeMap<LocalTime, Boolean> times = new TreeMap<>();
+        for (PtScheduleItem slot : slots) {
+            boolean inWindow = !slot.getSlotDate().isAfter(windowEnd) && isWeekday(slot.getSlotDate());
+            boolean free = "Free".equals(slot.getKind());
+            boolean rightLength = slot.getStartTime().plusMinutes(minutes).equals(slot.getEndTime());
+            boolean future = slot.getSlotDate().atTime(slot.getStartTime()).isAfter(now);
+            if (inWindow && free && rightLength && future) {
+                times.put(slot.getStartTime(), true);
+            }
+        }
+        return new ArrayList<>(times.keySet());
+    }
+
+    /**
+     * HÀM PHỤ (loadPlan) — thứ (1 = Thứ 2 … 5 = Thứ 6) mà PT CHƯA công bố khung Free nào (chưa qua giờ) trong 14 ngày đầu kỳ.
+     * Ví dụ PT chỉ mở Thứ 2, 4, 6 → [2, 4]. Chỉ để in hộp nhắc; việc bắt tích xác nhận xét theo TỪNG BUỔI (countNewSlots).
+     */
+    static List<Integer> unpublishedWeekdays(List<PtScheduleItem> slots, LocalDate start, LocalDateTime now) {
+        LocalDate windowEnd = start.plusDays(TIME_WINDOW_DAYS - 1);
+        List<Integer> missing = new ArrayList<>(List.of(1, 2, 3, 4, 5));
+        for (PtScheduleItem slot : slots) {
+            boolean inWindow = !slot.getSlotDate().isAfter(windowEnd);
+            boolean free = "Free".equals(slot.getKind());
+            boolean future = slot.getSlotDate().atTime(slot.getStartTime()).isAfter(now);
+            if (inWindow && free && future) {
+                missing.remove(Integer.valueOf(slot.getSlotDate().getDayOfWeek().getValue()));
+            }
+        }
+        return missing;
+    }
+
+    /**
+     * HÀM PHỤ (loadPlan) — gộp giờ lễ tân tự chọn (customTimes = giờ từ lịch mẫu t1..t5 + giờ sửa riêng từng buổi trong sessions)
+     * vào danh sách giờ chọn được. Chỉ giữ giờ HỢP LỆ (isValidStartTime) → giờ này sẽ thành buổi "create"
+     * (cần tick "Đã xác nhận với PT"). Nhờ vậy lễ tân bán được gói ở giờ PT chưa kịp công bố khung.
+     */
+    static List<LocalTime> mergeCustomTimes(List<LocalTime> published, List<LocalTime> customTimes, int minutes,
+            LocalTime open, LocalTime close) {
+        TreeSet<LocalTime> merged = new TreeSet<>(published);
+        if (customTimes != null) {
+            for (LocalTime time : customTimes) {
+                if (isValidStartTime(time, minutes, open, close)) {
+                    merged.add(time);
+                }
+            }
+        }
+        return new ArrayList<>(merged);
+    }
+
+    /**
+     * HÀM PHỤ (mergeCustomTimes) — giờ bắt đầu hợp lệ cho 1 buổi PT do LỄ TÂN TỰ NHẬP (không cần PT đã công bố khung):
+     *   trong giờ mở cửa (P-19), đúng mốc 15 phút, và khung (giờ → giờ + minutes) vẫn kết thúc trước giờ đóng cửa.
+     * open/close null (P-19 lỗi cấu hình) → không giờ nào hợp lệ.
+     */
+    static boolean isValidStartTime(LocalTime time, int minutes, LocalTime open, LocalTime close) {
+        if (time == null || open == null || close == null) {
+            return false;
+        }
+        if (minutes <= 0 || minutes >= 24 * 60) {
+            return false;
+        }
+        LocalTime end = time.plusMinutes(minutes);
+        if (time.isBefore(open) || !end.isAfter(time) || end.isAfter(close)) {
+            return false;
+        }
+        return time.toSecondOfDay() % (15 * 60) == 0;   // cùng mốc 15 phút với khung PT công bố
+    }
+
+    /** HÀM PHỤ (loadPlan) — [18:00, 06:00] → ["06:00", "18:00"] (xếp tăng dần). Cho PtSalePlan.published — JS tô xanh giờ PT đã mở. */
+    static List<String> formatTimes(List<LocalTime> times) {
+        List<String> texts = new ArrayList<>();
+        for (LocalTime time : times) {
+            texts.add(DateTimeUtil.formatTime(time));
+        }
+        return texts;
+    }
+
+    /**
+     * HÀM PHỤ (loadPlan khi xem) — dữ liệu Lịch tập cho trình duyệt: mỗi ngày T2–T6 trong kỳ × mỗi giờ chọn được → có buổi được không (+ lý do).
+     * Trình duyệt ghép "lịch mẫu" + "sửa từng buổi" trên dữ liệu này; hold() vẫn kiểm tra lại bằng checkRequested.
+     */
+    static PtSalePlan buildPlan(LocalDate start, LocalDate end, int minutes, long price, List<LocalTime> candidates,
+            List<PtScheduleItem> slots, List<LeaveInfo> leaves, List<HourException> exceptions,
+            List<TimeRange> busy, LocalDateTime now) {
+        PtSalePlan plan = new PtSalePlan();
+        plan.setStart(start.toString());
+        plan.setEnd(end.toString());
+        plan.setPrice(price);
+        plan.setMinutes(minutes);
+        for (LocalTime time : candidates) {
+            plan.getTimes().add(DateTimeUtil.formatTime(time));
+        }
+        Map<LocalDate, List<PtScheduleItem>> byDate = slotsByDate(slots);
+        for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
+            if (!isWeekday(date)) {
+                continue;
+            }
+            List<PtScheduleItem> sameDay = byDate.getOrDefault(date, List.of());
+            PtSalePlan.Day day = new PtSalePlan.Day(date.toString(), date.getDayOfWeek().getValue(),
+                    PtSessionHandleService.dayLabel(date));
+            for (LocalTime time : dayTimes(candidates, sameDay, minutes)) {
+                PtSaleDay check = checkDay(date, time, minutes, sameDay, leaves, exceptions, busy, now);
+                boolean fresh = "create".equals(check.getAction());   // PT chưa có khung giờ này ngày đó → sẽ tạo mới
+                day.getOptions().add(new PtSalePlan.Option(DateTimeUtil.formatTime(time),
+                        DateTimeUtil.formatTime(check.getEndTime()), check.isSession(), check.getReason(), check.getWarning(),
+                        fresh));
+            }
+            plan.getDays().add(day);
+        }
+        return plan;
+    }
+
+    /**
+     * HÀM PHỤ (buildPlan, checkRequested) — giờ chọn được trong 1 ngày = giờ của lịch mẫu (candidates) + khung Free đúng thời lượng PT công bố riêng ngày đó.
+     * Ví dụ lịch mẫu {09:30, 20:00}, riêng 29/10 PT mở thêm 14:00 → 29/10 chọn được {09:30, 14:00, 20:00}.
+     */
+    static List<LocalTime> dayTimes(List<LocalTime> candidates, List<PtScheduleItem> sameDay, int minutes) {
+        TreeSet<LocalTime> times = new TreeSet<>(candidates);
+        for (PtScheduleItem slot : sameDay) {
+            boolean rightLength = slot.getStartTime().plusMinutes(minutes).equals(slot.getEndTime());
+            if ("Free".equals(slot.getKind()) && rightLength) {
+                times.add(slot.getStartTime());
+            }
+        }
+        return new ArrayList<>(times);
+    }
+
+    /**
+     * HÀM PHỤ (buildPlan, checkRequested) — 1 ngày + 1 giờ → có buổi được không (luật DUY NHẤT, dùng cả lúc xem lẫn lúc giữ chỗ).
+     *   skip    đã qua giờ · khách có buổi khác trùng giờ · PT đã có khách / đang giữ / đã gỡ khung đúng giờ này
+     *           · PT có khung khác chồng giờ · khung cũ khác thời lượng
+     *   book    PT có khung Free đúng giờ → giữ khung đó
+     *   create  PT chưa có khung giờ này → tạo khung mới
+     * warning: có buổi nhưng PT cần dời sau (ngày phòng nghỉ, PT có đơn nghỉ trùng ca).
+     */
+    static PtSaleDay checkDay(LocalDate date, LocalTime time, int minutes, List<PtScheduleItem> sameDay,
+            List<LeaveInfo> leaves, List<HourException> exceptions, List<TimeRange> busy, LocalDateTime now) {
+        String label = PtSessionHandleService.dayLabel(date);
+        LocalTime endTime = time.plusMinutes(minutes);
+        String skip = whySkip(date, time, endTime, sameDay, busy, now);
+        if (skip != null) {
+            return new PtSaleDay(date, label, time, endTime, "skip", null, skip, null);
+        }
+        PtScheduleItem exact = null;
+        for (PtScheduleItem slot : sameDay) {
+            if (slot.getStartTime().equals(time) && slot.getEndTime().equals(endTime) && "Free".equals(slot.getKind())) {
+                exact = slot;
+            }
+        }
+        String warning = warningFor(date, time, leaves, exceptions);
+        return new PtSaleDay(date, label, time, endTime, exact != null ? "book" : "create",
+                exact == null ? null : exact.getTimeSlotId(), null, warning);
+    }
+
+    /** HÀM PHỤ (checkDay) — lý do ngày + giờ này KHÔNG xếp buổi được; null = được. Chữ này in ra ô lịch ("Chưa xếp được"). */
+    private static String whySkip(LocalDate date, LocalTime time, LocalTime endTime, List<PtScheduleItem> sameDay,
+            List<TimeRange> busy, LocalDateTime now) {
+        if (!date.atTime(time).isAfter(now)) {
+            return "Đã qua giờ";
+        }
+        TimeRange range = new TimeRange(date, time, endTime);
+        for (TimeRange other : busy) {
+            if (other.overlaps(range)) {
+                return "Khách có buổi khác trùng giờ";
+            }
+        }
+        for (PtScheduleItem slot : sameDay) {
+            boolean sameStart = slot.getStartTime().equals(time);
+            String kind = slot.getKind();
+            if (sameStart && "Booked".equals(kind)) {
+                return "PT đã có khách giờ này";
+            }
+            if (sameStart && "Held".equals(kind)) {
+                return "Đang được giữ cho đơn khác";
+            }
+            if (sameStart && "Withdrawn".equals(kind)) {
+                return "PT đã gỡ khung giờ này";
+            }
+            if (sameStart && !slot.getEndTime().equals(endTime)) {
+                return "Khung cũ khác thời lượng";
+            }
+            boolean overlap = new TimeRange(date, slot.getStartTime(), slot.getEndTime()).overlaps(range);
+            if (!sameStart && overlap && !"Withdrawn".equals(kind)) {
+                return "PT có khung khác chồng giờ";
+            }
+        }
+        return null;
+    }
+
+    /** HÀM PHỤ (checkDay) — có buổi nhưng cảnh báo vàng: phòng nghỉ cả ngày / PT có đơn nghỉ trùng giờ. */
+    private static String warningFor(LocalDate date, LocalTime time, List<LeaveInfo> leaves, List<HourException> exceptions) {
+        for (HourException exception : exceptions) {
+            if (date.equals(exception.getApplyDate()) && exception.isClosedAllDay()) {
+                return "Phòng nghỉ ngày này — PT cần dời buổi";
+            }
+        }
+        PtScheduleItem candidate = new PtScheduleItem();
+        candidate.setSlotDate(date);
+        candidate.setStartTime(time);
+        return PtScheduleService.isOnLeave(candidate, leaves) ? "PT có đơn nghỉ — PT cần dời buổi" : null;
+    }
+
+    /** HÀM PHỤ — gom khung của PT theo ngày (buildPlan + checkRequested dùng). */
+    static Map<LocalDate, List<PtScheduleItem>> slotsByDate(List<PtScheduleItem> slots) {
+        Map<LocalDate, List<PtScheduleItem>> byDate = new HashMap<>();
+        for (PtScheduleItem slot : slots) {
+            byDate.computeIfAbsent(slot.getSlotDate(), k -> new ArrayList<>()).add(slot);
+        }
+        return byDate;
+    }
+
+    /**
+     * HÀM PHỤ (prepare) — gọi ở cuối prepare (khi KHÔNG mở đơn cụ thể ?order=).
+     * Liệt kê đơn tại quầy đang giữ chỗ chưa hết hạn → JSP hiện danh sách "Đơn đang giữ" để lễ tân tìm lại
+     * sau khi bấm Back / đăng xuất mà mất URL ?order= (không mất dữ liệu, chỉ mất đường dẫn).
+     */
+    private List<PtSaleView.PendingHold> loadPendingHolds(Connection connection, LocalDateTime now) throws SQLException {
+        List<PtSaleDAO.HeldOrder> active = saleDAO.findActiveHoldOrders(connection, now);
+        List<PtSaleView.PendingHold> holds = new ArrayList<>();
+        for (PtSaleDAO.HeldOrder order : active) {
+            long secondsLeft = Math.max(0, Duration.between(now, order.expiresAt).getSeconds());
+            holds.add(new PtSaleView.PendingHold(order.orderId, order.orderCode, secondsLeft));
+        }
+        return holds;
+    }
+
+    /** HÀM PHỤ (prepare có ?order=) — dựng màn từ đơn đang giữ (không cần URL đủ 6 lựa chọn). Đơn hết giữ → câu lỗi. */
     private String loadHeld(Connection connection, PtSaleView view, int orderId, LocalDateTime now) throws SQLException {
         HeldOrder held = saleDAO.findHeldOrder(connection, orderId, false);
         if (held == null || !"Pending".equals(held.status) || held.slots.isEmpty() || held.expiresAt == null) {
@@ -646,13 +704,82 @@ public class PtSaleService {
         return null;
     }
 
-    private boolean isCustomerPerson(PtSaleView view, int personId) {
-        boolean holder = view.getHolder() != null && view.getHolder().getPersonId() == personId;
-        boolean partner = view.getPartner() != null && view.getPartner().getPersonId() == personId;
-        return holder || partner;
+
+    // ============================================================================================================
+    // HÀM CHÍNH 3. hold — nút "Giữ lịch 15 phút" (POST action=hold)
+    //   Ai gọi: PtSaleServlet.doPost  ·  Ra: mã đơn (Servlet redirect ?order=…) hoặc câu lỗi
+    //   Dùng lại build/loadPlan của prepare (lock = true). Hàm phụ riêng ngay dưới:
+    //     firstProblem · countNewSlots · checkRequested · parseSessions · openShiftId
+    // ============================================================================================================
+
+    /**
+     * HÀM CHÍNH 3 — nút "Giữ lịch 15 phút".
+     *   AI GỌI   PtSaleServlet.doPost (action=hold)
+     *   VÀO      accountId · input (giống prepare + sessions = "2026-11-03@09:30,…" + confirmPt) · now
+     *   RA       ok(mã đơn, MSG307) → Servlet redirect ?order=… · fail(câu lỗi) → Servlet hiện chữ đỏ "saleError"
+     *   BƯỚC (tất cả trong 1 transaction — lỗi ở đâu cũng rollback, không ghi gì)
+     *            1. releaseExpired (ngoài transaction)
+     *            2. requireReceptionist → lockPt: KHÓA dòng PT, lễ tân khác / PT đang Công bố phải chờ
+     *            3. build(lock = true): làm lại các bước + checkRequested kiểm lại TỪNG buổi gửi lên
+     *            4. firstProblem ≠ null → từ chối · có buổi "PT chưa mở" mà không tích xác nhận → từ chối
+     *            5. openShiftId: chưa mở ca → MSG109, ca ngày trước → MSG324
+     *            6. nextOrderCode + insertPendingOrder        → Orders: thêm 1 dòng Pending
+     *            7. mỗi buổi: "book" → holdFreeSlot           → TimeSlots: Free → Held (+ HoldExpiresAt = now + 15')
+     *                         "create" → insertHeldSlot       → TimeSlots: thêm 1 dòng Held
+     */
+    public ServiceResult<Integer> hold(int accountId, Input input, LocalDateTime now) {
+        try {
+            releaseExpired(now);
+        } catch (SQLException exception) {
+            exception.printStackTrace();
+            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+        }
+        return inTransaction(connection -> {
+            int[] receptionist = requireReceptionist(connection, accountId);
+            PtSaleView view = newView(input, now);
+            if (view.getPtId() != null) {
+                saleDAO.lockPt(connection, view.getPtId());      // xếp hàng với lễ tân khác / PT đang Công bố
+            }
+            build(connection, view, input, receptionist[1], now, true);
+            String problem = firstProblem(view);
+            if (problem != null) {
+                throw new IllegalArgumentException(problem);
+            }
+            // Buổi PT chưa mở khung (giữ lịch sẽ tự tạo khung mới) → lễ tân phải hỏi PT rồi tích xác nhận.
+            int unconfirmed = countNewSlots(view.getDays());
+            if (unconfirmed > 0 && !input.confirmPt) {
+                throw new IllegalArgumentException("Có " + unconfirmed + " buổi PT chưa mở khung giờ đó. "
+                        + "Hỏi PT rồi tích \"Đã xác nhận với PT\" trước khi giữ lịch.");
+            }
+
+            // Ca đang mở (đơn tại quầy bắt buộc thuộc 1 ca). Chưa mở ca → MSG109, giống Bán hàng tại quầy.
+            int shiftId = openShiftId(Messages.MSG109_SHIFT_NOT_OPEN_FOR_SALE);
+            PackageRow pkg = saleDAO.findPackage(connection, view.getPackageId());
+            int vatRate = configService.getInt(SystemConfigService.VAT_PERCENT);
+            String code = saleDAO.nextOrderCode(connection, now.getYear());
+            Integer partnerId = view.getPartner() == null ? null : view.getPartner().getCustomerId();
+            int orderId = saleDAO.insertPendingOrder(connection, code, view.getHolder().getCustomerId(), partnerId, pkg,
+                    receptionist[0], shiftId, vatRate, vatAmount(pkg.price, vatRate), now);
+
+            LocalDateTime expires = now.plusMinutes(HOLD_MINUTES);
+            for (PtSaleDay day : view.getDays()) {
+                if (!day.isSession()) {
+                    continue;
+                }
+                if ("book".equals(day.getAction())) {
+                    if (!saleDAO.holdFreeSlot(connection, day.getSlotId(), view.getPtId(), orderId, expires)) {
+                        throw new IllegalArgumentException(day.getDayLabel() + ": " + Messages.MSG103_SLOT_ALREADY_TAKEN);
+                    }
+                } else {
+                    saleDAO.insertHeldSlot(connection, view.getPtId(), day.getDate(), day.getStartTime(), day.getEndTime(),
+                            orderId, expires, now);
+                }
+            }
+            return ServiceResult.ok(orderId, String.format(Messages.MSG307_PT_SALE_HELD, view.getSessionCount(), HOLD_MINUTES, code));
+        });
     }
 
-    /** Câu lỗi đầu tiên chặn việc giữ chỗ (theo thứ tự bước); null = giữ được. */
+    /** HÀM PHỤ (hold) — câu lỗi đầu tiên chặn việc giữ chỗ (theo thứ tự bước); null = giữ được. */
     static String firstProblem(PtSaleView view) {
         if (view.getHolder() == null) {
             return view.getHolderError() != null ? view.getHolderError() : "Chọn khách trước.";
@@ -678,132 +805,8 @@ public class PtSaleService {
         return view.isReady() ? null : "Chọn ít nhất 1 buổi tập.";
     }
 
-
-    // ================================================================================================================
-    // PHẦN 3. LUẬT — static, không đọc DB (PtSaleServiceTest)
-    // ================================================================================================================
-
     /**
-     * Khách có mua được gói PT không? null = được.
-     *   không phải hồ sơ khách của chính lễ tân · đủ tuổi (P-05) · có gói thành viên phủ hôm nay (vé ngày không tính)
-     *   · hôm nay không bảo lưu (CBR-59, BR-37).
-     */
-    static String whyCannotBuy(PtSaleCustomer customer, LocalDate today, int minAge, int receptionistPersonId) {
-        if (customer.getPersonId() == receptionistPersonId) {
-            return "Lễ tân không tự bán gói cho hồ sơ khách của chính mình.";
-        }
-        if (DateTimeUtil.calculateAge(customer.getDateOfBirth(), today) < minAge) {
-            return "Chưa đủ " + minAge + " tuổi để mua gói PT.";
-        }
-        if (customer.getMembershipEnd() == null) {
-            return "Chưa có gói thành viên còn hạn hôm nay. Bán gói thành viên trước.";
-        }
-        if (customer.isFrozen()) {
-            return "Đang bảo lưu gói thành viên.";
-        }
-        return null;
-    }
-
-    /** Lý do không thu tiền được đơn đang giữ; null = thu được. */
-    static String whyCannotPay(HeldOrder held, LocalDate start, LocalDateTime now) {
-        if (held == null || !"Pending".equals(held.status)) {
-            return "Đơn này không còn chờ thu tiền.";
-        }
-        if (held.slots.isEmpty() || held.expiresAt == null || !held.expiresAt.isAfter(now)) {
-            return "Đã quá " + HOLD_MINUTES + " phút giữ chỗ. Giữ lại lịch rồi thu tiền.";
-        }
-        LocalDate first = held.slots.get(0).getSlotDate();
-        if (start == null || start.isAfter(first) || start.plusDays(TIME_WINDOW_DAYS).isBefore(first)) {
-            return "Ngày bắt đầu không khớp lịch đang giữ. Hủy giữ chỗ rồi làm lại.";
-        }
-        return null;
-    }
-
-    /**
-     * Giờ của "lịch mẫu" = giờ bắt đầu của các khung Free (đúng P-06 phút, chưa qua giờ) PT đã công bố
-     * vào T2–T6 trong 14 ngày đầu kỳ (CBR-52: lịch phải nằm trong giờ PT đã công bố). Xếp tăng dần.
-     */
-    static List<LocalTime> candidateTimes(List<PtScheduleItem> slots, LocalDate start, int minutes, LocalDateTime now) {
-        LocalDate windowEnd = start.plusDays(TIME_WINDOW_DAYS - 1);
-        TreeMap<LocalTime, Boolean> times = new TreeMap<>();
-        for (PtScheduleItem slot : slots) {
-            boolean inWindow = !slot.getSlotDate().isAfter(windowEnd) && isWeekday(slot.getSlotDate());
-            boolean free = "Free".equals(slot.getKind());
-            boolean rightLength = slot.getStartTime().plusMinutes(minutes).equals(slot.getEndTime());
-            boolean future = slot.getSlotDate().atTime(slot.getStartTime()).isAfter(now);
-            if (inWindow && free && rightLength && future) {
-                times.put(slot.getStartTime(), true);
-            }
-        }
-        return new ArrayList<>(times.keySet());
-    }
-
-    /**
-     * Thứ (1 = Thứ 2 … 5 = Thứ 6) mà PT CHƯA công bố khung Free nào (chưa qua giờ) trong 14 ngày đầu kỳ.
-     * Ví dụ PT chỉ mở Thứ 2, 4, 6 → [2, 4]. Chỉ để in hộp nhắc; việc bắt tích xác nhận xét theo TỪNG BUỔI (countNewSlots).
-     */
-    static List<Integer> unpublishedWeekdays(List<PtScheduleItem> slots, LocalDate start, LocalDateTime now) {
-        LocalDate windowEnd = start.plusDays(TIME_WINDOW_DAYS - 1);
-        List<Integer> missing = new ArrayList<>(List.of(1, 2, 3, 4, 5));
-        for (PtScheduleItem slot : slots) {
-            boolean inWindow = !slot.getSlotDate().isAfter(windowEnd);
-            boolean free = "Free".equals(slot.getKind());
-            boolean future = slot.getSlotDate().atTime(slot.getStartTime()).isAfter(now);
-            if (inWindow && free && future) {
-                missing.remove(Integer.valueOf(slot.getSlotDate().getDayOfWeek().getValue()));
-            }
-        }
-        return missing;
-    }
-
-    /**
-     * Giờ bắt đầu hợp lệ cho 1 buổi PT do LỄ TÂN TỰ NHẬP (không cần PT đã công bố khung):
-     *   trong giờ mở cửa (P-19), đúng mốc 15 phút, và khung (giờ → giờ + minutes) vẫn kết thúc trước giờ đóng cửa.
-     * open/close null (P-19 lỗi cấu hình) → không giờ nào hợp lệ.
-     */
-    static boolean isValidStartTime(LocalTime time, int minutes, LocalTime open, LocalTime close) {
-        if (time == null || open == null || close == null) {
-            return false;
-        }
-        if (minutes <= 0 || minutes >= 24 * 60) {
-            return false;
-        }
-        LocalTime end = time.plusMinutes(minutes);
-        if (time.isBefore(open) || !end.isAfter(time) || end.isAfter(close)) {
-            return false;
-        }
-        return time.toSecondOfDay() % (15 * 60) == 0;   // cùng mốc 15 phút với khung PT công bố
-    }
-
-    /**
-     * Gộp giờ lễ tân tự chọn (customTimes = giờ từ lịch mẫu t1..t5 + giờ sửa riêng từng buổi trong sessions)
-     * vào danh sách giờ chọn được. Chỉ giữ giờ HỢP LỆ (isValidStartTime) → giờ này sẽ thành buổi "create"
-     * (cần tick "Đã xác nhận với PT"). Nhờ vậy lễ tân bán được gói ở giờ PT chưa kịp công bố khung.
-     */
-    static List<LocalTime> mergeCustomTimes(List<LocalTime> published, List<LocalTime> customTimes, int minutes,
-            LocalTime open, LocalTime close) {
-        TreeSet<LocalTime> merged = new TreeSet<>(published);
-        if (customTimes != null) {
-            for (LocalTime time : customTimes) {
-                if (isValidStartTime(time, minutes, open, close)) {
-                    merged.add(time);
-                }
-            }
-        }
-        return new ArrayList<>(merged);
-    }
-
-    /** [18:00, 06:00] → ["06:00", "18:00"] (xếp tăng dần). Cho PtSalePlan.published — JS tô xanh giờ PT đã mở. */
-    static List<String> formatTimes(List<LocalTime> times) {
-        List<String> texts = new ArrayList<>();
-        for (LocalTime time : times) {
-            texts.add(DateTimeUtil.formatTime(time));
-        }
-        return texts;
-    }
-
-    /**
-     * Đếm số buổi "create" = ngày đó PT CHƯA có khung đúng giờ này → giữ lịch sẽ tự tạo khung mới.
+     * HÀM PHỤ (hold) — đếm số buổi "create" = ngày đó PT CHƯA có khung đúng giờ này → giữ lịch sẽ tự tạo khung mới.
      * Ví dụ PT Thứ 5 chỉ mở 09:00, lễ tân chọn Thứ 5 18:00 → mỗi Thứ 5 là 1 buổi "create". hold() bắt tích "Đã xác nhận với PT".
      */
     static int countNewSlots(List<PtSaleDay> days) {
@@ -816,94 +819,8 @@ public class PtSaleService {
         return count;
     }
 
-    /** Gom khung của PT theo ngày (buildPlan + checkRequested dùng). */
-    static Map<LocalDate, List<PtScheduleItem>> slotsByDate(List<PtScheduleItem> slots) {
-        Map<LocalDate, List<PtScheduleItem>> byDate = new HashMap<>();
-        for (PtScheduleItem slot : slots) {
-            byDate.computeIfAbsent(slot.getSlotDate(), k -> new ArrayList<>()).add(slot);
-        }
-        return byDate;
-    }
-
     /**
-     * 1 ngày + 1 giờ → có buổi được không (luật DUY NHẤT, dùng cả lúc xem lẫn lúc giữ chỗ).
-     *   skip    đã qua giờ · khách có buổi khác trùng giờ · PT đã có khách / đang giữ / đã gỡ khung đúng giờ này
-     *           · PT có khung khác chồng giờ · khung cũ khác thời lượng
-     *   book    PT có khung Free đúng giờ → giữ khung đó
-     *   create  PT chưa có khung giờ này → tạo khung mới
-     * warning: có buổi nhưng PT cần dời sau (ngày phòng nghỉ, PT có đơn nghỉ trùng ca).
-     */
-    static PtSaleDay checkDay(LocalDate date, LocalTime time, int minutes, List<PtScheduleItem> sameDay,
-            List<LeaveInfo> leaves, List<HourException> exceptions, List<TimeRange> busy, LocalDateTime now) {
-        String label = PtSessionHandleService.dayLabel(date);
-        LocalTime endTime = time.plusMinutes(minutes);
-        String skip = whySkip(date, time, endTime, sameDay, busy, now);
-        if (skip != null) {
-            return new PtSaleDay(date, label, time, endTime, "skip", null, skip, null);
-        }
-        PtScheduleItem exact = null;
-        for (PtScheduleItem slot : sameDay) {
-            if (slot.getStartTime().equals(time) && slot.getEndTime().equals(endTime) && "Free".equals(slot.getKind())) {
-                exact = slot;
-            }
-        }
-        String warning = warningFor(date, time, leaves, exceptions);
-        return new PtSaleDay(date, label, time, endTime, exact != null ? "book" : "create",
-                exact == null ? null : exact.getTimeSlotId(), null, warning);
-    }
-
-    /**
-     * Giờ chọn được trong 1 ngày = giờ của lịch mẫu (candidates) + khung Free đúng thời lượng PT công bố riêng ngày đó.
-     * Ví dụ lịch mẫu {09:30, 20:00}, riêng 29/10 PT mở thêm 14:00 → 29/10 chọn được {09:30, 14:00, 20:00}.
-     */
-    static List<LocalTime> dayTimes(List<LocalTime> candidates, List<PtScheduleItem> sameDay, int minutes) {
-        TreeSet<LocalTime> times = new TreeSet<>(candidates);
-        for (PtScheduleItem slot : sameDay) {
-            boolean rightLength = slot.getStartTime().plusMinutes(minutes).equals(slot.getEndTime());
-            if ("Free".equals(slot.getKind()) && rightLength) {
-                times.add(slot.getStartTime());
-            }
-        }
-        return new ArrayList<>(times);
-    }
-
-    /**
-     * Dữ liệu bước 3 cho trình duyệt: mỗi ngày T2–T6 trong kỳ × mỗi giờ chọn được → có buổi được không (+ lý do).
-     * Trình duyệt ghép "lịch mẫu" + "sửa từng buổi" trên dữ liệu này; hold() vẫn kiểm tra lại bằng checkRequested.
-     */
-    static PtSalePlan buildPlan(LocalDate start, LocalDate end, int minutes, long price, List<LocalTime> candidates,
-            List<PtScheduleItem> slots, List<LeaveInfo> leaves, List<HourException> exceptions,
-            List<TimeRange> busy, LocalDateTime now) {
-        PtSalePlan plan = new PtSalePlan();
-        plan.setStart(start.toString());
-        plan.setEnd(end.toString());
-        plan.setPrice(price);
-        plan.setMinutes(minutes);
-        for (LocalTime time : candidates) {
-            plan.getTimes().add(DateTimeUtil.formatTime(time));
-        }
-        Map<LocalDate, List<PtScheduleItem>> byDate = slotsByDate(slots);
-        for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
-            if (!isWeekday(date)) {
-                continue;
-            }
-            List<PtScheduleItem> sameDay = byDate.getOrDefault(date, List.of());
-            PtSalePlan.Day day = new PtSalePlan.Day(date.toString(), date.getDayOfWeek().getValue(),
-                    PtSessionHandleService.dayLabel(date));
-            for (LocalTime time : dayTimes(candidates, sameDay, minutes)) {
-                PtSaleDay check = checkDay(date, time, minutes, sameDay, leaves, exceptions, busy, now);
-                boolean fresh = "create".equals(check.getAction());   // PT chưa có khung giờ này ngày đó → sẽ tạo mới
-                day.getOptions().add(new PtSalePlan.Option(DateTimeUtil.formatTime(time),
-                        DateTimeUtil.formatTime(check.getEndTime()), check.isSession(), check.getReason(), check.getWarning(),
-                        fresh));
-            }
-            plan.getDays().add(day);
-        }
-        return plan;
-    }
-
-    /**
-     * "Giữ lịch": kiểm tra lại TỪNG buổi lễ tân gửi lên bằng đúng luật checkDay, trên dữ liệu đã khóa.
+     * HÀM PHỤ (loadPlan khi lock = true) — kiểm tra lại TỪNG buổi lễ tân gửi lên bằng đúng luật checkDay, trên dữ liệu đã khóa.
      * Ra: các buổi (đều có buổi được). Sai ở đâu → IllegalArgumentException với câu lỗi chỉ đúng ngày đó.
      */
     static List<PtSaleDay> checkRequested(Map<LocalDate, LocalTime> requested, LocalDate start, LocalDate end, int minutes,
@@ -937,7 +854,7 @@ public class PtSaleService {
     }
 
     /**
-     * Ô ẩn "sessions" → các buổi. "2026-10-27@09:30,2026-10-29@18:00" → {27/10 → 09:30, 29/10 → 18:00}, xếp theo ngày.
+     * HÀM PHỤ (loadPlan) — ô ẩn "sessions" → các buổi. "2026-10-27@09:30,2026-10-29@18:00" → {27/10 → 09:30, 29/10 → 18:00}, xếp theo ngày.
      * Trống → rỗng. Sai định dạng hoặc 1 ngày 2 buổi → null.
      */
     static Map<LocalDate, LocalTime> parseSessions(String text) {
@@ -956,53 +873,118 @@ public class PtSaleService {
         return sessions;
     }
 
-    private static String whySkip(LocalDate date, LocalTime time, LocalTime endTime, List<PtScheduleItem> sameDay,
-            List<TimeRange> busy, LocalDateTime now) {
-        if (!date.atTime(time).isAfter(now)) {
-            return "Đã qua giờ";
+    /**
+     * HÀM PHỤ (hold, pay) — ca đang mở để ghi đơn — cùng cách với CounterSaleService: lấy ca hiện tại của hôm nay,
+     * chưa có ca hoặc ca chưa Open / đã chốt → từ chối bằng câu lỗi truyền vào (MSG109 khi giữ lịch, MSG110 khi thu tiền);
+     * ca đang mở là ca ngày trước → MSG324 (CBR-123).
+     * Hệ thống KHÔNG tự mở ca hộ lễ tân (CBR-105, BR-93): lễ tân mở ca ở màn Ca làm việc.
+     */
+    private int openShiftId(String notOpenMessage) throws SQLException {
+        Shift shift = shiftDAO.findCurrentOrActiveShift(DateTimeUtil.today());
+        if (shift == null || !shift.isOpen()) {
+            throw new IllegalArgumentException(notOpenMessage);
         }
-        TimeRange range = new TimeRange(date, time, endTime);
-        for (TimeRange other : busy) {
-            if (other.overlaps(range)) {
-                return "Khách có buổi khác trùng giờ";
-            }
+        // CBR-123: ca đang mở là ca ngày trước (quên chốt) → không ghi đơn hôm nay vào ca đó.
+        String pastDayShift = ShiftService.pastDayShiftMessage(shift, DateTimeUtil.today());
+        if (pastDayShift != null) {
+            throw new IllegalArgumentException(pastDayShift);
         }
-        for (PtScheduleItem slot : sameDay) {
-            boolean sameStart = slot.getStartTime().equals(time);
-            String kind = slot.getKind();
-            if (sameStart && "Booked".equals(kind)) {
-                return "PT đã có khách giờ này";
+        return shift.getShiftId();
+    }
+
+
+    // ============================================================================================================
+    // HÀM CHÍNH 4. pay — nút "Xác nhận đã thu tiền" (POST action=pay)
+    //   Ai gọi: PtSaleServlet.doPost  ·  Hàm phụ ngay dưới: whyCannotPay · mostCommonStart · notifySale · notify
+    // ============================================================================================================
+
+    /**
+     * HÀM CHÍNH 4 — nút "Xác nhận đã thu tiền" của đơn đang giữ.
+     *   AI GỌI   PtSaleServlet.doPost (action=pay)
+     *   VÀO      accountId · orderId (ô ẩn "order") · startText (ô ẩn "start" = ngày bắt đầu kỳ)
+     *            · method "Cash" | "Transfer" · reference (mã giao dịch, không bắt buộc) · now
+     *   RA       ok(MSG310) → toast xanh, trang trống · fail(câu lỗi) → toast đỏ, quay lại ?order=
+     *   BƯỚC     0. method sai → MSG308 · mã giao dịch > 50 ký tự → MSG309 (chưa mở transaction)
+     *            1. findHeldOrder(lock = true): KHÓA đơn + khung → 2 lễ tân cùng bấm: người sau thấy Paid rồi
+     *            2. whyCannotPay: hết Pending / quá 15' / ngày bắt đầu lệch → từ chối
+     *            3. openShiftId: chưa mở ca → MSG110, ca ngày trước → MSG324
+     *            4. markOrderPaid + insertTransaction         → Orders: Pending → Paid · Transactions: thêm 1 dòng Success
+     *            5. insertSubscription                        → Subscriptions: thêm 1 dòng Active (số buổi = số khung giữ)
+     *            6. mỗi khung: bookHeldSlot + insertSession   → TimeSlots: Held → Booked · Sessions: thêm 1 dòng Scheduled
+     *            7. notifySale                                → Notifications cho khách (+ người tập cùng) và PT
+     */
+    public ServiceResult<Integer> pay(int accountId, int orderId, String startText, String method, String reference,
+            LocalDateTime now) {
+        if (!"Cash".equals(method) && !"Transfer".equals(method)) {
+            return ServiceResult.fail(Messages.MSG308_PT_SALE_METHOD_REQUIRED);
+        }
+        String ref = reference == null || reference.isBlank() || "Cash".equals(method) ? null : reference.trim();
+        if (ref != null && ref.length() > 50) {
+            return ServiceResult.fail(Messages.MSG309_PT_SALE_REFERENCE_LENGTH);
+        }
+        LocalDate start = parseDate(startText);
+
+        return inTransaction(connection -> {
+            int[] receptionist = requireReceptionist(connection, accountId);
+            HeldOrder held = saleDAO.findHeldOrder(connection, orderId, true);
+            String problem = whyCannotPay(held, start, now);
+            if (problem != null) {
+                throw new IllegalArgumentException(problem);
             }
-            if (sameStart && "Held".equals(kind)) {
-                return "Đang được giữ cho đơn khác";
+            // B0: phải có ca đang mở mới thu tiền (CBR-105, BR-93) — giống Bán hàng tại quầy.
+            openShiftId(Messages.MSG110_SHIFT_NOT_OPEN_FOR_PAYMENT);
+
+            // B1: đơn Paid + giao dịch Success (người nhận = lễ tân đang bấm).
+            PackageRow pkg = saleDAO.findPackage(connection, held.packageId);
+            if (pkg == null) {
+                throw new IllegalArgumentException("Gói này không còn bán. Hủy giữ chỗ rồi chọn gói khác.");
             }
-            if (sameStart && "Withdrawn".equals(kind)) {
-                return "PT đã gỡ khung giờ này";
+            if (!saleDAO.markOrderPaid(connection, orderId, now)) {
+                throw new IllegalArgumentException("Đơn này không còn chờ thu tiền.");
             }
-            if (sameStart && !slot.getEndTime().equals(endTime)) {
-                return "Khung cũ khác thời lượng";
+            saleDAO.insertTransaction(connection, orderId, held.price, method, ref, receptionist[0], now);
+
+            // B2: gói PT. Số buổi = số khung đang giữ; giá trị buổi = giá ÷ số buổi (DBR-59).
+            LocalDate end = DateTimeUtil.calculateEndDateByMonths(start, pkg.months);
+            int count = held.slots.size();
+            int maxSwaps = configService.getInt(SystemConfigService.MAX_SWAP_COUNT) * pkg.months;
+            int subscriptionId = saleDAO.insertSubscription(connection, orderId, held.holderId, pkg.type, held.ptId,
+                    start, end, mostCommonStart(held.slots), count, maxSwaps);
+
+            // B3: từng buổi: khung Held → Booked + buổi Scheduled.
+            PtRow pt = saleDAO.findPt(connection, held.ptId);
+            int rate = pt == null ? 0 : pt.commissionRate;
+            long value = sessionValue(held.price, count);
+            long commission = Math.round(value * rate / 100.0);
+            for (PtScheduleItem slot : held.slots) {
+                if (!saleDAO.bookHeldSlot(connection, slot.getTimeSlotId(), orderId)) {
+                    throw new IllegalArgumentException(Messages.MSG103_SLOT_ALREADY_TAKEN);
+                }
+                saleDAO.insertSession(connection, subscriptionId, slot.getTimeSlotId(), held.ptId, value, commission);
             }
-            boolean overlap = new TimeRange(date, slot.getStartTime(), slot.getEndTime()).overlaps(range);
-            if (!sameStart && overlap && !"Withdrawn".equals(kind)) {
-                return "PT có khung khác chồng giờ";
-            }
+
+            // B4: thông báo khách (+ người tập cùng) và PT.
+            notifySale(connection, held, pkg, pt == null ? "PT" : pt.fullName, start, end, count, now);
+            return ServiceResult.ok(orderId, String.format(Messages.MSG310_PT_SALE_PAID, money(held.price), held.orderCode, count));
+        });
+    }
+
+    /** HÀM PHỤ (pay) — lý do không thu tiền được đơn đang giữ; null = thu được. */
+    static String whyCannotPay(HeldOrder held, LocalDate start, LocalDateTime now) {
+        if (held == null || !"Pending".equals(held.status)) {
+            return "Đơn này không còn chờ thu tiền.";
+        }
+        if (held.slots.isEmpty() || held.expiresAt == null || !held.expiresAt.isAfter(now)) {
+            return "Đã quá " + HOLD_MINUTES + " phút giữ chỗ. Giữ lại lịch rồi thu tiền.";
+        }
+        LocalDate first = held.slots.get(0).getSlotDate();
+        if (start == null || start.isAfter(first) || start.plusDays(TIME_WINDOW_DAYS).isBefore(first)) {
+            return "Ngày bắt đầu không khớp lịch đang giữ. Hủy giữ chỗ rồi làm lại.";
         }
         return null;
     }
 
-    private static String warningFor(LocalDate date, LocalTime time, List<LeaveInfo> leaves, List<HourException> exceptions) {
-        for (HourException exception : exceptions) {
-            if (date.equals(exception.getApplyDate()) && exception.isClosedAllDay()) {
-                return "Phòng nghỉ ngày này — PT cần dời buổi";
-            }
-        }
-        PtScheduleItem candidate = new PtScheduleItem();
-        candidate.setSlotDate(date);
-        candidate.setStartTime(time);
-        return PtScheduleService.isOnLeave(candidate, leaves) ? "PT có đơn nghỉ — PT cần dời buổi" : null;
-    }
-
-    /** Giờ bắt đầu xuất hiện nhiều nhất → Subscriptions.FixedStartTime (giờ "chính" của gói). */
+    /** HÀM PHỤ (pay) — giờ bắt đầu xuất hiện nhiều nhất → Subscriptions.FixedStartTime (giờ "chính" của gói). */
     static LocalTime mostCommonStart(List<PtScheduleItem> slots) {
         Map<LocalTime, Integer> counts = new TreeMap<>();
         for (PtScheduleItem slot : slots) {
@@ -1019,6 +1001,125 @@ public class PtSaleService {
         return best;
     }
 
+    /** HÀM PHỤ (pay, bước 7) — 1 thông báo cho khách (+ người tập cùng), 1 cho PT. Hồ sơ không có tài khoản → bỏ qua. */
+    private void notifySale(Connection connection, HeldOrder held, PackageRow pkg, String ptName, LocalDate start,
+            LocalDate end, int count, LocalDateTime now) throws SQLException {
+        String term = DateTimeUtil.formatDate(start) + " – " + DateTimeUtil.formatDate(end);
+        int partnerId = held.partnerId == null ? held.holderId : held.partnerId;
+        notify(connection, saleDAO.findCustomerAccounts(connection, held.holderId, partnerId), "Gói PT mới đã kích hoạt",
+                pkg.name + " với " + ptName + ": " + count + " buổi, " + term + ". Mã đơn " + held.orderCode + ".");
+        Integer ptAccount = notificationDAO.findActiveAccountIdByEmployeeId(connection, held.ptId);
+        if (ptAccount != null) {
+            PtSaleCustomer holder = saleDAO.findCustomer(connection, held.holderId, now.toLocalDate());
+            notify(connection, List.of(ptAccount), "Bạn có khách gói PT mới",
+                    (holder == null ? "Khách" : holder.getFullName()) + " mua " + pkg.name + ": " + count
+                            + " buổi, " + term + ". Xem trên Lịch dạy.");
+        }
+    }
+
+    /** HÀM PHỤ (notifySale) — 1 thông báo hệ thống + 1 người nhận cho mỗi tài khoản. Nội dung quá 500 ký tự thì cắt. */
+    private void notify(Connection connection, List<Integer> accountIds, String title, String content) throws SQLException {
+        if (accountIds.isEmpty()) {
+            return;
+        }
+        String text = content.length() > 500 ? content.substring(0, 497) + "..." : content;
+        int notificationId = notificationDAO.insertSystemNotification(connection, title, text);
+        for (int accountId : accountIds) {
+            notificationDAO.insertRecipient(connection, notificationId, accountId);
+        }
+    }
+
+
+    // ============================================================================================================
+    // HÀM CHÍNH 5. release — nút "Hủy giữ chỗ" (POST action=release)
+    //   Ai gọi: PtSaleServlet.doPost  ·  Gọi xuống: PtSaleDAO.findHeldOrder, releaseHold
+    // ============================================================================================================
+
+    /**
+     * HÀM CHÍNH 5 — nút "Hủy giữ chỗ" (có hộp xác nhận ở JSP).
+     *   AI GỌI   PtSaleServlet.doPost (action=release)
+     *   RA       ok(MSG311) / fail("Đơn này không còn giữ chỗ.") → Servlet toast, về trang trống
+     *   GHI DB   1 transaction: Orders Pending → Cancelled · TimeSlots do lần giữ tạo → xóa · khung có sẵn → Free
+     */
+    public ServiceResult<Integer> release(int accountId, int orderId, LocalDateTime now) {
+        return inTransaction(connection -> {
+            requireReceptionist(connection, accountId);
+            HeldOrder held = saleDAO.findHeldOrder(connection, orderId, true);
+            if (held == null || !"Pending".equals(held.status)) {
+                throw new IllegalArgumentException("Đơn này không còn giữ chỗ.");
+            }
+            saleDAO.releaseHold(connection, orderId, held.createdAt, RELEASE_REASON, now);
+            return ServiceResult.ok(orderId, String.format(Messages.MSG311_PT_SALE_RELEASED, held.orderCode));
+        });
+    }
+
+
+    // ============================================================================================================
+    // DÙNG CHUNG CHO CÁC HÀM CHÍNH
+    //   releaseExpired  nhả đơn giữ quá 15 phút (prepare + hold gọi đầu tiên)
+    //   inTransaction   chạy 1 khối ghi trong 1 transaction (hold, pay, release, releaseExpired)
+    //   requireReceptionist · sessionValue · vatAmount · money · isWeekday · parseId · parseDate · parseTime
+    // ============================================================================================================
+
+    /**
+     * DÙNG CHUNG (prepare, hold) — nhả mọi đơn giữ chỗ đã quá 15 phút, mỗi đơn 1 transaction nhỏ.
+     * Không có JOB nền: đơn quá hạn chỉ được nhả khi có người mở màn Bán gói PT hoặc bấm Giữ lịch.
+     */
+    void releaseExpired(LocalDateTime now) throws SQLException {
+        List<Integer> expired;
+        try (Connection connection = DBContext.getConnection()) {
+            expired = saleDAO.findExpiredHoldOrders(connection, now);
+        }
+        for (int orderId : expired) {
+            inTransaction(connection -> {
+                HeldOrder held = saleDAO.findHeldOrder(connection, orderId, true);
+                if (held != null && "Pending".equals(held.status)) {
+                    saleDAO.releaseHold(connection, orderId, held.createdAt, EXPIRED_REASON, now);
+                }
+                return ServiceResult.ok(orderId);
+            });
+        }
+    }
+
+    @FunctionalInterface
+    interface Work {
+        ServiceResult<Integer> run(Connection connection) throws SQLException;
+    }
+
+    /**
+     * DÙNG CHUNG (hold, pay, release, releaseExpired) — chạy work trong 1 transaction.
+     *   work chạy xong → commit · ném IllegalArgumentException → rollback + trả câu lỗi cho lễ tân
+     *   · SQLException / lỗi khác → rollback + MSG04 "Hệ thống đang bận".
+     */
+    private ServiceResult<Integer> inTransaction(Work work) {
+        try (Connection connection = DBContext.getConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                ServiceResult<Integer> result = work.run(connection);
+                connection.commit();
+                return result;
+            } catch (IllegalArgumentException exception) {
+                connection.rollback();
+                return ServiceResult.fail(exception.getMessage());
+            } catch (SQLException | RuntimeException exception) {
+                connection.rollback();
+                throw exception;
+            }
+        } catch (SQLException | IllegalStateException | DateTimeException exception) {
+            exception.printStackTrace();
+            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+        }
+    }
+
+    /** DÙNG CHUNG — tài khoản → [EmployeeId, PersonId] của lễ tân; không phải lễ tân → IllegalArgumentException(MSG07) → rollback. */
+    private int[] requireReceptionist(Connection connection, int accountId) throws SQLException {
+        int[] receptionist = saleDAO.findReceptionist(connection, accountId);
+        if (receptionist == null) {
+            throw new IllegalArgumentException(Messages.MSG07_NO_PERMISSION);
+        }
+        return receptionist;
+    }
+
     /** Giá trị 1 buổi = giá gói ÷ số buổi thật sự sinh ra, làm tròn đồng (DBR-59). */
     static long sessionValue(long price, int sessionCount) {
         return Math.round((double) price / sessionCount);
@@ -1029,22 +1130,18 @@ public class PtSaleService {
         return Math.round(price * (double) vatRate / (100 + vatRate));
     }
 
-    /** "Đinh Công Sơn" → "ĐS" (chữ đầu họ + chữ đầu tên). */
-    static String initials(String fullName) {
-        String[] parts = fullName.trim().split("\\s+");
-        String first = parts[0].substring(0, 1);
-        return parts.length == 1 ? first : first + parts[parts.length - 1].substring(0, 1);
+    /** 1500000 → "1.500.000đ" (in trong ô gói và câu MSG310). */
+    static String money(long amount) {
+        return NumberFormat.getInstance(Locale.forLanguageTag("vi-VN")).format(amount) + "đ";
     }
 
+    /** Thứ 2 → Thứ 6 (gói PT chỉ xếp buổi T2–T6). */
     private static boolean isWeekday(LocalDate date) {
         DayOfWeek day = date.getDayOfWeek();
         return day != DayOfWeek.SATURDAY && day != DayOfWeek.SUNDAY;
     }
 
-    static String money(long amount) {
-        return NumberFormat.getInstance(Locale.forLanguageTag("vi-VN")).format(amount) + "đ";
-    }
-
+    /** "12" → 12; trống / chữ / ≤ 0 → null (URL bị sửa tay không làm lỗi trang). */
     private static Integer parseId(String text) {
         try {
             int id = Integer.parseInt(text == null ? "" : text.trim());
@@ -1054,6 +1151,7 @@ public class PtSaleService {
         }
     }
 
+    /** "2026-11-03" → LocalDate; sai định dạng → null. */
     private static LocalDate parseDate(String text) {
         try {
             return text == null || text.isBlank() ? null : LocalDate.parse(text.trim());
@@ -1062,6 +1160,7 @@ public class PtSaleService {
         }
     }
 
+    /** "09:30" → LocalTime; trống / sai → null (= Nghỉ ở lịch mẫu). */
     private static LocalTime parseTime(String text) {
         try {
             return text == null || text.isBlank() ? null : LocalTime.parse(text.trim());

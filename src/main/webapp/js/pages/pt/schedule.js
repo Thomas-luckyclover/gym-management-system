@@ -27,6 +27,26 @@
  *   NHÓM 7. Hàm phụ dùng chung          ptMinuteAtPointer, ptClock, ptMinutes, showPtStatus
  *   NHÓM 8. Hộp Xử lý buổi              initPtHandleDialog
  *   NHÓM 9. Thao tác nhanh              initPtTools, removeAllPtFree, copyPtWeekToNext, showPtCopyNotice
+ *   (HÀM CHÍNH initPtSchedule ở NHÓM 1; các nhóm sau là hàm phụ nó gắn vào sự kiện, xếp theo thứ tự gắn.)
+ *
+ * JS TÌM PHẦN TỬ NÀO TRÊN TRANG?  (getElementById("x") = tìm thẻ có id="x"; querySelector(".a") = thẻ có class "a")
+ *   Mẫu tìm                        Ở file JSP nào (thư mục WEB-INF/jsp/pt/)     Dùng để
+ *   #main-content (ptPlan)         schedule.jsp <main data-duration data-axis-start data-axis-end data-draft-key …>
+ *                                                                               đọc P-06, trục giờ, khóa lưu nháp
+ *   .pt-plan-board                 schedule.jsp <section> panel lịch             gắn rê chuột / bấm / tích ô gỡ
+ *   .pt-day-track[data-date]       _schedule-day.jspf thân 1 cột ngày (data-first / data-last = giờ được thêm)
+ *   .pt-slot[data-start]           _schedule-day.jspf 1 thẻ khung đang chiếm giờ  kiểm trùng giờ khi thêm nháp
+ *   .pt-remove                     _schedule-day.jspf ô tích "Gỡ khung"           gom removeIds khi Công bố
+ *   #pt-add-form                   _schedule-toolbar.jspf form "Thêm khung"       addPtDraftFromForm
+ *   [data-plan-action], [data-jump-date]  _schedule-toolbar.jspf nút thao tác nhanh / ô nhảy ngày   initPtTools
+ *   #pt-ghost                      schedule.jsp bóng khung đi theo chuột          movePtGhost
+ *   #pt-draft-template             _schedule-draft-template.jspf <template>       addPtDraft sao chép
+ *   .pt-draft                      thẻ nháp JS vừa tạo (từ template)              Công bố / Bỏ / lưu tạm
+ *   #pt-publish-form, #pt-publish, #pt-clear, #pt-publish-error   _schedule-pending.jspf thanh Chờ công bố
+ *   #pt-plan-status                schedule.jsp <p role="status"> ẩn              báo cho trình đọc màn hình
+ *   #pt-handle                     _handle-dialog.jspf <dialog>                   initPtHandleDialog
+ *
+ * HÀM LẤY TỪ common.js (nạp trước): showToast(loại, chữ) — toast góc màn; postData(url, URLSearchParams) — gửi POST AJAX, trả {success, message} (dùng ở publishPtChanges).
  */
 
 // ===== Đọc một lần từ JSP =====

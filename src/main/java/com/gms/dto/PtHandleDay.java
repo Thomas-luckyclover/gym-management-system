@@ -9,12 +9,13 @@ import java.util.List;
  *
  *   Ai tạo?   PtSessionHandleService.groupByDay (gom các PtHandleSlot cùng ngày).
  *   Ai in?    _handle-dialog.jspf: mỗi ngày 1 hàng "Thứ 5 · 29/10", các giờ là viên radio.
+ *   "· IN" cuối mỗi field = JSP Lịch dạy có in field này; "· không in" = chỉ dùng để tính / dựng link.
  */
 public class PtHandleDay {
 
-    private final LocalDate date;
-    private final String label;                          // "Thứ 5 · 29/10"
-    private final List<PtHandleSlot> slots = new ArrayList<>();
+    private final LocalDate date;   // · IN
+    private final String label;                          // "Thứ 5 · 29/10"   · IN
+    private final List<PtHandleSlot> slots = new ArrayList<>();   // · IN
 
     public PtHandleDay(LocalDate date, String label) {
         this.date = date;

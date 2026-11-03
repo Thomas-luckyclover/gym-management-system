@@ -13,29 +13,30 @@ import java.util.ArrayList;
  *
  * Ví dụ Thứ 3 27/10, mở 05:30–22:00, khung 90 phút:
  *   dayName="Thứ 3", firstStartMinute=330 (05:30), lastStartMinute=1170 (19:30).
+ *   "· IN" cuối mỗi field = JSP Lịch dạy có in field này; "· không in" = chỉ dùng để tính / dựng link.
  */
 public class PtScheduleDay {
 
     // ===== Ngày =====
-    private LocalDate date;          // ngày của cột
-    private String dayName;          // "Thứ 2" ... "Chủ nhật"
-    private boolean today;           // là hôm nay → tô nổi bật cột
-    private boolean past;            // trước hôm nay → chỉ xem
+    private LocalDate date;          // ngày của cột   · IN
+    private String dayName;          // "Thứ 2" ... "Chủ nhật"   · IN
+    private boolean today;           // là hôm nay → tô nổi bật cột   · IN
+    private boolean past;            // trước hôm nay → chỉ xem   · IN
 
     // ===== Giờ mở cửa (P-19 hoặc giờ ngoại lệ của riêng ngày này) =====
-    private boolean closedAllDay;    // phòng nghỉ cả ngày → openTime/closeTime = null
-    private LocalTime openTime;      // giờ mở cửa
-    private LocalTime closeTime;     // giờ đóng cửa
-    private String leaveLabel;       // nhãn nghỉ phép, ví dụ "Nghỉ phép ca sáng · chờ duyệt"; không nghỉ → ""
-    private String leaveDetails;
-    private List<String> leaveBookings = new ArrayList<>(); // buổi đã có khách trùng ca nghỉ, không tự hủy
+    private boolean closedAllDay;    // phòng nghỉ cả ngày → openTime/closeTime = null   · IN
+    private LocalTime openTime;      // giờ mở cửa   · không in
+    private LocalTime closeTime;     // giờ đóng cửa   · không in
+    private String leaveLabel;       // nhãn nghỉ phép, ví dụ "Nghỉ phép ca sáng · chờ duyệt"; không nghỉ → ""   · IN
+    private String leaveDetails;   // · IN
+    private List<String> leaveBookings = new ArrayList<>(); // buổi đã có khách trùng ca nghỉ, không tự hủy   · IN
 
     // ===== Khoảng giờ được THÊM khung mới (phút trong ngày). null = ngày này không thêm được =====
-    private Integer firstStartMinute; // giờ bắt đầu sớm nhất, đã làm tròn mốc 15 phút
-    private Integer lastStartMinute;  // giờ bắt đầu muộn nhất để khung vẫn kết thúc trước giờ đóng cửa
+    private Integer firstStartMinute; // giờ bắt đầu sớm nhất, đã làm tròn mốc 15 phút   · IN
+    private Integer lastStartMinute;  // giờ bắt đầu muộn nhất để khung vẫn kết thúc trước giờ đóng cửa   · IN
 
     // ===== Các thẻ trong ngày =====
-    private List<PtScheduleItem> items = List.of(); // khung trống + buổi có khách, đã xếp theo giờ
+    private List<PtScheduleItem> items = List.of(); // khung trống + buổi có khách, đã xếp theo giờ   · IN
 
 
     // ===== Getter / Setter: chỉ đọc và gán, không có nghiệp vụ =====
