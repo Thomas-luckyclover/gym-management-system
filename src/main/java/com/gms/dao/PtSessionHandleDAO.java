@@ -15,35 +15,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * DAO HỘP "XỬ LÝ BUỔI" trên Lịch dạy PT. Mọi hàm nhận connection của Service (có thể đang trong transaction).
- *
- * PHẦN 1. ĐỌC — PtSessionHandleService gọi khi mở hộp VÀ khi bấm Lưu (kiểm tra lại)
- *   findSession          1 buổi của PT đang đăng nhập (kèm gói, khách, hạn gói)
- *   findMySlots          khung Free của CHÍNH PT trong khoảng ngày        → "Dời buổi"
- *   findTransferSlots    khung Free của PT KHÁC đúng ngày + đúng giờ      → "Chuyển PT"
- *   findSlotById         1 khung đích PT đã chọn (bản khóa dòng)           → kiểm tra lại khi Lưu
- *   findCustomerAccounts tài khoản của khách + người tập cùng             → gửi thông báo
- *
- * PHẦN 2. GHI — chỉ chạy trong transaction của Service, KHÔNG tự commit
- *   bookSlot, releaseSlot, moveSession, insertMoveLog, cancelByPt
+ * DAO hộp XỬ LÝ BUỔI — đọc buổi, tìm khung nhận buổi, ghi Dời / Chuyển / Hủy.
  */
 public class PtSessionHandleDAO {
-
-
-    /**
-     * Câu SQL CHUNG đọc khung trống + 4 cờ, dùng cho cả 3 hàm tìm khung bên dưới (khác nhau ở dòng lọc cuối, %s).
-     * Nhờ dùng chung, lúc MỞ HỘP và lúc BẤM LƯU kiểm tra đúng cùng một luật.
-     *
-     *   Chỉ lấy khung: Free · không bị đơn nào giữ · chưa có buổi Scheduled
-     *                  · PT của khung đang làm việc VÀ tài khoản Active (PT bị khóa tài khoản không xem được lịch để dạy).
-     *   4 cờ (Service đọc để quyết định khung có hợp lệ không):
-     *     GymClosed     ngày đó phòng nghỉ cả ngày
-     *     PtOnLeave     PT của khung có đơn nghỉ Pending/Approved trùng ca (ca sáng = bắt đầu trước 12:00)
-     *     CustomerBusy  khách / người tập cùng có buổi Scheduled KHÁC chồng giờ (với bất kỳ PT nào)
-     *     HasGymAccess  ít nhất 1 người trong gói có Membership/DayPass phủ ngày đó và không bảo lưu
-     *
-     * 7 dấu ? đầu (setCommonParams): mã buổi (bỏ chính nó khi xét trùng), rồi cặp (khách, người tập cùng) ×3 lần.
-     */
+    // Câu đọc khung trống dùng chung 3 hàm find…Slots (chỗ %s: gợi ý khóa + điều kiện riêng).
+    // Mỗi khung Free, chưa giữ, chưa có buổi, của PT đang làm, kèm 4 cờ:
+    //   GymClosed (phòng nghỉ) · PtOnLeave (PT có đơn nghỉ trùng ca) · CustomerBusy (khách có buổi khác chồng giờ)
+    //   · HasGymAccess (khách có Membership / DayPass không bảo lưu ngày đó).
     private static final String SLOT_SQL = """
             SELECT t.TimeSlotId, t.PtEmployeeId, p.FullName AS PtName, e.CommissionRate,
                    t.SlotDate, t.StartTime, t.EndTime,
@@ -90,19 +68,8 @@ public class PtSessionHandleDAO {
             ORDER BY t.SlotDate, t.StartTime, p.FullName
             """;
 
-
-    // ============================================================================================================
-    // PHỤC VỤ PtSessionHandleService.getHandleForm (mở hộp) — ĐỌC
-    // Cũng dùng lại khi Lưu (lock = true) để kiểm lại có khóa
-    // ============================================================================================================
-
-    /**
-     * [getHandleForm (lock = false); reschedule / transfer / cancel (lock = true)] Sessions + TimeSlots + Subscriptions + Orders + Customers + Persons + Employees: R 1 dòng.
-     * HÀM CHÍNH — Service gọi đầu mỗi hàm (mở hộp, dời, chuyển, hủy).
-     * Chỉ tìm buổi có Sessions.PtEmployeeId = ptId → PT không mở được buổi của PT khác dù sửa ?handle= trên URL.
-     * lock = true (khi Lưu): UPDLOCK giữ dòng buổi tới hết transaction, 2 lần bấm Lưu phải xếp hàng.
-     * Không thấy → null.
-     */
+    // 1 buổi của PT (Sessions + khung + gói + khách + người tập cùng + PT). lock = true → KHÓA dòng buổi (UPDLOCK).
+    // Trả về: PtHandleView | null (không phải buổi của PT này).
     public PtHandleView findSession(Connection connection, int sessionId, int ptId, boolean lock) throws SQLException {
         String sql = """
                 SELECT s.SessionId, s.Status, s.TimeSlotId, s.PtEmployeeId, s.SessionValue, s.CommissionAmount,
@@ -128,7 +95,7 @@ public class PtSessionHandleDAO {
 
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, sessionId);
-            statement.setInt(2, ptId);    // ? = mã PT lấy từ session đăng nhập, không lấy từ URL
+            statement.setInt(2, ptId);
 
             try (ResultSet rs = statement.executeQuery()) {
                 return rs.next() ? readSession(rs) : null;
@@ -136,12 +103,14 @@ public class PtSessionHandleDAO {
         }
     }
 
-    /** HÀM PHỤ — findSession gọi. Một dòng SQL → PtHandleView (phần 1 + 2). */
+    /**
+     * HÀM PHỤ — 1 dòng → PtHandleView (tên khách "A & B" nếu gói đôi).
+     */
     private PtHandleView readSession(ResultSet rs) throws SQLException {
         int partnerId = rs.getInt("PartnerCustomerId");
         Integer partner = rs.wasNull() ? null : partnerId;
         return new PtHandleView(
-                rs.getInt("SessionId"),                          // Buổi + khung + PT dạy
+                rs.getInt("SessionId"),
                 rs.getString("Status"),
                 rs.getInt("TimeSlotId"),
                 rs.getInt("PtEmployeeId"),
@@ -151,7 +120,7 @@ public class PtSessionHandleDAO {
                 rs.getDate("SlotDate").toLocalDate(),
                 rs.getTime("StartTime").toLocalTime(),
                 rs.getTime("EndTime").toLocalTime(),
-                rs.getInt("SubscriptionId"),                     // Gói + khách
+                rs.getInt("SubscriptionId"),
                 rs.getString("SubscriptionType"),
                 rs.getInt("CustomerId"),
                 partner,
@@ -161,11 +130,7 @@ public class PtSessionHandleDAO {
                 rs.getString("CustomerNames"));
     }
 
-    /**
-     * [getHandleForm] TimeSlots của chính PT (+ ngày nghỉ, đơn nghỉ, buổi khác của khách): R nhiều dòng → tab "Dời buổi".
-     * HÀM CHÍNH — Service gọi khi mở hộp (phần "Dời buổi").
-     * Khung Free của CHÍNH PT từ fromDate đến toDate. Service lọc tiếp (đã qua giờ, ngoài hạn gói, 4 cờ).
-     */
+    // Tab Dời buổi: khung trống của CHÍNH PT trong [fromDate, toDate].
     public List<PtHandleSlot> findMySlots(Connection connection, PtHandleView session, int ptId,
             LocalDate fromDate, LocalDate toDate) throws SQLException {
         String sql = SLOT_SQL.formatted("", "t.PtEmployeeId = ? AND t.SlotDate BETWEEN ? AND ?");
@@ -180,24 +145,26 @@ public class PtSessionHandleDAO {
     }
 
     /**
-     * HÀM PHỤ — 3 hàm tìm khung gọi. Điền 7 dấu ? đầu của SLOT_SQL, trả số thứ tự dấu ? tiếp theo.
-     * Gói 1 người: người tập cùng = chính khách đó (để IN (?, ?) vẫn đúng).
+     * HÀM PHỤ — điền 7 tham số đầu của SLOT_SQL (buổi đang xử lý, khách, người tập cùng — gói đơn thì điền khách 2 lần).
+     * Trả về: số thứ tự tham số tiếp theo (8).
      */
     private int setCommonParams(PreparedStatement statement, PtHandleView session) throws SQLException {
         int customer = session.getCustomerId();
         int partner = session.getPartnerCustomerId() == null ? customer : session.getPartnerCustomerId();
 
-        statement.setInt(1, session.getSessionId());   // CustomerBusy: bỏ qua chính buổi đang xử lý
+        statement.setInt(1, session.getSessionId());
         statement.setInt(2, customer);
         statement.setInt(3, partner);
         statement.setInt(4, customer);
         statement.setInt(5, partner);
-        statement.setInt(6, customer);                 // HasGymAccess
+        statement.setInt(6, customer);
         statement.setInt(7, partner);
         return 8;
     }
 
-    /** HÀM PHỤ — chạy câu SQL khung, mỗi dòng → 1 PtHandleSlot. */
+    /**
+     * HÀM PHỤ — chạy câu, mỗi dòng → PtHandleSlot.
+     */
     private List<PtHandleSlot> readSlots(PreparedStatement statement) throws SQLException {
         List<PtHandleSlot> rows = new ArrayList<>();
 
@@ -221,11 +188,7 @@ public class PtSessionHandleDAO {
         return rows;
     }
 
-    /**
-     * [getHandleForm] TimeSlots của PT khác đúng giờ buổi: R nhiều dòng → tab "Chuyển PT".
-     * HÀM CHÍNH — Service gọi khi mở hộp (phần "Chuyển PT").
-     * Khung Free của PT KHÁC có ĐÚNG ngày + giờ bắt đầu + giờ kết thúc của buổi (chuyển PT giữ nguyên giờ).
-     */
+    // Tab Chuyển PT: khung trống của PT KHÁC đúng ngày + giờ bắt đầu + giờ kết thúc của buổi.
     public List<PtHandleSlot> findTransferSlots(Connection connection, PtHandleView session, int ptId)
             throws SQLException {
         String sql = SLOT_SQL.formatted("", "t.PtEmployeeId <> ? AND t.SlotDate = ? "
@@ -241,12 +204,7 @@ public class PtSessionHandleDAO {
         }
     }
 
-    /**
-     * [reschedule, transfer] TimeSlots: R 1 dòng có khóa (khung đích phải còn trống lúc Lưu).
-     * HÀM CHÍNH — Service gọi khi bấm Lưu (Dời buổi / Chuyển PT).
-     * Đọc lại ĐÚNG khung PT đã chọn, có khóa dòng: từ lúc này tới commit không ai giữ/đặt/gỡ được khung đó.
-     * Khung không còn Free (vừa có người lấy) → null → Service báo MSG103.
-     */
+    // Khung đích khi bấm Dời / Chuyển, KHÓA (UPDLOCK, HOLDLOCK). null = không còn trống.
     public PtHandleSlot findSlotById(Connection connection, PtHandleView session, int timeSlotId)
             throws SQLException {
         String sql = SLOT_SQL.formatted("WITH (UPDLOCK, HOLDLOCK)", "t.TimeSlotId = ?");
@@ -259,15 +217,7 @@ public class PtSessionHandleDAO {
         }
     }
 
-
-    // ============================================================================================================
-    // PHỤC VỤ reschedule / transfer / cancel (bấm Lưu trong hộp) — GHI trong transaction của Service
-    // ============================================================================================================
-
-    /**
-     * [reschedule, transfer] TimeSlots: U khung đích Free → Booked.
-     * Khung đích Free → Booked. Điều kiện Status = 'Free' chặn 2 người cùng lấy 1 khung.
-     */
+    // TimeSlots: Free → Booked (chỉ khi còn Free, không bị giữ). Trả về: true = lấy được khung.
     public boolean bookSlot(Connection connection, int timeSlotId) throws SQLException {
         String sql = """
                 UPDATE TimeSlots SET Status = 'Booked'
@@ -280,10 +230,7 @@ public class PtSessionHandleDAO {
         }
     }
 
-    /**
-     * [reschedule, transfer, cancel] TimeSlots: U khung cũ Booked → Free.
-     * Khung cũ Booked → Free: khung lại hiện "Còn trống" trên lịch PT (chốt A: cả dời, chuyển, hủy).
-     */
+    // TimeSlots: Booked → Free (khung cũ sau khi dời / hủy).
     public void releaseSlot(Connection connection, int timeSlotId) throws SQLException {
         String sql = "UPDATE TimeSlots SET Status = 'Free' WHERE TimeSlotId = ? AND Status = 'Booked'";
 
@@ -293,11 +240,7 @@ public class PtSessionHandleDAO {
         }
     }
 
-    /**
-     * [reschedule, transfer] Sessions: U TimeSlotId / PtEmployeeId / CommissionAmount (buổi còn Scheduled).
-     * Gắn buổi sang khung mới (+ PT mới, hoa hồng mới khi chuyển PT).
-     * Dời buổi: newPtId = PT cũ, commission = hoa hồng cũ. Chỉ đổi khi buổi còn Scheduled.
-     */
+    // Sessions: đổi khung, PT, hoa hồng (chỉ khi buổi còn Scheduled). Trả về: true = đổi được.
     public boolean moveSession(Connection connection, int sessionId, int newSlotId, int newPtId, int commission)
             throws SQLException {
         String sql = """
@@ -314,11 +257,7 @@ public class PtSessionHandleDAO {
         }
     }
 
-    /**
-     * [reschedule, transfer] SessionMoveLogs: C 1 dòng (ai dời, từ đâu → đâu, lý do).
-     * Ghi 1 dòng SessionMoveLogs. Màn khách (Gói của tôi) đọc bảng này để hiện "PT dời lịch" / "Chuyển PT dạy thay".
-     * moveType: PtReschedule (PT cũ = PT mới) | PtTransfer (PT khác) — CHECK trong DB bắt đúng cặp này.
-     */
+    // SessionMoveLogs: thêm 1 dòng lịch sử dời (màn Gói của tôi đọc để ghi "PT dời lịch · thay buổi …").
     public void insertMoveLog(Connection connection, PtHandleView session, PtHandleSlot target, String moveType,
             int accountId, String reason, LocalDateTime now) throws SQLException {
         String sql = """
@@ -345,11 +284,7 @@ public class PtSessionHandleDAO {
         }
     }
 
-    /**
-     * [cancel] Sessions: U Scheduled → Cancelled (CancelType = ByPt, lý do, CancelledAt).
-     * PT hủy buổi (CancelType = ByPt). CHECK trong DB bắt buộc: lý do ≥ 5 ký tự, RefundAgreed = 1, có người hủy.
-     * Vẫn tính là buổi đã dùng và PT vẫn có hoa hồng (CommissionAmount không đổi).
-     */
+    // Sessions: Scheduled → Cancelled, CancelType = ByPt, lý do, thời điểm, tài khoản hủy. Trả về: true = hủy được.
     public boolean cancelByPt(Connection connection, int sessionId, String reason, int accountId, LocalDateTime now)
             throws SQLException {
         String sql = """
@@ -368,12 +303,7 @@ public class PtSessionHandleDAO {
         }
     }
 
-
-    /**
-     * [reschedule, transfer, cancel → notify] Customers + Accounts: R tài khoản khách để gửi thông báo.
-     * HÀM CHÍNH — Service gọi sau khi ghi xong, để gửi thông báo.
-     * Tài khoản Active của khách + người tập cùng. Người không có tài khoản (hồ sơ phụ thuộc) → không có trong danh sách.
-     */
+    // Tài khoản Active của khách + người tập cùng (để gửi thông báo).
     public List<Integer> findCustomerAccounts(Connection connection, PtHandleView session) throws SQLException {
         String sql = """
                 SELECT DISTINCT a.AccountId

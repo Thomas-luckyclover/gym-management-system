@@ -10,10 +10,15 @@ import com.gms.dao.PtScheduleDAO;
 import com.gms.dao.ShiftDAO;
 import com.gms.dto.HourException;
 import com.gms.dto.LeaveInfo;
+import com.gms.dto.PtSaleChoiceBlock;
+import com.gms.dto.PtSaleBuyerBlock;
+import com.gms.dto.PtSalePlanBlock;
+import com.gms.dto.PtSaleHeldBlock;
 import com.gms.dto.PtSaleCustomer;
 import com.gms.dto.PtSaleDay;
 import com.gms.dto.PtSalePlan;
 import com.gms.dto.PtSaleOption;
+import com.gms.dto.PtSalePendingHold;
 import com.gms.dto.PtSaleView;
 import com.gms.dto.PtScheduleItem;
 import com.gms.dto.ServiceResult;
@@ -119,10 +124,18 @@ public class PtSaleService {
                 return ServiceResult.fail(Messages.MSG07_NO_PERMISSION);
             }
             String digits = text.replaceAll("\\D", "");
-            List<PtSaleCustomer> rows = saleDAO.searchCustomers(connection, text, digits, now.toLocalDate());
+            List<PtSaleCustomer> rows = saleDAO.searchCustomers(
+                    connection,
+                    text,
+                    digits,
+                    now.toLocalDate());
             int minAge = configService.getInt(SystemConfigService.MIN_AGE_FOR_PT);
             for (PtSaleCustomer row : rows) {
-                row.setBlockReason(whyCannotBuy(row, now.toLocalDate(), minAge, receptionist[1]));
+                row.setBlockReason(whyCannotBuy(
+                        row,
+                        now.toLocalDate(),
+                        minAge,
+                        receptionist[1]));
             }
             return ServiceResult.ok(rows);
         } catch (SQLException exception) {
@@ -138,7 +151,11 @@ public class PtSaleService {
      *   không phải hồ sơ khách của chính lễ tân · đủ tuổi (P-05) · có gói thành viên phủ hôm nay (vé ngày không tính)
      *   · hôm nay không bảo lưu (CBR-59, BR-37).
      */
-    static String whyCannotBuy(PtSaleCustomer customer, LocalDate today, int minAge, int receptionistPersonId) {
+    static String whyCannotBuy(
+            PtSaleCustomer customer,
+            LocalDate today,
+            int minAge,
+            int receptionistPersonId) {
         if (customer.getPersonId() == receptionistPersonId) {
             return "Lễ tân không tự bán gói cho hồ sơ khách của chính mình.";
         }
@@ -175,7 +192,11 @@ public class PtSaleService {
      *            3b. không có → build (4 bước, lock = false) + loadPendingHolds (danh sách "Đơn đang giữ chỗ")
      *   GHI DB   chỉ releaseExpired (nếu có đơn quá hạn); còn lại chỉ đọc, không khóa
      */
-    public ServiceResult<PtSaleView> prepare(int accountId, Input input, Integer orderId, LocalDateTime now) {
+    public ServiceResult<PtSaleView> prepare(
+            int accountId,
+            Input input,
+            Integer orderId,
+            LocalDateTime now) {
         try {
             releaseExpired(now);
             try (Connection connection = DBContext.getConnection()) {
@@ -188,12 +209,22 @@ public class PtSaleService {
                     // Mở lại đơn đang giữ mà URL không có start (link "Tiếp tục thu tiền") → bỏ mặc định "ngày mai",
                     // để loadHeld lấy ngày của khung đang giữ đầu tiên làm ngày bắt đầu kỳ.
                     if (parseDate(input.start) == null) {
-                        view.setStartDate(null);
+                        view.getChoice().setStartDate(null);
                     }
-                    String problem = loadHeld(connection, view, orderId, now);
+                    String problem = loadHeld(
+                            connection,
+                            view,
+                            orderId,
+                            now);
                     return problem == null ? ServiceResult.ok(view) : ServiceResult.fail(problem);
                 }
-                build(connection, view, input, receptionist[1], now, false);
+                build(
+                        connection,
+                        view,
+                        input,
+                        receptionist[1],
+                        now,
+                        false);
                 view.setPendingHolds(loadPendingHolds(connection, now));
                 return ServiceResult.ok(view);
             }
@@ -207,20 +238,23 @@ public class PtSaleService {
     /** HÀM PHỤ (prepare, hold) — chữ thô trên URL → PtSaleView rỗng: đọc mã, ngày (trống = ngày mai), giờ t1..t5, min / max ngày bắt đầu. */
     private PtSaleView newView(Input input, LocalDateTime now) {
         PtSaleView view = new PtSaleView();
-        view.setCustomerId(parseId(input.customer));
-        view.setPartnerId(parseId(input.partner));
-        view.setPackageId(parseId(input.packageId));
-        view.setPtId(parseId(input.pt));
+        PtSaleChoiceBlock choice = view.getChoice();
+        PtSaleBuyerBlock buyer = view.getBuyer();
+
+        buyer.setCustomerId(parseId(input.customer));
+        buyer.setPartnerId(parseId(input.partner));
+        choice.setPackageId(parseId(input.packageId));
+        choice.setPtId(parseId(input.pt));
         LocalDate start = parseDate(input.start);
-        view.setStartDate(start != null ? start : now.toLocalDate().plusDays(1));   // chưa chọn → mặc định ngày mai
+        choice.setStartDate(start != null ? start : now.toLocalDate().plusDays(1));   // chưa chọn → mặc định ngày mai
         LocalTime[] times = new LocalTime[5];
         for (int i = 0; i < 5; i++) {
             times[i] = parseTime(input.times[i]);
         }
-        view.setWeekTimes(times);
-        view.setSearchQuery(input.query == null || input.query.isBlank() ? null : input.query.trim());
-        view.setMinStart(now.toLocalDate());
-        view.setMaxStart(now.toLocalDate().plusDays(START_DAYS_AHEAD));
+        view.getPlan().setWeekTimes(times);
+        buyer.setSearchQuery(input.query == null || input.query.isBlank() ? null : input.query.trim());
+        choice.setMinStart(now.toLocalDate());
+        choice.setMaxStart(now.toLocalDate().plusDays(START_DAYS_AHEAD));
         return view;
     }
 
@@ -237,118 +271,159 @@ public class PtSaleService {
         // Lễ tân TƯ VẤN TRƯỚC: gói, PT, ngày bắt đầu, lịch tập chọn được khi chưa biết khách (cô góp ý 26/10).
         // Khách (+ người tập cùng của gói đôi) chọn lúc nào cũng được ở cột "Đơn bán"; có khách thì lịch
         // tính thêm giờ trùng buổi khác của khách. Giữ lịch bắt buộc đủ cả hai (firstProblem).
-        loadHolder(connection, view, today, minAge, receptionistPersonId);
+        loadHolder(
+                connection,
+                view,
+                today,
+                minAge,
+                receptionistPersonId);
         boolean packageOk = loadPackage(connection, view);
-        if (packageOk && view.isCouple()) {
-            loadPartner(connection, view, today, minAge, receptionistPersonId);
+        if (packageOk && view.getChoice().isCouple()) {
+            loadPartner(
+                    connection,
+                    view,
+                    today,
+                    minAge,
+                    receptionistPersonId);
         }
         if (!packageOk || !loadPt(connection, view)) {
             return;
         }
-        loadPlan(connection, view, input, now, lock);
+        loadPlan(
+                connection,
+                view,
+                input,
+                now,
+                lock);
     }
 
     /** HÀM PHỤ (build) — người đứng tên: đã chọn (?customer=) → hồ sơ + lý do không bán được; chưa chọn mà có chữ tìm (tắt JS) → danh sách. */
     private void loadHolder(Connection connection, PtSaleView view, LocalDate today, int minAge, int receptionistPersonId)
             throws SQLException {
-        if (view.getCustomerId() == null) {
-            if (view.getSearchQuery() != null) {
-                String digits = view.getSearchQuery().replaceAll("\\D", "");
-                view.setSearchResults(saleDAO.searchCustomers(connection, view.getSearchQuery(), digits, today));
-                for (PtSaleCustomer row : view.getSearchResults()) {
-                    row.setBlockReason(whyCannotBuy(row, today, minAge, receptionistPersonId));
+        PtSaleBuyerBlock buyer = view.getBuyer();
+
+        if (buyer.getCustomerId() == null) {
+            if (buyer.getSearchQuery() != null) {
+                String digits = buyer.getSearchQuery().replaceAll("\\D", "");
+                buyer.setSearchResults(saleDAO.searchCustomers(
+                        connection,
+                        buyer.getSearchQuery(),
+                        digits,
+                        today));
+                for (PtSaleCustomer row : buyer.getSearchResults()) {
+                    row.setBlockReason(whyCannotBuy(
+                            row,
+                            today,
+                            minAge,
+                            receptionistPersonId));
                 }
-                if (view.getSearchResults().isEmpty()) {
-                    view.setHolderError("Không tìm thấy khách nào khớp \"" + view.getSearchQuery() + "\".");
+                if (buyer.getSearchResults().isEmpty()) {
+                    buyer.setHolderError("Không tìm thấy khách nào khớp \"" + buyer.getSearchQuery() + "\".");
                 }
             }
             return;
         }
-        PtSaleCustomer holder = saleDAO.findCustomer(connection, view.getCustomerId(), today);
+        PtSaleCustomer holder = saleDAO.findCustomer(connection, buyer.getCustomerId(), today);
         if (holder == null) {
-            view.setHolderError("Không tìm thấy khách này. Tìm lại.");
+            buyer.setHolderError("Không tìm thấy khách này. Tìm lại.");
             return;
         }
-        holder.setBlockReason(whyCannotBuy(holder, today, minAge, receptionistPersonId));
-        view.setHolder(holder);
+        holder.setBlockReason(whyCannotBuy(
+                holder,
+                today,
+                minAge,
+                receptionistPersonId));
+        buyer.setHolder(holder);
     }
 
     /** HÀM PHỤ (build) — danh sách gói (ô chọn gói) + gói đang chọn (tên, giá, số tháng, gói đôi?). false = chưa chọn / gói ngừng bán. */
     private boolean loadPackage(Connection connection, PtSaleView view) throws SQLException {
+        PtSaleChoiceBlock choice = view.getChoice();
+
         List<PtSaleOption> options = new ArrayList<>();
         for (PackageRow row : saleDAO.findPtPackages(connection)) {
             String kind = "PTCouple".equals(row.type) ? "Gói đôi" : "1 người";
             options.add(new PtSaleOption(String.valueOf(row.packageId), row.name,
                     money(row.price) + " · " + row.months + " tháng · " + kind));
         }
-        view.setPackages(options);
-        if (view.getPackageId() == null) {
+        choice.setPackages(options);
+        if (choice.getPackageId() == null) {
             return false;
         }
-        PackageRow pkg = saleDAO.findPackage(connection, view.getPackageId());
+        PackageRow pkg = saleDAO.findPackage(connection, choice.getPackageId());
         if (pkg == null) {
-            view.setChoiceError("Gói này không còn bán. Chọn gói khác.");
+            choice.setChoiceError("Gói này không còn bán. Chọn gói khác.");
             return false;
         }
-        view.setPackageName(pkg.name);
-        view.setPrice(pkg.price);
-        view.setMonths(pkg.months);
-        view.setCouple("PTCouple".equals(pkg.type));
+        choice.setPackageName(pkg.name);
+        choice.setPrice(pkg.price);
+        choice.setMonths(pkg.months);
+        choice.setCouple("PTCouple".equals(pkg.type));
         return true;
     }
 
     /** HÀM PHỤ (build, chỉ gói đôi) — người tập cùng: phải chọn, phải khác người đứng tên, phải mua được. */
     private boolean loadPartner(Connection connection, PtSaleView view, LocalDate today, int minAge,
             int receptionistPersonId) throws SQLException {
-        if (view.getPartnerId() == null) {
-            view.setPartnerError("Gói đôi: tìm và chọn người tập cùng.");
+        PtSaleBuyerBlock buyer = view.getBuyer();
+
+        if (buyer.getPartnerId() == null) {
+            buyer.setPartnerError("Gói đôi: tìm và chọn người tập cùng.");
             return false;
         }
-        PtSaleCustomer partner = saleDAO.findCustomer(connection, view.getPartnerId(), today);
-        boolean sameAsHolder = partner != null && view.getHolder() != null
-                && partner.getCustomerId() == view.getHolder().getCustomerId();
+        PtSaleCustomer partner = saleDAO.findCustomer(connection, buyer.getPartnerId(), today);
+        boolean sameAsHolder = partner != null && buyer.getHolder() != null
+                && partner.getCustomerId() == buyer.getHolder().getCustomerId();
         if (partner == null || sameAsHolder) {
-            view.setPartnerError("Người tập cùng phải là một khách khác.");
+            buyer.setPartnerError("Người tập cùng phải là một khách khác.");
             return false;
         }
-        partner.setBlockReason(whyCannotBuy(partner, today, minAge, receptionistPersonId));
-        view.setPartner(partner);
+        partner.setBlockReason(whyCannotBuy(
+                partner,
+                today,
+                minAge,
+                receptionistPersonId));
+        buyer.setPartner(partner);
         return partner.getBlockReason() == null;
     }
 
     /** HÀM PHỤ (build) — danh sách PT (bỏ PT là chính khách) + PT đang chọn + kiểm ngày bắt đầu → tính ngày kết thúc kỳ. */
     private boolean loadPt(Connection connection, PtSaleView view) throws SQLException {
+        PtSaleChoiceBlock choice = view.getChoice();
+
         List<PtSaleOption> options = new ArrayList<>();
         for (PtRow row : saleDAO.findWorkingPts(connection)) {
             if (!isCustomerPerson(view, row.personId)) {
                 options.add(new PtSaleOption(String.valueOf(row.employeeId), row.fullName, initials(row.fullName)));
             }
         }
-        view.setPts(options);
-        if (view.getPtId() == null || view.getStartDate() == null) {
+        choice.setPts(options);
+        if (choice.getPtId() == null || choice.getStartDate() == null) {
             return false;
         }
-        PtRow pt = saleDAO.findPt(connection, view.getPtId());
+        PtRow pt = saleDAO.findPt(connection, choice.getPtId());
         if (pt == null || isCustomerPerson(view, pt.personId)) {
-            view.setChoiceError("PT này không nhận được gói. Chọn PT khác.");
+            choice.setChoiceError("PT này không nhận được gói. Chọn PT khác.");
             return false;
         }
-        boolean outOfRange = view.getStartDate().isBefore(view.getMinStart()) || view.getStartDate().isAfter(view.getMaxStart());
+        boolean outOfRange = choice.getStartDate().isBefore(choice.getMinStart()) || choice.getStartDate().isAfter(choice.getMaxStart());
         if (outOfRange) {
-            view.setChoiceError("Ngày bắt đầu phải từ " + DateTimeUtil.formatDate(view.getMinStart()) + " đến "
-                    + DateTimeUtil.formatDate(view.getMaxStart()) + ".");
+            choice.setChoiceError("Ngày bắt đầu phải từ " + DateTimeUtil.formatDate(choice.getMinStart()) + " đến "
+                    + DateTimeUtil.formatDate(choice.getMaxStart()) + ".");
             return false;
         }
-        view.setPtName(pt.fullName);
-        view.setCommissionRate(pt.commissionRate);
-        view.setEndDate(DateTimeUtil.calculateEndDateByMonths(view.getStartDate(), view.getMonths()));
+        choice.setPtName(pt.fullName);
+        choice.setCommissionRate(pt.commissionRate);
+        choice.setEndDate(DateTimeUtil.calculateEndDateByMonths(choice.getStartDate(), choice.getMonths()));
         return true;
     }
 
     /** HÀM PHỤ (loadPt) — personId này có phải khách đứng tên / người tập cùng không (PT không tự bán cho mình). */
     private boolean isCustomerPerson(PtSaleView view, int personId) {
-        boolean holder = view.getHolder() != null && view.getHolder().getPersonId() == personId;
-        boolean partner = view.getPartner() != null && view.getPartner().getPersonId() == personId;
+        PtSaleBuyerBlock buyer = view.getBuyer();
+
+        boolean holder = buyer.getHolder() != null && buyer.getHolder().getPersonId() == personId;
+        boolean partner = buyer.getPartner() != null && buyer.getPartner().getPersonId() == personId;
         return holder || partner;
     }
 
@@ -366,34 +441,56 @@ public class PtSaleService {
      */
     private void loadPlan(Connection connection, PtSaleView view, Input input, LocalDateTime now, boolean lock)
             throws SQLException {
+        PtSaleChoiceBlock choice = view.getChoice();
+        PtSaleBuyerBlock buyer = view.getBuyer();
+        PtSalePlanBlock planBlock = view.getPlan();
+
         int minutes = configService.getInt(SystemConfigService.SESSION_DURATION_MINUTES);
-        LocalDate start = view.getStartDate();
-        LocalDate end = view.getEndDate();
-        List<PtScheduleItem> slots = saleDAO.findPtSlots(connection, view.getPtId(), start, end, lock);
+        LocalDate start = choice.getStartDate();
+        LocalDate end = choice.getEndDate();
+        List<PtScheduleItem> slots = saleDAO.findPtSlots(
+                connection,
+                choice.getPtId(),
+                start,
+                end,
+                lock);
         // Giờ bận của khách chỉ tính khi đã chọn khách (tư vấn trước → chưa có khách → chỉ xét lịch PT).
         List<TimeRange> busy = new ArrayList<>();
-        PtSaleCustomer holder = view.getHolder();
+        PtSaleCustomer holder = buyer.getHolder();
         if (holder != null) {
-            int partnerId = view.getPartner() == null ? holder.getCustomerId() : view.getPartner().getCustomerId();
-            busy = saleDAO.findCustomerBusy(connection, holder.getCustomerId(), partnerId, start, end);
+            int partnerId = buyer.getPartner() == null ? holder.getCustomerId() : buyer.getPartner().getCustomerId();
+            busy = saleDAO.findCustomerBusy(
+                    connection,
+                    holder.getCustomerId(),
+                    partnerId,
+                    start,
+                    end);
         }
-        List<LeaveInfo> leaves = scheduleDAO.findLeaves(connection, view.getPtId(), start, end);
+        List<LeaveInfo> leaves = scheduleDAO.findLeaves(
+                connection,
+                choice.getPtId(),
+                start,
+                end);
         List<HourException> exceptions = scheduleDAO.findHourExceptions(connection, start, end);
         // Giờ chọn được = giờ PT đã công bố (14 ngày đầu kỳ) + giờ LỄ TÂN TỰ NHẬP (lịch mẫu t1..t5 + sửa riêng trong sessions).
         // Giờ tự nhập sẽ thành buổi "create" (PT chưa mở khung) → lúc Giữ lịch, hold() bắt tích "Đã xác nhận với PT".
-        List<LocalTime> published = candidateTimes(slots, start, minutes, now);
+        List<LocalTime> published = candidateTimes(
+                slots,
+                start,
+                minutes,
+                now);
         LocalTime[] hours = PtScheduleService.parseOpeningHours(configService.getString(SystemConfigService.OPENING_HOURS));
         Map<LocalDate, LocalTime> requested = parseSessions(input.sessions);
         // Thứ PT chưa công bố khung nào → chỉ là gợi ý (nhãn "PT chưa công bố"), KHÔNG chặn: lễ tân vẫn tự nhập giờ được.
         List<Integer> unpublished = unpublishedWeekdays(slots, start, now);
-        view.setUnpublishedWeekdays(unpublished);
+        planBlock.setUnpublishedWeekdays(unpublished);
 
         if (!lock) {
             // Giờ tự nhập CHỈ áp đúng chỗ lễ tân thêm: giờ lịch mẫu Thứ X → các ngày Thứ X; giờ sửa riêng → đúng ngày đó.
             // Mỗi ngày vẫn chạy checkDay (khách trùng giờ, PT có khách / chồng giờ, đã qua giờ, PT nghỉ…) như lúc Giữ lịch.
             Set<String> invalid = new LinkedHashSet<>();
             Map<Integer, LocalTime> weekdayExtra = new HashMap<>();
-            LocalTime[] weekTimes = view.getWeekTimes();
+            LocalTime[] weekTimes = planBlock.getWeekTimes();
             for (int i = 0; i < 5; i++) {
                 LocalTime time = weekTimes[i];
                 if (time == null || published.contains(time)) {
@@ -415,7 +512,7 @@ public class PtSaleService {
                     }
                 });
             }
-            PtSalePlan plan = buildPlan(start, end, minutes, view.getPrice(), published, weekdayExtra, dateExtra,
+            PtSalePlan plan = buildPlan(start, end, minutes, choice.getPrice(), published, weekdayExtra, dateExtra,
                     slots, leaves, exceptions, busy, now);
             plan.setUnpublished(unpublished);
             plan.setPublished(formatTimes(published));                       // JS: giờ ngoài danh sách này = "PT chưa mở"
@@ -436,43 +533,62 @@ public class PtSaleService {
                         + plan.getOpen() + " đến " + plan.getClose() + " (buổi " + minutes
                         + " phút kết thúc trước giờ đóng cửa) và theo mốc 15 phút (:00, :15, :30, :45).");
             }
-            view.setPlanJson(JsonUtil.toJson(plan));
+            planBlock.setPlanJson(JsonUtil.toJson(plan));
             return;
         }
 
         List<LocalTime> custom = new ArrayList<>();
-        for (LocalTime time : view.getWeekTimes()) {
+        for (LocalTime time : planBlock.getWeekTimes()) {
             custom.add(time);                       // giờ lịch mẫu (t1..t5)
         }
         if (requested != null) {
             custom.addAll(requested.values());      // giờ sửa riêng từng buổi (sessions)
         }
-        List<LocalTime> candidates = mergeCustomTimes(published, custom, minutes, hours[0], hours[1]);
+        List<LocalTime> candidates = mergeCustomTimes(
+                published,
+                custom,
+                minutes,
+                hours[0],
+                hours[1]);
 
         if (requested == null) {
-            view.setPlanError("Không đọc được lịch vừa chọn. Chọn lại lịch rồi bấm Giữ lịch.");
+            planBlock.setPlanError("Không đọc được lịch vừa chọn. Chọn lại lịch rồi bấm Giữ lịch.");
             return;
         }
         List<PtSaleDay> days;
         try {
-            days = checkRequested(requested, start, end, minutes, candidates, slots, leaves, exceptions, busy, now);
+            days = checkRequested(
+                    requested,
+                    start,
+                    end,
+                    minutes,
+                    candidates,
+                    slots,
+                    leaves,
+                    exceptions,
+                    busy,
+                    now);
         } catch (IllegalArgumentException problem) {
-            view.setPlanError(problem.getMessage());
+            planBlock.setPlanError(problem.getMessage());
             return;
         }
         if (days.size() > 255) {
             throw new IllegalStateException("Số buổi vượt giới hạn TINYINT");
         }
-        view.setDays(days);
-        view.setSessionCount(days.size());
-        view.setSessionValue(sessionValue(view.getPrice(), days.size()));
+        planBlock.setDays(days);
+        planBlock.setSessionCount(days.size());
+        planBlock.setSessionValue(sessionValue(choice.getPrice(), days.size()));
     }
 
     /**
      * HÀM PHỤ (loadPlan) — giờ của "lịch mẫu" = giờ bắt đầu của các khung Free (đúng P-06 phút, chưa qua giờ) PT đã công bố
      * vào T2–T6 trong 14 ngày đầu kỳ (CBR-52: lịch phải nằm trong giờ PT đã công bố). Xếp tăng dần.
      */
-    static List<LocalTime> candidateTimes(List<PtScheduleItem> slots, LocalDate start, int minutes, LocalDateTime now) {
+    static List<LocalTime> candidateTimes(
+            List<PtScheduleItem> slots,
+            LocalDate start,
+            int minutes,
+            LocalDateTime now) {
         LocalDate windowEnd = start.plusDays(TIME_WINDOW_DAYS - 1);
         TreeMap<LocalTime, Boolean> times = new TreeMap<>();
         for (PtScheduleItem slot : slots) {
@@ -528,7 +644,11 @@ public class PtSaleService {
      *   trong giờ mở cửa (P-19), đúng mốc 15 phút, và khung (giờ → giờ + minutes) vẫn kết thúc trước giờ đóng cửa.
      * open/close null (P-19 lỗi cấu hình) → không giờ nào hợp lệ.
      */
-    static boolean isValidStartTime(LocalTime time, int minutes, LocalTime open, LocalTime close) {
+    static boolean isValidStartTime(
+            LocalTime time,
+            int minutes,
+            LocalTime open,
+            LocalTime close) {
         if (time == null || open == null || close == null) {
             return false;
         }
@@ -558,7 +678,19 @@ public class PtSaleService {
     static PtSalePlan buildPlan(LocalDate start, LocalDate end, int minutes, long price, List<LocalTime> candidates,
             List<PtScheduleItem> slots, List<LeaveInfo> leaves, List<HourException> exceptions,
             List<TimeRange> busy, LocalDateTime now) {
-        return buildPlan(start, end, minutes, price, candidates, Map.of(), Map.of(), slots, leaves, exceptions, busy, now);
+        return buildPlan(
+                start,
+                end,
+                minutes,
+                price,
+                candidates,
+                Map.of(),
+                Map.of(),
+                slots,
+                leaves,
+                exceptions,
+                busy,
+                now);
     }
 
     /**
@@ -595,7 +727,15 @@ public class PtSaleService {
                 times.add(dateTime);
             }
             for (LocalTime time : times) {
-                PtSaleDay check = checkDay(date, time, minutes, sameDay, leaves, exceptions, busy, now);
+                PtSaleDay check = checkDay(
+                        date,
+                        time,
+                        minutes,
+                        sameDay,
+                        leaves,
+                        exceptions,
+                        busy,
+                        now);
                 boolean fresh = "create".equals(check.getAction());   // PT chưa có khung giờ này ngày đó → sẽ tạo mới
                 day.getOptions().add(new PtSalePlan.Option(DateTimeUtil.formatTime(time),
                         DateTimeUtil.formatTime(check.getEndTime()), check.isSession(), check.getReason(), check.getWarning(),
@@ -633,9 +773,23 @@ public class PtSaleService {
             List<LeaveInfo> leaves, List<HourException> exceptions, List<TimeRange> busy, LocalDateTime now) {
         String label = PtSessionHandleService.dayLabel(date);
         LocalTime endTime = time.plusMinutes(minutes);
-        String skip = whySkip(date, time, endTime, sameDay, busy, now);
+        String skip = whySkip(
+                date,
+                time,
+                endTime,
+                sameDay,
+                busy,
+                now);
         if (skip != null) {
-            return new PtSaleDay(date, label, time, endTime, "skip", null, skip, null);
+            return new PtSaleDay(
+                    date,
+                    label,
+                    time,
+                    endTime,
+                    "skip",
+                    null,
+                    skip,
+                    null);
         }
         PtScheduleItem exact = null;
         for (PtScheduleItem slot : sameDay) {
@@ -643,7 +797,11 @@ public class PtSaleService {
                 exact = slot;
             }
         }
-        String warning = warningFor(date, time, leaves, exceptions);
+        String warning = warningFor(
+                date,
+                time,
+                leaves,
+                exceptions);
         return new PtSaleDay(date, label, time, endTime, exact != null ? "book" : "create",
                 exact == null ? null : exact.getTimeSlotId(), null, warning);
     }
@@ -684,7 +842,11 @@ public class PtSaleService {
     }
 
     /** HÀM PHỤ (checkDay) — có buổi nhưng cảnh báo vàng: phòng nghỉ cả ngày / PT có đơn nghỉ trùng giờ. */
-    private static String warningFor(LocalDate date, LocalTime time, List<LeaveInfo> leaves, List<HourException> exceptions) {
+    private static String warningFor(
+            LocalDate date,
+            LocalTime time,
+            List<LeaveInfo> leaves,
+            List<HourException> exceptions) {
         for (HourException exception : exceptions) {
             if (date.equals(exception.getApplyDate()) && exception.isClosedAllDay()) {
                 return "Phòng nghỉ ngày này — PT cần dời buổi";
@@ -710,18 +872,27 @@ public class PtSaleService {
      * Liệt kê đơn tại quầy đang giữ chỗ chưa hết hạn → JSP hiện danh sách "Đơn đang giữ" để lễ tân tìm lại
      * sau khi bấm Back / đăng xuất mà mất URL ?order= (không mất dữ liệu, chỉ mất đường dẫn).
      */
-    private List<PtSaleView.PendingHold> loadPendingHolds(Connection connection, LocalDateTime now) throws SQLException {
+    private List<PtSalePendingHold> loadPendingHolds(Connection connection, LocalDateTime now) throws SQLException {
         List<PtSaleDAO.HeldOrder> active = saleDAO.findActiveHoldOrders(connection, now);
-        List<PtSaleView.PendingHold> holds = new ArrayList<>();
+        List<PtSalePendingHold> holds = new ArrayList<>();
         for (PtSaleDAO.HeldOrder order : active) {
             long secondsLeft = Math.max(0, Duration.between(now, order.expiresAt).getSeconds());
-            holds.add(new PtSaleView.PendingHold(order.orderId, order.orderCode, secondsLeft));
+            holds.add(new PtSalePendingHold(order.orderId, order.orderCode, secondsLeft));
         }
         return holds;
     }
 
     /** HÀM PHỤ (prepare có ?order=) — dựng màn từ đơn đang giữ (không cần URL đủ 6 lựa chọn). Đơn hết giữ → câu lỗi. */
-    private String loadHeld(Connection connection, PtSaleView view, int orderId, LocalDateTime now) throws SQLException {
+    private String loadHeld(
+            Connection connection,
+            PtSaleView view,
+            int orderId,
+            LocalDateTime now) throws SQLException {
+        PtSaleChoiceBlock choice = view.getChoice();
+        PtSaleBuyerBlock buyer = view.getBuyer();
+        PtSalePlanBlock planBlock = view.getPlan();
+        PtSaleHeldBlock heldBlock = view.getHeldOrder();
+
         HeldOrder held = saleDAO.findHeldOrder(connection, orderId, false);
         if (held == null || !"Pending".equals(held.status) || held.slots.isEmpty() || held.expiresAt == null) {
             return String.format(Messages.MSG108_HOLD_NO_LONGER_VALID, HOLD_MINUTES);
@@ -729,24 +900,24 @@ public class PtSaleService {
         LocalDate today = now.toLocalDate();
         PackageRow pkg = saleDAO.findPackage(connection, held.packageId);
         PtRow pt = saleDAO.findPt(connection, held.ptId);
-        view.setHeldOrderId(orderId);
-        view.setHeldCode(held.orderCode);
-        view.setHoldSeconds(Math.max(0, Duration.between(now, held.expiresAt).getSeconds()));
-        view.setHolder(saleDAO.findCustomer(connection, held.holderId, today));
-        view.setCustomerId(held.holderId);
+        heldBlock.setOrderId(orderId);
+        heldBlock.setOrderCode(held.orderCode);
+        heldBlock.setHoldSeconds(Math.max(0, Duration.between(now, held.expiresAt).getSeconds()));
+        buyer.setHolder(saleDAO.findCustomer(connection, held.holderId, today));
+        buyer.setCustomerId(held.holderId);
         if (held.partnerId != null) {
-            view.setPartner(saleDAO.findCustomer(connection, held.partnerId, today));
+            buyer.setPartner(saleDAO.findCustomer(connection, held.partnerId, today));
         }
-        view.setPackageId(held.packageId);
-        view.setPackageName(pkg == null ? "Gói PT" : pkg.name);
-        view.setMonths(pkg == null ? 0 : pkg.months);
-        view.setPrice(held.price);
-        view.setPtId(held.ptId);
-        view.setPtName(pt == null ? "PT" : pt.fullName);
-        if (view.getStartDate() == null) {
-            view.setStartDate(held.slots.get(0).getSlotDate());
+        choice.setPackageId(held.packageId);
+        choice.setPackageName(pkg == null ? "Gói PT" : pkg.name);
+        choice.setMonths(pkg == null ? 0 : pkg.months);
+        choice.setPrice(held.price);
+        choice.setPtId(held.ptId);
+        choice.setPtName(pt == null ? "PT" : pt.fullName);
+        if (choice.getStartDate() == null) {
+            choice.setStartDate(held.slots.get(0).getSlotDate());
         }
-        view.setEndDate(DateTimeUtil.calculateEndDateByMonths(view.getStartDate(), view.getMonths()));
+        choice.setEndDate(DateTimeUtil.calculateEndDateByMonths(choice.getStartDate(), choice.getMonths()));
 
         List<PtSaleDay> days = new ArrayList<>();
         LocalTime[] times = new LocalTime[5];
@@ -758,10 +929,10 @@ public class PtSaleService {
                 times[index] = slot.getStartTime();
             }
         }
-        view.setWeekTimes(times);
-        view.setDays(days);
-        view.setSessionCount(days.size());
-        view.setSessionValue(sessionValue(held.price, days.size()));
+        planBlock.setWeekTimes(times);
+        planBlock.setDays(days);
+        planBlock.setSessionCount(days.size());
+        planBlock.setSessionValue(sessionValue(held.price, days.size()));
         return null;
     }
 
@@ -798,16 +969,26 @@ public class PtSaleService {
         return inTransaction(connection -> {
             int[] receptionist = requireReceptionist(connection, accountId);
             PtSaleView view = newView(input, now);
-            if (view.getPtId() != null) {
-                saleDAO.lockPt(connection, view.getPtId());      // xếp hàng với lễ tân khác / PT đang Công bố
+            PtSaleChoiceBlock choice = view.getChoice();
+            PtSaleBuyerBlock buyer = view.getBuyer();
+            PtSalePlanBlock planBlock = view.getPlan();
+
+            if (choice.getPtId() != null) {
+                saleDAO.lockPt(connection, choice.getPtId());      // xếp hàng với lễ tân khác / PT đang Công bố
             }
-            build(connection, view, input, receptionist[1], now, true);
+            build(
+                    connection,
+                    view,
+                    input,
+                    receptionist[1],
+                    now,
+                    true);
             String problem = firstProblem(view);
             if (problem != null) {
                 throw new IllegalArgumentException(problem);
             }
             // Buổi PT chưa mở khung (giữ lịch sẽ tự tạo khung mới) → lễ tân phải hỏi PT rồi tích xác nhận.
-            int unconfirmed = countNewSlots(view.getDays());
+            int unconfirmed = countNewSlots(planBlock.getDays());
             if (unconfirmed > 0 && !input.confirmPt) {
                 throw new IllegalArgumentException("Có " + unconfirmed + " buổi PT chưa mở khung giờ đó. "
                         + "Hỏi PT rồi tích \"Đã xác nhận với PT\" trước khi giữ lịch.");
@@ -815,53 +996,61 @@ public class PtSaleService {
 
             // Ca đang mở (đơn tại quầy bắt buộc thuộc 1 ca). Chưa mở ca → MSG109, giống Bán hàng tại quầy.
             int shiftId = openShiftId(Messages.MSG109_SHIFT_NOT_OPEN_FOR_SALE);
-            PackageRow pkg = saleDAO.findPackage(connection, view.getPackageId());
+            PackageRow pkg = saleDAO.findPackage(connection, choice.getPackageId());
             int vatRate = configService.getInt(SystemConfigService.VAT_PERCENT);
             String code = saleDAO.nextOrderCode(connection, now.getYear());
-            Integer partnerId = view.getPartner() == null ? null : view.getPartner().getCustomerId();
-            int orderId = saleDAO.insertPendingOrder(connection, code, view.getHolder().getCustomerId(), partnerId, pkg,
+            Integer partnerId = buyer.getPartner() == null ? null : buyer.getPartner().getCustomerId();
+            int orderId = saleDAO.insertPendingOrder(connection, code, buyer.getHolder().getCustomerId(), partnerId, pkg,
                     receptionist[0], shiftId, vatRate, vatAmount(pkg.price, vatRate), now);
 
             LocalDateTime expires = now.plusMinutes(HOLD_MINUTES);
-            for (PtSaleDay day : view.getDays()) {
+            for (PtSaleDay day : planBlock.getDays()) {
                 if (!day.isSession()) {
                     continue;
                 }
                 if ("book".equals(day.getAction())) {
-                    if (!saleDAO.holdFreeSlot(connection, day.getSlotId(), view.getPtId(), orderId, expires)) {
+                    if (!saleDAO.holdFreeSlot(connection, day.getSlotId(), choice.getPtId(), orderId, expires)) {
                         throw new IllegalArgumentException(day.getDayLabel() + ": " + Messages.MSG103_SLOT_ALREADY_TAKEN);
                     }
                 } else {
-                    saleDAO.insertHeldSlot(connection, view.getPtId(), day.getDate(), day.getStartTime(), day.getEndTime(),
+                    saleDAO.insertHeldSlot(connection, choice.getPtId(), day.getDate(), day.getStartTime(), day.getEndTime(),
                             orderId, expires, now);
                 }
             }
-            return ServiceResult.ok(orderId, String.format(Messages.MSG307_PT_SALE_HELD, view.getSessionCount(), HOLD_MINUTES, code));
+            return ServiceResult.ok(orderId, String.format(
+                    Messages.MSG307_PT_SALE_HELD,
+                    planBlock.getSessionCount(),
+                    HOLD_MINUTES,
+                    code));
         });
     }
 
     /** HÀM PHỤ (hold) — câu lỗi đầu tiên chặn việc giữ chỗ (theo thứ tự bước); null = giữ được. */
     static String firstProblem(PtSaleView view) {
-        if (view.getHolder() == null) {
-            return view.getHolderError() != null ? view.getHolderError() : "Chọn khách trước.";
+        PtSaleChoiceBlock choice = view.getChoice();
+        PtSaleBuyerBlock buyer = view.getBuyer();
+        PtSalePlanBlock planBlock = view.getPlan();
+
+        if (buyer.getHolder() == null) {
+            return buyer.getHolderError() != null ? buyer.getHolderError() : "Chọn khách trước.";
         }
-        if (view.getHolder().getBlockReason() != null) {
-            return view.getHolder().getBlockReason();
+        if (buyer.getHolder().getBlockReason() != null) {
+            return buyer.getHolder().getBlockReason();
         }
-        if (view.getPartnerError() != null) {
-            return view.getPartnerError();
+        if (buyer.getPartnerError() != null) {
+            return buyer.getPartnerError();
         }
-        if (view.getPartner() != null && view.getPartner().getBlockReason() != null) {
-            return view.getPartner().getBlockReason();
+        if (buyer.getPartner() != null && buyer.getPartner().getBlockReason() != null) {
+            return buyer.getPartner().getBlockReason();
         }
-        if (view.getChoiceError() != null) {
-            return view.getChoiceError();
+        if (choice.getChoiceError() != null) {
+            return choice.getChoiceError();
         }
-        if (view.getEndDate() == null) {
+        if (choice.getEndDate() == null) {
             return "Chọn đủ gói, PT và ngày bắt đầu.";
         }
-        if (view.getPlanError() != null) {
-            return view.getPlanError();
+        if (planBlock.getPlanError() != null) {
+            return planBlock.getPlanError();
         }
         return view.isReady() ? null : "Chọn ít nhất 1 buổi tập.";
     }
@@ -904,7 +1093,15 @@ public class PtSaleService {
                 throw new IllegalArgumentException(label + ": PT không có khung " + DateTimeUtil.formatTime(time)
                         + ". Chọn lại buổi này.");
             }
-            PtSaleDay day = checkDay(date, time, minutes, sameDay, leaves, exceptions, busy, now);
+            PtSaleDay day = checkDay(
+                    date,
+                    time,
+                    minutes,
+                    sameDay,
+                    leaves,
+                    exceptions,
+                    busy,
+                    now);
             if (!day.isSession()) {
                 throw new IllegalArgumentException(label + " lúc " + DateTimeUtil.formatTime(time) + ": "
                         + day.getReason() + ". Chọn lại buổi này.");
@@ -1003,7 +1200,14 @@ public class PtSaleService {
             if (!saleDAO.markOrderPaid(connection, orderId, now)) {
                 throw new IllegalArgumentException("Đơn này không còn chờ thu tiền.");
             }
-            saleDAO.insertTransaction(connection, orderId, held.price, method, ref, receptionist[0], now);
+            saleDAO.insertTransaction(
+                    connection,
+                    orderId,
+                    held.price,
+                    method,
+                    ref,
+                    receptionist[0],
+                    now);
 
             // B2: gói PT. Số buổi = số khung đang giữ; giá trị buổi = giá ÷ số buổi (DBR-59).
             LocalDate end = DateTimeUtil.calculateEndDateByMonths(start, pkg.months);
@@ -1028,12 +1232,30 @@ public class PtSaleService {
                 if (!saleDAO.bookHeldSlot(connection, slot.getTimeSlotId(), orderId)) {
                     throw new IllegalArgumentException(Messages.MSG103_SLOT_ALREADY_TAKEN);
                 }
-                saleDAO.insertSession(connection, subscriptionId, slot.getTimeSlotId(), held.ptId, value, commission);
+                saleDAO.insertSession(
+                        connection,
+                        subscriptionId,
+                        slot.getTimeSlotId(),
+                        held.ptId,
+                        value,
+                        commission);
             }
 
             // B4: thông báo khách (+ người tập cùng) và PT.
-            notifySale(connection, held, pkg, pt == null ? "PT" : pt.fullName, start, end, count, now);
-            return ServiceResult.ok(orderId, String.format(Messages.MSG310_PT_SALE_PAID, money(held.price), held.orderCode, count));
+            notifySale(
+                    connection,
+                    held,
+                    pkg,
+                    pt == null ? "PT" : pt.fullName,
+                    start,
+                    end,
+                    count,
+                    now);
+            return ServiceResult.ok(orderId, String.format(
+                    Messages.MSG310_PT_SALE_PAID,
+                    money(held.price),
+                    held.orderCode,
+                    count));
         });
     }
 
@@ -1086,7 +1308,11 @@ public class PtSaleService {
     }
 
     /** HÀM PHỤ (notifySale) — 1 thông báo hệ thống + 1 người nhận cho mỗi tài khoản. Nội dung quá 500 ký tự thì cắt. */
-    private void notify(Connection connection, List<Integer> accountIds, String title, String content) throws SQLException {
+    private void notify(
+            Connection connection,
+            List<Integer> accountIds,
+            String title,
+            String content) throws SQLException {
         if (accountIds.isEmpty()) {
             return;
         }
@@ -1117,7 +1343,13 @@ public class PtSaleService {
                 throw new IllegalArgumentException("Đơn này không còn giữ chỗ.");
             }
             // Lễ tân chủ động hủy → CancelledByReceptionist.
-            saleDAO.releaseHold(connection, orderId, held.createdAt, CANCEL_BY_RECEPTIONIST, RELEASE_REASON, now);
+            saleDAO.releaseHold(
+                    connection,
+                    orderId,
+                    held.createdAt,
+                    CANCEL_BY_RECEPTIONIST,
+                    RELEASE_REASON,
+                    now);
             return ServiceResult.ok(orderId, String.format(Messages.MSG311_PT_SALE_RELEASED, held.orderCode));
         });
     }
@@ -1144,7 +1376,13 @@ public class PtSaleService {
                 HeldOrder held = saleDAO.findHeldOrder(connection, orderId, true);
                 if (held != null && "Pending".equals(held.status)) {
                     // Hết 15 phút chưa thu tiền → PaymentTimeout (BR-93), không phải "lễ tân hủy".
-                    saleDAO.releaseHold(connection, orderId, held.createdAt, CANCEL_TIMEOUT, EXPIRED_REASON, now);
+                    saleDAO.releaseHold(
+                            connection,
+                            orderId,
+                            held.createdAt,
+                            CANCEL_TIMEOUT,
+                            EXPIRED_REASON,
+                            now);
                 }
                 return ServiceResult.ok(orderId);
             });

@@ -5,7 +5,7 @@
  Nhúng vào: pt-sales.jsp (static include → dùng chung biến với trang cha).
  Đang giữ (sale.held):        form POST action=pay "Xác nhận đã thu tiền" + form POST action=release "Hủy giữ chỗ"
                               → PtSaleServlet.doPost → PtSaleService.pay / release
- Có lịch (sale.planJson):     form POST action=hold "Giữ lịch 15 phút" (data-plan-form)
+ Có lịch (sale.plan.planJson):     form POST action=hold "Giữ lịch 15 phút" (data-plan-form)
                               Các ô ẩn t1..t5 + sessions do pt-sale-plan.js (renderSummary) ĐIỀN trước khi gửi;
                               nút bị khóa (disabled) tới khi có ≥ 1 buổi + đủ khách + (nếu cần) tích "Đã xác nhận với PT".
                               Server vẫn kiểm lại hết (PtSaleService.hold).
@@ -22,8 +22,8 @@
                         <form class="sale-pay" method="post" action="${base}">
                             <input type="hidden" name="csrfToken" value="<c:out value='${csrfToken}' />">
                             <input type="hidden" name="action" value="pay">
-                            <input type="hidden" name="order" value="${sale.heldOrderId}">
-                            <input type="hidden" name="start" value="${sale.startDate}">
+                            <input type="hidden" name="order" value="${sale.heldOrder.orderId}">
+                            <input type="hidden" name="start" value="${sale.choice.startDate}">
                             <fieldset class="sale-method">
                                 <legend class="sale-field-label">Cách thu tiền</legend>
                                 <label><input type="radio" name="method" value="Cash" checked> <i class="fa-solid fa-money-bill-wave" aria-hidden="true"></i> Tiền mặt</label>
@@ -32,7 +32,7 @@
                             <label class="sale-field sale-ref"><span class="sale-field-label">Mã giao dịch <small>(không bắt buộc)</small></span>
                                 <input name="reference" type="text" maxlength="50" autocomplete="off"></label>
                             <label class="sale-confirm"><input type="checkbox" required>
-                                <span>Đã nhận đủ <b><c:out value="${gms:formatMoney(sale.price)}" /></b>.</span></label>
+                                <span>Đã nhận đủ <b><c:out value="${gms:formatMoney(sale.choice.price)}" /></b>.</span></label>
                             <button class="btn btn-primary sale-main" type="submit">Xác nhận đã thu tiền</button>
                         </form>
 
@@ -41,23 +41,23 @@
                             <input type="hidden" name="csrfToken" value="<c:out value='${csrfToken}' />">
 
                             <input type="hidden" name="action" value="release">
-                            <input type="hidden" name="order" value="${sale.heldOrderId}">
-                            <button class="btn btn-ghost sale-release" type="submit" data-confirm-message="Hủy giữ chỗ ${sale.heldCode}? Các khung sẽ trả lại cho PT." data-confirm-title="Hủy giữ chỗ" data-confirm-text="Hủy giữ chỗ">Hủy giữ chỗ</button>
+                            <input type="hidden" name="order" value="${sale.heldOrder.orderId}">
+                            <button class="btn btn-ghost sale-release" type="submit" data-confirm-message="Hủy giữ chỗ ${sale.heldOrder.orderCode}? Các khung sẽ trả lại cho PT." data-confirm-title="Hủy giữ chỗ" data-confirm-text="Hủy giữ chỗ">Hủy giữ chỗ</button>
                         </form>
                     </c:when>
                     <%-- Bước 3: giữ lịch (khung chuyển "Đang giữ" ngay, người khác không lấy được).
                          pt-sale-plan.js điền t1..t5 (lịch mẫu) + sessions (các buổi), mở nút khi có ít nhất 1 buổi. --%>
-                    <c:when test="${not empty sale.planJson}">
+                    <c:when test="${not empty sale.plan.planJson}">
 
                         <%-- FORM GIỮ LỊCH → POST action=hold. data-plan-form = chỗ pt-sale-plan.js tìm form này; data-customer-ready = JSP báo cho JS biết đã đủ khách chưa. --%>
                         <form method="post" action="${base}" data-plan-form data-customer-ready="${customerReady}">
                             <input type="hidden" name="csrfToken" value="<c:out value='${csrfToken}' />">
                             <input type="hidden" name="action" value="hold">
-                            <input type="hidden" name="customer" value="${sale.customerId}">
-                            <input type="hidden" name="partner" value="${sale.partnerId}">
-                            <input type="hidden" name="package" value="${sale.packageId}">
-                            <input type="hidden" name="pt" value="${sale.ptId}">
-                            <input type="hidden" name="start" value="${sale.startDate}">
+                            <input type="hidden" name="customer" value="${sale.buyer.customerId}">
+                            <input type="hidden" name="partner" value="${sale.buyer.partnerId}">
+                            <input type="hidden" name="package" value="${sale.choice.packageId}">
+                            <input type="hidden" name="pt" value="${sale.choice.ptId}">
+                            <input type="hidden" name="start" value="${sale.choice.startDate}">
 
                             <%-- t1..t5 (data-plan-t="1..5") và sessions (data-plan-sessions): RỖNG khi tải trang, pt-sale-plan.js renderSummary điền giờ đã chọn. --%>
                             <c:forEach var="n" begin="1" end="5"><input type="hidden" name="t${n}" value="" data-plan-t="${n}"></c:forEach>

@@ -6,34 +6,30 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * MỘT TUẦN trên Lịch dạy PT:  tuần → 7 ngày (days) → các thẻ trong ngày (items).
- *
- *   Ai tạo?   PtScheduleService.getWeek.
- *   Ai đọc?   PtScheduleServlet đặt vào request với tên "week"; schedule.jsp đọc ${week.days}.
- *
- * Ví dụ xem ngày 27/10/2026:
- *   weekStart=26/10 (Thứ 2), weekEnd=01/11 (Chủ nhật), axisStartHour=5, axisEndHour=22.
- *   "· IN" cuối mỗi field = JSP Lịch dạy có in field này; "· không in" = chỉ dùng để tính / dựng link.
+ * DTO 1 TUẦN của màn Lịch dạy — Service TẠO: PtScheduleService.getWeek (buildEmptyWeek → fillWeek).
+ * Servlet: PtScheduleServlet.loadWeek → request "week" → schedule.jsp + _schedule-toolbar / _schedule-day / _schedule-pending.
+ * Hàm tính sẵn: getShiftSplitHour() = 13 (mốc chia Ca sáng / Ca chiều trên trục giờ).
  */
 public class PtScheduleWeek {
-
-    // ===== Mốc tuần (dùng cho thanh ‹ tuần trước / tuần sau ›) =====
-    private LocalDate weekStart;     // Thứ 2 của tuần đang xem   · IN
-    private LocalDate weekEnd;       // Chủ nhật của tuần đang xem   · IN
-    private LocalDate prevWeek;      // Thứ 2 tuần trước → link ‹   · IN
-    private LocalDate nextWeek;      // Thứ 2 tuần sau  → link ›   · IN
-    private boolean currentWeek;     // tuần đang xem có chứa hôm nay không → ẩn nút "Tuần này"   · IN
-
-    // ===== Trục giờ của lưới (chung cho cả 7 cột) =====
-    private int axisStartHour;       // giờ đầu trục, ví dụ 5 = 05:00   · IN
-    private int axisEndHour;         // giờ cuối trục, ví dụ 22 = 22:00   · IN
-    private int sessionMinutes;      // P-06: mỗi khung dài bao nhiêu phút, ví dụ 90   · IN
-
-    // ===== 7 ngày, Thứ 2 → Chủ nhật =====
-    private List<PtScheduleDay> days = List.of();   // · IN
-
-
-    // ===== Getter / Setter: chỉ đọc và gán, không có nghiệp vụ =====
+    // ===== IN RA MÀN =====
+    // ← thứ Hai của tuần đang xem → "dd/MM – …" trên thanh tuần, khóa nháp (data-draft-key)
+    private LocalDate weekStart;
+    // ← Chủ nhật → "… – dd/MM/yyyy"
+    private LocalDate weekEnd;
+    // ← weekStart − 1 tuần → link "‹" (?date=)
+    private LocalDate prevWeek;
+    // ← weekStart + 1 tuần → link "›", nút "Chép sang tuần sau" (data-next-url)
+    private LocalDate nextWeek;
+    // ← tuần chứa hôm nay → ẩn nút "Tuần này" khi đang ở tuần này
+    private boolean currentWeek;
+    // ← giờ mở cửa sớm nhất trong tuần (P-19 / ngày ngoại lệ / khung có sẵn) → hàng giờ đầu của trục
+    private int axisStartHour;
+    // ← giờ đóng cửa muộn nhất (làm tròn lên) → hàng giờ cuối
+    private int axisEndHour;
+    // ← SystemConfigs P-06 (thời lượng 1 buổi) → "Kết thúc … · N phút", ô ẩn duration của form Công bố
+    private int sessionMinutes;
+    // ← 7 PtScheduleDay (T2 → CN) → 7 cột ngày
+    private List<PtScheduleDay> days = List.of();
 
     public LocalDate getWeekStart() { return weekStart; }
     public void setWeekStart(LocalDate weekStart) { this.weekStart = weekStart; }
@@ -56,11 +52,6 @@ public class PtScheduleWeek {
     public int getAxisEndHour() { return axisEndHour; }
     public void setAxisEndHour(int axisEndHour) { this.axisEndHour = axisEndHour; }
 
-    /**
-     * Giờ chia ca sáng / ca chiều = AppConstants.AFTERNOON_SHIFT_START (13). Không lưu field: mốc cố định của hệ thống.
-     * JSP dùng 2 chỗ: vạch "Ca chiều" trên lưới tuần (--shift-split = giờ này − axisStartHour)
-     * và dòng ngăn "Ca sáng / Ca chiều" ở kiểu danh sách.
-     */
     public int getShiftSplitHour() { return AppConstants.AFTERNOON_SHIFT_START.getHour(); }
 
     public int getSessionMinutes() { return sessionMinutes; }

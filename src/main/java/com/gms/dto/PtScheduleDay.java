@@ -6,40 +6,39 @@ import java.util.List;
 import java.util.ArrayList;
 
 /**
- * MỘT NGÀY (một cột) trên Lịch dạy PT.
- *
- *   Ai tạo?   PtScheduleService.buildDay tạo đủ 7 ngày, kể cả ngày không có khung nào.
- *   Ai đọc?   schedule.jsp in tiêu đề cột và các thẻ trong items.
- *
- * Ví dụ Thứ 3 27/10, mở 05:30–22:00, khung 90 phút:
- *   dayName="Thứ 3", firstStartMinute=330 (05:30), lastStartMinute=1170 (19:30).
- *   "· IN" cuối mỗi field = JSP Lịch dạy có in field này; "· không in" = chỉ dùng để tính / dựng link.
+ * DTO 1 NGÀY (1 cột) của màn Lịch dạy — Service TẠO: PtScheduleService.buildEmptyWeek / buildDay; fillWeek thêm khung.
+ * JSP đọc: _schedule-day.jspf (biến day), _schedule-toolbar.jspf (danh sách ngày thêm được khung).
  */
 public class PtScheduleDay {
+    // ===== IN RA MÀN =====
+    // ← thứ Hai + i → "dd/MM", data-date của cột (JS thả khung nháp vào đúng ngày)
+    private LocalDate date;
+    // ← "Thứ 2"…"Chủ nhật" → tên cột
+    private String dayName;
+    // ← date = hôm nay → tô cột + nhãn "Hôm nay", ngày chọn sẵn trong "Thêm khung"
+    private boolean today;
+    // ← date < hôm nay → cột mờ
+    private boolean past;
+    // ← OperatingHourExceptions.IsClosedAllDay → nhãn "Phòng nghỉ", "Phòng nghỉ cả ngày"
+    private boolean closedAllDay;
+    // ← buildLeaveLabel: "Nghỉ phép ca sáng · chờ duyệt" → nút mở chi tiết đơn nghỉ
+    private String leaveLabel;
+    // ← buildLeaveDetails: nhãn + lý do từng đơn → nội dung khi mở
+    private String leaveDetails;
+    // ← fillWeek: buổi có khách trùng ca nghỉ → "N buổi trùng ca nghỉ" + danh sách
+    private List<String> leaveBookings = new ArrayList<>();
+    // ← setAddRange: phút sớm nhất được thêm khung (null = ngày không thêm được) → data-first; quyết định nút "Thêm khung"
+    private Integer firstStartMinute;
+    // ← setAddRange: phút muộn nhất được bắt đầu khung → data-last
+    private Integer lastStartMinute;
+    // ← fillWeek: các khung / buổi (PtScheduleItem) trong ngày → các ô trên cột
+    private List<PtScheduleItem> items = List.of();
 
-    // ===== Ngày =====
-    private LocalDate date;          // ngày của cột   · IN
-    private String dayName;          // "Thứ 2" ... "Chủ nhật"   · IN
-    private boolean today;           // là hôm nay → tô nổi bật cột   · IN
-    private boolean past;            // trước hôm nay → chỉ xem   · IN
-
-    // ===== Giờ mở cửa (P-19 hoặc giờ ngoại lệ của riêng ngày này) =====
-    private boolean closedAllDay;    // phòng nghỉ cả ngày → openTime/closeTime = null   · IN
-    private LocalTime openTime;      // giờ mở cửa   · không in
-    private LocalTime closeTime;     // giờ đóng cửa   · không in
-    private String leaveLabel;       // nhãn nghỉ phép, ví dụ "Nghỉ phép ca sáng · chờ duyệt"; không nghỉ → ""   · IN
-    private String leaveDetails;   // · IN
-    private List<String> leaveBookings = new ArrayList<>(); // buổi đã có khách trùng ca nghỉ, không tự hủy   · IN
-
-    // ===== Khoảng giờ được THÊM khung mới (phút trong ngày). null = ngày này không thêm được =====
-    private Integer firstStartMinute; // giờ bắt đầu sớm nhất, đã làm tròn mốc 15 phút   · IN
-    private Integer lastStartMinute;  // giờ bắt đầu muộn nhất để khung vẫn kết thúc trước giờ đóng cửa   · IN
-
-    // ===== Các thẻ trong ngày =====
-    private List<PtScheduleItem> items = List.of(); // khung trống + buổi có khách, đã xếp theo giờ   · IN
-
-
-    // ===== Getter / Setter: chỉ đọc và gán, không có nghiệp vụ =====
+    // ===== DÙNG ĐỂ TÍNH (không in thẳng) =====
+    // ← P-19 hoặc giờ ngoại lệ của ngày → setAddRange, trục giờ
+    private LocalTime openTime;
+    // ← như trên
+    private LocalTime closeTime;
 
     public LocalDate getDate() { return date; }
     public void setDate(LocalDate date) { this.date = date; }
