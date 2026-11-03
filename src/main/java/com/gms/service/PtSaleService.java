@@ -17,6 +17,7 @@ import com.gms.dto.PtSaleOption;
 import com.gms.dto.PtSaleView;
 import com.gms.dto.PtScheduleItem;
 import com.gms.dto.ServiceResult;
+import com.gms.entity.Order;
 import com.gms.entity.Shift;
 import com.gms.util.DBContext;
 import com.gms.util.DateTimeUtil;
@@ -69,6 +70,8 @@ public class PtSaleService {
     static final int HOLD_MINUTES = 15;                      // giữ chỗ bao lâu
     static final String EXPIRED_REASON = "Hết 15 phút giữ chỗ, chưa thu tiền";
     static final String RELEASE_REASON = "Lễ tân hủy giữ chỗ, chưa thu tiền";
+    static final String CANCEL_BY_RECEPTIONIST = Order.CancelType.CANCELLED_BY_RECEPTIONIST.getDbValue(); // lễ tân bấm Hủy
+    static final String CANCEL_TIMEOUT = Order.CancelType.PAYMENT_TIMEOUT.getDbValue();                   // hết 15 phút (BR-93)
 
     // Lớp dưới mà Service này gọi (xem "SERVICE GỌI AI?" ở đầu file)
     private final PtSaleDAO saleDAO = new PtSaleDAO();
@@ -1048,7 +1051,8 @@ public class PtSaleService {
             if (held == null || !"Pending".equals(held.status)) {
                 throw new IllegalArgumentException("Đơn này không còn giữ chỗ.");
             }
-            saleDAO.releaseHold(connection, orderId, held.createdAt, RELEASE_REASON, now);
+            // Lễ tân chủ động hủy → CancelledByReceptionist.
+            saleDAO.releaseHold(connection, orderId, held.createdAt, CANCEL_BY_RECEPTIONIST, RELEASE_REASON, now);
             return ServiceResult.ok(orderId, String.format(Messages.MSG311_PT_SALE_RELEASED, held.orderCode));
         });
     }
@@ -1074,7 +1078,8 @@ public class PtSaleService {
             inTransaction(connection -> {
                 HeldOrder held = saleDAO.findHeldOrder(connection, orderId, true);
                 if (held != null && "Pending".equals(held.status)) {
-                    saleDAO.releaseHold(connection, orderId, held.createdAt, EXPIRED_REASON, now);
+                    // Hết 15 phút chưa thu tiền → PaymentTimeout (BR-93), không phải "lễ tân hủy".
+                    saleDAO.releaseHold(connection, orderId, held.createdAt, CANCEL_TIMEOUT, EXPIRED_REASON, now);
                 }
                 return ServiceResult.ok(orderId);
             });

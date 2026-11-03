@@ -797,19 +797,21 @@ public class PtSaleDAO {
 
     /**
      * [release, releaseExpired] Orders: U → Cancelled · TimeSlots: D khung do lần giữ tạo, U còn lại → Free.
-     * Hủy giữ chỗ (lễ tân bấm Hủy, hoặc quá 15 phút): đơn → Cancelled (CancelledByReceptionist, lý do ≥ 5 ký tự),
+     * Hủy giữ chỗ: đơn → Cancelled với cancelType do Service truyền vào —
+     *   lễ tân bấm Hủy → CancelledByReceptionist (lý do ≥ 5 ký tự); quá 15 phút → PaymentTimeout (BR-93),
      * khung do lần giữ này TẠO RA (CreatedAt ≥ lúc tạo đơn) → xóa; khung PT đã công bố từ trước → về Free.
      */
-    public void releaseHold(Connection connection, int orderId, LocalDateTime orderCreatedAt, String reason,
-            LocalDateTime now) throws SQLException {
+    public void releaseHold(Connection connection, int orderId, LocalDateTime orderCreatedAt, String cancelType,
+            String reason, LocalDateTime now) throws SQLException {
         String cancelSql = """
-                UPDATE Orders SET Status = 'Cancelled', CancelType = 'CancelledByReceptionist', CancelledAt = ?, CancelReason = ?
+                UPDATE Orders SET Status = 'Cancelled', CancelType = ?, CancelledAt = ?, CancelReason = ?
                 WHERE OrderId = ? AND Status = 'Pending'
                 """;
         try (PreparedStatement statement = connection.prepareStatement(cancelSql)) {
-            statement.setTimestamp(1, Timestamp.valueOf(now.withNano(0)));
-            statement.setNString(2, reason);
-            statement.setInt(3, orderId);
+            statement.setString(1, cancelType);
+            statement.setTimestamp(2, Timestamp.valueOf(now.withNano(0)));
+            statement.setNString(3, reason);
+            statement.setInt(4, orderId);
             statement.executeUpdate();
         }
         String deleteSql = "DELETE FROM TimeSlots WHERE HeldByOrderId = ? AND Status = 'Held' AND CreatedAt >= ?";

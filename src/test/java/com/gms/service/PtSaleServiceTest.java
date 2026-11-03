@@ -238,4 +238,11 @@ class PtSaleServiceTest {
         assertEquals(375000, PtSaleService.sessionValue(16_500_000, 44));
         assertEquals(1_500_000, PtSaleService.vatAmount(16_500_000, 10));
     }
+
+    @Test
+    void releaseUsesTheRightCancelType() {
+        // BR-93: hết 15 phút → PaymentTimeout; lễ tân bấm "Hủy giữ chỗ" → CancelledByReceptionist.
+        assertEquals("PaymentTimeout", PtSaleService.CANCEL_TIMEOUT);
+        assertEquals("CancelledByReceptionist", PtSaleService.CANCEL_BY_RECEPTIONIST);
+    }
 }
