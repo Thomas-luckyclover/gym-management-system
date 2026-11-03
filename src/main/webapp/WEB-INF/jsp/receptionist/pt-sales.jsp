@@ -32,7 +32,7 @@
 <head>
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Bán gói PT · Super Gym Lễ tân</title>
-    <link rel="stylesheet" href="${ctx}/css/pages/receptionist/pt-sales.css?v=20261103c">
+    <link rel="stylesheet" href="${ctx}/css/pages/receptionist/pt-sales.css?v=20261103e">
     <script src="${ctx}/js/pages/receptionist/pt-sales.js?v=20261103d" defer></script>
     <script src="${ctx}/js/pages/receptionist/pt-sale-plan.js?v=20261103d" defer></script>
 </head>
@@ -131,7 +131,7 @@
                 <p class="sale-total"><span>Phải thu</span><strong><c:choose><c:when test="${sale.price gt 0}"><c:out value="${gms:formatMoney(sale.price)}" /></c:when><c:otherwise>—</c:otherwise></c:choose></strong></p>
 
                 <%-- Bấm "Giữ lịch" bị từ chối → PtSaleServlet đặt saleError, vẽ lại trang với câu lỗi ở đây. --%>
-                <c:if test="${not empty saleError}"><p class="sale-msg is-error" role="alert"><c:out value="${saleError}" /></p></c:if>
+                <c:if test="${not empty saleError}"><p class="sale-msg is-error" role="alert"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> <c:out value="${saleError}" /></p></c:if>
 
 
                 <%@ include file="/WEB-INF/jsp/receptionist/_pt-sale-actions.jspf" %>
