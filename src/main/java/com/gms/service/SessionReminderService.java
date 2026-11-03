@@ -8,45 +8,25 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * SERVICE CỦA JOB-08 — TỰ NHẮC KHÁCH TRƯỚC BUỔI PT 1 NGÀY.
- *
- * QUY TẮC (thay cho nút "Nhắc khách" bấm tay của PT):
- *   Mỗi ngày lúc 00:05, hệ thống xét các buổi PT NGÀY MAI.
- *   Khách nào ngày mai chưa vào được phòng tập (thiếu membership / vé ngày, hoặc đang bảo lưu)
- *   → nhận 1 thông báo ở chuông, nói rõ giờ tập, PT và việc cần làm.
- *   Ngày phòng nghỉ cả ngày thì KHÔNG nhắc (CBR-56: PT phải dời buổi trước ngày nghỉ).
- *   Mỗi khách chỉ nhận 1 lời nhắc cho 1 ngày tập (job chạy lại cũng không gửi trùng).
- *   Có 2 buổi cùng ngày thì lời nhắc nêu buổi sớm nhất — thiếu quyền vào gym là chuyện của cả ngày.
- *
- * Vì sao nhắc? Không vào được phòng tập thì JOB-04 sẽ chốt buổi là Vắng → khách mất buổi.
- * Nhắc trước 1 ngày để khách kịp mua gói / vé ngày.
- *
- * ❓ VẤN ĐÁP (mỗi câu kèm luồng file để mở theo khi trả lời):
- *   1) JOB-08 làm gì? → mỗi ngày 00:05 nhắc khách có buổi PT NGÀY MAI nhưng chưa vào được phòng tập (thiếu membership/vé ngày hoặc đang bảo lưu).
- *      File: job/BackgroundJobScheduler.java → job/RemindMissingGymAccessJob.java → service/SessionReminderService.java.
- *   2) Vì sao phải nhắc? → nếu không kịp mua gói/vé, JOB-04 sẽ chốt buổi là Vắng → khách mất buổi. Nhắc trước 1 ngày để khách kịp xử lý.
- *      File: service/SessionReminderService.java → service/AutoCloseSessionService.java (JOB-04 chốt Vắng nếu không xử lý).
- *   3) Có gửi trùng không? → không: mỗi khách chỉ 1 lời nhắc cho 1 ngày tập (DAO lọc, job chạy lại cũng không gửi lại).
- *      File: service/SessionReminderService.java → dao/SessionReminderDAO.java (lọc khách chưa nhắc).
+ * JOB-08 — gửi thông báo cho khách có buổi PT NGÀY MAI nhưng chưa vào gym được (không gói / bảo lưu).
+ * Mỗi khách chỉ nhận 1 lần cho 1 ngày (SessionReminderDAO.sendOnce kiểm trùng tiêu đề).
  */
 public class SessionReminderService {
-
     private final SessionReminderDAO reminderDAO = new SessionReminderDAO();
 
-
-    /**
-     * HÀM CHÍNH — RemindMissingGymAccessJob.run() gọi mỗi ngày (BackgroundJobScheduler, lượt 00:05).
-     * Trả số thông báo đã gửi trong lượt này (để in log).
-     */
+    // Chạy job (BackgroundJobScheduler gọi lúc 00:05). Trả về: số thông báo mới đã gửi.
     public int runJob() throws SQLException {
-        // B1: ngày cần xét = ngày mai theo giờ Việt Nam (plusDays(1) = nhắc trước 1 ngày; muốn trước 2 ngày thì đổi thành 2).
+        // B1: ngày cần nhắc = ngày mai
         LocalDate tomorrow = DateTimeUtil.today().plusDays(1);
 
-        // B2: DAO tìm những người ngày mai chưa vào được phòng tập.
+        // B2: SessionReminderDAO.findCustomersToRemind → các khách (cả người tập cùng) có buổi ngày mai
+        //     mà CHƯA có quyền vào gym; đã bỏ ngày phòng nghỉ và buổi ngoài giờ mở cửa
         List<Reminder> reminders = reminderDAO.findCustomersToRemind(tomorrow);
 
-        // B3: gửi từng người. Mỗi người một transaction riêng: một người lỗi không chặn người khác.
         int sent = 0;
+
+        // B3: mỗi khách → sendOnce: Notifications + NotificationRecipients thêm 1 dòng (đã gửi rồi thì bỏ qua)
+        //     1 khách lỗi thì in lỗi, chạy tiếp khách sau
         for (Reminder reminder : reminders) {
             try {
                 boolean isNew = reminderDAO.sendOnce(reminder.accountId(), buildTitle(tomorrow), buildContent(reminder, tomorrow));
@@ -58,30 +38,27 @@ public class SessionReminderService {
             }
         }
 
+        // B4: in log số khách đã nhắc
         System.out.println("[JOB-08] Đã nhắc " + sent + " khách cho các buổi PT ngày " + DateTimeUtil.formatDate(tomorrow) + ".");
         return sent;
     }
 
     /**
-     * HÀM PHỤ — gọi ở B3 của runJob.
-     * Tiêu đề có ngày tập để chống gửi trùng (SessionReminderDAO.sendOnce so tiêu đề).
-     * Ví dụ: "Nhắc buổi PT ngày 27/10/2026".
+     * HÀM PHỤ (runJob B3) — tiêu đề "Nhắc buổi PT ngày dd/MM/yyyy" (cũng là khóa chống gửi trùng).
      */
     static String buildTitle(LocalDate sessionDate) {
         return "Nhắc buổi PT ngày " + DateTimeUtil.formatDate(sessionDate);
     }
 
     /**
-     * HÀM PHỤ — gọi ở B3 của runJob. Câu nhắc tùy lý do (bảo lưu hay chưa có gói).
-     * Ví dụ: "Ngày mai 27/10/2026 lúc 18:00 bạn có buổi PT với Đinh Công Sơn nhưng chưa có membership..."
+     * HÀM PHỤ (runJob B3) — nội dung: "Ngày mai … lúc … bạn có buổi PT với …" + lý do:
+     *   đang bảo lưu → nhắc liên hệ lễ tân · không có gói / vé ngày → nhắc mua trước giờ tập.
      */
     static String buildContent(Reminder reminder, LocalDate sessionDate) {
         String when = "Ngày mai " + DateTimeUtil.formatDate(sessionDate)
                 + " lúc " + DateTimeUtil.formatTime(reminder.startTime())
                 + " bạn có buổi PT với " + reminder.ptName();
 
-        // Đang bảo lưu thì mua vé ngày cũng KHÔNG vào được (luật JOB-04: có gói VÀ không bảo lưu)
-        // → không khuyên mua vé ngày, chỉ bảo liên hệ lễ tân.
         if (reminder.frozen()) {
             return when + " nhưng membership của bạn đang bảo lưu vào ngày này. "
                     + "Hãy liên hệ lễ tân kiểm tra thời gian bảo lưu trước giờ tập để buổi không bị tính vắng.";

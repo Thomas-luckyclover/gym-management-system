@@ -15,31 +15,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * DAO CỦA JOB-04 — chỉ đọc / ghi database; luật chốt buổi nằm ở AutoCloseSessionService.
- *
- * AutoCloseSessionService gọi 3 hàm theo đúng thứ tự:
- *   1. findOverdueSessionIds   (B1 của runJob)          đọc   Sessions + TimeSlots → danh sách SessionId
- *   2. findDataForClosing      (B1 của closeOneSession) đọc   1 buổi + gói, bảo lưu, check-in → SessionAutoCloseData
- *   3. closeScheduledSession   (B3 của closeOneSession) ghi   Status / MissedReason vào Sessions
- *
- * Kết nối (Connection) do Service mở và truyền vào → Service tự quản lý transaction (commit / rollback).
+ * DAO của JOB-04 — đọc buổi quá hạn, đọc dữ liệu để chốt, ghi kết quả vào bảng Sessions.
  */
 public class AutoCloseSessionDAO {
-
-    // =================================================================================================
-    // 1. TÌM BUỔI CẦN CHỐT
-    // =================================================================================================
-
-    /**
-     * HÀM CHÍNH — AutoCloseSessionService.findOverdueSessionIds gọi (B1 của runJob).
-     * Chỉ trả MÃ buổi, chưa đọc điều kiện hay sửa buổi.
-     *
-     * Bảng đọc: Sessions (Status, SessionId) JOIN TimeSlots (SlotDate).
-     * @param today ngày hiện tại theo giờ VN, Service lấy một lần
-     * @return các SessionId, VD [91, 105]; không có buổi nào thì []
-     */
+    // Đọc Sessions JOIN TimeSlots: buổi Scheduled có SlotDate < hôm nay, xếp theo ngày.
+    // Trả về: List<Integer> SessionId (chưa khóa — Service khóa từng buổi lúc chốt).
     public List<Integer> findOverdueSessionIds(Connection connection, LocalDate today) throws SQLException {
-        // B1: chọn buổi Scheduled có ngày tập trước today, kể cả buổi sót từ nhiều ngày trước.
         String sql = """
                 SELECT s.SessionId
                 FROM Sessions s
@@ -51,7 +32,6 @@ public class AutoCloseSessionDAO {
 
         List<Integer> sessionIds = new ArrayList<>();
 
-        // B2: mỗi dòng SQL trả một SessionId; add đưa mã đó vào danh sách Java.
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setDate(1, Date.valueOf(today));
 
@@ -65,30 +45,12 @@ public class AutoCloseSessionDAO {
         return sessionIds;
     }
 
-
-    // =================================================================================================
-    // 2. ĐỌC DỮ KIỆN CỦA 1 BUỔI
-    // =================================================================================================
-
-    /**
-     * HÀM CHÍNH — AutoCloseSessionService.closeOneSession gọi ở B1, mỗi buổi một lần.
-     * Đọc mọi dữ kiện của 1 buổi vào SessionAutoCloseData; Service mới quyết định kết quả.
-     *
-     * Bảng đọc:
-     *   Sessions + TimeSlots + Subscriptions (gói PT "pt") + Orders (PartnerCustomerId của gói đôi)
-     *   Subscriptions "gym" (Membership / DayPass)  → Holder/PartnerHasMembership, Holder/PartnerHasDayPass
-     *   FreezeRecords                               → HolderFrozen, PartnerFrozen
-     *   CheckIns                                    → HasCheckInOnSessionDate
-     * Mỗi cột CASE WHEN EXISTS trả 1 (có) / 0 (không) → Java đọc thành true / false.
-     *
-     * @return DTO của buổi; null khi buổi đã đổi trạng thái hoặc ngày tập chưa qua
-     * @throws SQLException loại gói không phải gói PT, hoặc gói đôi thiếu người tập cùng (dữ liệu hỏng)
-     */
+    // Đọc 1 buổi + mọi thứ cần để chốt, KHÓA dòng buổi tới hết transaction (UPDLOCK, HOLDLOCK).
+    // Bảng: Sessions, TimeSlots, Subscriptions (gói PT + gói gym), Orders (người tập cùng), FreezeRecords, CheckIns,
+    //       OperatingHourExceptions (ngày nghỉ / giờ riêng) + SystemConfigs P-19 (giờ mở cửa mặc định).
+    // Trả về: SessionAutoCloseData; null = buổi không còn Scheduled / chưa qua ngày.
     public SessionAutoCloseData findDataForClosing(Connection connection, int sessionId, LocalDate today)
             throws SQLException {
-        // B1: đọc dữ kiện của buổi tại ngày tập. CASE/EXISTS trả 1 nếu có, 0 nếu không.
-        // pt là gói PT tạo ra buổi; gym là Membership/DayPass dùng để vào gym.
-        // Expired/Used vẫn có thể đã hợp lệ vào ngày tập vì JOB chạy sau ngày đó.
         String sql = """
                 SELECT s.SessionId, t.SlotDate, pt.SubscriptionType, o.PartnerCustomerId,
                        -- Khách đứng tên: membership, DayPass và bảo lưu tại ngày tập.
@@ -163,8 +125,8 @@ public class AutoCloseSessionDAO {
                   AND t.SlotDate < ?
                 """;
 
-        // B2: đọc đúng sessionId trong transaction của buổi; nếu không còn dòng thì Service bỏ qua.
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            // ? 1 = SessionId · ? 2 = hôm nay (chỉ buổi đã qua ngày)
             statement.setInt(1, sessionId);
             statement.setDate(2, Date.valueOf(today));
 
@@ -173,7 +135,7 @@ public class AutoCloseSessionDAO {
                     return null;
                 }
 
-                // B3: đổi 'PTCouple' từ DB thành Package.Type.PT_COUPLE; kiểm tra partner của gói đôi.
+                // Kiểm dữ liệu hỏng: gói không phải gói PT → lỗi; gói đôi mà thiếu người tập cùng → lỗi (Service rollback buổi này)
                 Package.Type ptSubscriptionType = Package.Type.fromDbValue(
                         resultSet.getString("SubscriptionType"));
                 if (ptSubscriptionType == null || !ptSubscriptionType.isPtService()) {
@@ -181,13 +143,13 @@ public class AutoCloseSessionDAO {
                 }
 
                 int partnerCustomerId = resultSet.getInt("PartnerCustomerId");
-                // getInt trả 0 cả khi cột NULL; wasNull() cho biết có thật sự thiếu partner hay không.
+
                 boolean hasPartner = !resultSet.wasNull();
                 if (ptSubscriptionType == Package.Type.PT_COUPLE && !hasPartner) {
                     throw new SQLException("Gói PT đôi thiếu PartnerCustomerId, SessionId=" + sessionId);
                 }
 
-                // B4: lấy các cột vừa đọc để tạo một DTO; Service sẽ xét DTO này sau.
+                // Dòng kết quả → SessionAutoCloseData (các cột 0/1 → boolean)
                 return new SessionAutoCloseData(
                         resultSet.getInt("SessionId"),
                         resultSet.getDate("SlotDate").toLocalDate(),
@@ -208,28 +170,20 @@ public class AutoCloseSessionDAO {
         }
     }
 
-    /** SQL TIME có thể null khi cấu hình P-19 lỗi; để Service xử lý như dữ liệu không hợp lệ. */
+    /**
+     * HÀM PHỤ — cột time có thể NULL (cấu hình P-19 lỗi) → null.
+     */
     private static java.time.LocalTime toLocalTime(Time value) {
         return value == null ? null : value.toLocalTime();
     }
 
-
-    // =================================================================================================
-    // 3. GHI KẾT QUẢ
-    // =================================================================================================
-
-    /**
-     * HÀM CHÍNH — AutoCloseSessionService.closeOneSession gọi ở B3.
-     * Ghi kết quả Service đã chọn vào đúng 1 buổi: Status, MissedReason, CancelType, CancelledAt (khi hủy), IsAutoClosed = 1,
-     * AttendanceMarkedAt = bây giờ.
-     *
-     * Bảng ghi: Sessions (JOIN TimeSlots để kiểm tra lại ngày tập đã qua).
-     * @return true = UPDATE đổi đúng 1 buổi; false = buổi không còn Scheduled → Service rollback
-     */
+    // Ghi kết quả chốt vào bảng Sessions (chỉ khi buổi VẪN Scheduled và đã qua ngày).
+    //   Status / MissedReason / CancelType = kết quả evaluate · IsAutoClosed = 1 · AttendanceMarkedAt = bây giờ
+    //   GymClosed → CommissionAmount = 0 · có CancelType → CancelledAt = bây giờ
+    // Trả về: true = cập nhật đúng 1 dòng.
     public boolean closeScheduledSession(Connection connection, int sessionId, LocalDate today,
             Session.Status status, Session.MissedReason missedReason,
             Session.CancelType cancelType) throws SQLException {
-        // B1: WHERE kiểm tra lại Scheduled, tránh ghi đè buổi đã được chốt/hủy.
         String sql = """
                 UPDATE s
                 SET Status = ?,
@@ -246,8 +200,8 @@ public class AutoCloseSessionDAO {
                   AND t.SlotDate < ?
                 """;
 
-        // B2: Status dùng giá trị DB của enum; CheckedIn có MissedReason = NULL.
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            // ? 1 Status · ? 2 MissedReason · ? 3 CancelType · ? 4, ? 5 = CancelType (cho 2 câu CASE) · ? 6 SessionId · ? 7 hôm nay
             statement.setString(1, status.getDbValue());
 
             if (missedReason == null) {
@@ -262,14 +216,12 @@ public class AutoCloseSessionDAO {
                 statement.setString(3, cancelType.getDbValue());
             }
 
-            // GymClosed không phát sinh hoa hồng; các kết quả khác giữ nguyên giá trị đã chốt.
             if (cancelType == null) {
                 statement.setNull(4, Types.VARCHAR);
             } else {
                 statement.setString(4, cancelType.getDbValue());
             }
 
-            // Buổi bị hủy (GymClosed) phải có CancelledAt — CK_Sessions_Cancel; buổi CheckedIn / Missed để NULL.
             if (cancelType == null) {
                 statement.setNull(5, Types.VARCHAR);
             } else {
@@ -279,7 +231,6 @@ public class AutoCloseSessionDAO {
             statement.setInt(6, sessionId);
             statement.setDate(7, Date.valueOf(today));
 
-            // B3: trả số dòng đã đổi thành true/false; DAO chưa tự commit transaction.
             return statement.executeUpdate() == 1;
         }
     }
