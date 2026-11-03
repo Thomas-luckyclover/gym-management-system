@@ -367,9 +367,10 @@ CREATE TABLE Orders (
         CancelType IS NULL OR CancelType <> 'CancelledByReceptionist'
         OR (Channel = 'Counter' AND CancelReason IS NOT NULL AND LEN(LTRIM(RTRIM(CancelReason))) >= 5)
     ),
-    -- Hủy loại "quá hạn" / "bị thay thế" chỉ có ở đơn online (CBR-70, CBR-71)
+    -- "Bị thay thế" chỉ có ở đơn online (CBR-71). "Quá hạn" (PaymentTimeout) có ở đơn online (CBR-70)
+    -- VÀ đơn tại quầy giữ lịch gói PT hết 15 phút chưa thu tiền (BR-93).
     CONSTRAINT CK_Orders_OnlineCancel CHECK (
-        CancelType IS NULL OR CancelType NOT IN ('PaymentTimeout','ReplacedByNewOrder') OR Channel = 'Online'
+        CancelType IS NULL OR CancelType <> 'ReplacedByNewOrder' OR Channel = 'Online'
     ),
     -- Paid → Cancelled chỉ theo CBR-11, nên đơn đã hủy vẫn có thể có PaidAt
     CONSTRAINT CK_Orders_Paid CHECK (
