@@ -979,7 +979,13 @@ public final class Messages {
 
     /** Công bố chỉ gỡ khung. %d = số khung. */
     public static final String MSG322_PT_SLOTS_REMOVED = "Đã gỡ %d khung giờ.";
+    /** CBR-77: chuyển khoản phải được lễ tân xác nhận tiền đã về. */
+    public static final String MSG326_TRANSFER_NOT_CONFIRMED =
+            "Vui lòng tick xác nhận đã nhận đủ tiền trong tài khoản trước khi hoàn tất.";
 
+    /** Mã giao dịch chuyển khoản quá dài. */
+    public static final String MSG327_TRANSFER_REFERENCE_TOO_LONG =
+            "Mã giao dịch chuyển khoản tối đa 50 ký tự.";
     private Messages() {
     }
 }

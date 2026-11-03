@@ -6,6 +6,7 @@ import com.gms.integration.EmailSendException;
 import com.gms.dao.CounterSaleDAO;
 import com.gms.dao.CustomerDAO;
 import com.gms.dao.OrderDAO;
+import com.gms.dao.PaymentDAO;
 import com.gms.dao.PersonDAO;
 import com.gms.dao.PtSaleDAO;
 import com.gms.dao.ShiftDAO;
@@ -41,14 +42,12 @@ import java.util.Locale;
 /**
  * SERVICE MÀN LỄ TÂN BÁN GÓI TẠI QUẦY (/receptionist/sales), SRS #37.
  *
- * Điều phối luồng bán gói trực tiếp tại quầy lễ tân:
- * 1. getPackageView màn Chọn gói: 3 danh sách thẻ theo tab
- * 2. getPackageCard tải một thẻ gói (cột Tóm tắt đơn ở các bước sau)
- * 3. searchCustomers tìm khách theo từ khóa (tên / SĐT / mã KH)
- * 4. getCustomer thông tin khách hàng đã chọn
- * 5. checkout ghi nhận thanh toán thực tế (tiền mặt/chuyển khoản), lập đơn
- * Orders,
- * ghi Transactions, cấp Subscriptions, ghi AuditLog trong 1 transaction
+ * Điều phối luồng bán gói trực tiếp tại quầy lễ tân: 1. getPackageView màn Chọn
+ * gói: 3 danh sách thẻ theo tab 2. getPackageCard tải một thẻ gói (cột Tóm tắt
+ * đơn ở các bước sau) 3. searchCustomers tìm khách theo từ khóa (tên / SĐT / mã
+ * KH) 4. getCustomer thông tin khách hàng đã chọn 5. checkout ghi nhận thanh
+ * toán thực tế (tiền mặt/chuyển khoản), lập đơn Orders, ghi Transactions, cấp
+ * Subscriptions, ghi AuditLog trong 1 transaction
  */
 public class CounterSaleService {
 
@@ -67,13 +66,14 @@ public class CounterSaleService {
     private final OrderDAO orderDAO = new OrderDAO();
     private final SubscriptionDAO subscriptionDAO = new SubscriptionDAO();
     private final VoucherDAO voucherDAO = new VoucherDAO();
+    private final PaymentDAO paymentDAO = new PaymentDAO();
     private final SystemConfigService configService = new SystemConfigService();
     private final AuditLogService auditLogService = new AuditLogService();
     private final CounterAccountService counterAccountService = new CounterAccountService();
 
     /**
      * Dựng dữ liệu màn Chọn gói.
-     * 
+     *
      * @param accountId mã tài khoản từ session (không lấy từ request)
      * @return 3 danh sách thẻ theo tab, hoặc thông báo lỗi
      */
@@ -117,7 +117,7 @@ public class CounterSaleService {
 
     /**
      * Lấy một thẻ gói theo mã, dùng ở các bước sau Chọn gói.
-     * 
+     *
      * @param accountId mã tài khoản từ session
      * @param packageId mã gói từ URL
      * @return thẻ gói, hoặc lỗi nếu gói không có / đã tắt bán
@@ -147,12 +147,12 @@ public class CounterSaleService {
 
     /**
      * Tìm khách cho màn Chọn khách.
-     * 
+     *
      * @param accountId mã tài khoản từ session
-     * @param keyword   chữ lễ tân gõ (tên / SĐT / mã KH); dưới 2 ký tự thì trả danh
-     *                  sách rỗng
-     * @return danh sách khách (rỗng nếu chưa gõ đủ hoặc không khớp), hoặc thông báo
-     *         lỗi
+     * @param keyword chữ lễ tân gõ (tên / SĐT / mã KH); dưới 2 ký tự thì trả
+     * danh sách rỗng
+     * @return danh sách khách (rỗng nếu chưa gõ đủ hoặc không khớp), hoặc thông
+     * báo lỗi
      */
     public ServiceResult<List<CounterCustomerRow>> searchCustomers(int accountId, String keyword) {
         // B1: chưa gõ đủ ký tự thì không truy vấn.
@@ -187,11 +187,11 @@ public class CounterSaleService {
 
     /**
      * Lấy khách đã chọn (URL có ?customer=…).
-     * 
-     * @param accountId  mã tài khoản từ session
+     *
+     * @param accountId mã tài khoản từ session
      * @param customerId mã khách từ URL
-     * @return khách, hoặc lỗi nếu chưa mở ca / hồ sơ không có / là hồ sơ của chính
-     *         lễ tân
+     * @return khách, hoặc lỗi nếu chưa mở ca / hồ sơ không có / là hồ sơ của
+     * chính lễ tân
      */
     public ServiceResult<CounterCustomerRow> getCustomer(int accountId, int customerId) {
         try (Connection connection = DBContext.getConnection()) {
@@ -230,13 +230,14 @@ public class CounterSaleService {
     /**
      * TẠO NHANH HỒ SƠ KHÁCH HÀNG TẠI QUẦY (Step 2 - Counter Sales).
      *
-     * Kiểm tra số điện thoại chống trùng 1-1 theo DBR-22.
-     * Tạo Person và Customer trong 1 Transaction, sinh mã KH-nnnn, ghi AuditLog.
+     * Kiểm tra số điện thoại chống trùng 1-1 theo DBR-22. Tạo Person và
+     * Customer trong 1 Transaction, sinh mã KH-nnnn, ghi AuditLog.
      *
      * @param accountId mã tài khoản lễ tân từ session
-     * @param input     thông tin tạo khách (FullName, Phone, DOB, CustomerType,
-     *                  Guardian...)
-     * @return CounterCustomerRow thông tin khách vừa tạo để chọn ngay sang Bước 3
+     * @param input thông tin tạo khách (FullName, Phone, DOB, CustomerType,
+     * Guardian...)
+     * @return CounterCustomerRow thông tin khách vừa tạo để chọn ngay sang Bước
+     * 3
      */
     public ServiceResult<CounterCustomerRow> quickCreateCustomer(int accountId, CounterCustomerCreateInput input) {
         // B1: kiểm tra input hợp lệ
@@ -380,7 +381,22 @@ public class CounterSaleService {
             } catch (EmailSendException e) {
                 connection.rollback();
                 return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
-            } catch (SQLException | RuntimeException e) {
+            } catch (SQLException e) {
+                connection.rollback();
+                boolean isDuplicate = e.getErrorCode() == 2601 || e.getErrorCode() == 2627;
+                if (isDuplicate && !isDependent) {
+                    // Người khác vừa tạo trùng giữa lúc kiểm và lúc ghi: báo như bước kiểm trùng.
+                    Person justCreated = personDAO.findByPhone(phone);
+                    if (justCreated != null) {
+                        return ServiceResult.failField("phone", String.format(
+                                Messages.MSG120_PHONE_EXISTS_FOR_CUSTOMER, phone, justCreated.getFullName()));
+                    }
+                    if (personDAO.findByEmail(email) != null) {
+                        return ServiceResult.failField("email", Messages.MSG12_EMAIL_USED);
+                    }
+                }
+                throw e;
+            } catch (RuntimeException e) {
                 connection.rollback();
                 throw e;
             }
@@ -391,16 +407,15 @@ public class CounterSaleService {
     }
 
     /**
-     * KIỂM TRA MÃ GIẢM GIÁ TẠI QUẦY (AJAX):
-     * Lễ tân nhập mã ưu đãi của khách, hệ thống tính toán số tiền giảm và giá sau
-     * giảm.
+     * KIỂM TRA MÃ GIẢM GIÁ TẠI QUẦY (AJAX): Lễ tân nhập mã ưu đãi của khách, hệ
+     * thống tính toán số tiền giảm và giá sau giảm.
      *
-     * @param accountId  mã tài khoản lễ tân từ session
-     * @param packageId  mã gói tập đang chọn
+     * @param accountId mã tài khoản lễ tân từ session
+     * @param packageId mã gói tập đang chọn
      * @param customerId mã khách hàng thụ hưởng
-     * @param rawCode    mã voucher do khách đọc
-     * @return CounterVoucherResult kết quả kiểm tra và số tiền cập nhật, hoặc thông
-     *         báo lỗi
+     * @param rawCode mã voucher do khách đọc
+     * @return CounterVoucherResult kết quả kiểm tra và số tiền cập nhật, hoặc
+     * thông báo lỗi
      */
     public ServiceResult<CounterVoucherResult> checkVoucher(int accountId, int packageId, int customerId,
             String rawCode) {
@@ -511,23 +526,20 @@ public class CounterSaleService {
     }
 
     /**
-     * THU TIỀN TẠI QUẦY: Lễ tân kiểm tra thực tế (tiền mặt / chuyển khoản) rồi bấm
-     * xác nhận.
-     * Thực hiện trong 1 transaction ACID:
-     * B1: kiểm tra đầu vào và quyền Lễ tân đang làm việc.
-     * B2: kiểm tra ca trực đang mở (SRS 7.2.1 ghi chú 1).
-     * B3: kiểm tra hồ sơ khách hàng và gói dịch vụ còn bán.
-     * B4: tính toán ngày bắt đầu và ngày hết hạn theo DBR-52.
-     * B5: tính toán số tiền và thuế suất VAT P-10 (gồm kiểm tra & giữ lượt
-     * Voucher).
-     * B6: mở transaction ghi nhận Orders, Transactions, Subscriptions, AuditLogs.
-     * B7: đóng gói CounterSaleReceipt trả về.
+     * THU TIỀN TẠI QUẦY: Lễ tân kiểm tra thực tế (tiền mặt / chuyển khoản) rồi
+     * bấm xác nhận. Thực hiện trong 1 transaction ACID: B1: kiểm tra đầu vào và
+     * quyền Lễ tân đang làm việc. B2: kiểm tra ca trực đang mở (SRS 7.2.1 ghi
+     * chú 1). B3: kiểm tra hồ sơ khách hàng và gói dịch vụ còn bán. B4: tính
+     * toán ngày bắt đầu và ngày hết hạn theo DBR-52. B5: tính toán số tiền và
+     * thuế suất VAT P-10 (gồm kiểm tra & giữ lượt Voucher). B6: mở transaction
+     * ghi nhận Orders, Transactions, Subscriptions, AuditLogs. B7: đóng gói
+     * CounterSaleReceipt trả về.
      *
-     * @param accountId        mã tài khoản từ session của lễ tân đang thao tác
+     * @param accountId mã tài khoản từ session của lễ tân đang thao tác
      * @param receptionistName tên hiển thị của lễ tân đang trực ca
-     * @param input            thông tin gói, khách, ngày bắt đầu, hình thức thu
-     *                         tiền và mã voucher từ form POST
-     * @param now              thời điểm ghi nhận đơn hàng và giao dịch
+     * @param input thông tin gói, khách, ngày bắt đầu, hình thức thu tiền và mã
+     * voucher từ form POST
+     * @param now thời điểm ghi nhận đơn hàng và giao dịch
      * @return CounterSaleReceipt biên lai thu tiền chi tiết, hoặc lỗi nghiệp vụ
      */
     public ServiceResult<CounterSaleReceipt> checkout(int accountId, String receptionistName,
@@ -550,7 +562,20 @@ public class CounterSaleService {
         if (!isValidMethod) {
             return ServiceResult.fail(Messages.MSG134_PAYMENT_METHOD_REQUIRED);
         }
-
+        // CBR-77: chuyển khoản chỉ hoàn tất sau khi lễ tân tick đã nhận đủ tiền.
+        String transferRef = null;
+        if (isTransfer) {
+            if (!input.isTransferReceived()) {
+                return ServiceResult.fail(Messages.MSG326_TRANSFER_NOT_CONFIRMED);
+            }
+            String rawRef = input.getTransferReference();
+            if (rawRef != null && !rawRef.isBlank()) {
+                transferRef = rawRef.trim();
+                if (transferRef.length() > 50) {
+                    return ServiceResult.fail(Messages.MSG327_TRANSFER_REFERENCE_TOO_LONG);
+                }
+            }
+        }
         try (Connection connection = DBContext.getConnection()) {
             // B1.1: xác minh tài khoản thuộc Lễ tân đang làm việc.
             int[] receptionist = ptSaleDAO.findReceptionist(connection, accountId);
@@ -584,37 +609,47 @@ public class CounterSaleService {
             if (noPackage || packageInactive) {
                 return ServiceResult.fail(String.format(Messages.MSG08_NOT_FOUND, "gói tập"));
             }
-            if (pkg.getPackageType() == Package.Type.SINGLE_SESSION) {
+            // Màn này chỉ bán gói tập và vé ngày; gói PT bán ở màn PT (UC-21), buổi lẻ chưa có màn riêng.
+            boolean isMembershipPackage = pkg.getPackageType() == Package.Type.MEMBERSHIP;
+            boolean isDayPassPackage = pkg.getPackageType() == Package.Type.DAY_PASS;
+            if (!isMembershipPackage && !isDayPassPackage) {
                 return ServiceResult.fail(Messages.MSG135_PT_SINGLE_NOT_AT_COUNTER);
             }
 
-            // B4: tính toán ngày bắt đầu và ngày hết hạn theo DBR-52.
-            boolean hasPackageEnd = customer.getCurrentPackageEnd() != null;
-            boolean isPackageNotExpired = hasPackageEnd && !customer.getCurrentPackageEnd().isBefore(today);
-            boolean isChained = isPackageNotExpired;
-
-            LocalDate earliestStart = isChained ? customer.getCurrentPackageEnd().plusDays(1) : today;
-            LocalDate maxAllowedStartDate = earliestStart.plusDays(7);
+            // B4: ngày bắt đầu và hết hạn theo DBR-52, CBR-34, CBR-119.
+            boolean isChained = !isDayPassPackage
+                    && customer.getCurrentPackageEnd() != null
+                    && !customer.getCurrentPackageEnd().isBefore(today);
 
             LocalDate startDate;
-            if (input.getStartDate() != null) {
-                boolean isBeforeEarliest = input.getStartDate().isBefore(earliestStart);
-                boolean isAfterMaxDate = input.getStartDate().isAfter(maxAllowedStartDate);
-                if (isBeforeEarliest || isAfterMaxDate) {
-                    return ServiceResult.fail(String.format(Messages.MSG185_START_DATE_RANGE,
-                            DateTimeUtil.formatDate(earliestStart),
-                            DateTimeUtil.formatDate(maxAllowedStartDate)));
-                }
-                startDate = input.getStartDate();
+            if (isDayPassPackage) {
+                // CBR-34: vé ngày có hiệu lực ngay trong ngày thanh toán.
+                startDate = today;
+            } else if (isChained) {
+                // Gói nối tiếp: bắt đầu ngày sau khi gói hiện tại hết hạn, không cho chọn.
+                startDate = customer.getCurrentPackageEnd().plusDays(1);
             } else {
-                startDate = earliestStart;
+                // Gói tập mới: hôm nay, hoặc chọn tối đa 7 ngày tới.
+                LocalDate maxAllowedStartDate = today.plusDays(7);
+                if (input.getStartDate() == null) {
+                    startDate = today;
+                } else {
+                    boolean isBeforeToday = input.getStartDate().isBefore(today);
+                    boolean isAfterMaxDate = input.getStartDate().isAfter(maxAllowedStartDate);
+                    if (isBeforeToday || isAfterMaxDate) {
+                        return ServiceResult.fail(String.format(Messages.MSG136_COUNTER_START_DATE_RANGE,
+                                DateTimeUtil.formatDate(today),
+                                DateTimeUtil.formatDate(maxAllowedStartDate)));
+                    }
+                    startDate = input.getStartDate();
+                }
             }
 
             LocalDate endDate;
-            if (pkg.getDurationMonths() > 0) {
-                endDate = DateTimeUtil.calculateEndDateByMonths(startDate, pkg.getDurationMonths());
+            if (isDayPassPackage) {
+                endDate = startDate;
             } else {
-                endDate = startDate; // DayPass hết hạn cùng ngày
+                endDate = DateTimeUtil.calculateEndDateByMonths(startDate, pkg.getDurationMonths());
             }
 
             // B5: tính số tiền, giảm giá và thuế VAT (P-10).
@@ -682,7 +717,13 @@ public class CounterSaleService {
             // B6: mở transaction ghi nhận vào database.
             connection.setAutoCommit(false);
             try {
-                // B6.0: nếu có voucher, khóa và giữ lượt sử dụng
+                // B6.0: khóa ca trực, tránh thu tiền vào ca vừa được đóng.
+                if (!counterSaleDAO.lockShiftIfOpen(connection, shiftId)) {
+                    connection.rollback();
+                    return ServiceResult.fail(Messages.MSG110_SHIFT_NOT_OPEN_FOR_PAYMENT);
+                }
+
+                // B6.0b: nếu có voucher, khóa và giữ lượt sử dụng.
                 if (voucherId != null) {
                     int reserved = voucherDAO.reserveUse(connection, voucherId);
                     if (reserved != 1) {
@@ -730,7 +771,7 @@ public class CounterSaleService {
 
                 // B6.3: ghi nhận giao dịch Transactions (người nhận tiền là lễ tân đang trực
                 // ca).
-                ptSaleDAO.insertTransaction(connection, orderId, finalAmount, method, null, receptionist[0], now);
+                ptSaleDAO.insertTransaction(connection, orderId, finalAmount, method, transferRef, receptionist[0], now);
 
                 // B6.4: cấp gói Subscriptions trạng thái Active cho hội viên.
                 Subscription subscription = new Subscription(0);
@@ -749,6 +790,9 @@ public class CounterSaleService {
                 }
                 subscription.setStatus(Subscription.Status.ACTIVE);
                 subscriptionDAO.insertOnline(connection, subscription);
+
+                // CBR-01, CBR-02: khách New/Expired thành Active khi mua gói tập hoặc vé ngày.
+                paymentDAO.activateNewOrExpired(connection, customer.getCustomerId());
 
                 // B6.5: ghi nhật ký AuditLogs kiểm soát ca trực.
                 String auditMethodName = "chuyển khoản";
@@ -805,10 +849,10 @@ public class CounterSaleService {
 
     /**
      * Giá của gói tập 1 tháng rẻ nhất đang bán, làm mốc để tính % tiết kiệm.
-     * 
+     *
      * @param packages danh sách tất cả các gói đang bán do DAO đọc
-     * @return giá gói 1 tháng; 0 nếu không có gói 1 tháng (khi đó không hiện nhãn
-     *         tiết kiệm)
+     * @return giá gói 1 tháng; 0 nếu không có gói 1 tháng (khi đó không hiện
+     * nhãn tiết kiệm)
      */
     private long findOneMonthPrice(List<Package> packages) {
         long oneMonthPrice = 0;
@@ -824,14 +868,13 @@ public class CounterSaleService {
     }
 
     /**
-     * Một gói trong DB thành một thẻ trên màn.
-     * Ví dụ "Gói 3 Tháng", 2.190.000đ, mốc 1 tháng 799.000đ: giá mỗi tháng
-     * 730.000đ, tiết kiệm 8%.
-     * 
-     * @param pkg           gói do DAO đọc
+     * Một gói trong DB thành một thẻ trên màn. Ví dụ "Gói 3 Tháng", 2.190.000đ,
+     * mốc 1 tháng 799.000đ: giá mỗi tháng 730.000đ, tiết kiệm 8%.
+     *
+     * @param pkg gói do DAO đọc
      * @param oneMonthPrice giá gói 1 tháng (0 nếu không có)
-     * @param vatRate       thuế suất % (P-10), dùng tách VAT ra khỏi giá đã gồm VAT
-     *                      (DBR-57)
+     * @param vatRate thuế suất % (P-10), dùng tách VAT ra khỏi giá đã gồm VAT
+     * (DBR-57)
      * @return thẻ gói hoàn chỉnh
      */
     private CounterPackageCard buildCard(Package pkg, long oneMonthPrice, int vatRate) {
@@ -904,13 +947,12 @@ public class CounterSaleService {
     }
 
     /**
-     * Các dòng "QUY ĐỊNH" của thẻ. Số liệu bảo lưu (P-01, P-02) và tuổi tối thiểu
-     * (P-05) đọc từ SystemConfigs.
-     * Nội dung theo SRS: gói tập được bảo lưu, áp dụng voucher, chụp ảnh mặt tại
-     * quầy;
-     * vé ngày không bảo lưu, không chụp ảnh; gói PT và buổi lẻ không dùng voucher,
-     * không gồm quyền vào phòng (CBR-58).
-     * 
+     * Các dòng "QUY ĐỊNH" của thẻ. Số liệu bảo lưu (P-01, P-02) và tuổi tối
+     * thiểu (P-05) đọc từ SystemConfigs. Nội dung theo SRS: gói tập được bảo
+     * lưu, áp dụng voucher, chụp ảnh mặt tại quầy; vé ngày không bảo lưu, không
+     * chụp ảnh; gói PT và buổi lẻ không dùng voucher, không gồm quyền vào phòng
+     * (CBR-58).
+     *
      * @param packageType loại gói dịch vụ
      * @return danh sách các dòng quy định
      */

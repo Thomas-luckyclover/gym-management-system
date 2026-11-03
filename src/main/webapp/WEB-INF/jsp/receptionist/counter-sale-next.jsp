@@ -34,7 +34,7 @@
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Xác nhận thanh toán · Super Gym Lễ tân</title>
     <link rel="stylesheet" href="${ctx}/css/pages/receptionist/counter-sale.css?v=20261102_v2">
-    <script src="${ctx}/js/pages/receptionist/counter-sale.js?v=20261031_vVoucherDone" defer></script>
+    <script src="${ctx}/js/pages/receptionist/counter-sale.js?v=20261103_vTransferTick" defer></script>
 </head>
 <body class="dock theme-staff counter-sale-page">
 <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
@@ -142,6 +142,9 @@
                                         <input type="radio" name="startDateMode" id="modeToday" value="today" checked>
                                         <span class="radio-label">
                                             <c:choose>
+                                                <c:when test="${isDayPass}">
+                                                    <strong>Vé ngày có hiệu lực ngay hôm nay</strong> (<c:out value="${todayText}" />)
+                                                </c:when>
                                                 <c:when test="${isChained}">
                                                     <strong>Kích hoạt nối tiếp sau gói hiện tại</strong> (<c:out value="${defaultStartDateText}" />)
                                                 </c:when>
@@ -151,23 +154,28 @@
                                             </c:choose>
                                         </span>
                                     </label>
-                                    <label class="validity-option-radio">
-                                        <input type="radio" name="startDateMode" id="modeCustom" value="custom">
-                                        <span class="radio-label">
-                                            <strong>Hẹn ngày kích hoạt khác</strong> (trong 7 ngày tới)
-                                        </span>
-                                    </label>
+                                    <%-- CBR-119: chỉ gói tập mới (chưa có gói nối tiếp) được hẹn ngày; vé ngày và gói nối tiếp thì không. --%>
+                                    <c:if test="${canPickDate}">
+                                        <label class="validity-option-radio">
+                                            <input type="radio" name="startDateMode" id="modeCustom" value="custom">
+                                            <span class="radio-label">
+                                                <strong>Hẹn ngày kích hoạt khác</strong> (trong 7 ngày tới)
+                                            </span>
+                                        </label>
+                                    </c:if>
                                 </div>
 
                                 <%-- id="customDateWrap" được dùng trong counter-sale.js, hàm initValidityPicker() để toggle ẩn/hiện --%>
-                                <div class="validity-custom-input" id="customDateWrap" hidden>
-                                    <label for="customStartDate" class="field-label">Chọn ngày bắt đầu:</label>
-                                    <input type="date" id="customStartDate" name="customStartDate"
-                                           value="<c:out value='${defaultStartDateIso}' />"
-                                           min="<c:out value='${minStartDateIso}' />"
-                                           max="<c:out value='${maxStartDateIso}' />">
-                                    <span class="field-hint">Chỉ được chọn từ <c:out value="${defaultStartDateText}" /> đến <c:out value="${maxStartDateText}" /></span>
-                                </div>
+                                <c:if test="${canPickDate}">
+                                    <div class="validity-custom-input" id="customDateWrap" hidden>
+                                        <label for="customStartDate" class="field-label">Chọn ngày bắt đầu:</label>
+                                        <input type="date" id="customStartDate" name="customStartDate"
+                                               value="<c:out value='${defaultStartDateIso}' />"
+                                               min="<c:out value='${minStartDateIso}' />"
+                                               max="<c:out value='${maxStartDateIso}' />">
+                                        <span class="field-hint">Chỉ được chọn từ <c:out value="${defaultStartDateText}" /> đến <c:out value="${maxStartDateText}" /></span>
+                                    </div>
+                                </c:if>
 
                                 <div class="validity-dates-preview">
                                     <div class="date-chip">
@@ -211,6 +219,18 @@
                                         </div>
                                     </div>
                                 </label>
+                            </div>
+
+                            <%-- CBR-77: chuyển khoản chỉ hoàn tất sau khi lễ tân xác nhận tiền đã về tài khoản phòng tập. --%>
+                            <%-- id="transferConfirmBox" và "transferReceived" được dùng trong counter-sale.js, hàm initPaymentMethodToggle() --%>
+                            <div class="counter-transfer-confirm" id="transferConfirmBox" hidden>
+                                <label class="counter-transfer-tick" for="transferReceived">
+                                    <input type="checkbox" name="transferReceived" value="true" id="transferReceived">
+                                    <span>Tôi đã kiểm tra tiền đã về tài khoản phòng tập, đủ số tiền</span>
+                                </label>
+                                <input type="text" name="transferReference" id="transferReference"
+                                       maxlength="50" autocomplete="off"
+                                       placeholder="Mã giao dịch chuyển khoản (không bắt buộc)">
                             </div>
                         </div>
 

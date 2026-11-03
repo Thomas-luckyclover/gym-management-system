@@ -250,4 +250,17 @@ public class CounterSaleDAO {
     private static String escapeLike(String text) {
         return text.replace("[", "[[]").replace("%", "[%]").replace("_", "[_]");
     }
+        /**
+     * Khóa dòng ca trực và cho biết ca còn đang mở. Gọi trong transaction của Service:
+     * khóa giữ tới lúc commit, nên đóng ca phải chờ giao dịch này xong.
+     */
+    public boolean lockShiftIfOpen(Connection connection, int shiftId) throws SQLException {
+        String sql = "SELECT Status FROM Shifts WITH (UPDLOCK, HOLDLOCK) WHERE ShiftId = ?";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, shiftId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next() && "Open".equals(resultSet.getString(1));
+            }
+        }
+    }
 }
