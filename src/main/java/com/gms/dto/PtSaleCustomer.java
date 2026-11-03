@@ -3,18 +3,10 @@ package com.gms.dto;
 import java.time.LocalDate;
 
 /**
- * MỘT KHÁCH trên màn Bán gói PT — người đứng tên, hoặc người tập cùng của gói đôi.
- *
- *   PHẦN 1  DAO đọc từ DB → truyền vào CONSTRUCTOR (PtSaleDAO.readCustomer, dùng cho findCustomer + searchCustomers).
- *   PHẦN 2  Service tính thêm → SETTER (PtSaleService.whyCannotBuy → setBlockReason).
- *
- *   Ai in?  _sale-customer.jspf (thẻ khách ở cột "Đơn bán") · pt-sales.jsp (danh sách kết quả khi tắt JS)
- *           · PtSaleServlet.writeSuggestions đổi sang JSON cho ô gợi ý (pt-sales.js).
- *   Cột "In ra màn?" ở mỗi field: CÓ = người dùng nhìn thấy chữ / số này; KHÔNG = chỉ dùng để tính.
+ * 1 KHÁCH trên màn Bán gói PT — DAO tạo: PtSaleDAO.searchCustomers / findCustomer; Service điền blockReason (whyCannotBuy).
+ * Hiện ở: ô gợi ý tìm khách (pt-sales.js nhận JSON), danh sách kết quả, thẻ khách _sale-customer.jspf (biến cust).
  */
 public class PtSaleCustomer {
-
-    /** DAO tạo từ 1 dòng Customers JOIN Persons (+ 2 cột tính sẵn MembershipEnd, IsFrozen). blockReason để trống. */
     public PtSaleCustomer(int customerId, int personId, String customerCode, String customerType, String fullName,
             String phone, LocalDate dateOfBirth, LocalDate membershipEnd, boolean frozen) {
         this.customerId = customerId;
@@ -28,24 +20,30 @@ public class PtSaleCustomer {
         this.frozen = frozen;
     }
 
+    // ===== IN RA MÀN =====
+    // ← Persons.FullName → tên in đậm, chữ cái avatar
+    private final String fullName;
+    // ← Customers.CustomerCode → "KH-2010"
+    private final String customerCode;
+    // ← Persons.Phone (null = hồ sơ phụ thuộc) → SĐT
+    private final String phone;
+    // ← Persons.DateOfBirth → ngày sinh trên thẻ, tính tuổi (whyCannotBuy)
+    private final LocalDate dateOfBirth;
+    // ← MAX(EndDate) gói Membership phủ hôm nay → "Gói thành viên tới dd/MM/yyyy" (null = không có gói)
+    private final LocalDate membershipEnd;
+    // ← whyCannotBuy: null = bán được (thẻ xanh) · có chữ = lý do đỏ, khóa nút Giữ lịch
+    private String blockReason;
 
-    // ---------------- PHẦN 1: DAO đọc (PtSaleDAO.readCustomer) ----------------                  In ra màn?
-    private final int customerId;          // Customers.CustomerId → ?customer=12 trên URL, id trong JSON gợi ý      KHÔNG
-    private final int personId;            // Customers.PersonId → so với lễ tân / PT: không bán cho chính mình      KHÔNG
-    private final String customerCode;     // Customers.CustomerCode "KH-1001"                                      CÓ (thẻ khách, gợi ý)
-    private final String customerType;     // Customers.CustomerType: Self | Dependent                              KHÔNG (qua isDependent)
-    private final String fullName;         // Persons.FullName                                                      CÓ
-    private final String phone;            // Persons.Phone; hồ sơ phụ thuộc = null → in "Hồ sơ phụ thuộc"          CÓ
-    private final LocalDate dateOfBirth;   // Persons.DateOfBirth → whyCannotBuy tính tuổi (P-05)                   CÓ (thẻ khách)
-    private final LocalDate membershipEnd; // SQL tính: MAX(EndDate) gói thành viên Active/Frozen phủ hôm nay; null = không có
-                                           //   → "Gói thành viên tới 21/01/2027"                                  CÓ
-    private final boolean frozen;          // SQL tính: hôm nay nằm trong 1 FreezeRecords → "Đang bảo lưu"          KHÔNG (qua blockReason)
+    // ===== DÙNG ĐỂ KIỂM (không in) =====
+    // ← Customers.CustomerId → ?customer=<id>
+    private final int customerId;
+    // ← Persons.PersonId → chặn lễ tân tự bán cho mình, chặn PT trùng khách
+    private final int personId;
+    // ← Customers.CustomerType
+    private final String customerType;
+    // ← có FreezeRecords phủ hôm nay → "Đang bảo lưu gói thành viên"
+    private final boolean frozen;
 
-    // ---------------- PHẦN 2: Service điền (PtSaleService.whyCannotBuy) ----------------
-    private String blockReason;            // null = bán được; khác null = câu chữ đỏ ("Chưa đủ 10 tuổi…")          CÓ
-
-
-    // ---------------- Getter (JSP đọc bằng ${cust.fullName} …) ----------------
     public int getCustomerId() { return customerId; }
     public int getPersonId() { return personId; }
     public String getCustomerCode() { return customerCode; }
@@ -59,6 +57,5 @@ public class PtSaleCustomer {
     public String getBlockReason() { return blockReason; }
     public void setBlockReason(String blockReason) { this.blockReason = blockReason; }
 
-    /** JSP viết ${c.dependent}: hồ sơ phụ thuộc (không có SĐT riêng). */
     public boolean isDependent() { return "Dependent".equals(customerType); }
 }
