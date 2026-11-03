@@ -150,7 +150,7 @@ public final class PackagePeriod {
             LocalDate otherMembershipEnd) {
         List<LocalDate> days = new ArrayList<>();
         for (LocalDate day : options(today, otherMembershipEnd)) {
-            if (!day.isBefore(currentStart) && !day.isAfter(latestStart(today))) {
+         if (!day.isBefore(currentStart)) {
                 days.add(day);
             }
         }
