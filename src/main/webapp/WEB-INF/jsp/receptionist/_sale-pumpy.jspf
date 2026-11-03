@@ -35,11 +35,12 @@
     <%-- Chân --%>
     <ellipse cx="40" cy="100" rx="10" ry="6" fill="#294F78" stroke="#141414" stroke-width="3"/>
     <ellipse cx="72" cy="100" rx="10" ry="6" fill="#294F78" stroke="#141414" stroke-width="3"/>
-    <%-- Tay phải giơ lên vẫy (nhóm .sale-pumpy-wave: CSS lắc nhẹ) + vệt vẫy --%>
+    <%-- Tay phải giơ lên vẫy (nhóm .sale-pumpy-wave: CSS lắc nhẹ quanh vai) + vệt vẫy.
+         Tay ngắn, bám sát mép thân (vai ~ (95,56), bàn tay (104,42)) cho cân với tay trái. --%>
     <g class="sale-pumpy-wave">
-        <path d="M96 58 Q106 46 104 34" fill="none" stroke="#141414" stroke-width="12" stroke-linecap="round"/>
-        <path d="M96 58 Q106 46 104 34" fill="none" stroke="#294F78" stroke-width="6" stroke-linecap="round"/>
-        <circle cx="104" cy="31" r="7.5" fill="#294F78" stroke="#141414" stroke-width="3"/>
+        <path d="M95 56 Q102 51 104 45" fill="none" stroke="#141414" stroke-width="12" stroke-linecap="round"/>
+        <path d="M95 56 Q102 51 104 45" fill="none" stroke="#294F78" stroke-width="6" stroke-linecap="round"/>
+        <circle cx="104" cy="42" r="7.5" fill="#294F78" stroke="#141414" stroke-width="3"/>
     </g>
-    <path d="M112 20 L117 15 M115 28 L120 26" stroke="#F25A32" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M112 32 L117 27 M114 40 L119 38" stroke="#F25A32" stroke-width="2.4" stroke-linecap="round"/>
 </svg>
