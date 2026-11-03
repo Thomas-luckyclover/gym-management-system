@@ -4,18 +4,20 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 /**
- * Buổi đã bị dời/đổi: lần dời ĐẦU TIÊN cho biết giờ gốc, lần dời CUỐI cho biết ai dời.
- * Màn Gói của tôi dùng để ghi lý do cho "Buổi khác giờ".
- *
- *   Ai tạo?   MyBookingDAO.findMoves — đọc bảng SessionMoveLogs (không phải Service tự tính).
- *   Ai dùng?  MyBookingService.moveNote ghép lý do "đổi từ giờ X sang giờ Y".
+ * DTO lần DỜI BUỔI gần nhất của 1 buổi — DAO TẠO: MyBookingDAO.findMoves (bảng SessionMoveLogs).
+ * Không in thẳng: MyBookingService.moveNote đổi thành câu "PT dời lịch · thay buổi T3 05/11" (MyPtSessionRow.moveNote).
  */
 public class SessionMoveInfo {
-
-    private final int sessionId;
-    private String moveType;               // CustomerSwap | PtOnBehalfSwap | PtReschedule | PtTransfer (lần dời cuối)
-    private final LocalDate originalDate;  // ngày của khung GỐC (OldTimeSlotId của lần dời đầu)
+    // ===== DÙNG ĐỂ TẠO CÂU moveNote =====
+    // ← SessionMoveLogs.MoveType (lần dời MỚI NHẤT) → "Bạn đổi buổi" / "PT đổi giúp bạn" / "PT dời lịch" / "Chuyển PT dạy thay"
+    private String moveType;
+    // ← TimeSlots.SlotDate của khung CŨ (lần dời đầu tiên) → "thay buổi T3 05/11"
+    private final LocalDate originalDate;
+    // ← TimeSlots.StartTime của khung cũ
     private final LocalTime originalStart;
+
+    // ===== KHÔNG IN RA MÀN (chỉ dùng trong code) =====
+    private final int sessionId;
 
     public SessionMoveInfo(int sessionId, String moveType, LocalDate originalDate, LocalTime originalStart) {
         this.sessionId = sessionId;

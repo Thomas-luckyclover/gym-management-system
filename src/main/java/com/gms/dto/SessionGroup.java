@@ -4,14 +4,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Nhóm các buổi có CÙNG trạng thái + CÙNG lý do (màn Gói của tôi).
- * Thay 11 dòng giống hệt nhau bằng 1 dòng: "11 buổi · lý do" + các ngày dạng chip.
+ * DTO 1 NHÓM buổi cùng lý do trong khung "Cần để ý" — Service TẠO: MyBookingService.groupByReason.
+ * JSP đọc: _booking-groups.jspf (biến "g").
  */
 public class SessionGroup {
-
-    private final String statusKey;      // missed | cancelled | warn … → JSP chọn màu nhãn
-    private final String statusLabel;    // "Vắng", "Đã hủy", "Cần chú ý"
-    private final String explanation;    // lý do chung của cả nhóm
+    // ===== IN RA MÀN =====
+    // ← trạng thái chung của nhóm → màu nhãn (data-status)
+    private final String statusKey;
+    // ← chữ trạng thái → nhãn nhóm
+    private final String statusLabel;
+    // ← lý do chung (VD "Chưa có gói thành viên ngày này") → chú thích nhóm
+    private final String explanation;
+    // ← các buổi trong nhóm → "N buổi" + danh sách ngày (bấm mở buổi)
     private final List<MyPtSessionRow> sessions = new ArrayList<>();
 
     public SessionGroup(String statusKey, String statusLabel, String explanation) {

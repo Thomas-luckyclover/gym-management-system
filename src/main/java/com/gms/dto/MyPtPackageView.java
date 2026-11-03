@@ -3,49 +3,62 @@ package com.gms.dto;
 import java.time.LocalDate;
 
 /**
- * 1 GÓI PT (cá nhân / đôi) của khách — 1 thẻ ở cột trái màn "Gói của tôi".
- *   Phần 1: DAO đọc từ DB (MyPtSessionDAO.findMyPackages).
- *   Phần 2: Service tính thêm (MyBookingService).
+ * DTO 1 GÓI PT của khách — DAO TẠO: MyPtSessionDAO.findMyPackages (Subscriptions + Orders + PT + người tập cùng);
+ * Service ĐIỀN thêm: MyBookingService.fillPackage (typeLabel, zaloUrl, partnerName).
+ * JSP đọc: my-bookings.jsp (biến "sp" = gói đang xem) và _booking-package.jspf (biến "p" = 1 thẻ gói ở cột trái).
+ * Hàm tính sẵn: isActive() = tab Đang tập / Đã kết thúc · getProgressPercent() = % vòng tròn "còn N buổi".
  */
 public class MyPtPackageView {
-
-    // ---------------- Phần 1: DAO đọc từ DB ----------------
-    private int subscriptionId;          // mã gói
-    private String type;                 // PTSingle | PTCouple
-    private String status;               // Subscriptions.Status: Active = đang tập, còn lại = đã kết thúc
-    private String packageName;          // tên gói lúc mua
-    private LocalDate startDate;         // thời hạn gói
+    // ===== IN RA MÀN =====
+    // ← Subscriptions.SubscriptionId → link ?package=<id> của thẻ gói (bấm để xem gói)
+    private int subscriptionId;
+    // ← tên gói (snapshot trên đơn) → tên thẻ gói, tiêu đề cột phải
+    private String packageName;
+    // ← Subscriptions.StartDate → "dd/MM/yyyy – …" dưới tên gói
+    private LocalDate startDate;
+    // ← Subscriptions.EndDate → ngày hết gói, câu "Gói hết hạn ngày …"
     private LocalDate endDate;
-    private int totalSessions;           // tổng số buổi (GeneratedSessionCount)
-    private int pastSessions;            // số buổi có ngày tập trước hôm nay → thanh tiến độ
-    private int holderCustomerId;        // người đứng tên
-    private Integer partnerCustomerId;   // người đi kèm (gói đôi)
-    private String ptName;               // tên PT phụ trách
-    private String ptPhone;              // SĐT PT
-    private String holderName;           // tên người đứng tên
-    private String partnerFullName;      // tên người đi kèm
+    // ← tổng số buổi của gói → vòng tròn "còn N buổi" (= total − past), "x/y đã qua"
+    private int totalSessions;
+    // ← DAO đếm buổi có ngày tập TRƯỚC hôm nay → vòng tròn, "x/y đã qua"
+    private int pastSessions;
+    // ← tên PT → "PT …" trên thẻ gói, khung "PT của gói"
+    private String ptName;
+    // ← SĐT PT → nút gọi PT
+    private String ptPhone;
+    // ← fillPackage: "Gói PT đơn" / "Gói PT đôi" → dòng phụ dưới tên gói
+    private String typeLabel;
+    // ← fillPackage: tên NGƯỜI KIA của gói đôi (mình là người đứng tên → tên người tập cùng, và ngược lại) → "… cùng <tên>"
+    private String partnerName;
+    // ← fillPackage: ZaloUtil.toUrl(ptPhone) → nút "Nhắn Zalo"
+    private String zaloUrl;
 
-    // ---------------- Phần 2: Service tính thêm ----------------
-    private String typeLabel;            // "PT cá nhân" | "PT đôi"
-    private String partnerName;          // "người tập cùng" = người còn lại so với người đang xem
-    private String zaloUrl;              // https://zalo.me/<SĐT PT>
+    // ===== DÙNG ĐỂ TÍNH (không in thẳng) =====
+    // ← Subscriptions.SubscriptionType (PTSingle / PTCouple) → isCouple(), typeLabel
+    private String type;
+    // ← Subscriptions.Status → isActive()
+    private String status;
+    // ← người đứng tên → fillPackage biết mình là ai
+    private int holderCustomerId;
+    // ← Orders.PartnerCustomerId (gói đôi)
+    private Integer partnerCustomerId;
+    // ← tên người đứng tên → partnerName
+    private String holderName;
+    // ← tên người tập cùng → partnerName
+    private String partnerFullName;
 
-    /** Gói đôi? */
     public boolean isCouple() {
         return "PTCouple".equals(type);
     }
 
-    /** Gói còn đang tập? (Subscriptions.Status = Active) */
     public boolean isActive() {
         return "Active".equals(status);
     }
 
-    /** % thanh tiến độ (0–100). */
     public int getProgressPercent() {
         return totalSessions == 0 ? 0 : Math.min(100, pastSessions * 100 / totalSessions);
     }
 
-    // ---------------- Getter / Setter ----------------
     public int getSubscriptionId() { return subscriptionId; }
     public void setSubscriptionId(int subscriptionId) { this.subscriptionId = subscriptionId; }
 
