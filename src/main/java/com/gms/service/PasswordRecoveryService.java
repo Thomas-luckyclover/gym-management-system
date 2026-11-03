@@ -16,82 +16,43 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 /**
- * SERVICE "QUÊN MẬT KHẨU" (màn #3, UC-03). Chỉ ForgotPasswordServlet gọi.
- * Từ 31/10/2026 tài khoản Lễ tân tạo tại quầy đã có mật khẩu tạm gửi qua email (CounterAccountService, thay CBR-31);
- * khách quên mật khẩu tạm vẫn dùng luồng này.
- *
- * Service chỉ quyết định ĐƯỢC / KHÔNG ĐƯỢC rồi trả ServiceResult; không biết gì về trang web.
- *
- *   Bước 1  requestCode(email)                          kiểm tra email → gửi mã 6 số
- *   Bước 2  verifyCode(email, code)                     kiểm tra mã
- *           findLatestRecoveryCode, getRecoveryAttemptInfo   dữ liệu cho 2 đồng hồ + gợi ý số lượt
- *   Bước 3  resetPassword(accountId, mk, nhapLai)       lưu mật khẩu mới → validateNewPassword, savePasswordAndUnlock
- *
- * Luật gửi / nhập mã (chờ 60 giây, sai 5 lần khóa 5 phút…) KHÔNG nằm ở đây mà ở VerificationCodeService.
- *
- * THAM SỐ CẤU HÌNH (giá trị hiện tại)
- *   PASSWORD_MIN_LENGTH / MAX = 8 / 64   mật khẩu mới 8–64 ký tự, có cả chữ và số  (AppConstants)
- *   P-15 = 15   mã khôi phục sống 15 phút → đồng hồ "Mã hết hạn sau 14:59"           (SystemConfigs)
- *   P-17 = 5, P-18 = 5   nhập sai 5 lần → khóa 5 phút                               (SystemConfigs)
- *   Bước 3 phải xong trước giờ hết hạn của mã vừa dùng (lúc gửi mã + 15 phút), Servlet giữ mốc này trong session.
- *
- * @author Le Cong Minh
- *
- * ❓ VẤN ĐÁP (mỗi câu kèm luồng file để mở theo khi trả lời):
- *   1) Luồng quên mật khẩu? → 3 bước: gửi mã 6 số qua email → nhập mã → đặt mật khẩu mới.
- *      Khách quên mật khẩu tạm do lễ tân gửi (CounterAccountService) cũng dùng luồng này.
- *      File: servlet/auth/ForgotPasswordServlet.java → service/PasswordRecoveryService.java → dao/AccountDAO.java + dao/VerificationCodeDAO.java → WEB-INF/jsp/auth/forgot-password.jsp.
- *   2) Mã có hết hạn không? → có, 15 phút (P-15); nhập sai 5 lần → khóa 5 phút (P-17/P-18). Luật này KHÔNG nằm ở đây mà ở VerificationCodeService.
- *      File: service/PasswordRecoveryService.java → service/VerificationCodeService.java → dao/VerificationCodeDAO.java.
- *   3) Đổi mật khẩu có an toàn? → băm BCrypt (DB không giữ mật khẩu gốc); đổi mật khẩu + mở khóa tạm + ghi log trong 1 TRANSACTION;
- *      xong đăng xuất tài khoản trên MỌI trình duyệt (CBR-93).
- *      File: service/PasswordRecoveryService.java (resetPassword) → util/PasswordUtil.java + dao/AccountDAO.java + listener/SessionRegistryListener.java.
+ * QUÊN MẬT KHẨU — xử lý cho ForgotPasswordServlet.
+ * Phần mã 6 số (gửi, kiểm, khóa khi sai nhiều) dùng chung VerificationCodeService (Purpose = Recovery).
  */
 public class PasswordRecoveryService {
-
+    // Đọc / ghi bảng Accounts.
     private final AccountDAO accountDAO = new AccountDAO();
+    // Đọc mã mới nhất trong bảng VerificationCodes.
     private final VerificationCodeDAO verificationCodeDAO = new VerificationCodeDAO();
+    // Gửi / kiểm mã 6 số (dùng chung với Đăng ký, Đổi email…).
     private final VerificationCodeService verificationCodeService = new VerificationCodeService();
     private final AuditLogService auditLogService = new AuditLogService();
 
-
-    // =================================================================================================
-    // BƯỚC 1 — NHẬP EMAIL, GỬI MÃ
-    // =================================================================================================
-
-    /**
-     * HÀM CHÍNH — ForgotPasswordServlet gọi ở B1 của handleSend (nút "Gửi mã") và B2 của handleResend ("Gửi lại mã").
-     *
-     * @param email chữ khách gõ, đã bỏ khoảng trắng 2 đầu. Gõ số điện thoại cũng truyền vào như chữ thường.
-     * @return thành công: câu MSG42 "Mã đã được gửi tới … Mã có hiệu lực trong 15 phút."
-     *         lỗi gắn ô "email": bỏ trống / sai định dạng / không có tài khoản (MSG41) → chữ đỏ dưới ô
-     *         lỗi chung: tài khoản bị khóa (MSG37), đang khóa xác thực (MSG61), chưa đủ 60 giây, lỗi hệ thống (MSG04)
-     */
+    // Gửi mã khôi phục tới email (nút "Gửi mã xác thực" và "Gửi lại mã").
     public ServiceResult<Void> requestCode(String email) {
-        // B1: bỏ trống.
+        // B1: email trống → MSG09 · sai định dạng → MSG11 (lỗi gắn vào ô "email")
         if (ValidationUtil.isNullOrEmpty(email)) {
             return ServiceResult.failField("email", String.format(Messages.MSG09_REQUIRED, "Email"));
         }
 
-        // B2: sai định dạng. Gõ số điện thoại (vd "0901234501") cũng rơi vào đây vì chỉ khôi phục qua email (BR-03).
         if (!ValidationUtil.isValidEmail(email)) {
             return ServiceResult.failField("email", Messages.MSG11_INVALID_EMAIL);
         }
 
         try {
-            // B3: không có tài khoản dùng email này → MSG41.
+            // B2: AccountDAO.findByEmail → không có tài khoản → MSG41 (ô email)
             Account account = accountDAO.findByEmail(email);
             if (account == null) {
                 return ServiceResult.failField("email", Messages.MSG41_EMAIL_NOT_FOUND);
             }
 
-            // B4: tài khoản bị Admin khóa / nhân viên đã nghỉ → MSG37 (giống màn Đăng nhập).
-            //     Khóa TẠM 5 phút do sai mật khẩu KHÔNG đổi cột Status → vẫn qua được bước này (để tự mở khóa).
+            // B3: tài khoản bị khóa / ngừng → MSG37
             if (account.getStatus() != Account.Status.ACTIVE) {
                 return ServiceResult.fail(Messages.MSG37_ACCOUNT_INACTIVE);
             }
 
-            // B5: VerificationCodeService tự kiểm tra (đang khóa? đủ 60 giây? quá số lần/giờ?) rồi mới gửi.
+            // B4: VerificationCodeService.sendCode: đang bị khóa → MSG61 · gửi lại sớm < 60 giây → MSG70
+            //     · gửi quá nhiều trong khung giờ → khóa → MSG61 · được → gửi mail + VerificationCodes thêm 1 dòng → MSG42
             return verificationCodeService.sendCode(email, VerificationCode.Purpose.RECOVERY, account.getAccountId());
 
         } catch (SQLException e) {
@@ -100,78 +61,43 @@ public class PasswordRecoveryService {
         }
     }
 
-
-    // =================================================================================================
-    // BƯỚC 2 — NHẬP MÃ
-    // =================================================================================================
-
-    /**
-     * HÀM CHÍNH — ForgotPasswordServlet gọi ở B2 của handleVerify.
-     *
-     * @param email lấy từ SESSION (lưu ở bước 1), không từ form → không đổi được sang email người khác giữa chừng
-     * @param code  mã khách gõ, vd "246810"
-     * @return thành công: kèm dòng mã vừa dùng (Servlet lấy getAccountId() + getExpiresAt() = hạn làm bước 3)
-     *         thất bại: sai định dạng (MSG68), sai mã (MSG43), hết hạn (MSG44), sai lần thứ 5 → khóa (MSG61)
-     */
+    // Kiểm mã 6 số → VerificationCodeService.verifyCode. Trả về: ok(mã đã dùng: AccountId, hạn) | fail(câu lỗi ô "code").
     public ServiceResult<VerificationCode> verifyCode(String email, String code) {
-        // Toàn bộ luật nhập mã ở VerificationCodeService; ở đây chỉ nói "mã loại khôi phục".
         return verificationCodeService.verifyCode(email, VerificationCode.Purpose.RECOVERY, code);
     }
 
-    /**
-     * HÀM CHÍNH — ForgotPasswordServlet gọi ở B1 của setCodeTimers.
-     * Mã khôi phục gửi GẦN NHẤT của email → Servlet tính "Mã hết hạn sau mm:ss" và "Gửi lại mã (mm:ss)".
-     * Trả null nếu email này chưa từng được gửi mã khôi phục.
-     */
+    // Mã khôi phục mới nhất của email (VerificationCodeDAO) — Servlet dùng để tính đồng hồ hết hạn / gửi lại.
     public VerificationCode findLatestRecoveryCode(String email) throws SQLException {
         return verificationCodeDAO.findLatestByEmailAndPurpose(email, VerificationCode.Purpose.RECOVERY);
     }
 
-    /**
-     * HÀM CHÍNH — ForgotPasswordServlet gọi ở B2 của setCodeTimers. CHỈ ĐỌC.
-     * Còn mấy lần nhập mã / mấy lần gửi lại trước khi bị khóa → gợi ý MSG62–MSG65.
-     */
+    // Còn mấy lần nhập sai / gửi lại (VerificationCodeService.getAttemptInfo) → Servlet làm câu gợi ý dưới ô mã.
     public ServiceResult<VerificationAttemptInfo> getRecoveryAttemptInfo(String email) {
         return verificationCodeService.getAttemptInfo(email, VerificationCode.Purpose.RECOVERY);
     }
 
-
-    // =================================================================================================
-    // BƯỚC 3 — ĐẶT MẬT KHẨU MỚI
-    // =================================================================================================
-
-    /**
-     * HÀM CHÍNH — ForgotPasswordServlet gọi ở B3 của handleReset.
-     *
-     * @param accountId       lấy từ SESSION (lưu ở bước 2), không từ form
-     * @param newPassword     giữ nguyên từng ký tự (không trim)
-     * @param confirmPassword ô "Nhập lại mật khẩu", phải giống hệt
-     * @return thành công: MSG95 "Đã đặt lại mật khẩu và đăng xuất mọi phiên. Vui lòng đăng nhập."
-     *         lỗi gắn ô "password" / "confirmPassword" → trang giữ form, chữ đỏ dưới ô
-     *         lỗi chung: tài khoản vừa bị khóa (MSG37), lỗi hệ thống (MSG04)
-     */
+    // Đặt mật khẩu mới cho tài khoản đã xác thực mã.
     public ServiceResult<Void> resetPassword(int accountId, String newPassword, String confirmPassword) {
-        // B1: kiểm tra 2 ô (trống? đúng luật? khớp?). Sai thì dừng, chưa đụng DB.
+        // B1: kiểm mật khẩu mới (validateNewPassword) → lỗi gắn vào ô password / confirmPassword
         ServiceResult<Void> passwordCheck = validateNewPassword(newPassword, confirmPassword);
         if (passwordCheck != null) {
             return passwordCheck;
         }
 
         try {
-            // B2: đọc lại tài khoản — có thể Admin vừa khóa trong lúc khách đang khôi phục.
+            // B2: AccountDAO.findById → tài khoản không còn Active → MSG37
             Account account = accountDAO.findById(accountId);
             if (account == null || account.getStatus() != Account.Status.ACTIVE) {
                 return ServiceResult.fail(Messages.MSG37_ACCOUNT_INACTIVE);
             }
 
-            // B3: lưu mật khẩu mới (BCrypt) + mở khóa tạm + ghi nhật ký, chung 1 transaction.
-            //     Ví dụ: đang bị khóa 5 phút vì sai mật khẩu 5 lần → đặt lại xong đăng nhập được ngay.
+            // B3: lưu mật khẩu (1 transaction): Accounts: PasswordHash mới + mở khóa đăng nhập sai · AuditLogs thêm 1 dòng
             savePasswordAndUnlock(accountId, newPassword);
 
-            // B4: đăng xuất tài khoản này trên MỌI trình duyệt (CBR-93).
-            //     null = không chừa phiên nào (khác đổi mật khẩu trong /account: chừa phiên đang dùng).
+            // B4: đăng xuất mọi thiết bị đang đăng nhập tài khoản này (hủy các session)
             SessionRegistryListener.invalidateSessionsOfAccount(accountId, null);
 
+            // B5: trả MSG95 → Servlet toast + về /login
             return ServiceResult.ok(null, Messages.MSG95_PASSWORD_RESET_COMPLETED);
 
         } catch (SQLException e) {
@@ -181,20 +107,19 @@ public class PasswordRecoveryService {
     }
 
     /**
-     * HÀM PHỤ — gọi ở B1 của resetPassword. Luật DBR-02: 8–64 ký tự, có cả chữ và số.
-     * Trả null = cả 2 ô ổn; ngược lại = kết quả thất bại có lỗi gắn đúng ô sai.
+     * HÀM PHỤ (resetPassword B1) — trống → MSG09 · không đủ 8–64 ký tự chữ + số → MSG66 · nhập lại khác → MSG47.
+     * Trả về: null = hợp lệ, không thì ServiceResult lỗi gắn đúng ô.
      */
     private ServiceResult<Void> validateNewPassword(String newPassword, String confirmPassword) {
-        // Bỏ trống.
         if (ValidationUtil.isNullOrEmpty(newPassword)) {
             return ServiceResult.failField("password", String.format(Messages.MSG09_REQUIRED, "Mật khẩu mới"));
         }
-        // Sai luật: "abcdefgh" thiếu số, "1234567" quá ngắn…
+
         if (!ValidationUtil.isValidPassword(newPassword)) {
             return ServiceResult.failField("password", String.format(Messages.MSG66_PASSWORD_RULE,
                     AppConstants.PASSWORD_MIN_LENGTH, AppConstants.PASSWORD_MAX_LENGTH));
         }
-        // Ô nhập lại không giống hệt.
+
         if (confirmPassword == null || !confirmPassword.equals(newPassword)) {
             return ServiceResult.failField("confirmPassword", Messages.MSG47_PASSWORD_MISMATCH);
         }
@@ -202,28 +127,26 @@ public class PasswordRecoveryService {
     }
 
     /**
-     * HÀM PHỤ — gọi ở B3 của resetPassword.
-     * 3 việc trong 1 TRANSACTION: đổi mật khẩu + mở khóa tạm + ghi AuditLog.
-     * Cùng thành công, hoặc lỗi giữa chừng thì cùng hủy (không bao giờ "đổi được mật khẩu mà vẫn bị khóa").
+     * HÀM PHỤ (resetPassword B3) — ghi DB trong 1 transaction, lỗi thì rollback cả 3 lệnh.
      */
     private void savePasswordAndUnlock(int accountId, String newPassword) throws SQLException {
-        // B1: băm BCrypt ("$2a$10$…"); database không bao giờ giữ mật khẩu gốc.
         String newHash = PasswordUtil.hashPassword(newPassword);
 
         try (Connection conn = DBContext.getConnection()) {
-            // B2: tắt tự lưu → các câu SQL dưới chỉ có hiệu lực khi commit().
+            // Mở transaction
             conn.setAutoCommit(false);
             try {
-                // B3: mật khẩu mới + bộ đếm sai về 0 / xóa giờ khóa tạm + nhật ký (không lưu giá trị mật khẩu — GBR-07).
+                // Accounts: PasswordHash = hash BCrypt mới
                 accountDAO.updatePasswordHash(conn, accountId, newHash);
+                // Accounts: FailedLoginCount = 0, LockedUntil = NULL (mở khóa nếu đang bị khóa vì sai mật khẩu)
                 accountDAO.resetFailedLogin(conn, accountId);
+                // AuditLogs: thêm 1 dòng "Đặt lại mật khẩu qua email"
                 auditLogService.logInTransaction(conn, accountId, "Đặt lại mật khẩu qua email",
                         "Account", accountId, "PasswordHash", null, null, null);
 
-                // B4: cả 3 câu chạy được → lưu thật.
                 conn.commit();
             } catch (SQLException e) {
-                // Lỗi giữa chừng → hủy hết, database về như cũ.
+                // Lỗi → rollback, không lưu gì
                 conn.rollback();
                 throw e;
             }
