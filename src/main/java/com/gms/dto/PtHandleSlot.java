@@ -4,19 +4,10 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 /**
- * MỘT KHUNG TRỐNG có thể nhận buổi khi PT xử lý buổi (Dời buổi hoặc Chuyển PT).
- *
- *   Ai tạo?   PtSessionHandleDAO.readSlots → CONSTRUCTOR (khung Free của chính PT khi Dời, của PT khác khi Chuyển).
- *   "· IN" cuối mỗi field = _handle-dialog.jspf có in; "· không in" = chỉ để Service xét.
- *   Ai xét?   PtSessionHandleService.whyNotAllowed đọc 4 cờ bên dưới + hạn gói + giờ hiện tại.
- *   Ai in?    _handle-dialog.jspf: mỗi khung hợp lệ là 1 nút chọn (radio).
- *
- * Ví dụ khung Thứ 5 29/10 06:00–07:30 của PT Sơn: timeSlotId=812, ptName="Đinh Công Sơn",
- * gymClosed=false, ptOnLeave=false, customerBusy=false, hasGymAccess=true → hợp lệ.
+ * DTO 1 KHUNG TRỐNG có thể nhận buổi — DAO TẠO: PtSessionHandleDAO (findMySlots / findTransferSlots / findSlotById, câu SLOT_SQL).
+ * Service lọc bằng whyNotAllowed; JSP đọc: _handle-dialog.jspf (biến slot).
  */
 public class PtHandleSlot {
-
-    /** DAO tạo (PtSessionHandleDAO.readSlots): phần 1 + 2 bốn cờ SQL tính sẵn. */
     public PtHandleSlot(int timeSlotId, int ptEmployeeId, String ptName, int commissionRate, LocalDate slotDate,
             LocalTime startTime, LocalTime endTime, boolean gymClosed, boolean ptOnLeave, boolean customerBusy,
             boolean hasGymAccess) {
@@ -33,25 +24,33 @@ public class PtHandleSlot {
         this.hasGymAccess = hasGymAccess;
     }
 
-    /** Constructor rỗng: Service / test tạo object nhỏ rồi set từng field cần. */
     public PtHandleSlot() {
     }
 
-    // ===== 1. Khung giờ (bảng TimeSlots) + PT của khung (Employees, Persons) =====
-    private int timeSlotId;          // mã khung đích, form gửi lên khi bấm Lưu   · IN
-    private int ptEmployeeId;        // PT sở hữu khung (Chuyển PT: PT nhận buổi)   · không in
-    private String ptName;           // tên PT, chỉ in khi Chuyển PT   · IN
-    private int commissionRate;      // % hoa hồng của PT này (Employees.CommissionRate)   · IN
-    private LocalDate slotDate;   // · IN
-    private LocalTime startTime;   // · IN
-    private LocalTime endTime;   // · IN
+    // ===== IN RA MÀN =====
+    // ← TimeSlots.TimeSlotId → value của radio timeSlotId (gửi lên khi Dời / Chuyển)
+    private int timeSlotId;
+    // ← TimeSlots.StartTime → chữ giờ trên viên
+    private LocalTime startTime;
+    // ← tên PT của khung → tab Chuyển PT: tên + chữ cái avatar
+    private String ptName;
+    // ← khách có Membership / DayPass không bảo lưu ngày đó → false: viên vàng "khách chưa có gói thành viên ngày này"
+    private boolean hasGymAccess;
 
-    // ===== 2. Bốn cờ SQL tính sẵn (1 = có) =====
-    private boolean gymClosed;       // ngày đó phòng nghỉ cả ngày (OperatingHourExceptions)   · không in
-    private boolean ptOnLeave;       // PT của khung có đơn nghỉ Pending/Approved trùng ca   · không in
-    private boolean customerBusy;    // khách (hoặc người tập cùng) có buổi Scheduled khác chồng giờ   · không in
-    private boolean hasGymAccess;    // ít nhất 1 người trong gói có Membership/DayPass ngày đó và không bảo lưu   · IN
-                                     // (false KHÔNG chặn, chỉ tô vàng trong hộp)
+    // ===== DÙNG ĐỂ LỌC / GHI (không in) =====
+    // ← PT của khung → Dời: phải là chính PT · Chuyển: phải là PT khác
+    private int ptEmployeeId;
+    // ← Employees.CommissionRate của PT nhận → hoa hồng khi chuyển
+    private int commissionRate;
+    // ← ngày khung → kiểm hạn gói / đã qua giờ
+    private LocalDate slotDate;
+    private LocalTime endTime;
+    // ← ngày phòng nghỉ → loại
+    private boolean gymClosed;
+    // ← PT có đơn nghỉ trùng ca → loại
+    private boolean ptOnLeave;
+    // ← khách có buổi khác trùng giờ → loại
+    private boolean customerBusy;
 
     public int getTimeSlotId() { return timeSlotId; }
     public void setTimeSlotId(int timeSlotId) { this.timeSlotId = timeSlotId; }
