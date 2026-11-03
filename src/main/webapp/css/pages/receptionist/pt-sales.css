@@ -663,6 +663,12 @@ html body.dock.pt-sale-page .content .sale-card :is(h2, h3) {
 .sale-plan {
   gap: var(--space-5);
 }
+/* "+ Thêm giờ" giờ mới → đang tải lại để server kiểm: mờ + chặn bấm tiếp */
+.sale-plan.is-loading {
+  opacity: .6;
+  pointer-events: none;
+  cursor: progress;
+}
 .plan-total {
   display: flex;
   flex-wrap: wrap;
