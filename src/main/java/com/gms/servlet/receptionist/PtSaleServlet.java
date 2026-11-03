@@ -109,7 +109,11 @@ public class PtSaleServlet extends HttpServlet {
     private void showPage(HttpServletRequest request, HttpServletResponse response, int accountId)
             throws ServletException, IOException {
         Integer orderId = RequestUtil.getPositiveIntParam(request, "order");
-        ServiceResult<PtSaleView> result = saleService.prepare(accountId, readInput(request), orderId, DateTimeUtil.now());
+        ServiceResult<PtSaleView> result = saleService.prepare(
+                accountId,
+                readInput(request),
+                orderId,
+                DateTimeUtil.now());
         if (result.isSuccess()) {
             request.setAttribute("sale", result.getData());          // → pt-sales.jsp mọi khối
         } else if (orderId != null) {
