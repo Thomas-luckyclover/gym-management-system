@@ -233,12 +233,12 @@
                                                                 <c:when test="${item.cancelType == 'PaymentTimeout'}">
                                                                     <c:set var="stCls" value="badge-neutral" />
                                                                     <c:set var="stTxt" value="Hết hạn thanh toán" />
-                                                                    <c:set var="stTip" value="Quá hạn thanh toán nên hệ thống tự hủy. Khách không bị trừ tiền." />
+                                                                    <c:set var="stTip" value="Quá hạn thanh toán nên hệ thống tự hủy. Không ghi nhận khoản thanh toán nào." />
                                                                 </c:when>
                                                                 <c:when test="${item.cancelType == 'ReplacedByNewOrder'}">
                                                                     <c:set var="stCls" value="badge-neutral" />
                                                                     <c:set var="stTxt" value="Đã thay bằng đơn mới" />
-                                                                    <c:set var="stTip" value="Khách tạo đơn mới thay cho đơn này. Khách không bị trừ tiền." />
+                                                                    <c:set var="stTip" value="Khách tạo đơn mới thay cho đơn này. Không ghi nhận khoản thanh toán nào cho đơn này." />
                                                                 </c:when>
                                                                 <c:when test="${item.cancelType == 'InvalidPayment'}">
                                                                     <c:set var="stCls" value="badge-danger" />

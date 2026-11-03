@@ -269,8 +269,10 @@ public class VnPayClient {
                     public X509Certificate[] getAcceptedIssuers() {
                         return new X509Certificate[0];
                     }
+
                     public void checkClientTrusted(X509Certificate[] certs, String authType) {
                     }
+
                     public void checkServerTrusted(X509Certificate[] certs, String authType) {
                     }
                 }
@@ -278,7 +280,6 @@ public class VnPayClient {
             SSLContext sslContext = SSLContext.getInstance("TLS");
             sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
             return HttpClient.newBuilder()
-        
                     .connectTimeout(Duration.ofSeconds(10))
                     .sslContext(sslContext)
                     .build();
@@ -288,6 +289,7 @@ public class VnPayClient {
                     .build();
         }
     }
+
     /**
      * Truy vấn một lần thanh toán đã tạo.
      *
@@ -402,6 +404,12 @@ public class VnPayClient {
                 throw new IOException(
                         "Phản hồi QueryDR không khớp yêu cầu.");
             }
+        }
+        // Chỉ 00 (có kết quả) và 91 (VNPay không có giao dịch) là câu trả lời thật.
+        // Mã khác (99 lỗi hệ thống...) coi như chưa hỏi được: người gọi sẽ thử lại sau.
+        if (!"00".equals(responseCode) && !"91".equals(responseCode)) {
+            throw new IOException("VNPay chưa trả được kết quả QueryDR, mã " + responseCode
+                    + ": " + result.get("vnp_Message"));
         }
         return result;
     }

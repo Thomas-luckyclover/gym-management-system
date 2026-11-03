@@ -222,7 +222,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     + "</b>. Nếu cần trả tiền cho khách thì xử lý ngay tại quầy, không qua màn này.";
         } else if (order.status === "Cancelled") {
             callout.className = "tx-callout info";
-            callout.textContent = "Đơn đã hủy, khách không bị trừ tiền.";
+            callout.textContent = "Đơn đã hủy, Hệ thống không ghi nhận khoản thanh toán nào cho đơn này.";
         } else {
             callout.hidden = true;
         }

@@ -26,7 +26,7 @@ import java.util.Map;
  *                                    -> Cancelled/PaymentTimeout, đóng giao dịch Pending, nhả slot,
  *                                    trả voucher, thông báo khách (CBR-70, BR-44).
  *
- * Mỗi bản ghi một transaction riêng, một bản ghi lỗi không chặn các bản ghi khác. Không gọi VNPay.
+ * Mỗi bản ghi một transaction riêng, một bản ghi lỗi không chặn các bản ghi khác. JOB-06 hỏi VNPay (CBR-125) trước khi đóng giao dịch; JOB-05 không gọi VNPay..
  */
 public class PaymentMaintenanceService {
 

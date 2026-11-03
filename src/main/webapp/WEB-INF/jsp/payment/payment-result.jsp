@@ -122,7 +122,7 @@
             </main>
         </div>
     </div>
-    <%-- Chỉ đọc lại kết quả từ DB; không gọi QueryDR tại JSP. --%>
+ <%-- Servlet đã hỏi VNPay (nếu cần) trước khi vẽ trang; JSP chỉ đọc lại. --%>
     <c:if test="${empty resultError and not empty result and result.waiting}">
         <script>
             window.setTimeout(function () {
