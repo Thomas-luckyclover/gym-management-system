@@ -70,7 +70,11 @@ public class PtSessionHandleDAO {
 
     // 1 buổi của PT (Sessions + khung + gói + khách + người tập cùng + PT). lock = true → KHÓA dòng buổi (UPDLOCK).
     // Trả về: PtHandleView | null (không phải buổi của PT này).
-    public PtHandleView findSession(Connection connection, int sessionId, int ptId, boolean lock) throws SQLException {
+    public PtHandleView findSession(
+            Connection connection,
+            int sessionId,
+            int ptId,
+            boolean lock) throws SQLException {
         String sql = """
                 SELECT s.SessionId, s.Status, s.TimeSlotId, s.PtEmployeeId, s.SessionValue, s.CommissionAmount,
                        t.SlotDate, t.StartTime, t.EndTime,

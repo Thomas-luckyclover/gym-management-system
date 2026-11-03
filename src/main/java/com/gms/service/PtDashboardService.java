@@ -89,7 +89,11 @@ public class PtDashboardService {
                     }
                 }
 
-                days.add(new PtScheduleDayView(date, buildDayLabel(date, today), date.equals(today), sessionsOfDay));
+                days.add(new PtScheduleDayView(
+                        date,
+                        buildDayLabel(date, today),
+                        date.equals(today),
+                        sessionsOfDay));
             }
 
             return ServiceResult.ok(days);
@@ -190,7 +194,11 @@ public class PtDashboardService {
             }
 
             // B3: PtDashboardDAO.findClientPackages → khách × gói × ngày có buổi + quyền vào gym → lọc dòng có vấn đề (buildAttentionItems)
-            List<PtClientPackageView> clientPackages = dashboardDAO.findClientPackages(pt.getEmployeeId(), today, toDate, now);
+            List<PtClientPackageView> clientPackages = dashboardDAO.findClientPackages(
+                    pt.getEmployeeId(),
+                    today,
+                    toDate,
+                    now);
             items.addAll(buildAttentionItems(clientPackages, today));
 
             return ServiceResult.ok(items);

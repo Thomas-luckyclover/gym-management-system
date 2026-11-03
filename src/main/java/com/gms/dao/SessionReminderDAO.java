@@ -17,7 +17,11 @@ import java.util.List;
  */
 public class SessionReminderDAO {
     // 1 khách cần nhắc: tài khoản nhận · giờ bắt đầu buổi · tên PT · đang bảo lưu? (để chọn câu nhắc)
-    public record Reminder(int accountId, LocalTime startTime, String ptName, boolean frozen) {
+    public record Reminder(
+            int accountId,
+            LocalTime startTime,
+            String ptName,
+            boolean frozen) {
     }
 
     // Đọc khách có buổi Scheduled vào sessionDate (người đứng tên + người tập cùng của gói đôi).

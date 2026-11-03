@@ -106,7 +106,11 @@ public class MyBookingService {
 
             // B7: xem gói → Lịch cố định + buổi khác giờ + số ngày còn lại (fillPackageDetail); xem buổi lẻ → sắp tới trước, đã qua sau (orderSingles)
             if (selected != null) {
-                fillPackageDetail(view, selected, sessions, now.toLocalDate());
+                fillPackageDetail(
+                        view,
+                        selected,
+                        sessions,
+                        now.toLocalDate());
                 view.setSessions(sessions);
             } else {
                 view.setSessions(orderSingles(sessions, now));
