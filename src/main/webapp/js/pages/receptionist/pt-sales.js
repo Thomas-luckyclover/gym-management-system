@@ -25,7 +25,8 @@
  *
  * HÀM LẤY TỪ common.js (nạp trước file này): getJson(url, params) → Promise {success, data, message}.
  *
- * BỐ CỤC: HÀM CHÍNH (chạy khi trang tải xong) → PHẦN 1 ô gợi ý (+ hàm phụ) → PHẦN 2 form tự gửi (+ hàm phụ).
+ * BỐ CỤC: HÀM CHÍNH (chạy khi trang tải xong) → PHẦN 1 ô gợi ý (+ hàm phụ) → PHẦN 2 form tự gửi (+ hàm phụ)
+ *         → PHẦN 3 khung "Đơn đang giữ chỗ" (gỡ dòng hết giờ).
  * ============================================================================================================
  */
 
@@ -49,7 +50,33 @@ document.addEventListener("DOMContentLoaded", function () {
             window.location.href = withPlan(link.href);
         }
     });
+
+    // 4. Khung "Đơn đang giữ chỗ": đơn nào đếm về 00:00 thì gỡ dòng đó (hết hạn rồi bấm "Tiếp tục thu tiền" chỉ ra MSG108).
+    initHoldList(document.querySelector(".sale-holds"));
 });
+
+/* ==================== PHẦN 3 — KHUNG "ĐƠN ĐANG GIỮ CHỖ" ==================== */
+
+/**
+ * HÀM PHỤ (HÀM CHÍNH bước 4) — mỗi dòng có ô đếm data-countdown-seconds (số giây SERVER tính, common.js hiện mm:ss).
+ * Hết giờ → gỡ dòng; gỡ hết dòng → ẩn cả khung. Server vẫn là nơi quyết định: đơn hết hạn bị nhả ở lần mở màn kế tiếp
+ * (releaseExpired) và mở ?order= của đơn hết hạn vẫn bị từ chối bằng MSG108.
+ */
+function initHoldList(section) {
+    if (!section) {
+        return;
+    }
+    section.querySelectorAll("li").forEach(function (row) {
+        const clock = row.querySelector("[data-countdown-seconds]");
+        const seconds = clock ? Number(clock.dataset.countdownSeconds) : 0;
+        setTimeout(function () {
+            row.remove();
+            if (!section.querySelector("li")) {
+                section.remove();
+            }
+        }, Math.max(0, seconds) * 1000 + 300);
+    });
+}
 
 
 /* ==================== PHẦN 1. Ô TÌM KHÁCH CÓ GỢI Ý ==================== */
