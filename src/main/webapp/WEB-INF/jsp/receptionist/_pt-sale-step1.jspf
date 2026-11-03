@@ -50,9 +50,9 @@
                                    aria-describedby="sale-start-error" data-start-field>
                         </label>
                         <%-- pt-sales.js hiện câu này khi ngày gõ vào nằm ngoài min–max (form KHÔNG gửi đi). --%>
-                        <p class="sale-msg is-error" id="sale-start-error" role="alert" hidden>Ngày bắt đầu phải từ <c:out value="${gms:formatDate(sale.minStart)}" /> đến <c:out value="${gms:formatDate(sale.maxStart)}" />.</p>
+                        <p class="sale-msg is-error" id="sale-start-error" role="alert" hidden><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> Ngày bắt đầu phải từ <c:out value="${gms:formatDate(sale.minStart)}" /> đến <c:out value="${gms:formatDate(sale.maxStart)}" />.</p>
                     </c:if>
-                    <c:if test="${not empty sale.choiceError}"><p class="sale-msg is-error" role="alert"><c:out value="${sale.choiceError}" /></p></c:if>
+                    <c:if test="${not empty sale.choiceError}"><p class="sale-msg is-error" role="alert"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> <c:out value="${sale.choiceError}" /></p></c:if>
                     <noscript><button class="btn btn-outline" type="submit">Tiếp</button></noscript>
                 </section>
 

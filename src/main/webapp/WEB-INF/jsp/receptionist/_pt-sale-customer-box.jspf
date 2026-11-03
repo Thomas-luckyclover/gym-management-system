@@ -41,7 +41,7 @@
                                     <ul class="sale-suggest" id="sale-q-list" role="listbox" aria-label="Khách gợi ý" hidden></ul>
                                 </div>
                             </form>
-                            <c:if test="${not empty sale.holderError}"><p class="sale-msg is-error" role="alert"><c:out value="${sale.holderError}" /></p></c:if>
+                            <c:if test="${not empty sale.holderError}"><p class="sale-msg is-error" role="alert"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> <c:out value="${sale.holderError}" /></p></c:if>
                             <c:if test="${not empty sale.searchResults}">
                                 <ul class="sale-results" aria-label="Kết quả tìm kiếm">
                                     <c:forEach var="r" items="${sale.searchResults}">
