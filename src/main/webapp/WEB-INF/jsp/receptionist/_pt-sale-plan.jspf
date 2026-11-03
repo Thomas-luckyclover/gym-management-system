@@ -4,7 +4,7 @@
  _pt-sale-plan.jspf — BƯỚC 2. LỊCH TẬP (cột trái, chọn giờ không tải lại trang)
  Nhúng vào: pt-sales.jsp (static include → dùng chung biến với trang cha).
  Hiện khi:  chưa giữ chỗ VÀ đã có kỳ (done2).
- Server KHÔNG vẽ lịch ở đây: chỉ nhúng sale.planJson (PtSalePlan → JSON, PtSaleService.loadPlan) vào
+ Server KHÔNG vẽ lịch ở đây: chỉ nhúng sale.plan.planJson (PtSalePlan → JSON, PtSaleService.loadPlan) vào
    <script type="application/json" id="sale-plan-data">. pt-sale-plan.js đọc JSON đó rồi vẽ vào các ô rỗng:
      [data-pattern]      "Lịch mẫu hằng tuần" (mỗi thứ: Nghỉ hoặc 1 giờ)
      [data-week-tabs]    các tab tuần · [data-week-label] chữ "Tuần 1 · 03/11 – 07/11" · [data-week-step] nút ‹ ›
@@ -21,17 +21,17 @@
                     <p class="plan-total" data-plan-total aria-live="polite"></p>
                 </header>
                 <c:choose>
-                    <c:when test="${empty sale.planJson}">
-                        <p class="sale-empty"><c:out value="${sale.planError}" /></p>
+                    <c:when test="${empty sale.plan.planJson}">
+                        <p class="sale-empty"><c:out value="${sale.plan.planError}" /></p>
                     </c:when>
                     <c:otherwise>
-                        <script type="application/json" id="sale-plan-data">${sale.planJson}</script>
+                        <script type="application/json" id="sale-plan-data">${sale.plan.planJson}</script>
                         <noscript><p class="sale-msg is-error">Cần bật JavaScript để chọn lịch tập.</p></noscript>
                         <%-- Nhắc: Thứ PT chưa công bố khung nào. Việc bắt tích "Đã xác nhận với PT" xét từng buổi (ô "PT chưa mở"). --%>
-                        <c:if test="${not empty sale.unpublishedText}">
+                        <c:if test="${not empty sale.plan.unpublishedText}">
                             <div class="plan-alert" role="note">
                                 <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
-                                <p><b><c:out value="${sale.ptName}" /> chưa công bố khung rảnh <c:out value="${sale.unpublishedText}" /></b> trong 2 tuần đầu.
+                                <p><b><c:out value="${sale.choice.ptName}" /> chưa công bố khung rảnh <c:out value="${sale.plan.unpublishedText}" /></b> trong 2 tuần đầu.
                                     Nên hỏi PT trước khi thanh toán — buổi ghi <b>"PT chưa mở"</b> cần tích <b>"Đã xác nhận với PT"</b> mới giữ lịch được.</p>
                             </div>
                         </c:if>
