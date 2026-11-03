@@ -56,12 +56,23 @@ public class PtScheduleService {
             List<HourException> exceptions = scheduleDAO.findHourExceptions(monday, sunday);
 
             // B4: 7 ngày rỗng (giờ mở cửa, phòng nghỉ, nhãn nghỉ phép, khoảng được thêm khung) — buildEmptyWeek
-            PtScheduleWeek week = buildEmptyWeek(monday, now, exceptions, leaves, minutes, hours[0], hours[1]);
+            PtScheduleWeek week = buildEmptyWeek(
+                    monday,
+                    now,
+                    exceptions,
+                    leaves,
+                    minutes,
+                    hours[0],
+                    hours[1]);
 
             // B5: gộp buổi + khung, xếp theo giờ → phân loại từng ô và xếp vào đúng ngày (fillWeek)
             List<PtScheduleItem> allItems = merge(sessions, openSlots);
 
-            fillWeek(week, allItems, leaves, now);
+            fillWeek(
+                    week,
+                    allItems,
+                    leaves,
+                    now);
 
             return ServiceResult.ok(week);
 
@@ -98,7 +109,12 @@ public class PtScheduleService {
         // B3: 7 ngày: buildDay (giờ ngày đó) · nhãn + chi tiết nghỉ phép · khoảng được thêm khung (setAddRange); nới trục giờ theo từng ngày
         List<PtScheduleDay> days = new ArrayList<>();
         for (int i = 0; i < 7; i++) {
-            PtScheduleDay day = buildDay(monday.plusDays(i), now.toLocalDate(), open, close, exceptions);
+            PtScheduleDay day = buildDay(
+                    monday.plusDays(i),
+                    now.toLocalDate(),
+                    open,
+                    close,
+                    exceptions);
             day.setLeaveLabel(buildLeaveLabel(day.getDate(), leaves));
             day.setLeaveDetails(buildLeaveDetails(day.getDate(), leaves));
             setAddRange(day, now, sessionMinutes);
@@ -234,7 +250,11 @@ public class PtScheduleService {
      * HÀM PHỤ (getWeek B5) — nới trục giờ theo ô sớm/muộn nhất; mỗi ô: classify → tính vị trí → bỏ vào đúng ngày;
      * buổi có khách trùng ca nghỉ → thêm vào day.leaveBookings.
      */
-    static void fillWeek(PtScheduleWeek week, List<PtScheduleItem> items, List<LeaveInfo> leaves, LocalDateTime now) {
+    static void fillWeek(
+            PtScheduleWeek week,
+            List<PtScheduleItem> items,
+            List<LeaveInfo> leaves,
+            LocalDateTime now) {
         for (PtScheduleItem item : items) {
             week.setAxisStartHour(Math.min(week.getAxisStartHour(), item.getStartTime().getHour()));
             week.setAxisEndHour(Math.max(week.getAxisEndHour(), endHour(item.getEndTime())));
@@ -278,7 +298,11 @@ public class PtScheduleService {
         // B1: có buổi → "booked", nhãn theo trạng thái buổi; Scheduled chưa bắt đầu → được bấm Xử lý (canHandle)
         if (item.getSessionId() != null) {
             item.setKind("booked");
-            item.setStatusLabel(sessionLabel(item, start, end, now));
+            item.setStatusLabel(sessionLabel(
+                    item,
+                    start,
+                    end,
+                    now));
             boolean scheduled = "Scheduled".equals(item.getSessionStatus());
             item.setCanHandle(scheduled && notStarted);
             return;
@@ -422,7 +446,11 @@ public class PtScheduleService {
         // B3: gỡ khung đã tích: TimeSlots Free → Withdrawn (withdrawFreeSlot); 1 khung không gỡ được (vừa có khách giữ / đã tới giờ) → lỗi cả lượt
         List<Integer> slotIds = parseRemoveIds(removeIds);
         for (int slotId : slotIds) {
-            boolean withdrawn = scheduleDAO.withdrawFreeSlot(connection, ptId, slotId, now);
+            boolean withdrawn = scheduleDAO.withdrawFreeSlot(
+                    connection,
+                    ptId,
+                    slotId,
+                    now);
             if (!withdrawn) {
                 throw new IllegalArgumentException("Có khung không còn gỡ được (khách vừa giữ/đặt hoặc đã tới giờ). "
                         + "Tải lại lịch rồi thử lại.");
@@ -440,9 +468,23 @@ public class PtScheduleService {
         LocalDate fromDate = drafts.get(0).getSlotDate();
         LocalDate toDate = drafts.get(drafts.size() - 1).getSlotDate();
         List<HourException> exceptions = scheduleDAO.findHourExceptions(connection, fromDate, toDate);
-        List<LeaveInfo> leaves = scheduleDAO.findLeaves(connection, ptId, fromDate, toDate);
-        List<PtScheduleItem> existing = scheduleDAO.findSlotsForPublish(connection, ptId, fromDate, toDate);
-        validateDrafts(drafts, existing, leaves, exceptions, hours, now);
+        List<LeaveInfo> leaves = scheduleDAO.findLeaves(
+                connection,
+                ptId,
+                fromDate,
+                toDate);
+        List<PtScheduleItem> existing = scheduleDAO.findSlotsForPublish(
+                connection,
+                ptId,
+                fromDate,
+                toDate);
+        validateDrafts(
+                drafts,
+                existing,
+                leaves,
+                exceptions,
+                hours,
+                now);
 
         // B6: ghi từng khung: có khung Withdrawn đúng giờ → mở lại Free; không → INSERT TimeSlots Free (insertOrReopenSlot)
         for (PtSlotDraft draft : drafts) {
@@ -536,7 +578,12 @@ public class PtScheduleService {
             }
 
             // B2: phòng nghỉ / ngoài giờ mở cửa ngày đó
-            PtScheduleDay day = buildDay(draft.getSlotDate(), now.toLocalDate(), hours[0], hours[1], exceptions);
+            PtScheduleDay day = buildDay(
+                    draft.getSlotDate(),
+                    now.toLocalDate(),
+                    hours[0],
+                    hours[1],
+                    exceptions);
             boolean outside = day.isClosedAllDay()
                     || draft.getStartTime().isBefore(day.getOpenTime())
                     || draft.getEndTime().isAfter(day.getCloseTime());

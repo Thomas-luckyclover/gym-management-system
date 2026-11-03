@@ -167,7 +167,11 @@ public class PtScheduleDAO {
     public List<LeaveInfo> findLeaves(int employeeId, LocalDate fromDate, LocalDate toDate)
             throws SQLException {
         try (Connection connection = DBContext.getConnection()) {
-            return findLeaves(connection, employeeId, fromDate, toDate);
+            return findLeaves(
+                    connection,
+                    employeeId,
+                    fromDate,
+                    toDate);
         }
     }
 

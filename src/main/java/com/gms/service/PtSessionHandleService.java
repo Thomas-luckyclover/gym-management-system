@@ -48,7 +48,11 @@ public class PtSessionHandleService {
             }
 
             // B2: PtSessionHandleDAO.findSession: buổi phải của PT này; không còn Scheduled / đã bắt đầu → MSG91 (whySessionLocked)
-            PtHandleView session = handleDAO.findSession(connection, sessionId, ptId, false);
+            PtHandleView session = handleDAO.findSession(
+                    connection,
+                    sessionId,
+                    ptId,
+                    false);
             String locked = whySessionLocked(session, now);
             if (locked != null) {
                 return ServiceResult.fail(locked);
@@ -58,7 +62,11 @@ public class PtSessionHandleService {
             session.setDayLabel(dayLabel(session.getSlotDate()));
 
             // B4: tab Dời buổi: khung trống của chính PT trong 14 ngày tới (và trong hạn gói), lọc whyNotAllowed, gom theo ngày
-            findMoveDays(connection, session, ptId, now);
+            findMoveDays(
+                    connection,
+                    session,
+                    ptId,
+                    now);
 
             // B5: tab Chuyển PT: PT khác trống ĐÚNG ngày giờ này (findTransferSlots), lọc whyNotAllowed
             List<PtHandleSlot> transferSlots = new ArrayList<>();
@@ -179,23 +187,43 @@ public class PtSessionHandleService {
         return inTransaction(connection -> {
             // B2: khóa PT (lockPt) + khóa buổi, kiểm còn xử lý được (loadOpenSession)
             int ptId = lockPt(connection, accountId);
-            PtHandleView session = loadOpenSession(connection, sessionId, ptId, now);
+            PtHandleView session = loadOpenSession(
+                    connection,
+                    sessionId,
+                    ptId,
+                    now);
 
             // B3: khóa khung đích + kiểm (loadTarget); khung không phải của PT này → MSG103
-            PtHandleSlot target = loadTarget(connection, session, slotId, now);
+            PtHandleSlot target = loadTarget(
+                    connection,
+                    session,
+                    slotId,
+                    now);
             if (target.getPtEmployeeId() != ptId) {
                 throw new IllegalArgumentException(Messages.MSG103_SLOT_ALREADY_TAKEN);
             }
 
             // B4: dời (moveTo): TimeSlots khung mới Free → Booked · Sessions đổi khung · khung cũ Booked → Free · SessionMoveLogs thêm 1 dòng
             //     (hoa hồng giữ nguyên, không tính lượt đổi của khách)
-            moveTo(connection, session, target, session.getCommissionAmount(), "PtReschedule", accountId, note, now);
+            moveTo(
+                    connection,
+                    session,
+                    target,
+                    session.getCommissionAmount(),
+                    "PtReschedule",
+                    accountId,
+                    note,
+                    now);
 
             // B5: Notifications: báo khách (và người tập cùng) "PT dời buổi tập"
             String newTime = slotText(target);
             String content = "Buổi PT " + oldText(session) + " được " + session.getPtName() + " dời sang " + newTime + "."
                     + (note == null ? "" : " Ghi chú: " + note);
-            notify(connection, handleDAO.findCustomerAccounts(connection, session), "PT dời buổi tập", content);
+            notify(
+                    connection,
+                    handleDAO.findCustomerAccounts(connection, session),
+                    "PT dời buổi tập",
+                    content);
 
             return ServiceResult.ok(target.getSlotDate(), String.format(Messages.MSG315_PT_SESSION_MOVED, newTime));
         });
@@ -206,7 +234,11 @@ public class PtSessionHandleService {
      */
     private PtHandleView loadOpenSession(Connection connection, int sessionId, int ptId, LocalDateTime now)
             throws SQLException {
-        PtHandleView session = handleDAO.findSession(connection, sessionId, ptId, true);
+        PtHandleView session = handleDAO.findSession(
+                connection,
+                sessionId,
+                ptId,
+                true);
         String locked = whySessionLocked(session, now);
         if (locked != null) {
             throw new IllegalArgumentException(locked);
@@ -250,7 +282,14 @@ public class PtSessionHandleService {
         handleDAO.releaseSlot(connection, session.getTimeSlotId());
 
         // B4: SessionMoveLogs: thêm 1 dòng (loại dời, khung cũ → mới, PT cũ → mới, ai làm, lý do)
-        handleDAO.insertMoveLog(connection, session, target, moveType, accountId, reason, now);
+        handleDAO.insertMoveLog(
+                connection,
+                session,
+                target,
+                moveType,
+                accountId,
+                reason,
+                now);
     }
 
     /**
@@ -269,7 +308,11 @@ public class PtSessionHandleService {
     }
 
     // Nút "Chuyển PT": giữ ngày giờ, PT khác dạy thay. Trả về: ok(ngày buổi, MSG317) | fail.
-    public ServiceResult<LocalDate> transfer(int accountId, int sessionId, String slotIdText, LocalDateTime now) {
+    public ServiceResult<LocalDate> transfer(
+            int accountId,
+            int sessionId,
+            String slotIdText,
+            LocalDateTime now) {
         // B1: chưa chọn PT → MSG316
         Integer slotId = parseSlotId(slotIdText);
         if (slotId == null) {
@@ -279,10 +322,18 @@ public class PtSessionHandleService {
         return inTransaction(connection -> {
             // B2: khóa PT + khóa buổi (loadOpenSession)
             int ptId = lockPt(connection, accountId);
-            PtHandleView session = loadOpenSession(connection, sessionId, ptId, now);
+            PtHandleView session = loadOpenSession(
+                    connection,
+                    sessionId,
+                    ptId,
+                    now);
 
             // B3: khóa khung đích; phải là PT KHÁC và ĐÚNG ngày giờ của buổi → không thì MSG103
-            PtHandleSlot target = loadTarget(connection, session, slotId, now);
+            PtHandleSlot target = loadTarget(
+                    connection,
+                    session,
+                    slotId,
+                    now);
             boolean samePt = target.getPtEmployeeId() == ptId;
             boolean sameTime = target.getSlotDate().equals(session.getSlotDate())
                     && target.getStartTime().equals(session.getStartTime())
@@ -293,7 +344,15 @@ public class PtSessionHandleService {
 
             // B4: hoa hồng tính lại theo tỷ lệ của PT nhận → moveTo (ghi như Dời buổi, loại "PtTransfer")
             int commission = transferCommission(session.getSessionValue(), target.getCommissionRate());
-            moveTo(connection, session, target, commission, "PtTransfer", accountId, null, now);
+            moveTo(
+                    connection,
+                    session,
+                    target,
+                    commission,
+                    "PtTransfer",
+                    accountId,
+                    null,
+                    now);
 
             // B5: Notifications: báo khách "Đổi PT dạy buổi tập" + báo PT nhận "Bạn nhận dạy thay 1 buổi"
             String when = oldText(session);
@@ -330,7 +389,11 @@ public class PtSessionHandleService {
         return inTransaction(connection -> {
             // B2: khóa PT + khóa buổi (loadOpenSession)
             int ptId = lockPt(connection, accountId);
-            PtHandleView session = loadOpenSession(connection, sessionId, ptId, now);
+            PtHandleView session = loadOpenSession(
+                    connection,
+                    sessionId,
+                    ptId,
+                    now);
 
             // B3: Sessions: Scheduled → Cancelled (CancelType = ByPt, lý do, thời điểm, người hủy) · TimeSlots khung: Booked → Free
             if (!handleDAO.cancelByPt(connection, sessionId, note, accountId, now)) {

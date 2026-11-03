@@ -55,7 +55,11 @@ public class PtScheduleServlet extends HttpServlet {
         Integer handleId = RequestUtil.getPositiveIntParam(request, "handle");
 
         // B3: dựng trang (showPage)
-        showPage(request, response, accountId, handleId);
+        showPage(
+                request,
+                response,
+                accountId,
+                handleId);
     }
 
     /**
@@ -186,7 +190,11 @@ public class PtScheduleServlet extends HttpServlet {
         // B4: form Xử lý buổi → handleSession
         String action = request.getParameter("action");
         if (action != null) {
-            handleSession(request, response, accountId, action);
+            handleSession(
+                    request,
+                    response,
+                    accountId,
+                    action);
             return;
         }
 
@@ -259,7 +267,11 @@ public class PtScheduleServlet extends HttpServlet {
         request.setAttribute("handleAction", action);
         request.setAttribute("handleReason", reason);
         try {
-            showPage(request, response, accountId, sessionId);
+            showPage(
+                    request,
+                    response,
+                    accountId,
+                    sessionId);
         } catch (ServletException exception) {
             throw new IOException(exception);
         }
