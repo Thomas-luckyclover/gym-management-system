@@ -261,8 +261,8 @@ class MaintenanceRequestServiceTest {
     }
 
     @Test
-    @DisplayName("Tạo yêu cầu: Cho phép tạo yêu cầu kể cả khi máy con đang UnderMaintenance")
-    void createRequest_underMaintenanceEquipmentItem_allowed() {
+    @DisplayName("Tạo yêu cầu: Không cho phép tạo yêu cầu khi máy con đang UnderMaintenance (BR-105)")
+    void createRequest_underMaintenanceEquipmentItem_fails() {
         ServiceResult<String> result = service.createRequest(
                 RECEPTIONIST_ACCOUNT_ID,
                 2,
@@ -271,8 +271,9 @@ class MaintenanceRequestServiceTest {
                 false
         );
 
-        assertTrue(result.isSuccess());
-        assertNotNull(result.getData());
+        assertFalse(result.isSuccess());
+        assertTrue(result.getFieldErrors().containsKey("equipmentItemId"));
+        assertTrue(result.getMessage().contains("đang trong quá trình bảo trì"));
     }
 
     @Test
@@ -728,6 +729,23 @@ class MaintenanceRequestServiceTest {
         @Override
         public boolean hasInProgressRequest(Connection connection, int equipmentItemId) {
             return hasOtherInProgress;
+        }
+
+        @Override
+        public boolean hasActiveRequest(Connection connection, int equipmentItemId) {
+            for (MaintenanceRequest r : requests.values()) {
+                if (r.getEquipmentItemId() == equipmentItemId
+                        && (r.getStatus() == MaintenanceRequest.Status.OPEN
+                        || r.getStatus() == MaintenanceRequest.Status.IN_PROGRESS)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        @Override
+        public boolean hasActiveRequest(int equipmentItemId) {
+            return hasActiveRequest(null, equipmentItemId);
         }
     }
 

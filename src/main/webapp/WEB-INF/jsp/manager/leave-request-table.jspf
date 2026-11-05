@@ -25,7 +25,9 @@
           </c:if>
         </tr>
       </thead>
+      
       <tbody>
+          
         <c:forEach var="item" items="${requestItems}">
           <c:choose>
             <c:when test="${showEmployee and not empty item.leaveGroup and fn:length(item.leaveGroup.requests) > 1}">
@@ -54,6 +56,7 @@
                     <c:if test="${item.lateApproval}"><span class="badge badge-warning">Cần duyệt muộn</span></c:if>
                   </div>
                 </td>
+                <%-- Ở đây là hiện cả 2 badge 1 lúc --%>
                 <td>
                   <div class="leave-group-types">
                     <c:forEach var="part" items="${item.leaveGroup.requests}">
@@ -63,6 +66,7 @@
                     </c:forEach>
                   </div>
                 </td>
+                
                 <c:if test="${showDecisionColumns}">
                   <td class="leave-check-cell"><span class="leave-group-note">${fn:length(item.leaveGroup.requests)} đơn cùng đợt</span></td>
                   <td class="leave-actions-cell">
@@ -73,6 +77,8 @@
                 </c:if>
               </tr>
                 <%-- Service nạp sẵn từng phần; JS chỉ đổi hidden, không tải lại trang. --%>
+                <%-- Hàm chi tiết xổ xuống ở cái đơn cùng đợt. --%>
+                <%-- JS --%>
                 <tr id="leave-parts-${item.leaveGroup.key}" class="leave-expanded-row" ${groupOpen ? '' : 'hidden'}>
                   <td colspan="${showDecisionColumns ? 5 : 3}">
                     <section class="leave-group-detail" aria-label="Hai đơn cùng đợt nghỉ">
@@ -101,6 +107,7 @@
                                   <c:otherwise><c:out value="${part.approvalBlockMessage}" default="Bạn không có quyền xử lý đơn này." /></c:otherwise>
                                 </c:choose>
                               </div>
+                                <%-- Chỗ này là ấn nút duyệt hay không thì nó sẽ chạy --%>
                               <form class="leave-detail-actions" action="${pageContext.request.contextPath}/manager/leave-requests/review" method="post">
                                 <input type="hidden" name="csrfToken" value="<c:out value='${csrfToken}' />">
                                 <input type="hidden" name="leaveRequestId" value="${part.leaveRequest.leaveRequestId}">
@@ -127,9 +134,11 @@
                     </section>
                   </td>
                 </tr>
+                <%-- js --%>
             </c:when>
             <c:otherwise>
           <%-- JS mở chi tiết khi bấm hàng hoặc Enter; các nút trong form xử lý riêng. --%>
+          <%-- Từng đơn lẻ --%>
           <tr class="leave-request-row ${item.nearLeaveDate ? 'leave-row-near' : ''}"
               tabindex="0"
               aria-label="Đơn của <c:out value='${item.fullName}' />, ${gms:formatDate(item.fromDate)}. Enter để xem chi tiết."
@@ -188,7 +197,7 @@
               </div>
             </td>
 
-            <%-- Loại nghỉ chỉ hiện tên; hover tên nhân viên để đọc nhanh lý do, bấm hàng để xem đầy đủ. --%>
+            <%-- Loại nghỉ chỉ hiện tên; bấm hàng để xem đầy đủ. --%>
             <td>
               <span class="leave-type-label">
                 <c:choose>
@@ -271,7 +280,8 @@
           </tr>
             </c:otherwise>
           </c:choose>
-        </c:forEach>
+        </c:forEach>            
       </tbody>
+      
     </table>
   </div>

@@ -3,6 +3,8 @@ package com.gms.dto;
 import com.gms.dao.CustomerDAO.ActiveSubscriptionSummary;
 import com.gms.dao.CustomerDAO.ScheduledSessionSummary;
 import com.gms.entity.CustomerDeletionRequest;
+import com.gms.entity.Customer;
+import com.gms.entity.Person;
 import java.util.List;
 
 /**
@@ -23,14 +25,37 @@ public class CustomerProfileDetailView {
     // DAO đọc yêu cầu Pending, nếu có; khóa gửi trùng và cho quản lý mở màn duyệt.
     private final CustomerDeletionRequest pendingRequest;
 
+    // Service đọc Persons/Customers; trang chi tiết và form sửa dùng ngày sinh, ảnh, giám hộ.
+    private final Person person;
+    private final Customer customer;
+
     public CustomerProfileDetailView(CustomerProfileRowView profile,
             List<ActiveSubscriptionSummary> activePackages,
             List<ScheduledSessionSummary> scheduledSessions,
             CustomerDeletionRequest pendingRequest) {
+        this(profile, activePackages, scheduledSessions, pendingRequest, null, null);
+    }
+
+    public CustomerProfileDetailView(CustomerProfileRowView profile,
+            List<ActiveSubscriptionSummary> activePackages,
+            List<ScheduledSessionSummary> scheduledSessions, CustomerDeletionRequest pendingRequest,
+            Person person, Customer customer) {
+        this.person = person;
+        this.customer = customer;
         this.profile = profile;
         this.activePackages = activePackages;
         this.scheduledSessions = scheduledSessions;
         this.pendingRequest = pendingRequest;
+    }
+
+    /** Thông tin cá nhân để hiện ngày sinh và điền form sửa. */
+    public Person getPerson() {
+        return person;
+    }
+
+    /** Hồ sơ để hiện ảnh check-in và người giám hộ. */
+    public Customer getCustomer() {
+        return customer;
     }
 
     public CustomerProfileRowView getProfile() {

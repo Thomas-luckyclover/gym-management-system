@@ -1,0 +1,272 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1970" height="3430" viewBox="0 0 1970 3430">
+<defs><marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M1,1 L9,4 L1,7" fill="none" stroke="#334155"/></marker></defs>
+<rect width="1970" height="3430" fill="white"/>
+<g font-family="Arial, sans-serif" fill="#0f172a">
+<text x="45" y="42" text-anchor="start" font-size="22" font-weight="bold" stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="45" dy="0">Process Member Deletion Requests — UC-17 / MBF-09</tspan>
+</text>
+<rect x="40" y="80" width="240" height="58" fill="#dbeafe" stroke="#334155"/>
+<text x="160" y="114" text-anchor="middle" font-size="13" font-weight="bold" stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="160" dy="0">Manager</tspan>
+</text>
+<path d="M160,138 V3395" stroke="#94a3b8" stroke-dasharray="5 5"/>
+<rect x="315" y="80" width="240" height="58" fill="#dbeafe" stroke="#334155"/>
+<text x="435" y="114" text-anchor="middle" font-size="13" font-weight="bold" stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="435" dy="0">MemberDeletionReviewServlet</tspan>
+</text>
+<path d="M435,138 V3395" stroke="#94a3b8" stroke-dasharray="5 5"/>
+<rect x="590" y="80" width="240" height="58" fill="#dbeafe" stroke="#334155"/>
+<text x="710" y="114" text-anchor="middle" font-size="13" font-weight="bold" stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="710" dy="0">CustomerDeletionService</tspan>
+</text>
+<path d="M710,138 V3395" stroke="#94a3b8" stroke-dasharray="5 5"/>
+<rect x="865" y="80" width="240" height="58" fill="#dbeafe" stroke="#334155"/>
+<text x="985" y="114" text-anchor="middle" font-size="13" font-weight="bold" stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="985" dy="0">CustomerDeletionRequestDAO</tspan>
+</text>
+<path d="M985,138 V3395" stroke="#94a3b8" stroke-dasharray="5 5"/>
+<rect x="1140" y="80" width="240" height="58" fill="#dbeafe" stroke="#334155"/>
+<text x="1260" y="114" text-anchor="middle" font-size="13" font-weight="bold" stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="1260" dy="0">CustomerDAO</tspan>
+</text>
+<path d="M1260,138 V3395" stroke="#94a3b8" stroke-dasharray="5 5"/>
+<rect x="1415" y="80" width="240" height="58" fill="#dbeafe" stroke="#334155"/>
+<text x="1535" y="114" text-anchor="middle" font-size="13" font-weight="bold" stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="1535" dy="0">NotificationService</tspan>
+</text>
+<path d="M1535,138 V3395" stroke="#94a3b8" stroke-dasharray="5 5"/>
+<rect x="1690" y="80" width="240" height="58" fill="#dcfce7" stroke="#334155"/>
+<text x="1810" y="105" text-anchor="middle" font-size="13" font-weight="bold" stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="1810" dy="0">manager/</tspan>
+<tspan x="1810" dy="16">member-deletion-review.jsp</tspan>
+</text>
+<path d="M1810,138 V3395" stroke="#94a3b8" stroke-dasharray="5 5"/>
+<rect x="35" y="1068" width="1900" height="2169" fill="none" stroke="#334155"/>
+<rect x="80" y="193" width="1810" height="41" fill="#fff7d6" stroke="#c9a227"/>
+<text x="92" y="212" text-anchor="start" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="92" dy="0">Scope: Manager review of an existing Pending deletion request. Receptionist request/immediate deletion (UC-16) is a separate sequence. Signed-in POST requires a valid CSRF token.</tspan>
+</text>
+<path d="M160,322 H435" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="297.5" y="296" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="297.5" dy="0">GET</tspan>
+<tspan x="297.5" dy="16">/manager/member-deletions/review?id=7</tspan>
+</text>
+<rect x="431" y="322" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M435,388 H710" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="572.5" y="378" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="572.5" dy="0">getReviewDetail(accountId, 7)</tspan>
+</text>
+<rect x="706" y="388" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M710,454 H985" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="847.5" y="444" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="847.5" dy="0">findReviewDetail(7, accountId)</tspan>
+</text>
+<rect x="981" y="454" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M985,520 H710" stroke="#334155" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<text x="847.5" y="510" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="847.5" dy="0">CustomerDeletionReviewView</tspan>
+</text>
+<rect x="706" y="520" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M710,586 H1260" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="985.0" y="576" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="985.0" dy="0">findActiveSubscriptionsByCustomer(conn, customerId)</tspan>
+</text>
+<rect x="1256" y="586" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M1260,652 H710" stroke="#334155" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<text x="985.0" y="642" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="985.0" dy="0">Active package summaries</tspan>
+</text>
+<rect x="706" y="652" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M710,718 H1260" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="985.0" y="708" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="985.0" dy="0">findScheduledSessionsByCustomer(conn, customerId)</tspan>
+</text>
+<rect x="1256" y="718" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M1260,784 H710" stroke="#334155" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<text x="985.0" y="774" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="985.0" dy="0">Scheduled session summaries</tspan>
+</text>
+<rect x="706" y="784" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M710,850 H435" stroke="#334155" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<text x="572.5" y="840" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="572.5" dy="0">ServiceResult&lt;CustomerDeletionReviewView&gt;</tspan>
+</text>
+<rect x="431" y="850" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M435,916 H1810" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="1122.5" y="906" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="1122.5" dy="0">Set review and csrfToken; forward member-deletion-review.jsp</tspan>
+</text>
+<rect x="1806" y="916" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M1810,982 H160" stroke="#334155" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<text x="985.0" y="972" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="985.0" dy="0">Review detail page</tspan>
+</text>
+<rect x="156" y="982" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M160,1048 H435" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="297.5" y="1022" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="297.5" dy="0">POST /manager/member-deletions/review:</tspan>
+<tspan x="297.5" dy="16">action, id=7, rejectReason, csrfToken</tspan>
+</text>
+<rect x="431" y="1048" width="8" height="22" fill="white" stroke="#334155"/>
+<text x="45" y="1088" text-anchor="start" font-size="12" font-weight="bold" stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="45" dy="0">alt</tspan>
+</text>
+<text x="110" y="1088" text-anchor="start" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="110" dy="0">[action == approve]</tspan>
+</text>
+<path d="M435,1170 H710" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="572.5" y="1160" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="572.5" dy="0">approveDeletion(accountId, 7)</tspan>
+</text>
+<rect x="706" y="1170" width="8" height="22" fill="white" stroke="#334155"/>
+<rect x="80" y="1188" width="1810" height="41" fill="#fff7d6" stroke="#c9a227"/>
+<text x="92" y="1207" text-anchor="start" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="92" dy="0">Check actor permission. Begin transaction; read request with lock and require Pending. Reject actions on the actor&#x27;s own customer profile (CBR-115).</tspan>
+</text>
+<path d="M710,1317 H985" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="847.5" y="1307" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="847.5" dy="0">findById(conn, 7, true)</tspan>
+</text>
+<rect x="981" y="1317" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M985,1383 H710" stroke="#334155" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<text x="847.5" y="1373" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="847.5" dy="0">CustomerDeletionRequest</tspan>
+</text>
+<rect x="706" y="1383" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M710,1449 H1260" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="985.0" y="1439" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="985.0" dy="0">findById(conn, customerId, true)</tspan>
+</text>
+<rect x="1256" y="1449" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M1260,1515 H710" stroke="#334155" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<text x="985.0" y="1505" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="985.0" dy="0">Customer (must exist and not be Inactive)</tspan>
+</text>
+<rect x="706" y="1515" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M710,1581 H985" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="847.5" y="1571" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="847.5" dy="0">approve(conn, 7, managerEmployeeId)</tspan>
+</text>
+<rect x="981" y="1581" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M985,1647 H710" stroke="#334155" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<text x="847.5" y="1637" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="847.5" dy="0">boolean approved</tspan>
+</text>
+<rect x="706" y="1647" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M710,1691 h55 v22 h-55" fill="none" stroke="#334155" marker-end="url(#arrow)"/>
+<text x="775" y="1691" text-anchor="start" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="775" dy="0">deactivateCustomer(conn, customer)</tspan>
+</text>
+<rect x="706" y="1713" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M710,1779 H1260" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="985.0" y="1769" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="985.0" dy="0">softDeleteCustomer(conn, customerId)</tspan>
+</text>
+<rect x="1256" y="1779" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M1260,1845 H710" stroke="#334155" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<text x="985.0" y="1835" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="985.0" dy="0">boolean deleted</tspan>
+</text>
+<rect x="706" y="1845" width="8" height="22" fill="white" stroke="#334155"/>
+<rect x="80" y="1863" width="1810" height="58" fill="#fff7d6" stroke="#c9a227"/>
+<text x="92" y="1882" text-anchor="start" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="92" dy="0">deactivateCustomer also calls PersonDAO.releasePersonContactIfNoActiveRoles(...) and AccountDAO.deactivateAccountIfNoActiveRoles(...), then finds the account ID. Keep contact/account active while another active role remains. Preserve orders, packages,</tspan>
+<tspan x="92" dy="16">check-ins and sessions.</tspan>
+</text>
+<rect x="80" y="1961" width="1810" height="41" fill="#fff7d6" stroke="#c9a227"/>
+<text x="92" y="1980" text-anchor="start" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="92" dy="0">Write AuditLogService.logInTransaction(...) using the same connection.</tspan>
+</text>
+<path d="M710,2090 H1535" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="1122.5" y="2080" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="1122.5" dy="0">notifyEmployeeInTransaction(conn, requestedByEmployeeId, title, content)</tspan>
+</text>
+<rect x="1531" y="2090" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M710,2134 h55 v22 h-55" fill="none" stroke="#334155" marker-end="url(#arrow)"/>
+<text x="775" y="2134" text-anchor="start" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="775" dy="0">connection.commit()</tspan>
+</text>
+<rect x="706" y="2156" width="8" height="22" fill="white" stroke="#334155"/>
+<rect x="80" y="2174" width="1810" height="41" fill="#fff7d6" stroke="#c9a227"/>
+<text x="92" y="2193" text-anchor="start" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="92" dy="0">After successful commit only: SessionRegistryListener.invalidateSessionsOfAccount(customerAccountId, null), if an account exists.</tspan>
+</text>
+<path d="M710,2303 H435" stroke="#334155" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<text x="572.5" y="2293" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="572.5" dy="0">ServiceResult.ok(MSG292_DELETION_APPROVED)</tspan>
+</text>
+<rect x="431" y="2303" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M435,2379 H160" stroke="#334155" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<text x="297.5" y="2337" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="297.5" dy="0">Redirect</tspan>
+<tspan x="297.5" dy="16">/manager/members?tab=pending-deletions;</tspan>
+<tspan x="297.5" dy="16">success toast</tspan>
+</text>
+<rect x="156" y="2379" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M35,2409 H1935" stroke="#334155" stroke-dasharray="6 5"/>
+<text x="110" y="2432" text-anchor="start" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="110" dy="0">[action == reject]</tspan>
+</text>
+<path d="M435,2507 H710" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="572.5" y="2481" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="572.5" dy="0">rejectDeletion(accountId, 7,</tspan>
+<tspan x="572.5" dy="16">rejectReason)</tspan>
+</text>
+<rect x="706" y="2507" width="8" height="22" fill="white" stroke="#334155"/>
+<rect x="80" y="2525" width="1810" height="41" fill="#fff7d6" stroke="#c9a227"/>
+<text x="92" y="2544" text-anchor="start" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="92" dy="0">Validate reason 5–500 characters and actor permission. Begin transaction; lock/read request, require Pending and enforce own-profile guard.</tspan>
+</text>
+<path d="M710,2654 H985" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="847.5" y="2644" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="847.5" dy="0">findById(conn, 7, true)</tspan>
+</text>
+<rect x="981" y="2654" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M985,2720 H710" stroke="#334155" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<text x="847.5" y="2710" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="847.5" dy="0">CustomerDeletionRequest</tspan>
+</text>
+<rect x="706" y="2720" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M710,2786 H985" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="847.5" y="2760" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="847.5" dy="0">reject(conn, 7, managerEmployeeId,</tspan>
+<tspan x="847.5" dy="16">rejectReason)</tspan>
+</text>
+<rect x="981" y="2786" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M985,2852 H710" stroke="#334155" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<text x="847.5" y="2842" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="847.5" dy="0">boolean rejected</tspan>
+</text>
+<rect x="706" y="2852" width="8" height="22" fill="white" stroke="#334155"/>
+<rect x="80" y="2870" width="1810" height="41" fill="#fff7d6" stroke="#c9a227"/>
+<text x="92" y="2889" text-anchor="start" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="92" dy="0">Write audit log in the same transaction; read customer code for the notification. Customer profile and account remain unchanged.</tspan>
+</text>
+<path d="M710,2999 H1535" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="1122.5" y="2989" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="1122.5" dy="0">notifyEmployeeInTransaction(conn, requestedByEmployeeId, title, content)</tspan>
+</text>
+<rect x="1531" y="2999" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M710,3043 h55 v22 h-55" fill="none" stroke="#334155" marker-end="url(#arrow)"/>
+<text x="775" y="3043" text-anchor="start" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="775" dy="0">connection.commit()</tspan>
+</text>
+<rect x="706" y="3065" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M710,3131 H435" stroke="#334155" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<text x="572.5" y="3121" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="572.5" dy="0">ServiceResult.ok(MSG293_DELETION_REJECTED)</tspan>
+</text>
+<rect x="431" y="3131" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M435,3207 H160" stroke="#334155" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<text x="297.5" y="3165" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="297.5" dy="0">Redirect</tspan>
+<tspan x="297.5" dy="16">/manager/members?tab=pending-deletions;</tspan>
+<tspan x="297.5" dy="16">success toast</tspan>
+</text>
+<rect x="156" y="3207" width="8" height="22" fill="white" stroke="#334155"/>
+<rect x="80" y="3255" width="1810" height="58" fill="#fff7d6" stroke="#c9a227"/>
+<text x="92" y="3274" text-anchor="start" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="92" dy="0">Failure branches do not continue into the success messages: rollback where a transaction is open; return ServiceResult.fail/failField. Controller preserves rejectReason and errors, then reloads the review page. No session invalidation on rejection or</tspan>
+<tspan x="92" dy="16">rollback.</tspan>
+</text>
+</g></svg>

@@ -1,6 +1,8 @@
 package com.gms.service;
 
 import com.gms.dao.EquipmentItemDAO;
+import com.gms.dao.MaintenanceRequestDAO;
+import java.sql.Connection;
 import com.gms.dao.FacilityDAO;
 import com.gms.dto.ServiceResult;
 import com.gms.entity.EquipmentItem;
@@ -27,13 +29,15 @@ public class FacilityServiceTest {
 
     private FakeFacilityDAO fakeFacilityDAO;
     private FakeEquipmentItemDAO fakeEquipmentItemDAO;
+    private FakeMaintenanceRequestDAO fakeMaintenanceRequestDAO;
     private FacilityService facilityService;
 
     @BeforeEach
     void setUp() {
         fakeFacilityDAO = new FakeFacilityDAO();
         fakeEquipmentItemDAO = new FakeEquipmentItemDAO();
-        facilityService = new FacilityService(fakeFacilityDAO, fakeEquipmentItemDAO);
+        fakeMaintenanceRequestDAO = new FakeMaintenanceRequestDAO();
+        facilityService = new FacilityService(fakeFacilityDAO, fakeEquipmentItemDAO, fakeMaintenanceRequestDAO);
 
         // Seed 1 facility mẫu
         Facility f1 = new Facility(1, "Máy chạy bộ", Facility.Category.CARDIO, "Tầng 1", 2, Facility.Status.AVAILABLE, 0, 2);
@@ -230,6 +234,18 @@ public class FacilityServiceTest {
                 i.setStatus(EquipmentItem.Status.RETIRED);
                 return true;
             }
+            return false;
+        }
+    }
+
+    private static class FakeMaintenanceRequestDAO extends MaintenanceRequestDAO {
+        @Override
+        public boolean hasActiveRequest(int equipmentItemId) {
+            return false;
+        }
+
+        @Override
+        public boolean hasActiveRequest(Connection connection, int equipmentItemId) {
             return false;
         }
     }

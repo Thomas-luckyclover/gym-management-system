@@ -166,11 +166,13 @@
           </c:if>
 
           <%-- Tất cả: employeePage mở lịch sử từng người. Các tab trạng thái: requestPage hiện từng đơn. --%>
+          
           <c:choose>
             <c:when test="${employeeView and not empty employeePage.items}">
               <div class="leave-employee-list">
                 <c:forEach var="employee" items="${employeePage.items}">
                   <c:choose>
+                      
                     <c:when test="${employee.totalRequestCount > 0}">
                       <details class="leave-employee-group ${employee.nearLeaveDate ? 'leave-employee-near' : ''}">
                         <summary class="leave-employee-summary">
@@ -178,6 +180,7 @@
                         </summary>
                         <div class="leave-employee-requests">
                           <c:choose>
+                              <%-- Hiện tất cả các đơn của nhân viên (ALL) --%>
                             <c:when test="${not empty employee.requests}">
                               <c:set var="requestItems" value="${employee.requests}" />
                               <c:set var="showEmployee" value="${false}" />
@@ -190,6 +193,7 @@
                         </div>
                       </details>
                     </c:when>
+                      
                     <c:otherwise>
                       <div class="leave-employee-group leave-employee-no-requests">
                         <div class="leave-employee-summary">
@@ -201,11 +205,14 @@
                 </c:forEach>
               </div>
             </c:when>
+            
+            <%-- Hiện tất cả đơn thường --%>
             <c:when test="${not employeeView and not empty requestPage.items}">
               <c:set var="requestItems" value="${requestPage.items}" />
               <c:set var="showEmployee" value="${true}" />
               <%@ include file="/WEB-INF/jsp/manager/leave-request-table.jspf" %>
             </c:when>
+            
             <c:otherwise>
               <c:if test="${empty pageError}">
                 <div class="leave-empty">Không tìm thấy ${employeeView ? 'nhân viên' : 'đơn nghỉ phép'} phù hợp bộ lọc đã chọn.</div>
@@ -214,6 +221,7 @@
           </c:choose>
 
           <%-- Phân trang --%>
+          
           <c:if test="${listPage.totalPages > 1}">
             <div class="leave-pager">
               <c:if test="${listPage.hasPrevious}">
