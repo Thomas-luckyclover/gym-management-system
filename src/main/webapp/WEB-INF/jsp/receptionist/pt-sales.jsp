@@ -77,9 +77,9 @@
                  holderOk       có khách đứng tên và khách đó mua được
                  customerReady  đủ khách để giữ lịch (gói đôi cần cả người tập cùng mua được)
                  done2          đã chọn đủ gói + PT + ngày bắt đầu (Service tính được ngày kết thúc kỳ) --%>
-            <c:set var="holderOk" value="${not empty sale.holder and empty sale.holder.blockReason}" />
-            <c:set var="customerReady" value="${holderOk and (not sale.couple or (not empty sale.partner and empty sale.partner.blockReason))}" />
-            <c:set var="done2" value="${not empty sale.endDate}" />
+            <c:set var="holderOk" value="${not empty sale.buyer.holder and empty sale.buyer.holder.blockReason}" />
+            <c:set var="customerReady" value="${holderOk and (not sale.choice.couple or (not empty sale.buyer.partner and empty sale.buyer.partner.blockReason))}" />
+            <c:set var="done2" value="${not empty sale.choice.endDate}" />
 
 
             <%@ include file="/WEB-INF/jsp/receptionist/_pt-sale-holds.jspf" %>
@@ -106,14 +106,14 @@
             <%-- ===================== BẮT ĐẦU: CỘT PHẢI — "ĐƠN BÁN" ===================== --%>
             <aside class="sale-card sale-summary" aria-labelledby="sale-h-sum">
                 <header class="sale-card-head"><h2 id="sale-h-sum">Đơn bán</h2>
-                    <c:if test="${sale.held}"><p class="sale-code"><c:out value="${sale.heldCode}" /></p></c:if></header>
+                    <c:if test="${sale.held}"><p class="sale-code"><c:out value="${sale.heldOrder.orderCode}" /></p></c:if></header>
 
                 <c:if test="${sale.held}">
                     <%-- Đồng hồ giữ chỗ: common.js bindCountdowns đếm mm:ss, hết giờ tải lại (Service đã nhả khung). --%>
                     <p class="sale-timer">
                         <i class="fa-regular fa-clock" aria-hidden="true"></i>
                         <span>Giữ chỗ còn</span>
-                        <b data-countdown-seconds="${sale.holdSeconds}" data-countdown-reload="true">--:--</b>
+                        <b data-countdown-seconds="${sale.heldOrder.holdSeconds}" data-countdown-reload="true">--:--</b>
                     </p>
                 </c:if>
 
@@ -123,12 +123,12 @@
 
                 <%-- Tóm tắt đơn: gói, PT, kỳ, số buổi + giá 1 buổi (pt-sale-plan.js cập nhật ô [data-plan-count] khi chọn giờ). --%>
                 <dl class="sale-facts">
-                    <div><dt>Gói</dt><dd><c:out value="${not empty sale.packageName ? sale.packageName : '—'}" /></dd></div>
-                    <div><dt>PT</dt><dd><c:out value="${not empty sale.ptName ? sale.ptName : '—'}" /></dd></div>
-                    <div><dt>Kỳ</dt><dd><c:choose><c:when test="${done2}"><c:out value="${gms:formatDate(sale.startDate)}" /> – <c:out value="${gms:formatDate(sale.endDate)}" /></c:when><c:otherwise>—</c:otherwise></c:choose></dd></div>
-                    <div><dt>Buổi</dt><dd data-plan-count><c:choose><c:when test="${sale.sessionCount gt 0}"><c:out value="${sale.sessionCount}" /> buổi · <c:out value="${gms:formatMoney(sale.sessionValue)}" />/buổi</c:when><c:otherwise>—</c:otherwise></c:choose></dd></div>
+                    <div><dt>Gói</dt><dd><c:out value="${not empty sale.choice.packageName ? sale.choice.packageName : '—'}" /></dd></div>
+                    <div><dt>PT</dt><dd><c:out value="${not empty sale.choice.ptName ? sale.choice.ptName : '—'}" /></dd></div>
+                    <div><dt>Kỳ</dt><dd><c:choose><c:when test="${done2}"><c:out value="${gms:formatDate(sale.choice.startDate)}" /> – <c:out value="${gms:formatDate(sale.choice.endDate)}" /></c:when><c:otherwise>—</c:otherwise></c:choose></dd></div>
+                    <div><dt>Buổi</dt><dd data-plan-count><c:choose><c:when test="${sale.plan.sessionCount gt 0}"><c:out value="${sale.plan.sessionCount}" /> buổi · <c:out value="${gms:formatMoney(sale.plan.sessionValue)}" />/buổi</c:when><c:otherwise>—</c:otherwise></c:choose></dd></div>
                 </dl>
-                <p class="sale-total"><span>Phải thu</span><strong><c:choose><c:when test="${sale.price gt 0}"><c:out value="${gms:formatMoney(sale.price)}" /></c:when><c:otherwise>—</c:otherwise></c:choose></strong></p>
+                <p class="sale-total"><span>Phải thu</span><strong><c:choose><c:when test="${sale.choice.price gt 0}"><c:out value="${gms:formatMoney(sale.choice.price)}" /></c:when><c:otherwise>—</c:otherwise></c:choose></strong></p>
 
                 <%-- Bấm "Giữ lịch" bị từ chối → PtSaleServlet đặt saleError, vẽ lại trang với câu lỗi ở đây. --%>
                 <c:if test="${not empty saleError}"><p class="sale-msg is-error" role="alert"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> <c:out value="${saleError}" /></p></c:if>

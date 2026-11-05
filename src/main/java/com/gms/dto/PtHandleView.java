@@ -6,17 +6,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * DỮ LIỆU HỘP "XỬ LÝ BUỔI" trên Lịch dạy PT (/pt/schedule?handle=120).
- *
- *   Ai tạo?   PtSessionHandleDAO.findSession đọc phần 1 + 2 → CONSTRUCTOR (1 buổi của PT đang đăng nhập).
- *   "· IN" cuối mỗi field = _handle-dialog.jspf có in field này; "· không in" = chỉ dùng để tính / ô ẩn.
- *   Ai điền?  PtSessionHandleService.getHandleForm điền phần 3 (các lựa chọn hợp lệ).
- *   Ai in?    _handle-dialog.jspf (biến JSP "handle").
- *   Ai dùng lại?  3 hàm ghi của Service (dời / chuyển / hủy) đọc phần 1 + 2 để kiểm tra lại khi bấm Lưu.
+ * DTO HỘP "XỬ LÝ BUỔI" — DAO TẠO: PtSessionHandleDAO.findSession (buổi + gói + khách + PT);
+ * Service ĐIỀN: PtSessionHandleService.getHandleForm (dayLabel, khung dời được, PT nhận thay được).
+ * Servlet: PtScheduleServlet.loadHandle → request "handle" → _handle-dialog.jspf.
+ * Hàm tính sẵn: isCouple() → chip "Gói đôi".
  */
 public class PtHandleView {
-
-    /** DAO tạo (PtSessionHandleDAO.readSession): phần 1 (buổi) + phần 2 (gói, khách). Phần 3 Service set sau. */
     public PtHandleView(int sessionId, String sessionStatus, int timeSlotId, int ptEmployeeId, String ptName,
             int sessionValue, int commissionAmount, LocalDate slotDate, LocalTime startTime, LocalTime endTime,
             int subscriptionId, String subscriptionType, int customerId, Integer partnerCustomerId,
@@ -41,40 +36,62 @@ public class PtHandleView {
         this.customerNames = customerNames;
     }
 
-    /** Constructor rỗng: Service / test tạo object nhỏ rồi set từng field cần. */
     public PtHandleView() {
     }
 
-    // ===== 1. Buổi (Sessions + TimeSlots + PT dạy) =====
-    private int sessionId;             // mã buổi (Sessions.SessionId), KHÁC mã khung timeSlotId   · IN
-    private String sessionStatus;      // phải còn Scheduled mới xử lý được   · IN
-    private int timeSlotId;            // khung hiện tại của buổi   · IN
-    private LocalDate slotDate;   // · IN
-    private LocalTime startTime;   // · IN
-    private LocalTime endTime;   // · IN
-    private int ptEmployeeId;          // PT đang dạy   · không in
-    private String ptName;             // tên PT đang dạy (ghi vào thông báo)   · IN
-    private int sessionValue;          // giá trị buổi (Sessions.SessionValue) — tính lại hoa hồng khi chuyển PT   · không in
-    private int commissionAmount;      // hoa hồng hiện tại — giữ nguyên khi dời buổi   · không in
+    // ===== IN RA MÀN — đầu hộp =====
+    // ← Sessions.SessionId → ô ẩn sessionId của 3 form (Dời / Chuyển / Hủy)
+    private int sessionId;
+    // ← Service dayLabel: "Thứ 3 · 05/11" → tiêu đề hộp
+    private String dayLabel;
+    // ← TimeSlots.StartTime → "HH:mm – …" tiêu đề, "Trống HH:mm – …" của PT nhận thay
+    private LocalTime startTime;
+    // ← TimeSlots.EndTime
+    private LocalTime endTime;
+    // ← tên khách (gói đôi: "A & B") → chữ đậm dưới tiêu đề
+    private String customerNames;
+    // ← Orders.PackageNameSnapshot → "· tên gói"
+    private String packageName;
+    // ← Subscriptions.EndDate → chip "Hạn gói đến dd/MM/yyyy"
+    private LocalDate termEnd;
 
-    // ===== 2. Gói + khách (Subscriptions + Orders + Persons) =====
-    private int subscriptionId;   // · không in
-    private String subscriptionType;   // PTSingle | PTCouple | SingleSession   · không in
-    private int customerId;            // người đứng tên gói   · không in
-    private Integer partnerCustomerId; // người tập cùng (chỉ gói đôi), không có → null   · không in
-    private LocalDate termStart;       // hạn gói: buổi chỉ được dời trong khoảng này   · không in
-    private LocalDate termEnd;   // · IN
-    private String packageName;        // Orders.PackageNameSnapshot   · IN
-    private String customerNames;      // "Đỗ Thị Mai" hoặc gói đôi "A & B"   · IN
+    // ===== IN RA MÀN — tab Dời buổi =====
+    // ← findMoveDays → groupByDay: khung trống của chính PT, đã lọc whyNotAllowed → các ngày + giờ để chọn
+    private List<PtHandleDay> moveDays = new ArrayList<>();
+    // ← số khung dời được → "N khung" trên nút chọn, "N khung hợp lệ tới …"
+    private int moveSlotCount;
+    // ← min(hôm nay + 13 ngày, hạn gói) → "tới dd/MM"
+    private LocalDate moveUntil;
 
-    // ===== 3. Service điền cho hộp =====
-    private String dayLabel;                                     // "Thứ 3 · 27/10"   · IN
-    private List<PtHandleDay> moveDays = new ArrayList<>();      // Dời buổi: khung trống hợp lệ của PT, theo ngày   · IN
-    private int moveSlotCount;                                   // tổng số khung trong moveDays   · IN
-    private LocalDate moveUntil;                                 // ngày cuối đã tìm khung (hạn gói hoặc 14 ngày tới)   · IN
-    private List<PtHandleSlot> transferSlots = new ArrayList<>();// Chuyển PT: PT khác trống đúng giờ này   · IN
+    // ===== IN RA MÀN — tab Chuyển PT =====
+    // ← PtSessionHandleDAO.findTransferSlots (PT khác trống ĐÚNG giờ này), đã lọc → "N PT trống" + danh sách PT
+    private List<PtHandleSlot> transferSlots = new ArrayList<>();
 
-    /** JSP viết ${handle.couple}: gói đôi thì nhắc "báo cả 2 người". */
+    // ===== DÙNG ĐỂ KIỂM / GHI (không in) =====
+    // ← Sessions.Status → whySessionLocked (chỉ Scheduled chưa bắt đầu mới xử lý)
+    private String sessionStatus;
+    // ← khung hiện tại → trả về Free khi dời / hủy
+    private int timeSlotId;
+    // ← ngày buổi → kiểm đã bắt đầu chưa, câu thông báo
+    private LocalDate slotDate;
+    // ← PT đang dạy → SessionMoveLogs
+    private int ptEmployeeId;
+    // ← tên PT → câu thông báo cho khách
+    private String ptName;
+    // ← Sessions.SessionValue → tính hoa hồng PT nhận thay
+    private int sessionValue;
+    // ← hoa hồng hiện tại → giữ nguyên khi dời
+    private int commissionAmount;
+    private int subscriptionId;
+    // ← PTCouple → isCouple()
+    private String subscriptionType;
+    // ← người đứng tên → kiểm khách trùng giờ, gửi thông báo
+    private int customerId;
+    // ← người tập cùng (gói đôi)
+    private Integer partnerCustomerId;
+    // ← Subscriptions.StartDate → khung dời phải trong hạn gói
+    private LocalDate termStart;
+
     public boolean isCouple() {
         return partnerCustomerId != null;
     }

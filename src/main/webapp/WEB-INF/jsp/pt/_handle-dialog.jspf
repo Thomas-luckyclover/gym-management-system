@@ -1,37 +1,27 @@
 <%@ page pageEncoding="UTF-8" %>
 <%--
-================================================================================
- _handle-dialog.jspf — HỘP "XỬ LÝ BUỔI" (nhúng ở schedule.jsp KHỐI 4)
+  HỘP "XỬ LÝ BUỔI" — include trong schedule.jsp khi có handle (PtHandleView ← PtSessionHandleService.getHandleForm).
+  3 tab (radio, schedule.js đổi tab) → 3 form POST /pt/schedule → PtScheduleServlet.doPost → handleSession:
+    Dời buổi (action=reschedule) · Chuyển PT (action=transfer) · Hủy buổi (action=cancel)
+  Mỗi form gửi: csrfToken · action · sessionId = handle.sessionId · date + view (để quay lại đúng tuần).
+  Bị từ chối → trang vẽ lại, hộp vẫn mở: handleFormError (câu lỗi), handleAction (tab đang chọn), handleReason (chữ đã gõ).
+--%>
 
- CÓ KHI NÀO?   URL có ?handle=<mã buổi> VÀ PtSessionHandleService.getHandleForm trả "handle" (PtHandleView).
- BIẾN DÙNG     handle            ← Service: buổi + gói + khách + các lựa chọn hợp lệ
-               handleFormError   ← Servlet: câu lỗi khi bấm Lưu bị từ chối (VD MSG103 khung vừa bị lấy)
-               handleAction      ← Servlet: phương án PT vừa gửi → chọn sẵn lại; mặc định "reschedule"
-               handleReason      ← Servlet: chữ PT đã gõ → điền lại vào ô
-               viewDate, view, csrfToken  ← có sẵn trong schedule.jsp
-
- BỐ CỤC
-   Đầu hộp: ngày giờ, khách, gói, hạn gói, nút Đóng (link về URL không có handle)
-   3 thẻ chọn phương án (radio, không gửi lên server) → CSS :has(:checked) hiện đúng 1 khung bên dưới
-   3 khung, mỗi khung 1 <form method="post"> riêng: Dời buổi · Chuyển PT · Hủy buổi
-
- JS (schedule.js initPtHandleDialog) chỉ: mở hộp dạng modal, Esc / Đóng thì bỏ ?handle khỏi URL.
- Tắt JS: hộp vẫn hiện (thuộc tính open), mọi form vẫn gửi được.
-================================================================================ --%>
+<%-- Tab mở sẵn: handleAction (sau khi bị từ chối) hoặc "reschedule". --%>
 <c:set var="chosen" value="${empty handleAction ? 'reschedule' : handleAction}" />
 <c:set var="sessionTime" value="${gms:formatTime(handle.startTime)} – ${gms:formatTime(handle.endTime)}" />
 <c:url var="closeUrl" value="/pt/schedule"><c:param name="date" value="${viewDate}" /><c:param name="view" value="${view}" /></c:url>
 
+<%-- Đóng hộp = link closeUrl (về lịch, bỏ ?handle=). --%>
 <dialog class="pt-handle" id="pt-handle" open aria-labelledby="pt-handle-title" data-close-url="${closeUrl}">
 
-    <%-- ----- Đầu hộp: "Thứ 3 · 27/10 · 18:00 – 19:30" + khách + gói ----- --%>
     <header class="pt-handle-head">
         <div>
-            <%-- tabindex="-1" + autofocus: mở hộp thì focus vào tiêu đề (trình đọc màn hình đọc "Xử lý buổi Thứ 3 …"),
-                 không nhảy vòng focus lên nút Đóng. --%>
+
+            <%-- ĐẦU HỘP: handle.dayLabel · giờ · handle.customerNames · handle.packageName · "Hạn gói đến" handle.termEnd · "Gói đôi" (handle.couple). --%>
             <h2 id="pt-handle-title" tabindex="-1" autofocus><span class="visually-hidden">Xử lý buổi </span><c:out value="${handle.dayLabel}" /> · <c:out value="${sessionTime}" /></h2>
             <p class="pt-handle-who"><strong><c:out value="${handle.customerNames}" /></strong> · <c:out value="${handle.packageName}" /></p>
-            <%-- Hạn gói = Subscriptions.EndDate: buổi chỉ dời được tới ngày này. --%>
+
             <p class="pt-handle-chips">
                 <span>Hạn gói đến <c:out value="${gms:formatDate(handle.termEnd)}" /></span>
                 <c:if test="${handle.couple}"><span>Gói đôi</span></c:if>
@@ -41,11 +31,13 @@
     </header>
 
     <div class="pt-handle-body">
+
+        <%-- Câu lỗi khi Dời / Chuyển / Hủy bị từ chối (VD MSG103 khung vừa bị lấy). --%>
         <c:if test="${not empty handleFormError}">
             <p class="pt-handle-error" role="alert"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> <c:out value="${handleFormError}" /></p>
         </c:if>
 
-        <%-- ----- 3 thẻ chọn phương án. name="pt-handle-option" KHÔNG nằm trong form nào nên không gửi lên server. ----- --%>
+        <%-- 3 NÚT CHỌN: Dời buổi ("N khung" = handle.moveSlotCount) · Chuyển PT ("N PT trống" = số handle.transferSlots) · Hủy buổi. --%>
         <fieldset class="pt-handle-options">
             <legend class="visually-hidden">Chọn cách xử lý</legend>
             <label class="pt-handle-option">
@@ -70,12 +62,7 @@
             </label>
         </fieldset>
 
-        <%-- ==========================================================================
-             KHUNG 1. DỜI BUỔI → doPost action=reschedule → handleService.reschedule
-             handle.moveDays ← Service findMoveDays: khung Free của bạn từ hôm nay tới handle.moveUntil,
-             đã bỏ khung ngoài hạn gói, ngày phòng nghỉ, trùng ca nghỉ phép, khách trùng giờ.
-             Khách thiếu membership ngày đó KHÔNG bị bỏ, chỉ tô vàng.
-             ========================================================================== --%>
+        <%-- ===== FORM DỜI BUỔI (action=reschedule) → PtSessionHandleService.reschedule ===== --%>
         <form class="pt-handle-panel" data-panel="reschedule" method="post" action="${pageContext.request.contextPath}/pt/schedule">
             <input type="hidden" name="csrfToken" value="<c:out value='${csrfToken}' />">
             <input type="hidden" name="action" value="reschedule">
@@ -83,6 +70,11 @@
             <input type="hidden" name="date" value="${viewDate}">
             <input type="hidden" name="view" value="${view}">
             <c:choose>
+
+                <%--
+                  Các ngày (handle.moveDays) × viên giờ (slot): radio name="timeSlotId" value = slot.timeSlotId
+                  · viên vàng = slot.hasGymAccess false (khách chưa có gói gym ngày đó, vẫn dời được) · ghi chú name="reason" (≤ 500).
+                --%>
                 <c:when test="${handle.moveSlotCount gt 0}">
                     <p class="pt-handle-note"><c:out value="${handle.moveSlotCount}" /> khung hợp lệ tới <c:out value="${fn:substring(gms:formatDate(handle.moveUntil), 0, 5)}" />
                         · đã lọc theo hạn gói, ngày nghỉ, đơn nghỉ và lịch của khách.
@@ -93,7 +85,7 @@
                                 <span class="pt-handle-day-name"><c:out value="${moveDay.label}" /></span>
                                 <div class="pt-handle-times">
                                     <c:forEach var="slot" items="${moveDay.slots}">
-                                        <%-- slot.hasGymAccess = false → viên vàng: khách chưa có gói thành viên / vé ngày ngày đó (vẫn chọn được). --%>
+
                                         <label class="pt-handle-pill ${slot.hasGymAccess ? '' : 'is-warn'}"
                                                title="${slot.hasGymAccess ? '' : 'Khách chưa có gói thành viên / vé ngày ngày này'}">
                                             <input type="radio" name="timeSlotId" value="${slot.timeSlotId}" required
@@ -114,6 +106,8 @@
                         <button class="btn btn-primary" type="submit">Dời buổi</button>
                     </div>
                 </c:when>
+
+                <%-- Không có khung hợp lệ tới handle.moveUntil → hướng dẫn thêm khung rồi Công bố. --%>
                 <c:otherwise>
                     <p class="pt-handle-empty">Chưa có khung trống phù hợp tới <c:out value="${gms:formatDate(handle.moveUntil)}" />.
                         Thêm khung rảnh trên lịch rồi Công bố, sau đó mở lại buổi này.</p>
@@ -121,11 +115,10 @@
             </c:choose>
         </form>
 
-        <%-- ==========================================================================
-             KHUNG 2. CHUYỂN PT → doPost action=transfer → handleService.transfer
-             handle.transferSlots ← DAO findTransferSlots: PT khác có khung Free ĐÚNG ngày giờ này, không nghỉ phép.
-             Gửi timeSlotId = khung của PT nhận. Hoa hồng tính lại theo tỷ lệ PT nhận.
-             ========================================================================== --%>
+        <%--
+          ===== FORM CHUYỂN PT (action=transfer) → PtSessionHandleService.transfer =====
+          Mỗi PT trống đúng giờ (handle.transferSlots): radio name="timeSlotId" value = slot.timeSlotId · tên slot.ptName.
+        --%>
         <form class="pt-handle-panel" data-panel="transfer" method="post" action="${pageContext.request.contextPath}/pt/schedule">
             <input type="hidden" name="csrfToken" value="<c:out value='${csrfToken}' />">
             <input type="hidden" name="action" value="transfer">
@@ -156,10 +149,10 @@
             </c:choose>
         </form>
 
-        <%-- ==========================================================================
-             KHUNG 3. HỦY BUỔI → doPost action=cancel → handleService.cancel
-             reason 5–500 ký tự + refundAgreed bắt buộc (DB cũng CHECK: CK_Sessions_PtCancel).
-             ========================================================================== --%>
+        <%--
+          ===== FORM HỦY BUỔI (action=cancel) → PtSessionHandleService.cancel =====
+          name="reason" (5–500 ký tự, giữ lại chữ đã gõ handleReason) · ô tích name="refundAgreed" (bắt buộc).
+        --%>
         <form class="pt-handle-panel" data-panel="cancel" method="post" action="${pageContext.request.contextPath}/pt/schedule">
             <input type="hidden" name="csrfToken" value="<c:out value='${csrfToken}' />">
             <input type="hidden" name="action" value="cancel">

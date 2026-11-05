@@ -1,25 +1,21 @@
 <%@ page pageEncoding="UTF-8" %>
 <%--
-================================================================================
- _schedule-toolbar.jspf — THANH CÔNG CỤ trên lưới Lịch dạy
- Nhúng vào: pt/schedule.jsp (static include → dùng chung biến với trang cha: week, view, các *Url, canAddAny …).
- Trái:  "‹ 26/10 – 01/11/2026 ›" (link prevWeekUrl / nextWeekUrl do schedule.jsp c:url) · ô nhảy tới ngày · nút "Tuần này".
- Giữa:  nút "+ Thêm khung" (form nhỏ #pt-add-form, schedule.js xử lý — KHÔNG gửi server, chỉ tạo NHÁP)
-        · "Gỡ hết khung trống" / "Bỏ nháp" (cũng chỉ tạo nháp).
- Phải:  công tắc kiểu xem Tuần / Danh sách (link ?view=week|list).
- Dữ liệu: week (PtScheduleWeek ← PtScheduleService.getWeek), canAddAny / canRemoveAny (schedule.jsp tính).
-================================================================================ --%>
+  THANH CÔNG CỤ của Lịch dạy — include trong schedule.jsp (biến từ trang cha: week, view, viewDate, prevWeekUrl, nextWeekUrl,
+  thisWeekUrl, weekViewUrl, listViewUrl, canAddAny, canRemoveAny).
+--%>
 
-<%-- ===== BẮT ĐẦU: THANH CÔNG CỤ ===== --%>
-                                <%-- ----- 1.1 Thanh công cụ (cùng kiểu với màn Lịch tập của khách) ----- --%>
                                 <header class="pt-plan-toolbar">
+
+                                    <%--
+                                      CHỌN TUẦN: ‹ › (week.prevWeek / week.nextWeek) · khoảng ngày week.weekStart – week.weekEnd
+                                      · ô ngày (GET ?date=, JS tự gửi khi đổi) · "Tuần này" (ẩn khi week.currentWeek).
+                                    --%>
                                     <nav class="pt-plan-period" aria-label="Chọn tuần">
                                         <a class="btn btn-outline pt-plan-step" href="${prevWeekUrl}" aria-label="Tuần trước"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></a>
-                                        <%-- Khoảng tuần: week.weekStart cắt "dd/MM" + " – " + week.weekEnd đủ "dd/MM/yyyy" → "26/10 – 01/11/2026". --%>
+
                                         <h2 id="pt-plan-range"><c:out value="${fn:substring(gms:formatDate(week.weekStart), 0, 5)}" /> – <c:out value="${gms:formatDate(week.weekEnd)}" /></h2>
                                         <a class="btn btn-outline pt-plan-step" href="${nextWeekUrl}" aria-label="Tuần sau"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></a>
-                                        <%-- Nhảy thẳng tới ngày bất kỳ (khỏi bấm ‹ › nhiều lần): chọn ngày → schedule.js gửi form GET
-                                             ?date=…&view=… → Service dựng tuần chứa ngày đó. Tắt JS: nút "Xem". --%>
+
                                         <form class="pt-plan-jump" method="get" action="${pageContext.request.contextPath}/pt/schedule">
                                             <input type="hidden" name="view" value="${view}">
                                             <label class="pt-plan-jump-field" title="Chọn ngày để xem tuần đó">
@@ -29,18 +25,23 @@
                                             </label>
                                             <noscript><button class="btn btn-outline" type="submit">Xem</button></noscript>
                                         </form>
-                                        <%-- week.currentWeek = false (đang xem tuần khác) → hiện nút "Tuần này". --%>
+
                                         <c:if test="${not week.currentWeek}"><a class="btn btn-ghost" href="${thisWeekUrl}">Tuần này</a></c:if>
                                     </nav>
 
                                     <div class="pt-plan-actions">
                                         <c:choose>
+
+                                            <%--
+                                              THÊM KHUNG (form JS, không gửi server): chọn ngày (chỉ ngày có day.firstStartMinute) + giờ bắt đầu (mốc 15 phút)
+                                              → "Kết thúc … · N phút" (week.sessionMinutes) → "Thêm vào nháp" (schedule.js thêm khung nháp lên cột).
+                                            --%>
                                             <c:when test="${canAddAny}">
-                                                <%-- Nút "Thêm khung" mở form nhỏ: cách chính trên điện thoại, cách bàn phím trên máy tính. --%>
+
                                                 <details class="pt-plan-add">
                                                     <summary class="btn btn-outline"><i class="fa-solid fa-calendar-plus" aria-hidden="true"></i> Thêm khung</summary>
                                                     <form id="pt-add-form" class="pt-plan-add-form">
-                                                        <%-- Ô chọn ngày: chỉ ngày còn thêm được; mỗi lựa chọn "Thứ 3 · 27/10" (day.dayName · day.date). --%>
+
                                                         <label>Ngày
                                                             <select name="date">
                                                                 <c:forEach var="day" items="${week.days}">
@@ -50,25 +51,25 @@
                                                                 </c:forEach>
                                                             </select>
                                                         </label>
-                                                        <%-- Giờ bắt đầu: step 900 giây = mốc 15 phút. --%>
+
                                                         <label>Giờ bắt đầu
                                                             <input type="time" name="start" step="900" required>
                                                         </label>
-                                                        <%-- "Kết thúc 19:30 · 90 phút": JS điền giờ kết thúc; week.sessionMinutes = P-06. --%>
+
                                                         <p class="pt-plan-add-end">Kết thúc <output name="end">--:--</output> · <c:out value="${week.sessionMinutes}" /> phút</p>
                                                         <button class="btn btn-primary" type="submit">Thêm vào nháp</button>
                                                     </form>
                                                 </details>
                                             </c:when>
+
+                                            <%-- Không ngày nào thêm được (tuần đã qua / phòng nghỉ) → chỉ xem. --%>
                                             <c:otherwise>
-                                                <%-- Tuần đã qua / không còn ngày thêm được → chỉ một dòng chữ. --%>
+
                                                 <p class="pt-plan-readonly">Tuần này chỉ xem: không còn ngày nào thêm được khung.</p>
                                             </c:otherwise>
                                         </c:choose>
 
-                                        <%-- Thao tác nhanh — chỉ tạo NHÁP (thanh Chờ công bố), PT xem lại rồi mới Công bố:
-                                               Gỡ hết khung trống  tích mọi ô gỡ (chỉ khung Còn trống, không khách, không bị giữ) + bỏ nháp
-                                               Chép sang tuần sau  khung của tuần này → nháp tuần sau (cùng thứ, cùng giờ), rồi mở tuần sau --%>
+                                        <%-- THAO TÁC NHANH (schedule.js): "Gỡ hết khung trống" (tích mọi ô canRemove) · "Chép sang tuần sau" (chép khung sang nháp tuần sau). --%>
                                         <div class="pt-plan-tools" role="group" aria-label="Thao tác nhanh">
                                             <c:if test="${canRemoveAny}">
                                                 <button type="button" class="btn btn-ghost" data-plan-action="clear-free"><i class="fa-solid fa-calendar-xmark" aria-hidden="true"></i> Gỡ hết khung trống</button>
@@ -76,11 +77,10 @@
                                             <button type="button" class="btn btn-ghost" data-plan-action="copy-next"><i class="fa-regular fa-copy" aria-hidden="true"></i> Chép sang tuần sau</button>
                                         </div>
 
-                                        <%-- Công tắc kiểu xem: link đang chọn có aria-current="page" → CSS tô nền. --%>
+                                        <%-- KIỂU XEM: Tuần | Danh sách (GET ?view=). --%>
                                         <nav class="pt-plan-switch" aria-label="Kiểu xem">
                                             <a href="${weekViewUrl}" aria-current="${view eq 'week' ? 'page' : 'false'}">Tuần</a>
                                             <a href="${listViewUrl}" aria-current="${view eq 'list' ? 'page' : 'false'}">Danh sách</a>
                                         </nav>
                                     </div>
                                 </header>
-<%-- ===== KẾT THÚC: THANH CÔNG CỤ ===== --%>

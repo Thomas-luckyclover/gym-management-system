@@ -88,7 +88,11 @@ public class ForgotPasswordServlet extends HttpServlet {
         // B2: lỗi (email trống / sai định dạng / không có tài khoản / bị khóa / gửi quá nhiều) → vẽ lại bước email kèm lỗi
         if (!result.isSuccess()) {
             request.setAttribute("email", email);
-            forwardStep(request, response, STEP_EMAIL, result);
+            forwardStep(
+                    request,
+                    response,
+                    STEP_EMAIL,
+                    result);
             return;
         }
 
@@ -139,7 +143,11 @@ public class ForgotPasswordServlet extends HttpServlet {
 
         // B3: sai / hết hạn / bị khóa → vẽ lại bước code kèm lỗi
         if (!result.isSuccess()) {
-            forwardStep(request, response, STEP_CODE, result);
+            forwardStep(
+                    request,
+                    response,
+                    STEP_CODE,
+                    result);
             return;
         }
 
@@ -179,10 +187,18 @@ public class ForgotPasswordServlet extends HttpServlet {
         //     lỗi khác (tài khoản bị khóa, DB lỗi) → xóa session khôi phục, về bước email
         if (!result.isSuccess()) {
             if (result.hasFieldErrors()) {
-                forwardStep(request, response, STEP_RESET, result);
+                forwardStep(
+                        request,
+                        response,
+                        STEP_RESET,
+                        result);
             } else {
                 clearRecovery(session);
-                forwardStep(request, response, STEP_EMAIL, result);
+                forwardStep(
+                        request,
+                        response,
+                        STEP_EMAIL,
+                        result);
             }
             return;
         }
@@ -211,7 +227,11 @@ public class ForgotPasswordServlet extends HttpServlet {
             step = STEP_EMAIL;
         }
 
-        forwardStep(request, response, step, null);
+        forwardStep(
+                request,
+                response,
+                step,
+                null);
     }
 
     /**

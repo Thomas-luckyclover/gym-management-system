@@ -3,20 +3,20 @@
 ================================================================================
  _pt-sale-held.jspf — LƯỚI "N BUỔI TẬP · ĐANG GIỮ" (bước 4, cột trái)
  Nhúng vào: pt-sales.jsp (static include → dùng chung biến với trang cha).
- Hiện khi:  đang giữ (sale.held) và có buổi. Dữ liệu: sale.days (PtSaleDay) ← PtSaleService.loadHeld.
+ Hiện khi:  đang giữ (sale.held) và có buổi. Dữ liệu: sale.plan.days (PtSaleDay) ← PtSaleService.loadHeld.
  Lưới 5 cột T2–T6: ô đầu tiên đặt grid-column-start = thứ của ngày đầu (1 = T2) để các ngày rơi đúng cột.
  Ghi chú dưới lưới: ngày không có buổi (d.reason) và buổi PT cần dời (d.warning).
 ================================================================================ --%>
 
 <%-- ===== BẮT ĐẦU: LƯỚI BUỔI ĐANG GIỮ ===== --%>
-            <c:if test="${sale.held and not empty sale.days}">
+            <c:if test="${sale.held and not empty sale.plan.days}">
                 <section class="sale-card" aria-labelledby="sale-h-plan">
-                    <header class="sale-card-head"><h2 id="sale-h-plan"><c:out value="${sale.sessionCount}" /> buổi tập
+                    <header class="sale-card-head"><h2 id="sale-h-plan"><c:out value="${sale.plan.sessionCount}" /> buổi tập
                         <c:if test="${sale.held}"><span class="sale-badge">Đang giữ</span></c:if></h2>
-                        <c:if test="${sale.skipCount gt 0}"><p><c:out value="${sale.skipCount}" /> ngày không có buổi (lý do bên dưới)</p></c:if></header>
+                        <c:if test="${sale.plan.skipCount gt 0}"><p><c:out value="${sale.plan.skipCount}" /> ngày không có buổi (lý do bên dưới)</p></c:if></header>
                     <div class="sale-cal" role="list">
                         <c:forEach var="n" begin="2" end="6"><span class="sale-cal-head" aria-hidden="true">T<c:out value="${n}" /></span></c:forEach>
-                        <c:forEach var="d" items="${sale.days}" varStatus="loop">
+                        <c:forEach var="d" items="${sale.plan.days}" varStatus="loop">
                             <span role="listitem" style="grid-column-start: ${d.date.dayOfWeek.value}"
                                   class="sale-day ${d.session ? (empty d.warning ? 'is-on' : 'is-warn') : 'is-off'}"
                                   title="${fn:escapeXml(d.session ? (empty d.warning ? d.dayLabel : d.warning) : d.reason)}">
@@ -25,9 +25,9 @@
                             </span>
                         </c:forEach>
                     </div>
-                    <c:if test="${sale.noteCount gt 0}">
+                    <c:if test="${sale.plan.noteCount gt 0}">
                         <ul class="sale-notes">
-                            <c:forEach var="d" items="${sale.days}">
+                            <c:forEach var="d" items="${sale.plan.days}">
                                 <c:if test="${not d.session}"><li class="is-off"><b><c:out value="${d.dayLabel}" /></b> <c:out value="${d.reason}" /></li></c:if>
                                 <c:if test="${d.session and not empty d.warning}"><li class="is-warn"><b><c:out value="${d.dayLabel}" /></b> <c:out value="${d.warning}" /></li></c:if>
                             </c:forEach>

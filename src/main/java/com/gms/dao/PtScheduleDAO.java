@@ -17,34 +17,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * DAO MÀN LỊCH DẠY PT (/pt/schedule). Chỉ đọc/ghi DB, KHÔNG tính nghiệp vụ (việc đó của Service).
- *
- * PHẦN 1. ĐỌC LỊCH TUẦN — PtScheduleService.getWeek gọi
- *   findPtEmployeeId     tài khoản đăng nhập → mã PT
- *   findSessions         các buổi có khách trong tuần (kèm tên khách, gói)
- *   findOpenSlots        các khung Free / Held trong tuần
- *   findLeaves           đơn nghỉ Pending / Approved
- *   findHourExceptions   ngày phòng đổi giờ hoặc nghỉ cả ngày
- *
- * PHẦN 2. CÔNG BỐ — PtScheduleService.publishInTransaction gọi, dùng chung MỘT connection (transaction)
- *   lockPtForPublish     khóa hồ sơ PT để hai lần Công bố không chạy cùng lúc
- *   lockScheduleConfigs  giữ P-06 / P-19 không đổi trong lúc công bố
- *   withdrawFreeSlot     GỠ khung: Free → Withdrawn
- *   findSlotsForPublish  các khung đang có, để kiểm tra trùng giờ
- *   insertOrReopenSlot   THÊM khung: mở lại khung Withdrawn cùng giờ, hoặc INSERT mới
+ * DAO màn LỊCH DẠY — đọc lịch tuần, ghi khung khi Công bố. Một số hàm dùng chung với Xử lý buổi và Bán gói PT
+ * (findLeaves, findHourExceptions, lockPtForPublish).
  */
 public class PtScheduleDAO {
-
-
-    /**
-     * Câu SQL đọc buổi có khách. Giữ MỌI trạng thái (Scheduled / CheckedIn / Missed / Cancelled).
-     *
-     *   Bước 1 (WITH ... AS): đánh số buổi #1, #2... theo giờ trong TỪNG GÓI, trên toàn bộ gói.
-     *                         Nhờ vậy buổi 20/45 vẫn là "20" dù tuần này chỉ thấy vài buổi.
-     *   Bước 2:               JOIN tên khách (gói đôi ghép "A & B"), rồi mới lọc PT + khoảng ngày.
-     *
-     * 3 dấu ?: mã PT, từ ngày, đến ngày.
-     */
+    // Buổi có khách của PT trong khoảng ngày: Sessions JOIN TimeSlots, Subscriptions, Orders, khách (+ người tập cùng PTCouple).
+    // SessionNo = số thứ tự buổi trong gói (ROW_NUMBER) → "Buổi n/N".
     private static final String SESSIONS_SQL = """
             WITH NumberedSessions AS (
                 SELECT s.SessionId, s.Status AS SessionStatus, s.PtEmployeeId,
@@ -76,17 +54,7 @@ public class PtScheduleDAO {
             ORDER BY ns.SlotDate, ns.StartTime, ns.SessionId
             """;
 
-
-    // ============================================================================================================
-    // PHỤC VỤ PtScheduleService.getWeek (mở trang Lịch dạy) — ĐỌC
-    // Cũng được gọi từ: PtDashboardService (findSessions), PtSaleService (findLeaves, findHourExceptions), PtSessionHandleService (findPtEmployeeId)
-    // ============================================================================================================
-
-    /**
-     * [getWeek, publish; PtSessionHandleService] Accounts + Persons + Employees: R 1 dòng (tài khoản → mã PT).
-     * HÀM CHÍNH — Service gọi ở B1 của getWeek.
-     * Tài khoản → mã nhân viên PT đang làm việc. Không phải PT / đã nghỉ việc → null.
-     */
+    // Tài khoản → EmployeeId (Position = PT, Status = Working). null = không phải PT đang làm.
     public Integer findPtEmployeeId(int accountId) throws SQLException {
         String sql = """
                 SELECT e.EmployeeId
@@ -100,8 +68,7 @@ public class PtScheduleDAO {
 
         try (Connection connection = DBContext.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
-
-            statement.setInt(1, accountId);   // ? = tài khoản lấy từ session, không lấy từ URL
+            statement.setInt(1, accountId);
 
             try (ResultSet rs = statement.executeQuery()) {
                 if (rs.next()) {
@@ -112,18 +79,13 @@ public class PtScheduleDAO {
         return null;
     }
 
-    /**
-     * [getWeek; PtDashboardService] Sessions + TimeSlots + Subscriptions + Orders + Customers + Persons: R nhiều dòng (thẻ có khách).
-     * HÀM CHÍNH — Service gọi ở B4 của getWeek.
-     * Các buổi PT dạy từ fromDate đến toDate (tính cả hai đầu). Không có → danh sách rỗng.
-     */
+    // Chạy SESSIONS_SQL (? PT, từ ngày, tới ngày) → List<PtScheduleItem> có sessionId.
     public List<PtScheduleItem> findSessions(int ptEmployeeId, LocalDate fromDate, LocalDate toDate)
             throws SQLException {
         List<PtScheduleItem> rows = new ArrayList<>();
 
         try (Connection connection = DBContext.getConnection();
                 PreparedStatement statement = connection.prepareStatement(SESSIONS_SQL)) {
-
             statement.setInt(1, ptEmployeeId);
             statement.setDate(2, Date.valueOf(fromDate));
             statement.setDate(3, Date.valueOf(toDate));
@@ -137,29 +99,25 @@ public class PtScheduleDAO {
         return rows;
     }
 
-    /** HÀM PHỤ — findSessions gọi cho mỗi dòng. Một dòng SQL → một thẻ buổi có khách. */
+    /**
+     * HÀM PHỤ — 1 dòng buổi → PtScheduleItem (tên khách "A & B" nếu gói đôi).
+     */
     private PtScheduleItem readSessionRow(ResultSet rs) throws SQLException {
         return new PtScheduleItem(
-                rs.getInt("SessionId"),                          // Buổi
+                rs.getInt("SessionId"),
                 rs.getString("SessionStatus"),
-                rs.getInt("TimeSlotId"),                         // Khung giờ
+                rs.getInt("TimeSlotId"),
                 rs.getDate("SlotDate").toLocalDate(),
                 rs.getTime("StartTime").toLocalTime(),
                 rs.getTime("EndTime").toLocalTime(),
-                rs.getString("PackageNameSnapshot"),             // Gói
+                rs.getString("PackageNameSnapshot"),
                 rs.getInt("SessionNo"),
                 rs.getInt("GeneratedSessionCount"),
-                rs.getString("CustomerNames"),                   // Khách
+                rs.getString("CustomerNames"),
                 rs.getString("CustomerPhone"));
     }
 
-
-    /**
-     * [getWeek] TimeSlots (+ Sessions): R nhiều dòng (khung Free / Held chưa có buổi).
-     * HÀM CHÍNH — Service gọi ở B4 của getWeek.
-     * Các khung Free / Held của PT trong khoảng ngày.
-     * NOT EXISTS: bỏ khung đã có buổi Scheduled (buổi đó đã được findSessions đọc rồi).
-     */
+    // Khung của PT trong khoảng ngày còn Free / Held và chưa có buổi Scheduled → List<PtScheduleItem> (kind = Free | Held).
     public List<PtScheduleItem> findOpenSlots(int ptEmployeeId, LocalDate fromDate, LocalDate toDate)
             throws SQLException {
         String sql = """
@@ -180,7 +138,6 @@ public class PtScheduleDAO {
 
         try (Connection connection = DBContext.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
-
             statement.setInt(1, ptEmployeeId);
             statement.setDate(2, Date.valueOf(fromDate));
             statement.setDate(3, Date.valueOf(toDate));
@@ -195,9 +152,7 @@ public class PtScheduleDAO {
     }
 
     /**
-     * HÀM PHỤ — findOpenSlots và findSlotsForPublish gọi cho mỗi dòng.
-     * Một dòng TimeSlots → một thẻ khung. kind tạm giữ chữ Status trong DB (Free / Held / Withdrawn...);
-     * Service sẽ đổi thành free / held / locked.
+     * HÀM PHỤ — 1 dòng khung → PtScheduleItem.
      */
     private PtScheduleItem readSlot(ResultSet rs) throws SQLException {
         return new PtScheduleItem(
@@ -208,22 +163,20 @@ public class PtScheduleDAO {
                 rs.getString("Status"));
     }
 
-
-    /** HÀM CHÍNH — Service gọi ở B4 của getWeek. Mở connection riêng rồi dùng bản có connection bên dưới. */
+    // Đơn nghỉ Pending / Approved của PT giao với khoảng ngày (tự mở kết nối).
     public List<LeaveInfo> findLeaves(int employeeId, LocalDate fromDate, LocalDate toDate)
             throws SQLException {
         try (Connection connection = DBContext.getConnection()) {
-            return findLeaves(connection, employeeId, fromDate, toDate);
+            return findLeaves(
+                    connection,
+                    employeeId,
+                    fromDate,
+                    toDate);
         }
     }
 
-    /**
-     * HÀM CHÍNH — bản dùng connection có sẵn: Service gọi ở B3 của publishInTransaction (trong transaction).
-     * Đơn nghỉ Pending / Approved của PT trong khoảng ngày. Đơn Rejected không lấy.
-     * Một đơn nghỉ là KHOẢNG ngày FromDate..ToDate (schema develop 26/10) → tách thành 1 LeaveInfo cho MỖI ngày
-     * nằm trong [fromDate, toDate], để isOnLeave vẫn so từng ngày như cũ.
-     * HOLDLOCK: giữ dữ liệu đơn nghỉ không đổi tới khi transaction kết thúc.
-     */
+    // Như trên nhưng trong transaction đang mở (WITH HOLDLOCK: không cho duyệt / thêm đơn nghỉ giữa chừng).
+    // Mỗi đơn nhiều ngày → tách thành từng LeaveInfo 1 ngày (chỉ ngày nằm trong khoảng).
     public List<LeaveInfo> findLeaves(Connection connection, int employeeId, LocalDate fromDate, LocalDate toDate)
             throws SQLException {
         String sql = """
@@ -238,10 +191,9 @@ public class PtScheduleDAO {
         List<LeaveInfo> rows = new ArrayList<>();
 
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
-
             statement.setInt(1, employeeId);
-            statement.setDate(2, Date.valueOf(toDate));      // đơn bắt đầu trước khi khoảng xem kết thúc
-            statement.setDate(3, Date.valueOf(fromDate));    // và kết thúc sau khi khoảng xem bắt đầu
+            statement.setDate(2, Date.valueOf(toDate));
+            statement.setDate(3, Date.valueOf(fromDate));
 
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
@@ -258,17 +210,18 @@ public class PtScheduleDAO {
         return rows;
     }
 
-    /** HÀM PHỤ — findLeaves gọi cho MỖI NGÀY của 1 đơn nghỉ → một LeaveInfo. */
+    /**
+     * HÀM PHỤ — 1 đơn + 1 ngày → LeaveInfo.
+     */
     private LeaveInfo readLeave(ResultSet rs, LocalDate day) throws SQLException {
         return new LeaveInfo(
                 day,
-                rs.getString("ShiftType"),      // Morning / Afternoon / FullDay
-                rs.getString("Status"),         // Pending / Approved
+                rs.getString("ShiftType"),
+                rs.getString("Status"),
                 rs.getString("Reason"));
     }
 
-
-    /** HÀM CHÍNH — Service gọi ở B4 của getWeek. Mở connection riêng rồi dùng bản có connection bên dưới. */
+    // Ngày giờ đặc biệt (OperatingHourExceptions) trong khoảng ngày (tự mở kết nối).
     public List<HourException> findHourExceptions(LocalDate fromDate, LocalDate toDate)
             throws SQLException {
         try (Connection connection = DBContext.getConnection()) {
@@ -276,10 +229,7 @@ public class PtScheduleDAO {
         }
     }
 
-    /**
-     * HÀM CHÍNH — bản dùng connection có sẵn: Service gọi ở B3 của publishInTransaction.
-     * Các ngày phòng gym đổi giờ hoặc nghỉ cả ngày. Ngày không có dòng nào → Service dùng giờ P-19.
-     */
+    // Như trên trong transaction (WITH HOLDLOCK).
     public List<HourException> findHourExceptions(Connection connection, LocalDate fromDate, LocalDate toDate)
             throws SQLException {
         String sql = """
@@ -292,7 +242,6 @@ public class PtScheduleDAO {
         List<HourException> rows = new ArrayList<>();
 
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
-
             statement.setDate(1, Date.valueOf(fromDate));
             statement.setDate(2, Date.valueOf(toDate));
 
@@ -305,7 +254,9 @@ public class PtScheduleDAO {
         return rows;
     }
 
-    /** HÀM PHỤ — findHourExceptions gọi cho mỗi dòng. Ngày nghỉ cả ngày thì OpenTime/CloseTime là NULL. */
+    /**
+     * HÀM PHỤ — 1 dòng → HourException (giờ mở / đóng có thể NULL khi nghỉ cả ngày).
+     */
     private HourException readHourException(ResultSet rs) throws SQLException {
         Time openTime = rs.getTime("OpenTime");
         Time closeTime = rs.getTime("CloseTime");
@@ -316,18 +267,8 @@ public class PtScheduleDAO {
                 closeTime == null ? null : closeTime.toLocalTime());
     }
 
-
-    // ============================================================================================================
-    // PHỤC VỤ PtScheduleService.publish (nút "Công bố") — GHI trong transaction của Service, có KHÓA
-    // lockPtForPublish cũng được PtSessionHandleService gọi: Dời / Chuyển / Hủy xếp hàng với Công bố
-    // ============================================================================================================
-
-    /**
-     * [publish; PtSessionHandleService] Employees: KHÓA 1 dòng PT (UPDLOCK, HOLDLOCK) — không đổi dữ liệu.
-     * HÀM CHÍNH — Service gọi ở B1 của publishInTransaction.
-     * Khóa dòng hồ sơ PT (UPDLOCK, HOLDLOCK): lần Công bố thứ hai của cùng PT phải chờ lần đầu xong.
-     * Trả mã PT; tài khoản không phải PT đang làm việc → null.
-     */
+    // KHÓA dòng Employees của PT (UPDLOCK, HOLDLOCK) tới hết transaction: Công bố lịch, Xử lý buổi, Bán gói PT cùng PT phải xếp hàng.
+    // Trả về: EmployeeId (tài khoản Active, PT Working) | null.
     public Integer lockPtForPublish(Connection connection, int accountId) throws SQLException {
         String sql = """
                 SELECT e.EmployeeId
@@ -347,10 +288,7 @@ public class PtScheduleDAO {
         }
     }
 
-    /**
-     * [publish] SystemConfigs: đọc P-06 / P-19 có khóa (giờ mở cửa không đổi giữa chừng).
-     * HÀM CHÍNH — Service gọi ở B1 của publishInTransaction. Giữ P-06 / P-19 không bị sửa giữa chừng.
-     */
+    // Khóa đọc P-06, P-19 trong SystemConfigs tới hết transaction.
     public void lockScheduleConfigs(Connection connection) throws SQLException {
         String sql = """
                 SELECT ConfigKey FROM SystemConfigs WITH (HOLDLOCK)
@@ -360,18 +298,12 @@ public class PtScheduleDAO {
         try (PreparedStatement statement = connection.prepareStatement(sql);
                 ResultSet rs = statement.executeQuery()) {
             while (rs.next()) {
-                // Chỉ cần đọc hết các dòng để giữ khóa tới cuối transaction.
             }
         }
     }
 
-    /**
-     * [publish] TimeSlots (+ Sessions): R có khóa khoảng ngày (không ai chen thêm khung).
-     * HÀM CHÍNH — Service gọi ở B3 của publishInTransaction.
-     * Mọi khung (kể cả Withdrawn) trong khoảng ngày, để Service kiểm tra trùng giờ.
-     * Khung có buổi Scheduled của PT này luôn được coi là 'Booked', dù Status trong TimeSlots lệch.
-     * UPDLOCK, HOLDLOCK: không ai chen thêm khung vào khoảng này tới khi transaction kết thúc.
-     */
+    // Mọi khung trong khoảng ngày của PT (kể cả khung PT khác mà PT này đang dạy buổi Scheduled), KHÓA (UPDLOCK, HOLDLOCK).
+    // Khung có buổi Scheduled → Status "Booked". Dùng để kiểm khung nháp không chồng giờ.
     public List<PtScheduleItem> findSlotsForPublish(Connection connection, int ptId,
             LocalDate fromDate, LocalDate toDate) throws SQLException {
         String sql = """
@@ -405,17 +337,7 @@ public class PtScheduleDAO {
         return rows;
     }
 
-    /**
-     * [publish, khung bị gỡ] TimeSlots: U 1 dòng Free → Withdrawn (chỉ khung chưa bắt đầu, chưa có buổi).
-     * HÀM CHÍNH — Service gọi ở B2 của publishInTransaction, mỗi khung cần gỡ một lần.
-     * Đổi Free → Withdrawn (DBR-36): giữ dòng để làm lịch sử, không xóa.
-     *
-     * Chỉ đổi khi ĐỦ 4 điều kiện:
-     *   đúng PT  ·  đang Free (không Held/Booked)  ·  chưa tới giờ bắt đầu  ·  không có buổi Scheduled gắn vào.
-     *
-     * 5 dấu ?: mã khung, mã PT, hôm nay, hôm nay, giờ hiện tại.
-     * Trả true nếu đổi được đúng 1 dòng; false = khung không còn gỡ được.
-     */
+    // Gỡ 1 khung: TimeSlots Free → Withdrawn, chỉ khi của PT này, chưa tới giờ, không có buổi Scheduled. Trả về: true = gỡ được.
     public boolean withdrawFreeSlot(Connection connection, int ptId, int timeSlotId, LocalDateTime now)
             throws SQLException {
         String sql = """
@@ -436,18 +358,9 @@ public class PtScheduleDAO {
         }
     }
 
-    /**
-     * [publish, khung mới] TimeSlots: C 1 dòng Free, hoặc U khung Withdrawn cùng giờ → Free.
-     * HÀM CHÍNH — Service gọi ở B4 của publishInTransaction, mỗi khung mới một lần.
-     *
-     *   Cách 1: đã có khung Withdrawn ĐÚNG giờ này → đổi lại thành Free (giữ mã cũ, giữ lịch sử).
-     *   Cách 2: chưa có → INSERT dòng mới với Status = 'Free'.
-     *
-     * Giờ gửi bằng chuỗi + CAST(? AS time) để driver không đổi thành kiểu DATETIME.
-     */
+    // Công bố 1 khung nháp:
     public void insertOrReopenSlot(Connection connection, int ptId, PtSlotDraft draft) throws SQLException {
-
-        // Cách 1: mở lại khung Withdrawn cùng giờ.
+        // B1: có khung Withdrawn đúng ngày + giờ bắt đầu + giờ kết thúc → mở lại: Withdrawn → Free (xong)
         String reopenSql = """
                 UPDATE TimeSlots SET Status = 'Free'
                 WHERE PtEmployeeId = ? AND SlotDate = ? AND StartTime = CAST(? AS time) AND EndTime = CAST(? AS time)
@@ -466,7 +379,7 @@ public class PtScheduleDAO {
             }
         }
 
-        // Cách 2: thêm khung mới (DBR-33: chặn chồng giờ ngay trong SQL — lớp cuối chống 2 khung đè nhau).
+        // B2: không có → INSERT TimeSlots Free, chỉ khi không chồng khung còn hiệu lực nào (không chèn được → lỗi "trùng khung")
         String insertSql = """
                 INSERT INTO TimeSlots (PtEmployeeId, SlotDate, StartTime, EndTime, Status)
                 SELECT ?, ?, CAST(? AS time), CAST(? AS time), 'Free'
@@ -482,14 +395,13 @@ public class PtScheduleDAO {
             statement.setDate(2, Date.valueOf(draft.getSlotDate()));
             statement.setString(3, draft.getStartTime().toString());
             statement.setString(4, draft.getEndTime().toString());
-            // Các dấu ? trong NOT EXISTS (theo đúng thứ tự xuất hiện trong SQL):
-            statement.setInt(5, ptId);                                       // t.PtEmployeeId = ?
-            statement.setDate(6, Date.valueOf(draft.getSlotDate()));         // t.SlotDate = ?
-            statement.setString(7, draft.getEndTime().toString());           // t.StartTime < @end
-            statement.setString(8, draft.getStartTime().toString());         // t.EndTime  > @start
+
+            statement.setInt(5, ptId);
+            statement.setDate(6, Date.valueOf(draft.getSlotDate()));
+            statement.setString(7, draft.getEndTime().toString());
+            statement.setString(8, draft.getStartTime().toString());
             int inserted = statement.executeUpdate();
             if (inserted == 0) {
-                // IllegalArgumentException để Service trả đúng câu lỗi cho PT (không phải lỗi kết nối DB).
                 throw new IllegalArgumentException("Khung giờ này trùng với khung giờ đã có ("
                         + draft.getStartTime() + "–" + draft.getEndTime() + ").");
             }

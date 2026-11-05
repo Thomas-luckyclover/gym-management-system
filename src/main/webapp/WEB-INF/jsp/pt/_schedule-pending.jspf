@@ -1,19 +1,13 @@
 <%@ page pageEncoding="UTF-8" %>
 <%--
-================================================================================
- _schedule-pending.jspf — THANH "CHỜ CÔNG BỐ" (dính đáy màn hình)
- Nhúng vào: pt/schedule.jsp (static include → dùng chung biến với trang cha: week, view, các *Url, canAddAny …).
- Form #pt-publish-form: KHÔNG có action — schedule.js gom các thẻ nháp (thêm / gỡ) rồi gửi AJAX
-   POST /pt/schedule (slotDate[], startTime[], removeIds, csrfToken) → PtScheduleServlet.doPost → PtScheduleService.publish
-   → JSON {success, message}. Lỗi (vd trùng giờ) → JS điền chữ vào ô báo lỗi trong thanh này.
-================================================================================ --%>
+  THANH "THAY ĐỔI CHỜ LƯU" — include trong schedule.jsp. schedule.js hiện thanh khi có khung nháp / khung tích gỡ.
+  FORM id="pt-publish-form" (schedule.js gửi bằng fetch POST /pt/schedule, KHÔNG có ô action) → PtScheduleServlet.doPost B5
+  → PtScheduleService.publish → JSON. Các ô gửi kèm:
+    csrfToken · duration = week.sessionMinutes (Service so với P-06 hiện tại)
+    slotDate[] + startTime[] (khung nháp, từ _schedule-draft-template) · removeSlotId[] (ô tích trong _schedule-day)
+  Số "N khung mới / M khung gỡ" và câu lỗi (#pt-publish-error) do schedule.js điền.
+--%>
 
-<%-- ===== BẮT ĐẦU: THANH CHỜ CÔNG BỐ ===== --%>
-                            <%-- ==========================================================================
-                                 KHỐI 2. THANH CHỜ CÔNG BỐ (dính đáy) — BẮT ĐẦU
-                                 Số "2 khung mới / 1 khung gỡ" do CSS tự đếm (counter), JS không phải vẽ danh sách.
-                                 Gửi lên: csrfToken, duration (P-06 trang đang dùng), removeSlotId…, slotDate + startTime của nháp.
-                                 ========================================================================== --%>
                             <form id="pt-publish-form" class="pt-plan-pending" aria-label="Thay đổi chờ lưu">
                                 <input type="hidden" name="csrfToken" value="<c:out value='${csrfToken}' />">
                                 <input type="hidden" name="duration" value="${week.sessionMinutes}">
@@ -23,13 +17,13 @@
                                         <span class="pt-pending-remove"><b class="pt-count-remove"></b> khung gỡ</span>
                                     </p>
                                     <p class="pt-pending-note">Thay đổi chưa áp dụng vào lịch của khách.</p>
-                                    <%-- Lỗi do server trả về khi Công bố (VD trùng giờ) — JS điền chữ vào đây. --%>
+
                                     <p class="pt-pending-error" id="pt-publish-error" role="alert"></p>
                                 </div>
                                 <div class="pt-pending-actions">
+
+                                    <%-- "Bỏ tất cả" = xóa nháp + bỏ tích (JS) · "Công bố" = gửi form. --%>
                                     <button class="btn btn-ghost" type="button" id="pt-clear">Bỏ tất cả</button>
                                     <button class="btn btn-primary" type="submit" id="pt-publish">Công bố</button>
                                 </div>
                             </form>
-                            <%-- KHỐI 2. THANH CHỜ CÔNG BỐ — KẾT THÚC --%>
-<%-- ===== KẾT THÚC: THANH CHỜ CÔNG BỐ ===== --%>

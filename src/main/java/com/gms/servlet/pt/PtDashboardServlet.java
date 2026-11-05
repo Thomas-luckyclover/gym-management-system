@@ -78,11 +78,19 @@ public class PtDashboardServlet extends HttpServlet {
      */
     private void loadBlocks(HttpServletRequest request, int accountId) {
         // B1: lịch 7 ngày → "scheduleDays" | "scheduleError"
-        putBlock(request, dashboardService.getSchedule(accountId), "scheduleDays", "scheduleError");
+        putBlock(
+                request,
+                dashboardService.getSchedule(accountId),
+                "scheduleDays",
+                "scheduleError");
 
         // B2: việc cần chú ý (14 ngày tới) → "attentionItems" | "attentionError"
         ServiceResult<List<PtAttentionView>> attention = dashboardService.getAttentionItems(accountId);
-        putBlock(request, attention, "attentionItems", "attentionError");
+        putBlock(
+                request,
+                attention,
+                "attentionItems",
+                "attentionError");
 
         // B3: khách phụ trách, gắn kèm các việc cần chú ý ở B2 → "assignedPackages" | "assignedPackagesError"
         List<PtAttentionView> attentionItems = attention.isSuccess() ? attention.getData() : List.of();
@@ -90,7 +98,11 @@ public class PtDashboardServlet extends HttpServlet {
                 "assignedPackages", "assignedPackagesError");
 
         // B4: kết quả tháng + hoa hồng → "commissionSummary" | "commissionSummaryError"
-        putBlock(request, dashboardService.getCommissionSummary(accountId), "commissionSummary", "commissionSummaryError");
+        putBlock(
+                request,
+                dashboardService.getCommissionSummary(accountId),
+                "commissionSummary",
+                "commissionSummaryError");
     }
 
     /**
@@ -123,7 +135,11 @@ public class PtDashboardServlet extends HttpServlet {
     /**
      * HÀM PHỤ (loadBlocks) — thành công → attribute dataName = dữ liệu; lỗi → attribute errorName = câu lỗi.
      */
-    private void putBlock(HttpServletRequest request, ServiceResult<?> result, String dataName, String errorName) {
+    private void putBlock(
+            HttpServletRequest request,
+            ServiceResult<?> result,
+            String dataName,
+            String errorName) {
         if (result.isSuccess()) {
             request.setAttribute(dataName, result.getData());
         } else {
