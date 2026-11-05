@@ -1,4 +1,4 @@
-/* ============================================================================
+﻿/* ============================================================================
    GMS — FILE: 2_Seed_Data.sql  ·  v26
    SINH TỰ ĐỘNG bởi database/tools/seeddata.py — muốn sửa dữ liệu thì sửa file .py rồi sinh lại.
    v26    : CheckedIn/Used, tự chốt JOB-04, đánh giá PT theo tháng, P-22 thay P-07.
@@ -5027,8 +5027,8 @@ INSERT INTO LeaveRequests (LeaveRequestId, EmployeeId, ReviewedByEmployeeId, Ass
  (13, 6, NULL, NULL, 'Unpaid', '2026-11-03', '2026-11-03', 'Morning', 1.0, N'Ca nghỉ đã qua nhưng đơn vẫn đang chờ quản lý xác nhận để duyệt muộn.', 'Pending', NULL, '2026-11-02 08:00:00', NULL, NULL, NULL),
  (14, 9, NULL, NULL, 'Annual', '2026-11-16', '2026-11-18', 'FullDay', 3.0, N'Nghỉ nhiều ngày: về quê dự việc gia đình trong ba ngày.', 'Pending', NULL, '2026-11-04 08:40:00', NULL, NULL, NULL),
  (15, 14, NULL, NULL, 'Unpaid', '2026-11-18', '2026-12-02', 'FullDay', 15.0, N'Chủ động xin nghỉ không lương 15 ngày, không sử dụng quỹ phép năm.', 'Pending', NULL, '2026-11-04 08:50:00', NULL, NULL, NULL),
- (16, 13, NULL, NULL, 'Annual', '2026-11-09', '2026-11-10', 'FullDay', 2.0, N'Đợt nghỉ 4 ngày Lý Hoàng Long: phần 1 Phép năm 2 ngày.', 'Pending', NULL, '2026-11-04 09:00:00', NULL, NULL, '33333333-0524-4620-8000-000000000003'),
- (17, 13, NULL, NULL, 'Unpaid', '2026-11-11', '2026-11-12', 'FullDay', 2.0, N'Đợt nghỉ 4 ngày Lý Hoàng Long: phần 2 Không lương 2 ngày.', 'Pending', NULL, '2026-11-04 09:00:00', NULL, NULL, '33333333-0524-4620-8000-000000000003'),
+ (16, 13, NULL, NULL, 'Annual', '2026-11-09', '2026-11-10', 'FullDay', 2.0, N'Đợt nghỉ 4 ngày Lý Hoàng Long: phần 1 Phép năm 2 ngày.', 'Pending', NULL, '2026-11-05 09:00:00', NULL, NULL, '33333333-0524-4620-8000-000000000003'),
+ (17, 13, NULL, NULL, 'Unpaid', '2026-11-11', '2026-11-12', 'FullDay', 2.0, N'Đợt nghỉ 4 ngày Lý Hoàng Long: phần 2 Không lương 2 ngày.', 'Pending', NULL, '2026-11-05 09:00:00', NULL, NULL, '33333333-0524-4620-8000-000000000003'),
  (18, 3, 2, NULL, 'Annual', '2026-11-23', '2026-11-25', 'FullDay', 3.0, N'Phần phép năm đã được duyệt trong đợt 5 ngày.', 'Approved', NULL, '2026-11-04 09:00:00', '2026-11-04 10:00:00', NULL, '44444444-0524-4620-8000-000000000004'),
  (19, 3, 2, NULL, 'Unpaid', '2026-11-26', '2026-11-27', 'FullDay', 2.0, N'Phần không lương bị từ chối trong cùng đợt.', 'Rejected', N'Chưa bố trí được nhân sự cho phần không lương.', '2026-11-04 09:00:00', '2026-11-04 10:00:00', NULL, '44444444-0524-4620-8000-000000000004'),
  (20, 13, 2, NULL, 'Annual', '2026-08-16', '2026-08-27', 'FullDay', 12.0, N'Nghỉ phép năm đã được duyệt, còn 2 ngày phép để gửi đợt nghỉ tháng 11.', 'Approved', NULL, '2026-08-15 09:00:00', '2026-08-15 10:00:00', NULL, NULL),
