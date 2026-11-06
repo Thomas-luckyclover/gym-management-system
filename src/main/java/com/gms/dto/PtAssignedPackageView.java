@@ -46,14 +46,17 @@ public class PtAssignedPackageView {
         this.scheduledSessionCount = scheduledSessionCount;
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "customerZaloUrl"; = ZaloUtil.toUrl(customerPhone); JSP: pt/dashboard.jsp:233 …
     public String getCustomerZaloUrl() {
         return ZaloUtil.toUrl(customerPhone);
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "partnerZaloUrl"; = ZaloUtil.toUrl(partnerPhone); JSP: pt/dashboard.jsp:244 …
     public String getPartnerZaloUrl() {
         return ZaloUtil.toUrl(partnerPhone);
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "attentionPriority"; = có việc closedDay → 0, có việc khác → 1, không có việc → 2; JSP: không dùng (chỉ Java/test)
     public int getAttentionPriority() {
         for (PtAttentionView item : attentionItems) {
             if ("closedDay".equals(item.getKind())) {

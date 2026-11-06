@@ -111,9 +111,9 @@ public class CustomerDashboardDAO {
     public List<SubscriptionRow> findActiveSubscriptions(int customerId) throws SQLException {
         String sql = "SELECT subCombined.SubscriptionId, subCombined.SubscriptionType, subCombined.PackageName, "
                 + "subCombined.StartDate, subCombined.EndDate, subCombined.Status, subCombined.GeneratedSessionCount, "
-                + "subCombined.RemainingSessions, subCombined.UsedSessions, "
+                + "subCombined.RemainingSessions, "
                 + "subCombined.FreezeStart, subCombined.FreezeEnd, "
-                + "subCombined.OrderCode, subCombined.PackageDescription, subCombined.PackageBenefits, "
+                + "subCombined.OrderCode, subCombined.PackageDescription, "
                 + "subCombined.PtName, subCombined.FreezeUsed, subCombined.MaxFreezes "
                 + "FROM ("
                 + "  SELECT sub.SubscriptionId, sub.SubscriptionType, o.PackageNameSnapshot AS PackageName, "
@@ -123,14 +123,9 @@ public class CustomerDashboardDAO {
                 + "    WHERE s2.SubscriptionId = sub.SubscriptionId "
                 + "    AND s2.Status = 'Scheduled'"
                 + "  ) AS RemainingSessions, "
-                + "  ("
-                + "    SELECT COUNT(*) FROM Sessions s3 "
-                + "    WHERE s3.SubscriptionId = sub.SubscriptionId "
-                + "    AND s3.Status IN ('CheckedIn', 'Missed')"
-                + "  ) AS UsedSessions, "
                 + "  fr.StartDate AS FreezeStart, COALESCE(fr.ActualEndDate, fr.PlannedEndDate) AS FreezeEnd, "
                 + "  o.OrderCode, o.PackageDescriptionSnapshot AS PackageDescription, "
-                + "  o.PackageBenefitsSnapshot AS PackageBenefits, ptp.FullName AS PtName, "
+                + "  ptp.FullName AS PtName, "
                 + "  sub.FreezeUsed, sub.MaxFreezesSnapshot AS MaxFreezes, "
                 + "  0 AS SortPriority "
                 + "  FROM Subscriptions sub "
@@ -150,10 +145,9 @@ public class CustomerDashboardDAO {
                 + "    WHERE s4.SubscriptionId = sub2.SubscriptionId "
                 + "    AND s4.Status = 'Scheduled'"
                 + "  ) AS RemainingSessions, "
-                + "  0 AS UsedSessions, "
                 + "  NULL AS FreezeStart, NULL AS FreezeEnd, "
                 + "  o2.OrderCode, o2.PackageDescriptionSnapshot AS PackageDescription, "
-                + "  o2.PackageBenefitsSnapshot AS PackageBenefits, ptp2.FullName AS PtName, "
+                + "  ptp2.FullName AS PtName, "
                 + "  sub2.FreezeUsed, sub2.MaxFreezesSnapshot AS MaxFreezes, "
                 + "  1 AS SortPriority "
                 + "  FROM Subscriptions sub2 "
@@ -197,14 +191,9 @@ public class CustomerDashboardDAO {
                 + "  WHERE s2.SubscriptionId = sub.SubscriptionId "
                 + "  AND s2.Status = 'Scheduled'"
                 + ") AS RemainingSessions, "
-                + "("
-                + "  SELECT COUNT(*) FROM Sessions s3 "
-                + "  WHERE s3.SubscriptionId = sub.SubscriptionId "
-                + "  AND s3.Status IN ('CheckedIn', 'Missed')"
-                + ") AS UsedSessions, "
                 + "NULL AS FreezeStart, NULL AS FreezeEnd, "
                 + "o.OrderCode, o.PackageDescriptionSnapshot AS PackageDescription, "
-                + "o.PackageBenefitsSnapshot AS PackageBenefits, ptp.FullName AS PtName, "
+                + "ptp.FullName AS PtName, "
                 + "sub.FreezeUsed, sub.MaxFreezesSnapshot AS MaxFreezes "
                 + "FROM Subscriptions sub "
                 + "JOIN Orders o ON o.OrderId = sub.OrderId "
@@ -242,10 +231,10 @@ public class CustomerDashboardDAO {
     public SubscriptionRow findLatestExpiredMembership(int customerId) throws SQLException {
         String sql = "SELECT TOP 1 sub.SubscriptionId, sub.SubscriptionType, o.PackageNameSnapshot AS PackageName, "
                 + "sub.StartDate, sub.EndDate, sub.Status, sub.GeneratedSessionCount, "
-                + "0 AS RemainingSessions, 0 AS UsedSessions, "
+                + "0 AS RemainingSessions, "
                 + "NULL AS FreezeStart, NULL AS FreezeEnd, "
                 + "o.OrderCode, o.PackageDescriptionSnapshot AS PackageDescription, "
-                + "o.PackageBenefitsSnapshot AS PackageBenefits, NULL AS PtName, "
+                + "NULL AS PtName, "
                 + "sub.FreezeUsed, sub.MaxFreezesSnapshot AS MaxFreezes "
                 + "FROM Subscriptions sub "
                 + "JOIN Orders o ON o.OrderId = sub.OrderId "
@@ -275,7 +264,6 @@ public class CustomerDashboardDAO {
 
         Integer totalSessions = isPt ? rs.getInt("GeneratedSessionCount") : null;
         Integer remaining = isPt ? rs.getInt("RemainingSessions") : null;
-        Integer used = isPt ? rs.getInt("UsedSessions") : null;
 
         Date fsDate = rs.getDate("FreezeStart");
         Date feDate = rs.getDate("FreezeEnd");
@@ -293,12 +281,10 @@ public class CustomerDashboardDAO {
                 rs.getString("Status"),
                 totalSessions,
                 remaining,
-                used,
                 fsDate != null ? fsDate.toLocalDate() : null,
                 feDate != null ? feDate.toLocalDate() : null,
                 rs.getString("OrderCode"),
                 rs.getString("PackageDescription"),
-                rs.getString("PackageBenefits"),
                 rs.getString("PtName"),
                 isPt ? null : rs.getInt("FreezeUsed"),
                 isPt ? null : maxFreezes);

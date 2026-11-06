@@ -24,10 +24,13 @@ public class AutoCloseSessionService {
     private final AutoCloseSessionDAO sessionDAO;
     private final AuditLogService auditLogService;
 
+    
+    // Job dùng constructor này, constructor ko tham số, và constructor này tự tạo DAO thật
     public AutoCloseSessionService() {
         this(new AutoCloseSessionDAO(), new AuditLogService());
     }
 
+    // Tets gọi constructor có tham số để truyền DAO giả vào, ko cần DB thật
     public AutoCloseSessionService(AutoCloseSessionDAO sessionDAO,
             AuditLogService auditLogService) {
         this.sessionDAO = sessionDAO;
@@ -35,6 +38,7 @@ public class AutoCloseSessionService {
     }
 
     // Chạy job với ngày hôm nay (BackgroundJobScheduler gọi).
+    // trả về số buổi int
     public int runJob() throws SQLException {
         return runJob(DateTimeUtil.today());
     }
@@ -213,8 +217,9 @@ public class AutoCloseSessionService {
 
     /**
      * HÀM PHỤ — mở kết nối DB (test ghi đè để dùng kết nối giả).
+     * protected nghĩa là class con được ovveride hàm này, mở cho test thay thế ok, bên ngoài ko gọi đc trừ các class cùng package
      */
     protected Connection openConnection() throws SQLException {
-        return DBContext.getConnection();
+        return DBContext.getConnection(); // // bản thật: nối SQL Server
     }
 }

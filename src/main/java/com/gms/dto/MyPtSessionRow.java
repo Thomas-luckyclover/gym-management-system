@@ -119,15 +119,18 @@ public class MyPtSessionRow {
 
     public void setEnded(boolean ended) { this.ended = ended; }
 
+    // GETTER TỰ TÍNH — không có field/setter "dayName"; = thứ của slotDate: "Thứ 2…Thứ 7", "Chủ nhật"; JSP: customer/my-bookings.jsp:204 …
     public String getDayName() {
         int day = slotDate.getDayOfWeek().getValue();
         return day == 7 ? "Chủ nhật" : "Thứ " + (day + 1);
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "couple"; = type == "PTCouple"; JSP: không dùng (chỉ Java/test)
     public boolean isCouple() {
         return "PTCouple".equals(type);
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "singleSession"; = type == "SingleSession"; JSP: customer/_session-card.jspf:20 …
     public boolean isSingleSession() {
         return "SingleSession".equals(type);
     }

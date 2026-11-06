@@ -214,8 +214,10 @@
           </c:choose>
 
           <%-- Phân trang --%>
+          <%-- listPage.totalPages = getter tự tính getTotalPages() · dto/PageResult.java --%>
           <c:if test="${listPage.totalPages > 1}">
             <div class="leave-pager">
+              <%-- listPage.hasPrevious = getter tự tính isHasPrevious() · dto/PageResult.java --%>
               <c:if test="${listPage.hasPrevious}">
                 <c:url var="previousUrl" value="/manager/leave-requests">
                   <c:param name="page" value="${listPage.pageNumber - 1}" />
@@ -232,6 +234,7 @@
 
               <span>Trang ${listPage.pageNumber} / ${listPage.totalPages} (${listPage.totalItems} ${employeeView ? 'nhân viên' : 'mục'})</span>
 
+              <%-- listPage.hasNext = getter tự tính isHasNext() · dto/PageResult.java --%>
               <c:if test="${listPage.hasNext}">
                 <c:url var="nextUrl" value="/manager/leave-requests">
                   <c:param name="page" value="${listPage.pageNumber + 1}" />

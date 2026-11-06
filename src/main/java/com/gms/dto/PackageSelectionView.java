@@ -263,11 +263,4 @@ public class PackageSelectionView {
         this.chips = new ArrayList<>(chips);
     }
 
-    /**
-     * Có đang lọc hoặc tìm kiếm không — JSP dùng để hiện nút "Xóa bộ lọc" trong trạng thái rỗng.
-     * Tính: từ khóa khác rỗng, hoặc có chip bộ lọc đang bật. Kiểu sắp xếp không tính là lọc.
-     */
-    public boolean isFiltering() {
-        return !keyword.isEmpty() || !chips.isEmpty();
-    }
 }

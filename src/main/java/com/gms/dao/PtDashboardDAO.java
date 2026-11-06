@@ -3,7 +3,6 @@ package com.gms.dao;
 import com.gms.dto.PtAssignedPackageView;
 import com.gms.dto.PtClientPackageView;
 import com.gms.dto.PtCommissionSummaryView;
-import com.gms.dto.PtRatingView;
 import com.gms.dto.PtSessionView;
 import com.gms.entity.Package;
 import com.gms.entity.Session;
@@ -13,6 +12,7 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -24,10 +24,10 @@ import java.util.List;
  * DAO màn PT DASHBOARD — chỉ đọc (SELECT), không ghi gì.
  */
 public class PtDashboardDAO {
-    // 1 buổi Scheduled rơi vào ngày phòng nghỉ (kết quả findClosedDaySessions).
-    public record ClosedDaySession(int sessionId, int customerId, String customerName,
-            int subscriptionId, Package.Type subscriptionType, LocalDate ptEndDate,
-            LocalDate slotDate, LocalTime startTime) { }
+    // 1 buổi Scheduled rơi vào lúc phòng đóng (kết quả findClosedDaySessions). openTime / closeTime = null: không đọc được giờ.
+    public record ClosedDaySession(int sessionId, String customerName, int subscriptionId,
+            LocalDate slotDate, LocalTime startTime, boolean closedAllDay, LocalTime endTime,
+            LocalTime openTime, LocalTime closeTime) { }
 
     // Lịch dạy: Sessions JOIN TimeSlots, Subscriptions, Orders, khách (+ người tập cùng nếu PTCouple)
     // của PT trong [fromDate, toDate]. Trả về: List<PtSessionView> (Service chia theo ngày).
@@ -93,25 +93,30 @@ public class PtDashboardDAO {
         return sessions;
     }
 
-    // Buổi Scheduled của PT trong khoảng ngày mà OperatingHourExceptions đánh dấu nghỉ cả ngày.
+    // Buổi Scheduled của PT trong khoảng ngày rơi vào lúc phòng ĐÓNG: nghỉ cả ngày hoặc ngoài giờ mở cửa (cùng luật JOB-04 B1).
     // Trả về: List<ClosedDaySession> → Service tạo việc "closedDay".
     public List<ClosedDaySession> findClosedDaySessions(int ptEmployeeId,
             LocalDate fromDate, LocalDate toDate) throws SQLException {
         String sql = """
-                SELECT s.SessionId, sub.CustomerId, p.FullName AS CustomerName,
-                       sub.SubscriptionId, sub.SubscriptionType, sub.EndDate,
-                       t.SlotDate, t.StartTime
+                SELECT s.SessionId, p.FullName AS CustomerName, sub.SubscriptionId,
+                       t.SlotDate, t.StartTime, t.EndTime,
+                       CASE WHEN ISNULL(ex.IsClosedAllDay, 0) = 1 THEN 1 ELSE 0 END AS ClosedAllDay,
+                       COALESCE(ex.OpenTime, TRY_CONVERT(time(0), LEFT(cfg.ConfigValue, 5))) AS GymOpenTime,
+                       COALESCE(ex.CloseTime, TRY_CONVERT(time(0), RIGHT(cfg.ConfigValue, 5))) AS GymCloseTime
                 FROM Sessions s
                 JOIN TimeSlots t ON t.TimeSlotId = s.TimeSlotId
                 JOIN Subscriptions sub ON sub.SubscriptionId = s.SubscriptionId
                 JOIN Customers c ON c.CustomerId = sub.CustomerId
                 JOIN Persons p ON p.PersonId = c.PersonId
+                LEFT JOIN OperatingHourExceptions ex ON ex.ApplyDate = t.SlotDate
+                LEFT JOIN SystemConfigs cfg ON cfg.ConfigKey = 'P-19'
                 WHERE s.Status = 'Scheduled' AND s.PtEmployeeId = ?
                   AND t.SlotDate BETWEEN ? AND ?
-                  AND EXISTS (
-                      SELECT 1 FROM OperatingHourExceptions e
-                      WHERE e.ApplyDate = t.SlotDate AND e.IsClosedAllDay = 1
-                  )
+                  AND (   ISNULL(ex.IsClosedAllDay, 0) = 1
+                       OR COALESCE(ex.OpenTime, TRY_CONVERT(time(0), LEFT(cfg.ConfigValue, 5))) IS NULL
+                       OR COALESCE(ex.CloseTime, TRY_CONVERT(time(0), RIGHT(cfg.ConfigValue, 5))) IS NULL
+                       OR t.StartTime < COALESCE(ex.OpenTime, TRY_CONVERT(time(0), LEFT(cfg.ConfigValue, 5)))
+                       OR t.EndTime > COALESCE(ex.CloseTime, TRY_CONVERT(time(0), RIGHT(cfg.ConfigValue, 5))))
                 ORDER BY t.SlotDate, t.StartTime, s.SessionId
                 """;
         List<ClosedDaySession> rows = new ArrayList<>();
@@ -124,23 +129,26 @@ public class PtDashboardDAO {
 
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
-                    Package.Type type = Package.Type.fromDbValue(rs.getString("SubscriptionType"));
-                    if (type == null) {
-                        throw new SQLException("Loại gói không hợp lệ, SessionId=" + rs.getInt("SessionId"));
-                    }
-                    rows.add(new ClosedDaySession(rs.getInt("SessionId"), rs.getInt("CustomerId"),
-                            rs.getString("CustomerName"), rs.getInt("SubscriptionId"), type,
-                            rs.getDate("EndDate").toLocalDate(), rs.getDate("SlotDate").toLocalDate(),
-                            rs.getTime("StartTime").toLocalTime()));
+                    rows.add(new ClosedDaySession(rs.getInt("SessionId"), rs.getString("CustomerName"),
+                            rs.getInt("SubscriptionId"), rs.getDate("SlotDate").toLocalDate(),
+                            rs.getTime("StartTime").toLocalTime(), rs.getInt("ClosedAllDay") == 1,
+                            rs.getTime("EndTime").toLocalTime(), readTimeOrNull(rs, "GymOpenTime"),
+                            readTimeOrNull(rs, "GymCloseTime")));
                 }
             }
         }
         return rows;
     }
 
+    /** HÀM PHỤ (findClosedDaySessions) — cột giờ có thể NULL (không đọc được giờ mở cửa). */
+    private static LocalTime readTimeOrNull(ResultSet rs, String column) throws SQLException {
+        Time value = rs.getTime(column);
+        return value == null ? null : value.toLocalTime();
+    }
+
     // Khách × gói PT × ngày có buổi (14 ngày tới, buổi chưa bắt đầu, gói Active, đơn Paid):
     //   WITH SessionDays (ngày có buổi của từng gói) → ClientPackages (tách người đứng tên + người tập cùng)
-    //   mỗi dòng kèm: có membership phủ ngày đó? đang bảo lưu? hạn membership gần nhất, hạn bảo lưu, số buổi còn lại.
+    //   mỗi dòng kèm: có membership phủ ngày đó? đang bảo lưu?
     // Trả về: List<PtClientPackageView> (Service lọc ra dòng có vấn đề).
     public List<PtClientPackageView> findClientPackages(int ptEmployeeId,
             LocalDate fromDate, LocalDate toDate, LocalDateTime now) throws SQLException {
@@ -153,8 +161,7 @@ public class PtDashboardDAO {
                 SessionDays AS (
                     SELECT DISTINCT sub.SubscriptionId AS PtSubscriptionId,
                            sub.CustomerId AS HolderCustomerId, o.PartnerCustomerId,
-                           sub.SubscriptionType AS PtSubscriptionType,
-                           sub.EndDate AS PtEndDate, t.SlotDate AS SessionDate
+                           sub.SubscriptionType AS PtSubscriptionType, t.SlotDate AS SessionDate
                     FROM Sessions s
                     JOIN TimeSlots t ON t.TimeSlotId = s.TimeSlotId
                     JOIN Subscriptions sub ON sub.SubscriptionId = s.SubscriptionId
@@ -174,18 +181,16 @@ public class PtDashboardDAO {
                 -- B1.2: holder luôn có một dòng; gói đôi thêm một dòng cho partner.
                 ClientPackages AS (
                     SELECT PtSubscriptionId, HolderCustomerId AS CustomerId,
-                           PtSubscriptionType, PtEndDate, SessionDate
+                           PtSubscriptionType, SessionDate
                     FROM SessionDays
                     UNION ALL
                     SELECT PtSubscriptionId, PartnerCustomerId AS CustomerId,
-                           PtSubscriptionType, PtEndDate, SessionDate
+                           PtSubscriptionType, SessionDate
                     FROM SessionDays
                     WHERE PtSubscriptionType = 'PTCouple' AND PartnerCustomerId IS NOT NULL
                 )
                 SELECT cp.CustomerId, p.FullName AS CustomerName,
-                       cp.PtSubscriptionId, cp.PtSubscriptionType, cp.PtEndDate,
-                       futureSessions.ScheduledSessionCount, cp.SessionDate,
-                       selectedMembership.EndDate AS MembershipEndDate,
+                       cp.PtSubscriptionId, cp.PtSubscriptionType, cp.SessionDate,
                        -- B1.3: chỉ hỏi có membership bao phủ ngày tập, chưa xét bảo lưu.
                        CAST(CASE WHEN EXISTS (
                            SELECT 1 FROM Subscriptions m
@@ -195,40 +200,11 @@ public class PtDashboardDAO {
                              AND m.StartDate <= cp.SessionDate AND m.EndDate >= cp.SessionDate
                        ) THEN 1 ELSE 0 END AS BIT) AS HasMembershipOnSessionDate,
                        CAST(CASE WHEN freezePeriod.FreezeEndDate IS NOT NULL
-                           THEN 1 ELSE 0 END AS BIT) AS FrozenOnSessionDate,
-                       freezePeriod.FreezeEndDate
+                           THEN 1 ELSE 0 END AS BIT) AS FrozenOnSessionDate
                 FROM ClientPackages cp
                 JOIN Customers c ON c.CustomerId = cp.CustomerId
                 JOIN Persons p ON p.PersonId = c.PersonId
-                CROSS JOIN QueryTime q
-                -- B1.4: COUNT theo gói, không giới hạn 14 ngày và không JOIN hai người vào số đếm.
-                OUTER APPLY (
-                    SELECT COUNT(*) AS ScheduledSessionCount
-                    FROM Sessions futureSession
-                    JOIN TimeSlots futureSlot ON futureSlot.TimeSlotId = futureSession.TimeSlotId
-                    WHERE futureSession.SubscriptionId = cp.PtSubscriptionId
-                      AND futureSession.Status = 'Scheduled'
-                      AND (futureSlot.SlotDate > CAST(q.Now AS DATE)
-                           OR (futureSlot.SlotDate = CAST(q.Now AS DATE)
-                               AND futureSlot.StartTime > CAST(q.Now AS TIME)))
-                ) futureSessions
-                -- B1.5: ưu tiên gói bao phủ ngày tập; thiếu thì lấy hạn gần nhất đã qua để giải thích.
-                -- OUTER APPLY vẫn giữ dòng khách nếu không tìm thấy membership (EndDate sẽ null).
-                OUTER APPLY (
-                    SELECT TOP (1) m.EndDate
-                    FROM Subscriptions m
-                    WHERE m.CustomerId = cp.CustomerId
-                      AND m.SubscriptionType = 'Membership'
-                      AND ((m.Status IN ('Active', 'Frozen')
-                            AND m.StartDate <= cp.SessionDate AND m.EndDate >= cp.SessionDate)
-                           OR (m.Status IN ('Active', 'Frozen', 'Expired')
-                               AND m.EndDate < cp.SessionDate))
-                    ORDER BY CASE WHEN m.Status IN ('Active', 'Frozen')
-                                       AND m.StartDate <= cp.SessionDate AND m.EndDate >= cp.SessionDate
-                                  THEN 0 ELSE 1 END,
-                             m.EndDate DESC, m.SubscriptionId DESC
-                ) selectedMembership
-                -- B1.6: kỳ bảo lưu được xét riêng trên tất cả membership của chính khách.
+                -- B1.4: kỳ bảo lưu được xét riêng trên tất cả membership của chính khách.
                 OUTER APPLY (
                     SELECT MAX(COALESCE(f.ActualEndDate, f.PlannedEndDate)) AS FreezeEndDate
                     FROM FreezeRecords f
@@ -262,27 +238,14 @@ public class PtDashboardDAO {
                             && ptSubscriptionType != Package.Type.PT_COUPLE) {
                         throw new SQLException("Loại gói PT không hợp lệ, SubscriptionId=" + ptSubscriptionId);
                     }
-                    LocalDate ptEndDate = resultSet.getDate("PtEndDate").toLocalDate();
-                    int scheduledSessionCount = resultSet.getInt("ScheduledSessionCount");
 
                     LocalDate sessionDate = resultSet.getDate("SessionDate").toLocalDate();
-                    Date membershipEndDateValue = resultSet.getDate("MembershipEndDate");
-                    LocalDate membershipEndDate = null;
-                    if (membershipEndDateValue != null) {
-                        membershipEndDate = membershipEndDateValue.toLocalDate();
-                    }
                     boolean hasMembershipOnSessionDate = resultSet.getBoolean("HasMembershipOnSessionDate");
                     boolean frozenOnSessionDate = resultSet.getBoolean("FrozenOnSessionDate");
-                    Date freezeEndDateValue = resultSet.getDate("FreezeEndDate");
-                    LocalDate freezeEndDate = null;
-                    if (freezeEndDateValue != null) {
-                        freezeEndDate = freezeEndDateValue.toLocalDate();
-                    }
 
                     PtClientPackageView clientPackage = new PtClientPackageView(
                             customerId, customerName, ptSubscriptionId, ptSubscriptionType,
-                            ptEndDate, scheduledSessionCount, sessionDate, membershipEndDate,
-                            hasMembershipOnSessionDate, frozenOnSessionDate, freezeEndDate);
+                            sessionDate, hasMembershipOnSessionDate, frozenOnSessionDate);
                     clientPackages.add(clientPackage);
                 }
             }
@@ -473,32 +436,6 @@ public class PtDashboardDAO {
                         membershipFrozenCount, cancelledCount, finalizedCommissionAmount,
                         pendingSessionCount, pendingCommissionAmount,
                         projectedSessionCount, projectedCommissionAmount);
-            }
-        }
-    }
-
-    // Feedbacks của PT trong tháng: số khách đánh giá + tổng điểm. Trả về: PtRatingView.
-    public PtRatingView findRatingForMonth(int ptEmployeeId, LocalDate ratingMonth)
-            throws SQLException {
-        String sql = """
-                SELECT COUNT(DISTINCT CustomerId) AS RatingCustomerCount,
-                       COALESCE(SUM(CAST(Rating AS BIGINT)), 0) AS RatingTotal
-                FROM Feedbacks
-                WHERE RatedPtEmployeeId = ? AND RatingMonth = ?
-                """;
-
-        try (Connection connection = DBContext.getConnection();
-                PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, ptEmployeeId);
-            statement.setDate(2, Date.valueOf(ratingMonth));
-
-            try (ResultSet resultSet = statement.executeQuery()) {
-                if (!resultSet.next()) {
-                    throw new SQLException("Không đọc được điểm PT trong tháng.");
-                }
-
-                return new PtRatingView(resultSet.getInt("RatingCustomerCount"),
-                        resultSet.getLong("RatingTotal"));
             }
         }
     }

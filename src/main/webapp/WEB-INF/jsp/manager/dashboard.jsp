@@ -94,15 +94,19 @@
             <%-- ===== 6 thẻ tổng quan ===== --%>
             <%-- Bảng điểm: ô đầu tô màu chủ đạo; data-flip: số lật kiểu bảng giờ tàu khi tải (common.js) --%>
             <section class="report-stats scoreboard" aria-label="Tổng quan" data-reveal>
+                <%-- report.totalRevenueText = getter tự tính getTotalRevenueText() · dto/ReportView.java --%>
                 <div class="report-card stat is-lead"><div class="stat-label">Doanh thu</div><div class="stat-value is-flap" title="${gms:formatMoney(report.totalRevenue)}" data-flip><c:out value="${report.totalRevenueText}" /></div><div class="stat-note">Đã gồm VAT</div><c:set var="delta" value="${reportDeltas['revenue']}" /><%@ include file="/WEB-INF/jsp/manager/_stat-delta.jspf" %></div>
                 <div class="report-card stat"><div class="stat-label">Hội viên đang hoạt động</div><div class="stat-value is-flap" data-flip>${report.activeMembers}</div><div class="stat-note">+${report.newMembers} hội viên mới</div></div>
                 <div class="report-card stat"><div class="stat-label">Gói đang chạy</div><div class="stat-value is-flap" data-flip>${report.runningPackages}</div><div class="stat-note">Gói tập, không gồm vé ngày</div></div>
+                <%-- report.totalCommissionText = getter tự tính getTotalCommissionText() · dto/ReportView.java --%>
                 <div class="report-card stat"><div class="stat-label">Hoa hồng PT</div><div class="stat-value is-flap" title="${gms:formatMoney(report.totalCommission)}" data-flip><c:out value="${report.totalCommissionText}" /></div><div class="stat-note">Theo % riêng từng PT</div><c:set var="delta" value="${reportDeltas['commission']}" /><%@ include file="/WEB-INF/jsp/manager/_stat-delta.jspf" %></div>
+                <%-- report.dayPassRevenueText = getter tự tính getDayPassRevenueText() · dto/ReportView.java --%>
                 <div class="report-card stat"><div class="stat-label">Vé 1 ngày</div><div class="stat-value is-flap" data-flip>${report.dayPassVisits}</div><div class="stat-note">lượt · <c:out value="${report.dayPassRevenueText}" /> doanh thu</div><c:set var="delta" value="${reportDeltas['dayPass']}" /><%@ include file="/WEB-INF/jsp/manager/_stat-delta.jspf" %></div>
                 <div class="report-card stat"><div class="stat-label">Lượt check-in</div><div class="stat-value is-flap" data-flip>${report.checkInCount}</div><div class="stat-note">Gồm cả vé 1 ngày</div><c:set var="delta" value="${reportDeltas['checkIn']}" /><%@ include file="/WEB-INF/jsp/manager/_stat-delta.jspf" %></div>
             </section>
 
             <%-- Không có dữ liệu trong khoảng ngày → báo rõ (MSG03), vẫn giữ các thẻ ở trên --%>
+            <%-- report.emptyInRange = getter tự tính isEmptyInRange() · dto/ReportView.java --%>
             <c:if test="${report.emptyInRange}">
                 <div class="report-card report-empty"><%= com.gms.constant.Messages.MSG03_NO_DATA_IN_RANGE %></div>
             </c:if>
@@ -111,6 +115,7 @@
 
             <%-- ===== Biểu đồ doanh thu: chiều cao cột = --percent (% so với trục Y) ===== --%>
             <section class="report-card report-pad" data-reveal>
+                <%-- report.monthlyChart = getter tự tính isMonthlyChart() · dto/ReportView.java --%>
                 <h2>Doanh thu theo <c:out value="${report.monthlyChart ? 'tháng' : 'ngày'}" /></h2>
                 <p class="report-sub">Triệu đồng, đã gồm VAT</p>
                 <div class="chart" role="img" aria-label="Biểu đồ doanh thu">
@@ -121,6 +126,7 @@
                         <div class="bars">
                             <c:forEach var="b" items="${report.buckets}">
                                 <%-- tabindex + data-tooltip: xem số khi rê chuột hoặc Tab bằng bàn phím --%>
+                                <%-- b.last = getter tự tính isLast() · dto/ReportView.java (b = phần tử report.buckets) --%>
                                 <div class="bar${b.last ? ' bar-last' : ''}" style="--percent:${b.percent}" tabindex="0"
                                      data-tooltip="<c:out value='${b.fullLabel}' />: ${gms:formatMoney(b.amount)}"
                                      aria-label="<c:out value='${b.fullLabel}' />: ${gms:formatMoney(b.amount)}"></div>
@@ -128,6 +134,7 @@
                         </div>
                     </div>
                     <div class="x-labels">
+                        <%-- b.labelVisible = getter tự tính isLabelVisible() · dto/ReportView.java (b = phần tử report.buckets) --%>
                         <c:forEach var="b" items="${report.buckets}"><span><c:if test="${b.labelVisible}"><c:out value="${b.label}" /></c:if></span></c:forEach>
                     </div>
                 </div>

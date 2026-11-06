@@ -35,6 +35,7 @@ public class PtScheduleDayView {
         return dayLabel;
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "today"; = trả thẳng field isToday; JSP: pt/dashboard.jsp:51 …
     public boolean isToday() {
         return isToday;
     }

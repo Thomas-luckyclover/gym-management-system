@@ -116,9 +116,11 @@
               </div>
 
               <%-- Phân trang danh mục nhóm thiết bị --%>
+              <%-- facilityPage.totalPages = getter tự tính getTotalPages() · dto/PageResult.java --%>
               <c:if test="${facilityPage.totalPages > 1}">
                 <div class="catalog-pager">
                   <c:choose>
+                    <%-- facilityPage.hasPrevious = getter tự tính isHasPrevious() · dto/PageResult.java --%>
                     <c:when test="${facilityPage.hasPrevious}">
                       <c:url var="prevCatalogUrl" value="/receptionist/facilities">
                         <c:param name="page" value="${facilityPage.pageNumber - 1}" />
@@ -137,6 +139,7 @@
                   </span>
 
                   <c:choose>
+                    <%-- facilityPage.hasNext = getter tự tính isHasNext() · dto/PageResult.java --%>
                     <c:when test="${facilityPage.hasNext}">
                       <c:url var="nextCatalogUrl" value="/receptionist/facilities">
                         <c:param name="page" value="${facilityPage.pageNumber + 1}" />

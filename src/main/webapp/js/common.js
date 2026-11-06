@@ -266,8 +266,6 @@ const MESSAGES = {
     MSG88_LAST_ACTIVE_ADMIN: "Đây là tài khoản Admin hoạt động cuối cùng. Không thể khóa, hạ quyền hoặc chuyển sang Đã nghỉ việc.",
     // EN: The position cannot be changed while unfinished work remains: %s.
     MSG89_POSITION_CHANGE_UNFINISHED: "Không thể đổi vị trí khi còn công việc chưa hoàn thành: %s.",
-    // EN: This PT package has already used all %d swaps.
-    MSG90_SWAP_LIMIT_REACHED: "Gói PT này đã dùng hết %d lượt đổi.",
     // EN: This session has already started or is no longer scheduled, so it cannot be changed.
     MSG91_SESSION_CANNOT_CHANGE: "Buổi tập đã bắt đầu hoặc không còn ở trạng thái đã xếp lịch, nên không thể thay đổi.",
     // EN: The customer has no valid membership package on %s. Please choose another date.

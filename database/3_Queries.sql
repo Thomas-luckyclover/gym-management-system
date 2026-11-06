@@ -23,7 +23,7 @@ SELECT DISTINCT Status FROM Sessions ORDER BY Status;
 SELECT DISTINCT MissedReason FROM Sessions ORDER BY MissedReason;
 -- A3. Không còn giá trị Completed; Used chỉ DayPass và SingleSession.
 SELECT DISTINCT SubscriptionType, Status FROM Subscriptions ORDER BY SubscriptionType, Status;
--- A4. Chỉ P-21 và P-22; không có P-07.
+-- A4. Chỉ P-21; không có P-07, P-22.
 SELECT ConfigKey, ConfigValue FROM SystemConfigs WHERE ConfigKey IN ('P-07','P-21','P-22');
 GO
 
@@ -92,32 +92,6 @@ LEFT JOIN (Sessions s JOIN TimeSlots t ON t.TimeSlotId=s.TimeSlotId)
     ON s.PtEmployeeId=e.EmployeeId AND t.SlotDate BETWEEN @FromDate AND @ToDate
 WHERE e.Position='PT' AND (@PtEmployeeId IS NULL OR e.EmployeeId=@PtEmployeeId)
 GROUP BY e.EmployeeId,p.FullName;
-GO
-
--- B3. Điểm PT: mỗi khách chỉ tính phiếu mới nhất trong khoảng RatingMonth.
--- @FromMonth/@ToMonth là tháng đánh giá, ngày 1, tính cả tháng cuối.
--- PT 5 tháng 09/2026: 3 khách, 2 phiếu thấp; PT 6: 2 khách, Chưa đủ.
-DECLARE @FromMonth DATE='2026-09-01', @ToMonth DATE='2026-09-01', @PtEmployeeId INT=NULL;
-DECLARE @MinimumCustomers INT=(SELECT TRY_CONVERT(INT,ConfigValue) FROM SystemConfigs WHERE ConfigKey='P-22');
-IF @MinimumCustomers IS NULL OR @MinimumCustomers<1 THROW 51001,N'Thiếu hoặc sai P-22.',1;
-;WITH Latest AS (
-    SELECT f.*,ROW_NUMBER() OVER(PARTITION BY CustomerId,RatedPtEmployeeId
-        ORDER BY RatingMonth DESC,COALESCE(UpdatedAt,SubmittedAt) DESC,FeedbackId DESC) AS rn
-    FROM Feedbacks f WHERE RatedPtEmployeeId IS NOT NULL AND RatingMonth BETWEEN @FromMonth AND @ToMonth
-), Scores AS (
-    SELECT RatedPtEmployeeId,COUNT(*) AS CustomerCount,
-           CAST(ROUND(AVG(CAST(Rating AS DECIMAL(10,2))),1) AS DECIMAL(3,1)) AS AverageRating,
-           SUM(CASE WHEN Rating IN (1,2) THEN 1 ELSE 0 END) AS LowRatingCount
-    FROM Latest WHERE rn=1 GROUP BY RatedPtEmployeeId
-)
-SELECT e.EmployeeId,p.FullName,COALESCE(s.CustomerCount,0) AS CustomerCount,
-       CASE WHEN s.CustomerCount>=@MinimumCustomers THEN s.AverageRating END AS AverageRating,
-       COALESCE(s.LowRatingCount,0) AS LowRatingCount,
-       CAST(CASE WHEN COALESCE(s.CustomerCount,0)<@MinimumCustomers THEN 1 ELSE 0 END AS BIT) AS IsInsufficient,
-       CASE WHEN COALESCE(s.CustomerCount,0)<@MinimumCustomers THEN N'Chưa đủ' ELSE N'Đủ' END AS RatingVisibility
-FROM Employees e JOIN Persons p ON p.PersonId=e.PersonId
-LEFT JOIN Scores s ON s.RatedPtEmployeeId=e.EmployeeId
-WHERE e.Position='PT' AND (@PtEmployeeId IS NULL OR e.EmployeeId=@PtEmployeeId);
 GO
 
 -- B4. Upsert đánh giá: @CustomerId là khách đã xác thực, không lấy tùy ý từ form.

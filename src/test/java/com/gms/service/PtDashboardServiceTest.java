@@ -109,8 +109,8 @@ class PtDashboardServiceTest {
         var first = clientPackage(11);
         var sameNameOtherPackage = clientPackage(12);
         var packages = new ArrayList<>(List.of(sameNameOtherPackage, first));
-        var holder = attention(11, 6, "membership");
-        var partner = attention(11, 7, "frozen");
+        var holder = attention(11, "membership");
+        var partner = attention(11, "frozen");
 
         PtDashboardService.mergeClientAttention(packages, List.of(holder, partner));
 
@@ -125,7 +125,7 @@ class PtDashboardServiceTest {
         var membership = clientPackage(11);
         var closed = clientPackage(12);
         var packages = new ArrayList<>(List.of(normal, membership, closed));
-        var items = List.of(attention(11, 6, "membership"), attention(12, 7, "closedDay"));
+        var items = List.of(attention(11, "membership"), attention(12, "closedDay"));
 
         PtDashboardService.mergeClientAttention(packages, items);
         PtDashboardService.mergeClientAttention(packages, items);
@@ -156,10 +156,15 @@ class PtDashboardServiceTest {
     }
 
     /** Dữ liệu cảnh báo tối thiểu để kiểm tra ghép gói, không gọi database. */
-    private static PtAttentionView attention(int subscriptionId, int customerId, String kind) {
-        return new PtAttentionView(customerId, subscriptionId, "Khách trùng tên", NOW.toLocalDate(), 5,
-                NOW.toLocalDate(), null, null, "PT đôi", null, "Cần chú ý", "Nội dung", kind,
-                "closedDay".equals(kind) ? 274 : null);
+    private static PtAttentionView attention(int subscriptionId, String kind) {
+        return new PtAttentionView(
+                kind,
+                "closedDay".equals(kind) ? 274 : null,
+                NOW.toLocalDate(),
+                "Cần chú ý",
+                "Nội dung",
+                subscriptionId,
+                "Khách trùng tên");
     }
 
     /** Tạo một buổi mẫu; thời điểm kiểm tra cố định để test không phụ thuộc giờ chạy. */

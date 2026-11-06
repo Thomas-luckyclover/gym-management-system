@@ -7,12 +7,11 @@ import java.time.LocalDate;
  * Hiện ở: ô gợi ý tìm khách (pt-sales.js nhận JSON), danh sách kết quả, thẻ khách _sale-customer.jspf (biến cust).
  */
 public class PtSaleCustomer {
-    public PtSaleCustomer(int customerId, int personId, String customerCode, String customerType, String fullName,
+    public PtSaleCustomer(int customerId, int personId, String customerCode, String fullName,
             String phone, LocalDate dateOfBirth, LocalDate membershipEnd, boolean frozen) {
         this.customerId = customerId;
         this.personId = personId;
         this.customerCode = customerCode;
-        this.customerType = customerType;
         this.fullName = fullName;
         this.phone = phone;
         this.dateOfBirth = dateOfBirth;
@@ -39,15 +38,12 @@ public class PtSaleCustomer {
     private final int customerId;
     // ← Persons.PersonId → chặn lễ tân tự bán cho mình, chặn PT trùng khách
     private final int personId;
-    // ← Customers.CustomerType
-    private final String customerType;
     // ← có FreezeRecords phủ hôm nay → "Đang bảo lưu gói thành viên"
     private final boolean frozen;
 
     public int getCustomerId() { return customerId; }
     public int getPersonId() { return personId; }
     public String getCustomerCode() { return customerCode; }
-    public String getCustomerType() { return customerType; }
     public String getFullName() { return fullName; }
     public String getPhone() { return phone; }
     public LocalDate getDateOfBirth() { return dateOfBirth; }
@@ -56,6 +52,4 @@ public class PtSaleCustomer {
 
     public String getBlockReason() { return blockReason; }
     public void setBlockReason(String blockReason) { this.blockReason = blockReason; }
-
-    public boolean isDependent() { return "Dependent".equals(customerType); }
 }

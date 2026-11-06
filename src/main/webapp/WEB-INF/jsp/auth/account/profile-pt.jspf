@@ -14,6 +14,7 @@
                              src="<c:out value='${pageContext.request.contextPath}${accountSettings.avatar}' />" alt="Ảnh đại diện"
                              data-original-src="<c:out value='${pageContext.request.contextPath}${accountSettings.avatar}' />"
                              onerror="this.classList.add('is-hidden'); this.style.display='none'; var fb = document.getElementById('avatarFallback'); if (fb) { fb.classList.remove('is-hidden'); fb.style.display=''; }">
+                        <%-- accountSettings.initials = getter tự tính getInitials() · dto/AccountSettingsView.java --%>
                         <div id="avatarFallback" class="account-avatar-fallback is-hidden" data-initials="<c:out value='${accountSettings.initials}' />" style="display: none;">
                             <c:out value="${accountSettings.initials}" />
                         </div>

@@ -7,7 +7,6 @@ import com.gms.dto.JsonResponse;
 import com.gms.dto.PtHandleView;
 import com.gms.dto.PtScheduleWeek;
 import com.gms.dto.ServiceResult;
-import com.gms.service.PtDashboardService;
 import com.gms.service.PtScheduleService;
 import com.gms.service.PtSessionHandleService;
 import com.gms.util.DateTimeUtil;
@@ -37,7 +36,6 @@ public class PtScheduleServlet extends HttpServlet {
     private static final String PAGE_URL = "/pt/schedule";
 
     private final PtScheduleService scheduleService = new PtScheduleService();
-    private final PtDashboardService dashboardService = new PtDashboardService();
     private final PtSessionHandleService handleService = new PtSessionHandleService();
 
     // GET /pt/schedule: vẽ lịch tuần.
@@ -141,7 +139,7 @@ public class PtScheduleServlet extends HttpServlet {
 
     /**
      * HÀM PHỤ (showPage B4) — csrfToken (form Công bố + 3 form xử lý) · draftAccountId (khóa lưu nháp trong trình duyệt)
-     * · activeNav, pageTitle, pageHelp (_header.jspf) · ptEmployeeCode (thẻ tài khoản).
+     * · activeNav, pageTitle, pageHelp (_header.jspf).
      */
     private void setPageInfo(HttpServletRequest request, int accountId) {
         request.setAttribute("csrfToken", RequestUtil.getOrCreateCsrfToken(request.getSession(false)));
@@ -153,10 +151,6 @@ public class PtScheduleServlet extends HttpServlet {
         request.setAttribute("pageTitle", "Lịch dạy");
         request.setAttribute("pageHelp", "Bấm vào chỗ trống trên lịch (hoặc nút Thêm khung) để thêm khung rảnh. "
                 + "Bấm vào khung Còn trống để đánh dấu gỡ. Khách chỉ thấy thay đổi sau khi bạn bấm Công bố.");
-        ServiceResult<String> employeeCode = dashboardService.getPtEmployeeCode(accountId);
-        if (employeeCode.isSuccess()) {
-            request.setAttribute("ptEmployeeCode", employeeCode.getData());
-        }
     }
 
     // POST /pt/schedule: 2 loại — form Xử lý buổi (có action) hoặc Công bố (fetch JSON, không có action).

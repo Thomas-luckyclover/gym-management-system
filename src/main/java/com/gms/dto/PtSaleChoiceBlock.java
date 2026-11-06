@@ -52,6 +52,15 @@ public class PtSaleChoiceBlock {
     // ← loadPackage (giá đã gồm VAT) → "Phải thu", giá 1 buổi
     private long price;
 
+    // ← loadPackage → fillVatPreview: P-10 hiện tại (đơn chưa có, số tạm; đọc lỗi = null) → dòng "Thuế VAT x%"
+    private Integer vatRate;
+
+    // ← fillVatPreview = vatAmount(giá, P-10), cùng hàm lúc hold lưu vào đơn → dòng "Thuế VAT x%"
+    private Long vatAmount;
+
+    // ← fillVatPreview = giá − vatAmount → dòng "Trước thuế VAT"
+    private Long preTaxAmount;
+
     // ← loadPackage → "… · N tháng", tính ngày hết kỳ
     private int months;
 
@@ -97,6 +106,15 @@ public class PtSaleChoiceBlock {
 
     public long getPrice() { return price; }
     public void setPrice(long price) { this.price = price; }
+
+    public Integer getVatRate() { return vatRate; }
+    public void setVatRate(Integer vatRate) { this.vatRate = vatRate; }
+
+    public Long getVatAmount() { return vatAmount; }
+    public void setVatAmount(Long vatAmount) { this.vatAmount = vatAmount; }
+
+    public Long getPreTaxAmount() { return preTaxAmount; }
+    public void setPreTaxAmount(Long preTaxAmount) { this.preTaxAmount = preTaxAmount; }
 
     public int getMonths() { return months; }
     public void setMonths(int months) { this.months = months; }

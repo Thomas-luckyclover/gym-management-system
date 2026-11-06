@@ -33,7 +33,7 @@
 <head>
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Xác nhận thanh toán · Super Gym Lễ tân</title>
-    <link rel="stylesheet" href="${ctx}/css/pages/receptionist/counter-sale.css?v=20261031_vVoucherDone">
+    <link rel="stylesheet" href="${ctx}/css/pages/receptionist/counter-sale.css?v=20261105vat">
     <script src="${ctx}/js/pages/receptionist/counter-sale.js?v=20261031_vVoucherDone" defer></script>
 </head>
 <body class="dock theme-staff counter-sale-page">
@@ -88,13 +88,16 @@
                                 <div class="counter-customer-details">
                                     <div class="customer-name-row">
                                         <span class="customer-name"><c:out value="${selectedCustomer.fullName}" /></span>
+                                        <%-- selectedCustomer.statusBadgeClass = getter tự tính getStatusBadgeClass() · dto/CounterCustomerRow.java (selectedCustomer = CounterCustomerRow) --%>
                                         <span class="badge ${selectedCustomer.statusBadgeClass}"><c:out value="${selectedCustomer.status.displayName}" /></span>
+                                        <%-- selectedCustomer.dependent = getter tự tính isDependent() · dto/CounterCustomerRow.java (selectedCustomer = CounterCustomerRow) --%>
                                         <c:if test="${selectedCustomer.dependent}">
                                             <span class="badge badge-info">Hồ sơ phụ thuộc</span>
                                         </c:if>
                                     </div>
                                     <div class="customer-meta-row">
                                         <span><i class="fa-solid fa-id-card"></i> Mã KH: <strong><c:out value="${selectedCustomer.customerCode}" /></strong></span>
+                                        <%-- selectedCustomer.phoneText = getter tự tính getPhoneText() · dto/CounterCustomerRow.java (selectedCustomer = CounterCustomerRow) --%>
                                         <span><i class="fa-solid fa-phone"></i> SĐT: <strong><c:out value="${selectedCustomer.phoneText}" /></strong></span>
                                     </div>
                                 </div>
@@ -257,11 +260,11 @@
                                     <dd class="discount-amount">-<span id="summaryDiscountAmount">0 đ</span></dd>
                                 </div>
                                 <div>
-                                    <dt>Trước thuế VAT</dt>
+                                    <dt>Trước thuế VAT<small class="counter-tax-note">Đã bao gồm trong tổng hóa đơn</small></dt>
                                     <dd id="summaryPreTaxAmount"><c:out value="${gms:formatMoney(selectedCard.preTaxAmount)}" /></dd>
                                 </div>
                                 <div>
-                                    <dt>Thuế VAT <c:out value="${selectedCard.vatRate}" />% (đã gồm)</dt>
+                                    <dt>Thuế VAT <c:out value="${selectedCard.vatRate}" />%<small class="counter-tax-note">Đã bao gồm trong tổng hóa đơn</small></dt>
                                     <dd id="summaryVatAmount"><c:out value="${gms:formatMoney(selectedCard.vatAmount)}" /></dd>
                                 </div>
                                 <div class="is-total">

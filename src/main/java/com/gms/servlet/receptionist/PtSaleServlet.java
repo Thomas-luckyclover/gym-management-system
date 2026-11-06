@@ -33,7 +33,7 @@ import java.util.Map;
  *   URL / nút                                               Servlet gọi                          Kết quả
  *   GET  /receptionist/pt-sales?package=&pt=&start=&t1..t5   showPage → saleService.prepare       forward pt-sales.jsp (attribute "sale")
  *   GET  /receptionist/pt-sales?order=1001                   showPage → saleService.prepare       trang đang giữ: đồng hồ + thu tiền
- *   GET  /receptionist/pt-sales/customers?q=mai              writeSuggestions → saleService.search JSON tối đa 8 khách (pt-sales.js)
+ *   GET  /receptionist/pt-sales/customers?q=mai              writeSuggestions → saleService.search JSON mọi khách khớp (pt-sales.js)
  *   POST action=hold     "Giữ lịch 15 phút"                  saleService.hold                     redirect ?order=… / chữ đỏ "saleError"
  *   POST action=pay      "Xác nhận đã thu tiền"              saleService.pay                      toast + redirect trang trống / ?order=
  *   POST action=release  "Hủy giữ chỗ"                       saleService.release                  toast + redirect trang trống
@@ -79,10 +79,14 @@ public class PtSaleServlet extends HttpServlet {
      */
     private void writeSuggestions(HttpServletResponse response, int accountId, String query) throws IOException {
         ServiceResult<List<PtSaleCustomer>> result = saleService.search(accountId, query, DateTimeUtil.now());
+        // Nếu ko trả về kết quả thành công => Báo lỗi dạng JSON
         if (!result.isSuccess()) {
             JsonUtil.writeJson(response, JsonResponse.error(result.getMessage()));
             return;
         }
+        
+        
+        // Nếu thành công, mapping giá trị trả về gắn vào Object rows, chuyển về dạng JSON
         List<Map<String, Object>> rows = new ArrayList<>();
         for (PtSaleCustomer c : result.getData()) {
             Map<String, Object> row = new LinkedHashMap<>();
@@ -108,7 +112,10 @@ public class PtSaleServlet extends HttpServlet {
      */
     private void showPage(HttpServletRequest request, HttpServletResponse response, int accountId)
             throws ServletException, IOException {
+        // URL có orderID trong 3 trường hợp: Lễ tân bấm giữ lịch 15', lễ tân bấm Tiếp tục thu tiền, Lễ tân bấm Xác nhận thu tiền
         Integer orderId = RequestUtil.getPositiveIntParam(request, "order");
+        
+        
         ServiceResult<PtSaleView> result = saleService.prepare(
                 accountId,
                 readInput(request),
@@ -202,11 +209,16 @@ public class PtSaleServlet extends HttpServlet {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
+        
+        
+        // B3: nếu action = release => release, còn ko thì pay
         ServiceResult<Integer> result = "release".equals(action)
                 ? saleService.release(accountId, orderId, DateTimeUtil.now())
                 : saleService.pay(accountId, orderId, start, request.getParameter("method"),
                         request.getParameter("reference"), DateTimeUtil.now());
         RequestUtil.setFlashToast(request, result.isSuccess() ? "success" : "error", result.getMessage());
+        
+        
         boolean backToHold = !result.isSuccess() && !"release".equals(action);
         RequestUtil.redirect(request, response, backToHold
                 ? PAGE_URL + "?order=" + orderId + "&start=" + encode(start)

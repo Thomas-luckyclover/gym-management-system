@@ -116,6 +116,7 @@ public class PackageOptionView {
         return imagePath;
     }
     /** JSP nhận biết buổi PT lẻ để hiện link chọn lịch, không tạo đơn ngay. */
+    // GETTER TỰ TÍNH — không có field/setter "singleSession"; = gói của thẻ có loại SINGLE_SESSION; JSP: customer/package-selection.jsp:609 …
     public boolean isSingleSession() {
         return card.getPkg().getPackageType()
                 == com.gms.entity.Package.Type.SINGLE_SESSION;

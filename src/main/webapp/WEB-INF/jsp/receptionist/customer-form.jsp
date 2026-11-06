@@ -50,6 +50,7 @@
 
                     <%-- ===== detail: CustomerProfileDetailView do Service tạo cho cả hai vai trò ===== --%>
                     <c:set var="profile" value="${detail.profile}" />
+                    <%-- profile.inactive = getter tự tính isInactive() · dto/CustomerProfileRowView.java (profile = CustomerProfileRowView) --%>
                     <c:set var="showDeletionPanel" value="${not empty detail.pendingRequest or (not managerView and not profile.ownProfile and not profile.inactive)}" />
                     <c:url var="listUrl" value="${listPath}" />
                     <nav class="bf07-breadcrumb" aria-label="Đường dẫn">
@@ -76,10 +77,13 @@
                                     <span class="bf07-sub">
                                         <c:out value="${profile.customerCode}" />
                                         ·
+                                        <%-- profile.customerTypeLabel = getter tự tính getCustomerTypeLabel() · dto/CustomerProfileRowView.java (profile = CustomerProfileRowView) --%>
                                         <c:out value="${profile.customerTypeLabel}" />
                                     </span>
                                 </div>
+                                <%-- profile.statusTone = getter tự tính getStatusTone() · dto/CustomerProfileRowView.java (profile = CustomerProfileRowView) --%>
                                 <span class="badge badge-<c:out value="${profile.statusTone}" />">
+                                    <%-- profile.statusLabel = getter tự tính getStatusLabel() · dto/CustomerProfileRowView.java (profile = CustomerProfileRowView) --%>
                                     <c:out value="${profile.statusLabel}" />
                                 </span>
                             </div>
@@ -143,6 +147,7 @@
                                         <h2>Xóa hồ sơ</h2>
                                         <p class="bf07-notice">
                                             <c:choose>
+                                                <%-- detail.hasActiveAssets = getter tự tính isHasActiveAssets() · dto/CustomerProfileDetailView.java --%>
                                                 <c:when test="${detail.hasActiveAssets}">Còn gói hoặc buổi PT. Yêu cầu sẽ gửi quản lý duyệt; hồ sơ chưa bị xóa ngay.</c:when>
                                                 <c:otherwise>Không còn gói hoặc buổi PT. Xác nhận sẽ ngừng hồ sơ ngay.</c:otherwise>
                                             </c:choose>

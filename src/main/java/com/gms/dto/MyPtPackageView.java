@@ -47,14 +47,17 @@ public class MyPtPackageView {
     // ← tên người tập cùng → partnerName
     private String partnerFullName;
 
+    // GETTER TỰ TÍNH — không có field/setter "couple"; = type == "PTCouple"; JSP: không dùng (chỉ Java/test)
     public boolean isCouple() {
         return "PTCouple".equals(type);
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "active"; = status == "Active"; JSP: customer/my-bookings.jsp:28 …
     public boolean isActive() {
         return "Active".equals(status);
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "progressPercent"; = pastSessions × 100 ÷ totalSessions, tối đa 100, không có buổi → 0; JSP: customer/my-bookings.jsp:232
     public int getProgressPercent() {
         return totalSessions == 0 ? 0 : Math.min(100, pastSessions * 100 / totalSessions);
     }

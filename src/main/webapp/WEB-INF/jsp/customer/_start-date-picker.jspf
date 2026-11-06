@@ -4,13 +4,17 @@
      và bọc fragment này trong phần tử có data-sdp, data-sdp-url, data-sdp-sub, data-sdp-csrf.
      start-date-picker.js điều khiển; mỗi ngày do server tính sẵn. --%>
 <div class="sdp-cal" data-sdp-cal role="group" aria-label="Chọn ngày bắt đầu" hidden>
+    <%-- picker.calendarTitle = getter tự tính getCalendarTitle() · dto/StartDatePicker.java --%>
     <h4 class="sdp-cal__title"><c:out value="${picker.calendarTitle}" /></h4>
     <p class="sdp-cal__sub"><b>Chọn ngày bắt đầu tập</b> (trong 7 ngày tới)</p>
     <div class="sdp-cal__grid">
         <span class="sdp-cal__dow">T2</span><span class="sdp-cal__dow">T3</span><span class="sdp-cal__dow">T4</span><span class="sdp-cal__dow">T5</span><span class="sdp-cal__dow">T6</span><span class="sdp-cal__dow">T7</span><span class="sdp-cal__dow">CN</span>
+        <%-- picker.calendarCells = getter tự tính getCalendarCells() · dto/StartDatePicker.java --%>
         <c:forEach var="cell" items="${picker.calendarCells}">
+            <%-- getter tự tính: cell.iso = getIso(), cell.startText = getStartText() · dto/StartDatePicker.java (cell = CalendarCell) --%>
             <button type="button" class="sdp-cal__day${cell.selected ? ' is-selected' : ''}${cell.today ? ' is-today' : ''}"
                     data-date="${cell.iso}" data-start="${cell.startText}" data-end="${cell.endText}"
+                    <%-- cell.label = getter tự tính getLabel() · dto/StartDatePicker.java (cell = CalendarCell) --%>
                     ${cell.enabled ? '' : 'disabled'}><c:out value="${cell.label}" /></button>
         </c:forEach>
     </div>

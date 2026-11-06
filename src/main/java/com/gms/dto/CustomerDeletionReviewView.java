@@ -157,6 +157,7 @@ public class CustomerDeletionReviewView {
         this.scheduledSessions = List.copyOf(scheduledSessions);
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "customerTypeLabel"; = Dependent → "Phụ thuộc", khác → "Cá nhân"; JSP: manager/member-deletion-review.jsp:100
     public String getCustomerTypeLabel() {
         if ("Dependent".equals(customerType)) {
             return "Phụ thuộc";

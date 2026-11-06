@@ -92,6 +92,7 @@ public class PtHandleView {
     // ← Subscriptions.StartDate → khung dời phải trong hạn gói
     private LocalDate termStart;
 
+    // GETTER TỰ TÍNH — không có field/setter "couple"; = partnerCustomerId khác null; JSP: pt/_handle-dialog.jspf:28
     public boolean isCouple() {
         return partnerCustomerId != null;
     }

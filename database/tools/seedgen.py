@@ -15,7 +15,6 @@ FUTURE_FROM = date(2026, 10, 5)     # buổi PT từ ngày này trở đi = Sche
 HASH = '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu'  # Gms@2026
 VAT = 10
 SESSION_MIN = 90
-SWAPS_PER_MONTH = 3                 # P-08: lượt đổi buổi cho MỖI THÁNG của gói PT (gói 1/2/3 tháng → 3/6/9 lượt)
 rng = random.Random(2026)
 
 
@@ -285,16 +284,12 @@ def subscription(oid, start, status=None, pt=None, fixed=None, end=None, note=No
     pkg = get('Packages', o['PackageId'])
     t = pkg['PackageType']
     end = end or (start if t == 'SingleSession' else end_of(start, pkg))
-    # Hạn mức đổi buổi chốt lúc bán = P-08 × số tháng của gói PT (BR-73, GBR-04).
-    # Gói PT luôn tính theo tháng (P-21); buổi lẻ không được đổi (BR-74) nên để NULL.
-    max_swaps = None
+    # Gói PT luôn tính theo tháng (P-21).
     if t in ('PTSingle', 'PTCouple'):
         assert pkg['DurationUnit'] == 'Month', 'Gói PT phải tính theo tháng (P-21)'
-        max_swaps = SWAPS_PER_MONTH * pkg['DurationValue']
     r = dict(OrderId=oid, CustomerId=o['HolderCustomerId'], SubscriptionType=t, PtEmployeeId=pt,
              StartDate=start, EndDate=end, FixedStartTime=fixed,
-             GeneratedSessionCount=1 if t == 'SingleSession' else None, SwapsUsed=0,
-             MaxSwapsSnapshot=max_swaps, FreezeUsed=0,
+             GeneratedSessionCount=1 if t == 'SingleSession' else None, FreezeUsed=0,
              MaxFreezesSnapshot=1 if t == 'Membership' else None, Status=status or 'Active')
     return add('Subscriptions', r, note)
 
@@ -422,7 +417,6 @@ def pt_package(oid, pt, start, fixed, events=None, freeze=None, holder_checkin_r
     value = round(o['_payable'] / len(dates))
     pt_acc = account_of_person(emp_person(pt))
     holder_acc = account_of_person(cust_person(holder))
-    swaps = 0
     for d in dates:
         ev = events.get(d)
         at = datetime.combine(d, time(*fixed))
@@ -436,8 +430,6 @@ def pt_package(oid, pt, start, fixed, events=None, freeze=None, holder_checkin_r
             at = datetime.combine(nd, time(*nt))
             end_at = at + timedelta(minutes=SESSION_MIN)
             cur_pt = npt
-            if mtype in ('CustomerSwap', 'PtOnBehalfSwap'):
-                swaps += 1
             requester = holder_acc if mtype == 'CustomerSwap' else account_of_person(emp_person(pt))
             sess_id = _session_status(sid, new_slot, cur_pt, value, nd, at, end_at, holder, partner, freeze, holder_checkin_rate)
             add('SessionMoveLogs', dict(SessionId=sess_id, MoveType=mtype, OldTimeSlotId=old_slot,
@@ -446,7 +438,7 @@ def pt_package(oid, pt, start, fixed, events=None, freeze=None, holder_checkin_r
                                         MovedAt=datetime.combine(min(d, nd) - timedelta(days=2), time(20, 15))))
             continue
         # Ngày nghỉ tương lai giữ Scheduled để PT dời; ngày đã qua mô phỏng JOB-04.
-        # Xét trước quyền vào gym/check-in; không nhả slot quá khứ, không tăng SwapsUsed.
+        # Xét trước quyền vào gym/check-in; không nhả slot quá khứ.
         if d in CLOSED and d < FUTURE_FROM:
             sl = slot(pt, d, fixed, 'Booked')
             session(sid, sl, pt, 'Cancelled', value, CancelType='GymClosed',
@@ -475,7 +467,6 @@ def pt_package(oid, pt, start, fixed, events=None, freeze=None, holder_checkin_r
         # Buổi trong bảo lưu đã qua ngày sẽ được session() chuyển Missed (và nhả slot như mọi buổi Missed).
         sl = slot(pt, d, fixed, 'Booked')
         _session_status(sid, sl, pt, value, d, at, end_at, holder, partner, freeze, holder_checkin_rate)
-    sub['SwapsUsed'] = swaps
     sub['Status'] = 'Expired' if end < SEED else 'Active'
     return sid
 

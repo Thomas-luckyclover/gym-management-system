@@ -945,7 +945,6 @@ CFG = [('P-01', '1', 'Số lần bảo lưu tối đa mỗi gói tập (lần)')
        ('P-04', '1D,1M,3M,9M,12M', 'Thời hạn gói tập: D = ngày, M = tháng'),
        ('P-05', '10', 'Tuổi tối thiểu dùng dịch vụ PT'),
        ('P-06', '90', 'Độ dài một buổi PT (phút)'),
-       ('P-08', '3', 'Số lượt đổi buổi mỗi tháng của gói PT (hạn mức gói = P-08 × số tháng)'),
        ('P-09', '20', 'Hạn thanh toán đơn online = thời gian giữ slot (phút)'),
        ('P-10', '10', 'Thuế VAT (%) đã nằm trong giá bán'),
        ('P-11', '70', 'Tỷ lệ hoa hồng mặc định cho PT mới (%)'),
@@ -958,11 +957,10 @@ CFG = [('P-01', '1', 'Số lần bảo lưu tối đa mỗi gói tập (lần)')
        ('P-18', '5', 'Thời gian khóa tạm (phút)'),
        ('P-19', '05:30-22:00', 'Giờ mở cửa mặc định hằng ngày'),
        ('P-21', '1M,2M,3M', 'Thời hạn gói PT (tháng)'),
-       ('P-22', '3', "Số khách tối thiểu để hiện điểm đánh giá trung bình của PT"),
        ('P-23', '14', 'Định mức phép năm demo (ngày/năm)')]
 for k, v, d in CFG:
     add('SystemConfigs', dict(ConfigKey=k, ConfigValue=v, Description=d,
-                             UpdatedAt=dt_(2026, 10, 6, 9) if k == 'P-22' else dt_(2026, 9, 1, 9),
+                             UpdatedAt=dt_(2026, 9, 1, 9),
                              UpdatedByEmployeeId=2), rid=int(k[2:]))
 
 OHE = [(d_(2026, 9, 2), None, None, 1, 'Nghỉ lễ Quốc khánh'),

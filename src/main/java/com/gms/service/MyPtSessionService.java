@@ -203,7 +203,7 @@ public class MyPtSessionService {
 
             // ===== B4: DỰNG LƯỚI RỖNG + "DANH BẠ" NGÀY → Ô =====
             LocalDate today = now.toLocalDate();             // 20/10
-            MonthView view = new MonthView(month, today);    // vỏ rỗng, các ô đếm = 0
+            MonthView view = new MonthView(month);    // vỏ rỗng, các ô đếm = 0
 
             // Map để sau này tra nhanh: đưa ngày 21/10 → trả ngay đúng ô 21/10
             Map<LocalDate, MonthView.Cell> cellByDate = new HashMap<>();

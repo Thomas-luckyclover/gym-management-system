@@ -9,14 +9,15 @@
 ================================================================================ --%>
 
 <%-- ===== BẮT ĐẦU: LƯỚI BUỔI ĐANG GIỮ ===== --%>
+            <%-- sale.held = getter tự tính isHeld() · dto/PtSaleView.java --%>
             <c:if test="${sale.held and not empty sale.plan.days}">
                 <section class="sale-card" aria-labelledby="sale-h-plan">
                     <header class="sale-card-head"><h2 id="sale-h-plan"><c:out value="${sale.plan.sessionCount}" /> buổi tập
-                        <c:if test="${sale.held}"><span class="sale-badge">Đang giữ</span></c:if></h2>
-                        <c:if test="${sale.plan.skipCount gt 0}"><p><c:out value="${sale.plan.skipCount}" /> ngày không có buổi (lý do bên dưới)</p></c:if></header>
+                        <c:if test="${sale.held}"><span class="sale-badge">Đang giữ</span></c:if></h2></header>
                     <div class="sale-cal" role="list">
                         <c:forEach var="n" begin="2" end="6"><span class="sale-cal-head" aria-hidden="true">T<c:out value="${n}" /></span></c:forEach>
                         <c:forEach var="d" items="${sale.plan.days}" varStatus="loop">
+                            <%-- d.session = getter tự tính isSession() · dto/PtSaleDay.java (d = PtSaleDay) --%>
                             <span role="listitem" style="grid-column-start: ${d.date.dayOfWeek.value}"
                                   class="sale-day ${d.session ? (empty d.warning ? 'is-on' : 'is-warn') : 'is-off'}"
                                   title="${fn:escapeXml(d.session ? (empty d.warning ? d.dayLabel : d.warning) : d.reason)}">
@@ -25,6 +26,7 @@
                             </span>
                         </c:forEach>
                     </div>
+                    <%-- sale.plan.noteCount = getter tự tính getNoteCount() · dto/PtSalePlanBlock.java --%>
                     <c:if test="${sale.plan.noteCount gt 0}">
                         <ul class="sale-notes">
                             <c:forEach var="d" items="${sale.plan.days}">

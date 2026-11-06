@@ -180,6 +180,7 @@ public class ShiftDetailView {
         return blockingOpenShift;
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "pastDate"; = workDate của ca trước hôm nay; JSP: receptionist/shift.jsp:146
     public boolean isPastDate() {
         return shift != null && shift.getWorkDate() != null
                 && shift.getWorkDate().isBefore(com.gms.util.DateTimeUtil.today());

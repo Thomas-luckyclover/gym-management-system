@@ -16,6 +16,15 @@ public class PtSaleHeldBlock {
     // ← HoldExpiresAt (sớm nhất) − giờ server → data-countdown-seconds, common.js đếm ngược, về 0 thì tải lại trang
     private long holdSeconds;
 
+    // ← loadHeld: Orders.VatRateSnapshot (chốt lúc giữ, CBR-09) → dòng "Thuế VAT x%" ở Đơn bán
+    private Integer vatRate;
+
+    // ← loadHeld: Orders.VatAmount → dòng "Thuế VAT x%" ở Đơn bán
+    private Long vatAmount;
+
+    // ← loadHeld: giá đơn − VatAmount → dòng "Trước thuế VAT" ở Đơn bán
+    private Long preTaxAmount;
+
 
     public Integer getOrderId() { return orderId; }
     public void setOrderId(Integer orderId) { this.orderId = orderId; }
@@ -25,4 +34,13 @@ public class PtSaleHeldBlock {
 
     public long getHoldSeconds() { return holdSeconds; }
     public void setHoldSeconds(long holdSeconds) { this.holdSeconds = holdSeconds; }
+
+    public Integer getVatRate() { return vatRate; }
+    public void setVatRate(Integer vatRate) { this.vatRate = vatRate; }
+
+    public Long getVatAmount() { return vatAmount; }
+    public void setVatAmount(Long vatAmount) { this.vatAmount = vatAmount; }
+
+    public Long getPreTaxAmount() { return preTaxAmount; }
+    public void setPreTaxAmount(Long preTaxAmount) { this.preTaxAmount = preTaxAmount; }
 }

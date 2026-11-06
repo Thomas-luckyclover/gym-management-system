@@ -82,18 +82,22 @@ public class PtScheduleItem {
     // ← SĐT khách (dùng ở màn khác)
     private String customerPhone;
 
+    // GETTER TỰ TÍNH — không có field/setter "startOfDay"; = startTime đổi ra số phút từ 0 giờ; JSP: pt/_schedule-day.jspf:71
     public int getStartOfDay() {
         return startTime.toSecondOfDay() / 60;
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "endOfDay"; = endTime đổi ra số phút từ 0 giờ; JSP: pt/_schedule-day.jspf:71
     public int getEndOfDay() {
         return endTime.toSecondOfDay() / 60;
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "booked"; = kind == "booked"; JSP: pt/_schedule-day.jspf:67 …
     public boolean isBooked() {
         return "booked".equals(kind);
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "blocking"; = sessionId null hoặc sessionStatus == "Scheduled"; JSP: pt/_schedule-day.jspf:71
     public boolean isBlocking() {
         return sessionId == null || "Scheduled".equals(sessionStatus);
     }

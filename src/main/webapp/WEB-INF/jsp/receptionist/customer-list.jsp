@@ -182,6 +182,7 @@
                                                                     <span class="bf07-sub">
                                                                         <c:out value="${profile.customerCode}" />
                                                                         ·
+                                                                        <%-- profile.customerTypeLabel = getter tự tính getCustomerTypeLabel() · dto/CustomerProfileRowView.java (profile = CustomerProfileRowView) --%>
                                                                         <c:out value="${profile.customerTypeLabel}" />
                                                                     </span>
                                                                 </div>
@@ -189,6 +190,7 @@
                                                         </td>
                                                         <td data-label="Liên hệ">
                                                             <c:choose>
+                                                                <%-- profile.zaloUrl = getter tự tính getZaloUrl() · dto/CustomerProfileRowView.java (profile = CustomerProfileRowView) --%>
                                                                 <c:when test="${managerView and not empty profile.zaloUrl}">
                                                                     <a href="<c:out value='${profile.zaloUrl}' />" target="_blank" rel="noopener noreferrer" title="Mở Zalo">
                                                                         <c:out value="${profile.phone}" />
@@ -204,7 +206,9 @@
                                                             ${empty profile.currentPackageName ? 'Chưa có gói' : 'Đã có gói'}
                                                         </td>
                                                         <td data-label="Trạng thái">
+                                                            <%-- profile.statusTone = getter tự tính getStatusTone() · dto/CustomerProfileRowView.java (profile = CustomerProfileRowView) --%>
                                                             <span class="badge badge-<c:out value="${profile.statusTone}" />">
+                                                                <%-- profile.statusLabel = getter tự tính getStatusLabel() · dto/CustomerProfileRowView.java (profile = CustomerProfileRowView) --%>
                                                                 <c:out value="${profile.statusLabel}" />
                                                             </span>
                                                             <c:if test="${profile.hasPendingDeletion}">
@@ -352,9 +356,11 @@
                                                 <c:out value="${pageData.pageNumber}" />
                                             </b>
                                             /
+                                            <%-- pageData.totalPages = getter tự tính getTotalPages() · dto/PageResult.java --%>
                                             <c:out value="${pageData.totalPages}" /> (<c:out value="${pageData.totalItems}" /> mục)
                                         </span>
                                         <div class="bf07-row-actions">
+                                            <%-- pageData.hasPrevious = getter tự tính isHasPrevious() · dto/PageResult.java --%>
                                             <c:if test="${pageData.hasPrevious}">
                                                 <c:url var="prevUrl" value="${listPath}">
                                                     <c:param name="tab" value="${currentTab}" />
@@ -364,6 +370,7 @@
                                                 </c:url>
                                                 <a class="btn btn-outline" href="<c:out value="${prevUrl}" />">Trang trước</a>
                                             </c:if>
+                                            <%-- pageData.hasNext = getter tự tính isHasNext() · dto/PageResult.java --%>
                                             <c:if test="${pageData.hasNext}">
                                                 <c:url var="nextUrl" value="${listPath}">
                                                     <c:param name="tab" value="${currentTab}" />

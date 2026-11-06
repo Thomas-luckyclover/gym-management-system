@@ -107,6 +107,7 @@
                                 <div class="pt-plan-scroll">
 
                                     <%-- LƯỚI TUẦN: --axis-hours = số hàng giờ · --shift-split = vị trí vạch chia Ca sáng / Ca chiều (13:00). --%>
+                                    <%-- week.shiftSplitHour = getter tự tính getShiftSplitHour() · dto/PtScheduleWeek.java --%>
                                     <div class="pt-plan-grid" style="--axis-hours: ${week.axisEndHour - week.axisStartHour}; --shift-split: ${week.shiftSplitHour - week.axisStartHour}">
 
                                         <div class="pt-plan-axis-head" aria-hidden="true"></div>

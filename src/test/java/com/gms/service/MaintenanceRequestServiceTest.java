@@ -261,8 +261,8 @@ class MaintenanceRequestServiceTest {
     }
 
     @Test
-    @DisplayName("Tạo yêu cầu: Cho phép tạo yêu cầu kể cả khi máy con đang UnderMaintenance")
-    void createRequest_underMaintenanceEquipmentItem_allowed() {
+    @DisplayName("Tạo yêu cầu: Từ chối khi máy con đang UnderMaintenance")
+    void createRequest_underMaintenanceEquipmentItem_rejected() {
         ServiceResult<String> result = service.createRequest(
                 RECEPTIONIST_ACCOUNT_ID,
                 2,
@@ -271,8 +271,33 @@ class MaintenanceRequestServiceTest {
                 false
         );
 
-        assertTrue(result.isSuccess());
-        assertNotNull(result.getData());
+        assertFalse(result.isSuccess());
+        assertTrue(result.getFieldErrors().containsKey("equipmentItemId"));
+        assertTrue(fakeMaintenanceRequestDAO.requests.isEmpty());
+    }
+
+    @Test
+    @DisplayName("Tạo yêu cầu: Từ chối khi máy con đã có yêu cầu chờ duyệt")
+    void createRequest_itemWithActiveRequest_rejected() {
+        service.createRequest(
+                RECEPTIONIST_ACCOUNT_ID,
+                1,
+                "Urgent",
+                "Máy rung lắc mạnh khi tăng tốc độ",
+                true
+        );
+
+        ServiceResult<String> result = service.createRequest(
+                RECEPTIONIST_ACCOUNT_ID,
+                1,
+                "Normal",
+                "Báo lại lần nữa cho cùng một máy",
+                false
+        );
+
+        assertFalse(result.isSuccess());
+        assertTrue(result.getFieldErrors().containsKey("equipmentItemId"));
+        assertEquals(1, fakeMaintenanceRequestDAO.requests.size());
     }
 
     @Test
@@ -676,6 +701,18 @@ class MaintenanceRequestServiceTest {
         @Override
         public String generateNextRequestCode(Connection connection) {
             return String.format("BT-%04d", nextId);
+        }
+
+        @Override
+        public boolean hasActiveRequest(Connection connection, int equipmentItemId) {
+            for (MaintenanceRequest request : requests.values()) {
+                boolean active = request.getStatus() == MaintenanceRequest.Status.OPEN
+                        || request.getStatus() == MaintenanceRequest.Status.IN_PROGRESS;
+                if (active && Integer.valueOf(equipmentItemId).equals(request.getEquipmentItemId())) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         @Override

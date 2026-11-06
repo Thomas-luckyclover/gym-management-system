@@ -229,9 +229,11 @@
                   <div class="leave-history-list">
                     <c:forEach var="group" items="${formView.requestGroups}">
                       <div class="leave-history-group">
+                        <%-- group.linked = getter tự tính isLinked() · dto/LeaveRequestGroupView.java (group = LeaveRequestGroupView) --%>
                         <c:if test="${group.linked}">
                           <div class="leave-group-heading">
                             <b>Đợt <c:out value="${group.code}" /></b>
+                            <%-- getter tự tính: group.totalDays = getTotalDays(), group.approvedDays = getApprovedDays() · dto/LeaveRequestGroupView.java --%>
                             <span>Được duyệt <fmt:formatNumber value="${group.approvedDays}" maxFractionDigits="1" />/<fmt:formatNumber value="${group.totalDays}" maxFractionDigits="1" /> ngày</span>
                           </div>
                         </c:if>

@@ -352,10 +352,12 @@
           </c:choose>
 
           <%-- ===== Phân trang ===== --%>
+          <%-- requestPage.totalPages = getter tự tính getTotalPages() · dto/PageResult.java --%>
           <c:if test="${requestPage.totalPages > 1}">
             <div class="maintenance-pager">
 
               <c:choose>
+                <%-- requestPage.hasPrevious = getter tự tính isHasPrevious() · dto/PageResult.java --%>
                 <c:when test="${requestPage.hasPrevious}">
                   <c:url var="previousUrl"
                          value="/receptionist/maintenance-requests">
@@ -385,6 +387,7 @@
               </span>
 
               <c:choose>
+                <%-- requestPage.hasNext = getter tự tính isHasNext() · dto/PageResult.java --%>
                 <c:when test="${requestPage.hasNext}">
                   <c:url var="nextUrl"
                          value="/receptionist/maintenance-requests">

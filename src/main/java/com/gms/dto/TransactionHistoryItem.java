@@ -113,10 +113,12 @@ public class TransactionHistoryItem {
         return subscriptionId;
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "onlineGateway"; = paymentMethod == "OnlineGateway"; JSP: customer/transaction-history.jsp:212
     public boolean isOnlineGateway() {
         return "OnlineGateway".equals(paymentMethod);
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "canViewPackage"; = có subscriptionId, giao dịch Success và chưa/không hoàn tiền; JSP: customer/transaction-history.jsp:198
     public boolean isCanViewPackage() {
         return subscriptionId != null
                 && "Success".equals(status)
@@ -125,34 +127,17 @@ public class TransactionHistoryItem {
     }
 
     /** Chỉ có 2 hình thức hiển thị cho khách: VNPay (online) hoặc Tại quầy (tiền mặt/chuyển khoản do lễ tân thu). */
+    // GETTER TỰ TÍNH — không có field/setter "paymentMethodLabel"; = OnlineGateway → "VNPay", khác → "Tại quầy"; JSP: customer/transaction-history.jsp:118 …
     public String getPaymentMethodLabel() {
         return "OnlineGateway".equals(paymentMethod) ? "VNPay" : "Tại quầy";
     }
 
-    public String getStatusLabel() {
-        if ("Success".equals(status)) {
-            return "Thanh toán thành công";
-        }
-        if ("Failed".equals(status)) {
-            return "Thanh toán thất bại";
-        }
-        if ("Expired".equals(status)) {
-            return "Hết hạn lần thanh toán";
-        }
-        return "Đang chờ kết quả";
-    }
-
-    public String getRefundLabel() {
-        if (refundedAt != null) {
-            return "Đã hoàn tiền";
-        }
-        return needsRefund ? "Cần hoàn tiền" : "—";
-    }
-
+    // GETTER TỰ TÍNH — không có field/setter "createdAtText"; = createdAt định dạng ngày giờ; JSP: customer/transaction-history.jsp:173
     public String getCreatedAtText() {
         return formatTime(createdAt);
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "completedAtText"; = completedAt định dạng ngày giờ; JSP: customer/transaction-history.jsp:179
     public String getCompletedAtText() {
         return formatTime(completedAt);
     }
@@ -176,6 +161,7 @@ public class TransactionHistoryItem {
         return vatAmount;
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "hasCompleted"; = completedAt khác null; JSP: customer/transaction-history.jsp:175
     public boolean isHasCompleted() {
         return completedAt != null;
     }
@@ -185,11 +171,13 @@ public class TransactionHistoryItem {
     }
 
     /** Đơn có giảm giá thì popup hiện thêm dòng Giảm giá. */
+    // GETTER TỰ TÍNH — không có field/setter "hasDiscount"; = discountAmount > 0; JSP: customer/transaction-history.jsp:157
     public boolean isHasDiscount() {
         return discountAmount > 0;
     }
 
     /** Tên màu/ảnh của banner popup (khớp data-tone ở trang Mua gói). */
+    // GETTER TỰ TÍNH — không có field/setter "tone"; = packageType đổi sang tên màu (day-pass, pt-single…), mặc định membership; JSP: customer/transaction-history.jsp:130
     public String getTone() {
         if (packageType == null) {
             return "membership";
@@ -204,6 +192,7 @@ public class TransactionHistoryItem {
     }
 
     /** Trạng thái để tô màu: đã/đang chờ hoàn tiền thì là "Refunded", còn lại theo Status. */
+    // GETTER TỰ TÍNH — không có field/setter "displayStatus"; = có hoàn tiền → Refunded; Success/Failed/Expired giữ nguyên; khác → Pending; JSP: customer/transaction-history.jsp:105 …
     public String getDisplayStatus() {
         if (refundedAt != null || needsRefund) {
             return "Refunded";
@@ -216,6 +205,7 @@ public class TransactionHistoryItem {
     }
 
     /** Nhãn ngắn của trạng thái. */
+    // GETTER TỰ TÍNH — không có field/setter "shortStatusLabel"; = nhãn ngắn theo hoàn tiền rồi displayStatus; JSP: customer/transaction-history.jsp:122 …
     public String getShortStatusLabel() {
         if (refundedAt != null) {
             return "Đã hoàn tiền";
@@ -232,6 +222,7 @@ public class TransactionHistoryItem {
     }
 
     /** Dòng "Hoàn tiền" trong popup; null thì JSP không in. */
+    // GETTER TỰ TÍNH — không có field/setter "refundRowText"; = ngày hoàn tiền; chờ hoàn → "Đang chờ hoàn tiền"; không có → null; JSP: customer/transaction-history.jsp:184 …
     public String getRefundRowText() {
         if (refundedAt != null) {
             return refundedAt.format(DISPLAY_DATE);
@@ -240,16 +231,19 @@ public class TransactionHistoryItem {
     }
 
     /** Thất bại hoặc hết hạn (chưa hoàn tiền) thì cho mua lại. */
+    // GETTER TỰ TÍNH — không có field/setter "canBuyAgain"; = giao dịch Failed/Expired và không hoàn tiền; JSP: customer/transaction-history.jsp:206
     public boolean isCanBuyAgain() {
         return ("Failed".equals(status) || "Expired".equals(status))
                 && refundedAt == null && !needsRefund;
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "createdDateText"; = createdAt chỉ phần ngày, null → "—"; JSP: customer/transaction-history.jsp:116
     public String getCreatedDateText() {
         return createdAt == null ? "—" : createdAt.format(DISPLAY_DATE);
     }
 
     /** Tiêu đề nhóm: "Tháng 10/2026". */
+    // GETTER TỰ TÍNH — không có field/setter "monthLabel"; = "Tháng …" của createdAt, null → ""; JSP: customer/transaction-history.jsp:91 …
     public String getMonthLabel() {
         return createdAt == null ? "" : "Tháng " + createdAt.format(DISPLAY_MONTH);
     }
@@ -275,15 +269,18 @@ public class TransactionHistoryItem {
     }
 
     /** Có thông tin thời hạn gói (giao dịch thành công và đã được cấp ngày). */
+    // GETTER TỰ TÍNH — không có field/setter "startText"; = startDate dạng dd/MM/yyyy, null → ""; JSP: customer/transaction-history.jsp:147
     public String getStartText() {
         return startDate == null ? "" : DateTimeUtil.formatDate(startDate);
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "endText"; = endDate dạng dd/MM/yyyy, null → ""; JSP: customer/transaction-history.jsp:149
     public String getEndText() {
         return endDate == null ? "" : DateTimeUtil.formatDate(endDate);
     }
 
     /** Chuỗi dải ngày hiệu lực: Từ dd/MM/yyyy đến dd/MM/yyyy */
+    // GETTER TỰ TÍNH — không có field/setter "fullValidityText"; = "Từ … đến …", cùng ngày → "Ngày …", thiếu ngày → ""; JSP: customer/transaction-history.jsp:111
     public String getFullValidityText() {
         if (startDate == null || endDate == null) {
             return "";
@@ -294,19 +291,13 @@ public class TransactionHistoryItem {
         return "Từ " + DateTimeUtil.formatDate(startDate) + " đến " + DateTimeUtil.formatDate(endDate);
     }
 
+ // GETTER TỰ TÍNH — không có field/setter "hasValidity"; = giao dịch Success và có đủ startDate, endDate; JSP: customer/transaction-history.jsp:109 …
  public boolean isHasValidity() {
         return "Success".equals(status) && startDate != null && endDate != null;
     }
 
-    /** Chuỗi dải ngày hiệu lực dạng: dd/MM/yyyy – dd/MM/yyyy */
-    public String getValidityRangeText() {
-        if (startDate == null || endDate == null) {
-            return "";
-        }
-        return DateTimeUtil.formatDate(startDate) + " – " + DateTimeUtil.formatDate(endDate);
-    }
-
     /** Chuỗi thời hạn gói dạng: 3 tháng, 1 ngày */
+    // GETTER TỰ TÍNH — không có field/setter "durationText"; = "N ngày" hoặc "N tháng", không có → ""; JSP: customer/transaction-history.jsp:143 …
     public String getDurationText() {
         if (durationValue == null || durationValue <= 0) {
             return "";

@@ -24,6 +24,7 @@
 
             <p class="pt-handle-chips">
                 <span>Hạn gói đến <c:out value="${gms:formatDate(handle.termEnd)}" /></span>
+                <%-- handle.couple = getter tự tính isCouple() · dto/PtHandleView.java --%>
                 <c:if test="${handle.couple}"><span>Gói đôi</span></c:if>
             </p>
         </div>

@@ -30,6 +30,7 @@
           <c:choose>
             <c:when test="${showEmployee and not empty item.leaveGroup and fn:length(item.leaveGroup.requests) > 1}">
               <c:set var="groupOpen" value="${item.leaveGroup.containsRequest(reviewId)}" />
+              <%-- item.leaveGroup.key = getter tự tính getKey() · dto/LeaveRequestGroupView.java --%>
               <c:set var="groupReturnUrl" value="${listReturnUrl}${fn:contains(listReturnUrl, '?') ? '&' : '?'}reviewId=${item.leaveRequestId}#leave-group-${item.leaveGroup.key}" />
               <%-- Một hàng cho cả đợt; mở rộng ngay bên dưới để xử lý từng phần. --%>
               <tr id="leave-group-${item.leaveGroup.key}" class="leave-request-row ${groupOpen ? 'leave-row-selected' : ''}" tabindex="0"
@@ -48,7 +49,9 @@
                 </td>
                 <td>
                   <div class="leave-date-cell">
+                    <%-- getter tự tính: item.leaveGroup.fromDate = getFromDate(), item.leaveGroup.toDate = getToDate() · dto/LeaveRequestGroupView.java --%>
                     <b>${gms:formatDate(item.leaveGroup.fromDate)} → ${gms:formatDate(item.leaveGroup.toDate)}</b>
+                    <%-- item.leaveGroup.totalDays = getter tự tính getTotalDays() · dto/LeaveRequestGroupView.java --%>
                     <small>Cùng đợt nghỉ · <fmt:formatNumber value="${item.leaveGroup.totalDays}" maxFractionDigits="1" /> ngày</small>
                     <c:if test="${item.nearLeaveDate}"><span class="leave-near-label">Sắp đến ngày nghỉ</span></c:if>
                     <c:if test="${item.lateApproval}"><span class="badge badge-warning">Cần duyệt muộn</span></c:if>
@@ -146,6 +149,7 @@
                     </c:choose>
                     <input type="checkbox" class="leave-selection-checkbox" name="leaveRequestIds"
                            form="leave-bulk-form" value="${item.leaveRequestId}"
+                           <%-- item.canApprove = getter tự tính isCanApprove() · dto/LeaveRequestItemView.java (item = LeaveRequestItemView) --%>
                            ${not item.canApprove or item.lateApproval ? 'disabled' : ''}
                            aria-label="Chọn đơn của <c:out value='${item.fullName}' />, nghỉ ${gms:formatDate(item.fromDate)}"
                            title="<c:out value='${selectionHint}' />">
@@ -202,6 +206,7 @@
                   <details class="leave-related">
                       <summary>Cùng đợt <c:out value="${item.leaveGroup.code}" /></summary>
                       <div class="leave-related-parts">
+                          <%-- item.leaveGroup.approvedDays = getter tự tính getApprovedDays() · dto/LeaveRequestGroupView.java --%>
                           <small>Được duyệt <fmt:formatNumber value="${item.leaveGroup.approvedDays}" maxFractionDigits="1" />/<fmt:formatNumber value="${item.leaveGroup.totalDays}" maxFractionDigits="1" /> ngày</small>
                           <c:forEach var="part" items="${item.leaveGroup.requests}">
                               <a class="leave-related-part" href="${pageContext.request.contextPath}/manager/leave-requests/review?id=${part.leaveRequestId}">

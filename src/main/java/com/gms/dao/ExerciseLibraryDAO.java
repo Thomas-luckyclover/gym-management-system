@@ -122,12 +122,13 @@ public class ExerciseLibraryDAO {
         return counts;
     }
 
-    /**
+        /**
      * Đếm bài khớp bộ lọc. Tham số null = không lọc theo điều kiện đó.
      *
      * @param namePattern mẫu LIKE đã escape (SqlUtil.toContainsPattern), ví dụ "%bench%"
      */
     public int countFiltered(String namePattern, Integer categoryId, Integer equipmentId) throws SQLException {
+        // 1. Ghét câu SQL, buildWhere xem tham số nào khác null thì thêm 1 điều kiện dấu ? 
         String sql = "SELECT COUNT(*) FROM Exercises" + buildWhere(namePattern, categoryId, equipmentId);
         try (Connection connection = DBContext.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -143,6 +144,7 @@ public class ExerciseLibraryDAO {
      *
      * @param orderBy mệnh đề ORDER BY lấy từ hằng số của Service (ExerciseLibraryService.orderByOf),
      *                KHÔNG BAO GIỜ là chữ người dùng gõ trên URL
+     Bỏ qua n dòng đầu tiên, rồi lấy m dòng tiếp theo: OFFSET n ROWS FETCH NEXT m 
      */
     public List<ExerciseItem> findPage(String namePattern, Integer categoryId, Integer equipmentId,
             String orderBy, int offset, int size) throws SQLException {
@@ -154,8 +156,8 @@ public class ExerciseLibraryDAO {
         try (Connection connection = DBContext.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
             int next = bindWhere(statement, namePattern, categoryId, equipmentId);
-            statement.setInt(next, offset);
-            statement.setInt(next + 1, size);
+            statement.setInt(next, offset); // điền giá trị của offset
+            statement.setInt(next + 1, size); // điền giá trị của size: PAGE_SIZE = 12
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
                     ExerciseItem item = new ExerciseItem();
@@ -214,6 +216,7 @@ public class ExerciseLibraryDAO {
 
     /** Ghép WHERE theo bộ lọc có giá trị. Chỉ ghép chữ cố định, giá trị luôn đi qua dấu ?. */
     private String buildWhere(String namePattern, Integer categoryId, Integer equipmentId) {
+        //  1 = 1 => Giữ lại tất cả
         StringBuilder where = new StringBuilder(" WHERE 1 = 1");
         if (namePattern != null) {
             where.append(" AND Name LIKE ? ESCAPE '\\'");
@@ -241,6 +244,7 @@ public class ExerciseLibraryDAO {
         if (equipmentId != null) {
             statement.setString(index++, "%," + equipmentId + ",%");
         }
+        // index sau = 4, ko phải dấu ? nào cả, là vị trú trống kế tiếp, trả về để findPage dùng cho OFFSET và FETCH
         return index;
     }
 

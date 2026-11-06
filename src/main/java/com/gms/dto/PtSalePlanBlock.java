@@ -13,7 +13,7 @@ public class PtSalePlanBlock {
 
     // ===== LỊCH ĐANG CHỌN =====
 
-    // ← ?t1..t5 (giờ lịch mẫu Thứ 2..Thứ 6, null = Nghỉ) → loadPlan tính lịch; timeOf / getWeekTimeTexts đọc
+    // ← ?t1..t5 (giờ lịch mẫu Thứ 2..Thứ 6, null = Nghỉ) → loadPlan tính lịch
     private LocalTime[] weekTimes = new LocalTime[5];
 
 
@@ -37,29 +37,12 @@ public class PtSalePlanBlock {
     // ← số buổi xếp được → "N buổi tập", hold() dùng để biết có buổi để giữ không
     private int sessionCount;
 
-    // ← số ngày không có buổi → "N ngày không có buổi (lý do bên dưới)"
-    private int skipCount;
-
     // ← giá ÷ số buổi → (không in thẳng) giá trị 1 buổi
     private long sessionValue;
 
 
-    /** Giờ lịch mẫu của 1 thứ (1 = Thứ 2) dạng "HH:mm"; "" = Nghỉ. */
-    public String timeOf(int weekday) {
-        LocalTime time = weekTimes[weekday - 1];
-        return time == null ? "" : time.toString();
-    }
-
-    /** 5 giờ lịch mẫu dạng chữ (Thứ 2..Thứ 6). */
-    public List<String> getWeekTimeTexts() {
-        List<String> texts = new ArrayList<>();
-        for (int i = 1; i <= 5; i++) {
-            texts.add(timeOf(i));
-        }
-        return texts;
-    }
-
     /** Số dòng ghi chú dưới lưới đang giữ = ngày không có buổi + ngày có cảnh báo vàng. */
+    // GETTER TỰ TÍNH — không có field/setter "noteCount"; = số ngày không có buổi hoặc có warning; JSP: receptionist/_pt-sale-held.jspf:30
     public int getNoteCount() {
         int count = 0;
         for (PtSaleDay day : days) {
@@ -71,6 +54,7 @@ public class PtSalePlanBlock {
     }
 
     /** "Thứ 3, Thứ 5" — chèn vào hộp nhắc PT chưa công bố. */
+    // GETTER TỰ TÍNH — không có field/setter "unpublishedText"; = ghép unpublishedWeekdays thành "Thứ 2, Thứ 3…"; JSP: receptionist/_pt-sale-plan.jspf:54 …
     public String getUnpublishedText() {
         StringBuilder text = new StringBuilder();
         for (int weekday : unpublishedWeekdays) {
@@ -97,9 +81,6 @@ public class PtSalePlanBlock {
 
     public int getSessionCount() { return sessionCount; }
     public void setSessionCount(int sessionCount) { this.sessionCount = sessionCount; }
-
-    public int getSkipCount() { return skipCount; }
-    public void setSkipCount(int skipCount) { this.skipCount = skipCount; }
 
     public long getSessionValue() { return sessionValue; }
     public void setSessionValue(long sessionValue) { this.sessionValue = sessionValue; }

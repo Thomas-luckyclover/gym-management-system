@@ -483,7 +483,9 @@
                                                             <c:when test="${row.hasMembership() and not empty row.startDate}">
                                                                 <div>Bắt đầu: <b><c:out value="${gms:formatDate(row.startDate)}" /></b></div>
                                                                 <div>Hết hạn: <b><c:out value="${gms:formatDate(row.endDate)}" /></b></div>
+                                                                <%-- row.daysRemainingText = getter tự tính getDaysRemainingText() · dto/CustomerMembershipRow.java (row = CustomerMembershipRow) --%>
                                                                 <c:if test="${not empty row.daysRemainingText}">
+                                                                    <%-- row.daysRemaining = getter tự tính getDaysRemaining() · dto/CustomerMembershipRow.java (row = CustomerMembershipRow) --%>
                                                                     <div class="gym-days-left ${row.daysRemaining > 0 ? (row.daysRemaining <= 15 ? 'warn' : 'ok') : 'expired'}">
                                                                         <c:out value="${row.daysRemainingText}" />
                                                                     </div>
@@ -496,7 +498,9 @@
                                                     </div>
                                                 </td>
                                                 <td class="gym-status-cell" style="text-align: left;">
+                                                    <%-- row.freezeStatusBadgeClass = getter tự tính getFreezeStatusBadgeClass() · dto/CustomerMembershipRow.java (row = CustomerMembershipRow) --%>
                                                     <span class="badge ${row.freezeStatusBadgeClass}">
+                                                        <%-- row.freezeStatusLabel = getter tự tính getFreezeStatusLabel() · dto/CustomerMembershipRow.java (row = CustomerMembershipRow) --%>
                                                         <c:out value="${row.freezeStatusLabel}" />
                                                     </span>
                                                 </td>
@@ -543,6 +547,7 @@
                         
 
                                 <%-- Phân trang danh sách hội viên chuẩn phong cách BF-07 --%>
+                    <%-- membershipsPage.totalPages = getter tự tính getTotalPages() · dto/PageResult.java --%>
                     <c:if test="${membershipsPage.totalPages > 1}">
                         <div class="freeze-pagination">
                             <div class="freeze-pagination-info">
@@ -553,6 +558,7 @@
                             <div class="freeze-pagination-controls" aria-label="Điều hướng phân trang">
                                 <%-- Nút Trang trước --%>
                                 <c:choose>
+                                    <%-- membershipsPage.hasPrevious = getter tự tính isHasPrevious() · dto/PageResult.java --%>
                                     <c:when test="${membershipsPage.hasPrevious}">
                                         <c:url var="prevPageUrl" value="/receptionist/freeze">
                                             <c:param name="tab" value="members" />
@@ -663,6 +669,7 @@
 
                                 <%-- Nút Trang sau --%>
                                 <c:choose>
+                                    <%-- membershipsPage.hasNext = getter tự tính isHasNext() · dto/PageResult.java --%>
                                     <c:when test="${membershipsPage.hasNext}">
                                         <c:url var="nextPageUrl" value="/receptionist/freeze">
                                             <c:param name="tab" value="members" />

@@ -21,7 +21,7 @@
 
     <title><c:out value="${pageTitle}" /> · GMS</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/pt/header.css?v=20261025city">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/pt/dashboard.css?v=20261025city">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/pt/dashboard.css?v=20261105month2">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/dashboard-weather.css?v=20261014s">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/dashboard-comic.css?v=20261015h">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/dashboard-hero.css?v=20261025city">
@@ -47,11 +47,17 @@
                 <c:set var="todayCount" value="0" />
                 <c:set var="firstToday" value="${null}" />
                 <c:forEach var="statDay" items="${scheduleDays}">
+                    <%-- statDay.today = getter tự tính isToday() · dto/PtScheduleDayView.java (statDay = PtScheduleDayView) --%>
                     <c:if test="${statDay.today}">
                         <c:set var="todayCount" value="${fn:length(statDay.sessions)}" />
                         <c:if test="${not empty statDay.sessions}"><c:set var="firstToday" value="${statDay.sessions[0]}" /></c:if>
                     </c:if>
                 </c:forEach>
+                
+                
+                
+                
+                
 
                 <%-- ===== KHỐI CHÀO + THỜI TIẾT ===== (common/dashboard-weather.jspf đọc weather) --%>
                 <section class="pt-board__hero" aria-label="Lời chào và thời tiết hôm nay">
@@ -74,6 +80,10 @@
                     </dl>
                 </section>
 
+                    
+                    
+                    
+                    
                 <%-- ===== LỊCH DẠY 7 NGÀY ===== ← scheduleDays (List<PtScheduleDayView>) --%>
                 <section class="panel pt-board__schedule" aria-labelledby="schedule-title" data-reveal>
                     <div class="pt-section-heading">
@@ -84,8 +94,7 @@
                         </span>
                     </div>
 
-                    <c:choose>
-
+                    <c:choose>       
                         <%-- Lỗi khối (scheduleError) → câu đỏ; null → "Chưa tải được lịch". --%>
                         <c:when test="${not empty scheduleError}">
                             <p class="pt-block-error" role="alert"><c:out value="${scheduleError}" /></p>
@@ -95,10 +104,15 @@
                         </c:when>
                         <c:otherwise>
 
+                            
+                            
+                            
+                            
                             <%-- 7 TAB NGÀY (dashboard.js đổi tab): day.dayLabel · dd/MM ← day.slotDate · "N buổi"/"Trống" ← day.sessions; tab hôm nay mở sẵn (day.today). --%>
                             <div class="pt-days" role="tablist" aria-label="Chọn ngày" data-pt-days>
                                 <%-- MỖI TAB 1 BẢNG BUỔI (biến s = PtSessionView): --%>
                                 <c:forEach var="day" items="${scheduleDays}" varStatus="st">
+                                    <%-- day.today = getter tự tính isToday() · dto/PtScheduleDayView.java (day = PtScheduleDayView) --%>
                                     <button type="button" role="tab" class="pt-day ${day.today ? 'is-today' : ''}"
                                             id="pt-day-tab-${st.index}" aria-controls="pt-day-panel-${st.index}"
                                             aria-selected="${day.today}" tabindex="${day.today ? 0 : -1}">
@@ -155,6 +169,11 @@
                                                             <span class="badge ${s.statusBadgeClass}"><c:out value="${s.statusLabel}" /></span>
                                                         </c:if>
 
+                                                        <%-- Lý do vắng cạnh huy hiệu "Vắng": s.missedReasonLabel ← prepareSessionDisplay B4. --%>
+                                                        <c:if test="${s.status eq 'MISSED' and not empty s.missedReasonLabel}">
+                                                            <small class="pt-session-reason"><c:out value="${s.missedReasonLabel}" /></small>
+                                                        </c:if>
+
                                                         <%-- Nút "Xử lý buổi" (s.canOpenActions = Scheduled, chưa tới giờ) → GET /pt/schedule?date=…&handle=<sessionId> (mở hộp Xử lý buổi). --%>
                                                         <c:if test="${s.canOpenActions}">
                                                             <c:url var="handleUrl" value="/pt/schedule"><c:param name="date" value="${s.slotDate}" /><c:param name="handle" value="${s.sessionId}" /></c:url>
@@ -173,6 +192,12 @@
                     </c:choose>
                 </section>
 
+                
+                
+                
+                
+                
+                
                 <%-- ===== KHÁCH PHỤ TRÁCH ===== ← assignedPackages (List<PtAssignedPackageView>), đã xếp khách có việc lên đầu. --%>
                 <section class="panel pt-board__clients" aria-labelledby="clients-title" data-reveal>
                     <div class="pt-section-heading"><h2 id="clients-title">Khách phụ trách</h2></div>
@@ -206,6 +231,7 @@
 
                                                         <a class="pt-contact-btn" href="tel:${fn:escapeXml(client.customerPhone)}"><i class="fa-solid fa-phone" aria-hidden="true"></i><c:out value="${client.customerPhone}" /></a>
 
+                                                        <%-- client.customerZaloUrl = getter tự tính getCustomerZaloUrl() · dto/PtAssignedPackageView.java (client = PtAssignedPackageView) --%>
                                                         <c:if test="${not empty client.customerZaloUrl}">
                                                             <a class="pt-contact-btn is-zalo" href="${fn:escapeXml(client.customerZaloUrl)}" target="_blank" rel="noopener noreferrer" aria-label="Nhắn Zalo cho ${fn:escapeXml(client.customerName)} (mở tab mới)">Zalo<i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a>
                                                         </c:if>
@@ -216,6 +242,7 @@
                                                     <li>
                                                         <span class="pt-contacts__who"><c:out value="${client.partnerName}" /></span>
                                                         <a class="pt-contact-btn" href="tel:${fn:escapeXml(client.partnerPhone)}"><i class="fa-solid fa-phone" aria-hidden="true"></i><c:out value="${client.partnerPhone}" /></a>
+                                                        <%-- client.partnerZaloUrl = getter tự tính getPartnerZaloUrl() · dto/PtAssignedPackageView.java (client = PtAssignedPackageView) --%>
                                                         <c:if test="${not empty client.partnerZaloUrl}">
                                                             <a class="pt-contact-btn is-zalo" href="${fn:escapeXml(client.partnerZaloUrl)}" target="_blank" rel="noopener noreferrer" aria-label="Nhắn Zalo cho ${fn:escapeXml(client.partnerName)} (mở tab mới)">Zalo<i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a>
                                                         </c:if>
@@ -236,7 +263,7 @@
                                                 <c:if test="${item.kind eq 'closedDay' or not empty client.partnerName}"><p class="pt-attn__note"><c:out value="${item.attentionMessage}" /></p></c:if>
                                                 <c:choose>
 
-                                                    <%-- Buổi rơi ngày phòng nghỉ → nút "Dời buổi" → /pt/schedule?date=…&handle=<item.sessionId>. --%>
+                                                    <%-- Buổi rơi lúc phòng đóng (nghỉ cả ngày / ngoài giờ) → nút "Dời buổi" → /pt/schedule?date=…&handle=<item.sessionId>. --%>
                                                     <c:when test="${item.kind eq 'closedDay'}">
                                                         <c:url var="moveUrl" value="/pt/schedule"><c:param name="date" value="${item.sessionDate}" /><c:param name="handle" value="${item.sessionId}" /></c:url>
                                                         <a class="btn btn-primary btn-sm" href="${moveUrl}">Dời buổi</a>
@@ -254,14 +281,33 @@
                     </c:choose>
                 </section>
 
+                    
+                    
+                    
+                    
+                    
+                    
                 <%-- ===== KẾT QUẢ THÁNG VÀ HOA HỒNG ===== ← commissionSummary (biến cs = PtCommissionSummaryView) --%>
+                <%-- Chữ tháng đang xem: "tháng này" hoặc "tháng 10/2026" (selectedMonthText). --%>
+                <c:set var="viewedMonthText" value="${isCurrentMonth ? 'tháng này' : 'tháng '.concat(selectedMonthText)}" />
                 <section class="panel pt-board__summary" aria-labelledby="summary-title" data-reveal>
                     <div class="pt-section-heading">
                         <h2 id="summary-title">Kết quả tháng và hoa hồng</h2>
                         <span class="pt-info">
                             <button type="button" class="pt-info-trigger" aria-label="Giải thích kết quả tháng" aria-describedby="summary-help"><span aria-hidden="true">i</span></button>
-                            <span id="summary-help" class="pt-info-popover" role="tooltip">Số liệu theo ngày tập trong tháng này. Tỷ lệ tính trên các buổi đã có kết quả, kể cả buổi hủy.</span>
+                            <span id="summary-help" class="pt-info-popover" role="tooltip">Số liệu theo ngày tập trong <c:out value="${viewedMonthText}" />. Tỷ lệ tính trên các buổi đã có kết quả, kể cả buổi hủy.</span>
                         </span>
+                        <%-- Ô chọn tháng: select ← monthOptions / selectedMonth (Servlet loadMonthFilter), gửi GET ?month=. data-auto-submit: common.js tự gửi; tắt JS có nút Xem. --%>
+                        <form method="get" action="${pageContext.request.contextPath}/pt/dashboard" class="pt-month-filter">
+                            <c:if test="${weatherPreview}"><input type="hidden" name="weather" value="${fn:escapeXml(param.weather)}"></c:if>
+                            <label for="commissionMonth" class="visually-hidden">Chọn tháng</label>
+                            <select id="commissionMonth" name="month" data-auto-submit>
+                                <c:forEach var="o" items="${monthOptions}">
+                                    <option value="${o.value()}" ${o.value() eq selectedMonth ? 'selected' : ''}><c:out value="${o.label()}" /></option>
+                                </c:forEach>
+                            </select>
+                            <noscript><button type="submit" class="btn btn-sm">Xem</button></noscript>
+                        </form>
                     </div>
 
                     <c:choose>
@@ -286,13 +332,13 @@
                             <div class="pt-money-tiles">
                                 <div class="pt-money-tile is-main"><span>Đã chốt</span><strong><c:out value="${gms:formatMoney(cs.finalizedCommissionAmount)}" /></strong><small><c:out value="${cs.resolvedSessionCount}" /> buổi đã có kết quả</small></div>
                                 <div class="pt-money-tile"><span>Chờ hệ thống chốt</span><strong><c:out value="${gms:formatMoney(cs.pendingCommissionAmount)}" /></strong><small><c:out value="${cs.pendingSessionCount}" /> buổi vừa kết thúc</small></div>
-                                <div class="pt-money-tile"><span>Dự kiến</span><strong><c:out value="${gms:formatMoney(cs.projectedCommissionAmount)}" /></strong><small><c:out value="${cs.projectedSessionCount}" /> buổi còn lại trong tháng</small></div>
+                                <div class="pt-money-tile"><span>Dự kiến</span><strong><c:out value="${gms:formatMoney(cs.projectedCommissionAmount)}" /></strong><small><c:choose><c:when test="${isCurrentMonth}"><c:out value="${cs.projectedSessionCount}" /> buổi còn lại trong tháng</c:when><c:otherwise>không còn buổi</c:otherwise></c:choose></small></div>
                             </div>
 
                             <c:choose>
                                 <%-- Chưa có buổi nào có kết quả → 1 câu; có → thanh màu tỷ lệ + chú thích. --%>
                                 <c:when test="${cs.resolvedSessionCount == 0}">
-                                    <p class="pt-summary-note">Chưa có buổi nào được chốt trong tháng này.</p>
+                                    <p class="pt-summary-note">Chưa có buổi nào được chốt trong <c:out value="${viewedMonthText}" />.</p>
                                 </c:when>
                                 <c:otherwise>
 

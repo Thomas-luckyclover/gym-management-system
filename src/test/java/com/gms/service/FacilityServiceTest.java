@@ -2,6 +2,7 @@ package com.gms.service;
 
 import com.gms.dao.EquipmentItemDAO;
 import com.gms.dao.FacilityDAO;
+import com.gms.dao.MaintenanceRequestDAO;
 import com.gms.dto.ServiceResult;
 import com.gms.entity.EquipmentItem;
 import com.gms.entity.Facility;
@@ -27,13 +28,15 @@ public class FacilityServiceTest {
 
     private FakeFacilityDAO fakeFacilityDAO;
     private FakeEquipmentItemDAO fakeEquipmentItemDAO;
+    private FakeMaintenanceRequestDAO fakeMaintenanceRequestDAO;
     private FacilityService facilityService;
 
     @BeforeEach
     void setUp() {
         fakeFacilityDAO = new FakeFacilityDAO();
         fakeEquipmentItemDAO = new FakeEquipmentItemDAO();
-        facilityService = new FacilityService(fakeFacilityDAO, fakeEquipmentItemDAO);
+        fakeMaintenanceRequestDAO = new FakeMaintenanceRequestDAO();
+        facilityService = new FacilityService(fakeFacilityDAO, fakeEquipmentItemDAO, fakeMaintenanceRequestDAO);
 
         // Seed 1 facility mẫu
         Facility f1 = new Facility(1, "Máy chạy bộ", Facility.Category.CARDIO, "Tầng 1", 2, Facility.Status.AVAILABLE, 0, 2);
@@ -147,7 +150,28 @@ public class FacilityServiceTest {
         assertEquals(EquipmentItem.Status.RETIRED, fakeEquipmentItemDAO.items.get(1).getStatus());
     }
 
+    @Test
+    @DisplayName("Không thanh lý được cá thể máy đang có yêu cầu bảo trì chưa hoàn thành")
+    void retireEquipmentItem_withActiveRequest_fails() {
+        fakeMaintenanceRequestDAO.hasActive = true;
+        EquipmentItem.Status before = fakeEquipmentItemDAO.items.get(1).getStatus();
+
+        ServiceResult<Void> result = facilityService.retireEquipmentItem(1);
+
+        assertFalse(result.isSuccess());
+        assertEquals(before, fakeEquipmentItemDAO.items.get(1).getStatus());
+    }
+
     // --- Fake DAO Classes ---
+    private static class FakeMaintenanceRequestDAO extends MaintenanceRequestDAO {
+        boolean hasActive = false;
+
+        @Override
+        public boolean hasActiveRequest(int equipmentItemId) {
+            return hasActive;
+        }
+    }
+
     private static class FakeFacilityDAO extends FacilityDAO {
         final Map<Integer, Facility> facilities = new HashMap<>();
         int nextId = 100;

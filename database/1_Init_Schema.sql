@@ -2,7 +2,7 @@
    GMS — Gym Management System
    FILE    : 1_Init_Schema.sql  ·  bản v26 (06/10/2026)
    MỤC ĐÍCH: Tạo toàn bộ schema SQL Server, chuẩn 3NF, khớp thay đổi nghiệp vụ v26
-             (GBR / CBR / DBR / BR / P-01…P-22). 30 bảng, 7 cluster A–G.
+             (GBR / CBR / DBR / BR / P-01…P-23). 30 bảng, 7 cluster A–G.
    CHẠY    : Trên SQL Server 2019+. Muốn làm lại từ đầu: chạy 0_Reset_Database.sql trước.
              Thứ tự: 0_Reset_Database.sql → 1_Init_Schema.sql → 2_Seed_Data.sql
    v26    : JOB-04 chốt tự động, CheckedIn/Used, đánh giá PT theo tháng (DBR-66/67).
@@ -445,8 +445,6 @@ CREATE TABLE Subscriptions (
     EndDate               DATE         NOT NULL,  -- NGÀY CUỐI còn dùng (GBR-03)
     FixedStartTime        TIME(0)      NULL,      -- v25: khung giờ cố định của gói PT (CBR-43, CBR-52)
     GeneratedSessionCount TINYINT      NULL,      -- số buổi thực sinh, chốt khi Paid (BR-40, DBR-53)
-    SwapsUsed             TINYINT      NOT NULL CONSTRAINT DF_Subscriptions_Swaps  DEFAULT (0),
-    MaxSwapsSnapshot      TINYINT      NULL,      -- hạn mức đổi buổi = P-08 × số tháng của gói, chốt lúc bán — đổi P-08 không áp ngược (BR-73, GBR-04)
     FreezeUsed            TINYINT      NOT NULL CONSTRAINT DF_Subscriptions_Freeze DEFAULT (0),
     MaxFreezesSnapshot    TINYINT      NULL,      -- v25: P-01 lúc bán (GBR-04)
     Status                VARCHAR(10)  NOT NULL CONSTRAINT DF_Subscriptions_Status DEFAULT ('Active'),
@@ -469,21 +467,18 @@ CREATE TABLE Subscriptions (
         (SubscriptionType IN ('PTSingle','PTCouple','SingleSession') AND PtEmployeeId IS NOT NULL)
         OR (SubscriptionType IN ('Membership','DayPass') AND PtEmployeeId IS NULL)
     ),
-    -- Gói PT: có khung giờ cố định, trần swap, số buổi. Buổi lẻ: đúng 1 buổi. Gói tập: trần bảo lưu.
+    -- Gói PT: có khung giờ cố định, số buổi. Buổi lẻ: đúng 1 buổi. Gói tập: trần bảo lưu.
     CONSTRAINT CK_Subscriptions_PtFields CHECK (
         (SubscriptionType IN ('PTSingle','PTCouple') AND FixedStartTime IS NOT NULL
-            AND MaxSwapsSnapshot IS NOT NULL AND GeneratedSessionCount IS NOT NULL)
-        OR (SubscriptionType = 'SingleSession' AND FixedStartTime IS NULL AND MaxSwapsSnapshot IS NULL
+            AND GeneratedSessionCount IS NOT NULL)
+        OR (SubscriptionType = 'SingleSession' AND FixedStartTime IS NULL
             AND GeneratedSessionCount IS NOT NULL AND GeneratedSessionCount = 1)
-        OR (SubscriptionType IN ('Membership','DayPass') AND FixedStartTime IS NULL AND MaxSwapsSnapshot IS NULL
+        OR (SubscriptionType IN ('Membership','DayPass') AND FixedStartTime IS NULL
             AND GeneratedSessionCount IS NULL)
     ),
     CONSTRAINT CK_Subscriptions_Freeze CHECK (
         (SubscriptionType = 'Membership' AND MaxFreezesSnapshot IS NOT NULL AND FreezeUsed <= MaxFreezesSnapshot)
         OR (SubscriptionType <> 'Membership' AND MaxFreezesSnapshot IS NULL AND FreezeUsed = 0)
-    ),
-    CONSTRAINT CK_Subscriptions_Swaps CHECK (
-        SwapsUsed = 0 OR (MaxSwapsSnapshot IS NOT NULL AND SwapsUsed <= MaxSwapsSnapshot)    -- BR-73, BR-74
     )
 );
 GO
@@ -663,10 +658,10 @@ CREATE INDEX IX_Sessions_Scheduled ON Sessions(TimeSlotId) INCLUDE (Subscription
 GO
 
 -- SessionMoveLogs (v25, thay SessionSwapLogs): MỌI lần dời buổi, để giữ lịch sử PT cũ / slot cũ
---   CustomerSwap   : khách tự swap (UC-38) — tính vào P-08
---   PtOnBehalfSwap : PT dời theo yêu cầu khách không có tài khoản (BR-62) — tính vào P-08
---   PtReschedule   : PT bận, dời sang slot khác của chính mình (BR-64) — không tính
---   PtTransfer     : chuyển sang PT khác (BR-65, BR-68) — không tính
+--   CustomerSwap   : khách tự swap (UC-38)
+--   PtOnBehalfSwap : PT dời theo yêu cầu khách không có tài khoản (BR-62)
+--   PtReschedule   : PT bận, dời sang slot khác của chính mình (BR-64)
+--   PtTransfer     : chuyển sang PT khác (BR-65, BR-68)
 CREATE TABLE SessionMoveLogs (
     SessionMoveLogId     INT IDENTITY(1,1) NOT NULL,
     SessionId            INT           NOT NULL,
@@ -1042,10 +1037,10 @@ GO
    CLUSTER G — CẤU HÌNH & LƯU VẾT
    ============================================================================ */
 
--- SystemConfigs: P-01…P-22 dạng key–value (GBR-04)
+-- SystemConfigs: P-01…P-23 dạng key–value (GBR-04)
 CREATE TABLE SystemConfigs (
     SystemConfigId      INT IDENTITY(1,1) NOT NULL,
-    ConfigKey           VARCHAR(10)   NOT NULL,  -- P-01 … P-22
+    ConfigKey           VARCHAR(10)   NOT NULL,  -- P-01 … P-23
     ConfigValue         NVARCHAR(200) NOT NULL,
     Description         NVARCHAR(255) NOT NULL,
     UpdatedAt           DATETIME2(0)  NOT NULL CONSTRAINT DF_SystemConfigs_UpdatedAt DEFAULT (SYSDATETIME()),

@@ -49,5 +49,6 @@ public class PtSaleDay {
     public String getReason() { return reason; }
     public String getWarning() { return warning; }
 
+    // GETTER TỰ TÍNH — không có field/setter "session"; = action khác "skip"; JSP: receptionist/_pt-sale-held.jspf:22 …
     public boolean isSession() { return !"skip".equals(action); }
 }
