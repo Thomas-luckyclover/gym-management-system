@@ -33,7 +33,7 @@
             <c:when test="${showEmployee and not empty item.leaveGroup and fn:length(item.leaveGroup.requests) > 1}">
               <c:set var="groupOpen" value="${item.leaveGroup.containsRequest(reviewId)}" />
               <c:set var="groupReturnUrl" value="${listReturnUrl}${fn:contains(listReturnUrl, '?') ? '&' : '?'}reviewId=${item.leaveRequestId}#leave-group-${item.leaveGroup.key}" />
-              <%-- Một hàng cho cả đợt; mở rộng ngay bên dưới để xử lý từng phần. --%>
+              <%-- Một hàng cho cả đợt; mở rộng ngay bên dưới để xử lý từng phần có chung đơn. --%>
               <tr id="leave-group-${item.leaveGroup.key}" class="leave-request-row ${groupOpen ? 'leave-row-selected' : ''}" tabindex="0"
                   aria-label="Đợt nghỉ của <c:out value='${item.fullName}' />. Enter để xem các đơn."
                   data-leave-reason="<c:out value='${item.reason}' />"
@@ -153,6 +153,7 @@
                       <c:when test="${item.lateApproval}"><c:set var="selectionHint" value="Duyệt muộn cần xác nhận riêng từng đơn." /></c:when>
                       <c:otherwise><c:set var="selectionHint" value="${item.checkMessage}" /></c:otherwise>
                     </c:choose>
+                    <%-- Many leaveReq.box js dùng 2 dòng đầu --%>
                     <input type="checkbox" class="leave-selection-checkbox" name="leaveRequestIds"
                            form="leave-bulk-form" value="${item.leaveRequestId}"
                            ${not item.canApprove or item.lateApproval ? 'disabled' : ''}

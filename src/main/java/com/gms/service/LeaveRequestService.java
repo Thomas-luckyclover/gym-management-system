@@ -254,7 +254,10 @@ public class LeaveRequestService {
     }
 
     /** Chỉ đổi dữ liệu hiển thị; các kiểm tra database nằm ở loadApprovalSummary(). */
+    // cái này set sắp đến ngày nghỉ và đánh dấu đơn đã qua
+    
     private LeaveRequestItemView toItemView(LeaveRequestRow row, LocalDate today) {
+        //Đưa thông tin đơn DAO đọc được vào DTO hiển thị
         LeaveRequestItemView view = new LeaveRequestItemView(row);
         view.setNearLeaveDate(isNearLeaveDate(row.getLeaveRequest(), today));
         LeaveRequest request = row.getLeaveRequest();

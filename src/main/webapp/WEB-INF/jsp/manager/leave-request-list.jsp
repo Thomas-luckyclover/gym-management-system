@@ -151,7 +151,7 @@
             <div class="leave-list-caption">
               <form id="leave-bulk-form" class="leave-bulk-actions" action="${pageContext.request.contextPath}/manager/leave-requests/review" method="post">
                 <input type="hidden" name="csrfToken" value="<c:out value='${csrfToken}' />">
-                <input type="hidden" name="action" value="approveMany">
+                <input type="hidden" name="action" value="approveMany"> <%-- Here many  --%>
                 <input type="hidden" name="returnUrl" value="<c:out value='${listReturnUrl}' />">
                 <span id="leave-selection-count" aria-live="polite" hidden>Đã chọn 0 đơn</span>
                 <button id="leave-approve-selected" type="submit" class="btn btn-sm btn-primary" disabled

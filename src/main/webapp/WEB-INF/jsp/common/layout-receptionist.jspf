@@ -17,11 +17,16 @@
       padding:12px 16px;border-radius:12px;background:#FFF4E5;color:#7A4100;border:1px solid #F5B971;
       box-shadow:0 6px 20px rgba(0,0,0,.12);font-size:14px;line-height:1.4}
     .shift-notice a{flex:none;font-weight:600;color:#7A4100;text-decoration:underline;white-space:nowrap}
+    .shift-notice-close{flex:none;background:transparent;border:0;color:inherit;
+      padding:var(--space-2);font-size:var(--font-size-xl);line-height:1;cursor:pointer}
   </style>
   <div class="shift-notice" role="status">
     <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
     <span><c:out value="${shiftNotice}" /></span>
     <a href="${pageContext.request.contextPath}/receptionist/shift">Ca làm việc</a>
+    <%-- Chỉ đóng cảnh báo trên trang hiện tại; tải lại trang sẽ kiểm tra ca lại. --%>
+    <button type="button" class="shift-notice-close" aria-label="Đóng cảnh báo ca làm việc"
+            onclick="this.closest('.shift-notice').remove()">×</button>
   </div>
 </c:if>
 
