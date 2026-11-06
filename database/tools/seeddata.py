@@ -213,9 +213,10 @@ subscription(o, d_(2026, 10, 16), note='gia hạn trước: bắt đầu ngay sa
 single_session(1, 5, d_(2026, 9, 26), (9, 0), 'Online', dt_(2026, 9, 24, 21, 0))
 o_rep = order(1, PKG['single'], now_(-10), 'Online', status='Cancelled', cancel=('ReplacedByNewOrder', now_(-2), None),
               note='bị thay bằng đơn mới (CBR-41, CBR-71)')
-slot(7, today_d(1), (15, 30), 'Free', check=False)
-o_held = order(1, PKG['single'], now_(-2), 'Online', status='Pending', note='đang giữ slot ngày mai 14:00 (CBR-53)')
-slot(7, today_d(1), (14, 0), 'Held', held_order=o_held, hold_exp=now_(18), check=False)
+slot(7, today_d(1), (15, 30), 'Free')
+o_held = order(1, PKG['single'], now_(-2), 'Online', status='Pending', note='đang giữ slot ngày mai 20:30 (CBR-53)')
+# Khung sống của PT 7 chỉ dùng giờ PT 7 KHÔNG BAO GIỜ có khung ngày cứng (15:30, 20:30) → chạy seed ngày nào cũng không chồng giờ
+slot(7, today_d(1), (20, 30), 'Held', held_order=o_held, hold_exp=now_(18))
 
 # ---- Bích (2): gói 1 tháng hết hạn đúng ngày mốc, đơn sai tiền chờ hoàn, buổi lẻ
 o = order(2, PKG['m1'], dt_(2026, 9, 3, 20, 20), 'Online', voucher=1, fail_first=True)
@@ -317,7 +318,7 @@ o = order(16, PKG['day'], today_dt(0, 8, 10), 'Counter')
 s16 = subscription(o, today_d(), note='gói ngày chưa check-in')
 o = order(16, PKG['single'], today_dt(0, 8, 15), 'Counter', note='bán buổi lẻ hôm nay tại quầy (CBR-54)')
 s16b = subscription(o, today_d(), pt=7)
-sl = slot(7, today_d(), (20, 0), 'Booked', check=False)
+sl = slot(7, today_d(), (20, 30), 'Booked')   # 20:30–22:00: PT 7 có chuỗi 19:00–20:30 ngày thường → không dùng 20:00
 session(s16b, sl, 7, 'Scheduled', 450000)
 order(15, PKG['m1'], today_dt(0, 9, 0), 'Counter', status='Pending', note='chưa thu tiền → chặn chốt ca (CBR-78)')
 o = order(10, PKG['day'], today_dt(0, 6, 40), 'Counter', status='Cancelled',

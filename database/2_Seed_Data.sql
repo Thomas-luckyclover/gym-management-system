@@ -551,7 +551,7 @@ Miễn phí nước uống
 Tặng 3 buổi đo InBody', 5490000, 549000, 10, 449182, 'Paid', '2026-09-20 20:30:00', '2026-09-20 20:10:00', '2026-09-20 20:12:00', NULL, NULL, NULL),
  (3, 'DH-2026-0003', 1, NULL, 13, NULL, NULL, NULL, 'Online', N'Buổi PT Lẻ', N'Một buổi tập cùng huấn luyện viên.', N'Không ràng buộc kỳ hạn', 450000, 0, 10, 40909, 'Paid', '2026-09-24 21:20:00', '2026-09-24 21:00:00', '2026-09-24 21:02:00', NULL, NULL, NULL),
  (4, 'DH-2026-0004', 1, NULL, 13, NULL, NULL, NULL, 'Online', N'Buổi PT Lẻ', N'Một buổi tập cùng huấn luyện viên.', N'Không ràng buộc kỳ hạn', 450000, 0, 10, 40909, 'Cancelled', DATEADD(MINUTE, 10, @Now), DATEADD(MINUTE, -10, @Now), NULL, 'ReplacedByNewOrder', DATEADD(MINUTE, -2, @Now), NULL), -- bị thay bằng đơn mới (CBR-41, CBR-71)
- (5, 'DH-2026-0005', 1, NULL, 13, NULL, NULL, NULL, 'Online', N'Buổi PT Lẻ', N'Một buổi tập cùng huấn luyện viên.', N'Không ràng buộc kỳ hạn', 450000, 0, 10, 40909, 'Pending', DATEADD(MINUTE, 18, @Now), DATEADD(MINUTE, -2, @Now), NULL, NULL, NULL, NULL), -- đang giữ slot ngày mai 14:00 (CBR-53)
+ (5, 'DH-2026-0005', 1, NULL, 13, NULL, NULL, NULL, 'Online', N'Buổi PT Lẻ', N'Một buổi tập cùng huấn luyện viên.', N'Không ràng buộc kỳ hạn', 450000, 0, 10, 40909, 'Pending', DATEADD(MINUTE, 18, @Now), DATEADD(MINUTE, -2, @Now), NULL, NULL, NULL, NULL), -- đang giữ slot ngày mai 20:30 (CBR-53)
  (6, 'DH-2026-0006', 2, NULL, 2, 1, NULL, NULL, 'Online', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
 Dùng đủ thiết bị khu cardio và khu tạ
 Miễn phí nước uống', 799000, 79900, 10, 65373, 'Paid', '2026-09-03 20:40:00', '2026-09-03 20:20:00', '2026-09-03 20:22:00', NULL, NULL, NULL),
@@ -2223,7 +2223,7 @@ SET IDENTITY_INSERT TimeSlots ON;
 INSERT INTO TimeSlots (TimeSlotId, PtEmployeeId, SlotDate, StartTime, EndTime, Status, HeldByOrderId, HoldExpiresAt, CreatedAt) VALUES
  (1, 5, '2026-09-26', '09:00:00', '10:30:00', 'Booked', NULL, NULL, '2026-09-21 21:00:00'),
  (2, 7, DATEADD(DAY, 1, @Today), '15:30:00', '17:00:00', 'Free', NULL, NULL, DATEADD(MINUTE, -4320, @Now)),
- (3, 7, DATEADD(DAY, 1, @Today), '14:00:00', '15:30:00', 'Held', 5, DATEADD(MINUTE, 18, @Now), DATEADD(MINUTE, -4320, @Now)),
+ (3, 7, DATEADD(DAY, 1, @Today), '20:30:00', '22:00:00', 'Held', 5, DATEADD(MINUTE, 18, @Now), DATEADD(MINUTE, -4320, @Now)),
  (4, 5, '2026-09-26', '10:30:00', '12:00:00', 'Booked', NULL, NULL, '2026-09-22 19:00:00'),
  (5, 5, '2026-07-06', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-06-26 21:00:00'),
  (6, 5, '2026-07-07', '07:00:00', '08:30:00', 'Free', NULL, NULL, '2026-06-27 21:00:00'),
@@ -2434,7 +2434,7 @@ INSERT INTO TimeSlots (TimeSlotId, PtEmployeeId, SlotDate, StartTime, EndTime, S
  (211, 5, '2026-10-12', '06:30:00', '08:00:00', 'Booked', NULL, NULL, '2026-10-02 21:00:00'),
  (212, 5, '2026-10-13', '06:30:00', '08:00:00', 'Booked', NULL, NULL, '2026-10-03 21:00:00'),
  (213, 5, '2026-10-14', '06:30:00', '08:00:00', 'Booked', NULL, NULL, '2026-10-04 21:00:00'),
- (214, 7, @Today, '20:00:00', '21:30:00', 'Booked', NULL, NULL, DATEADD(MINUTE, -4320, @Now)),
+ (214, 7, @Today, '20:30:00', '22:00:00', 'Booked', NULL, NULL, DATEADD(MINUTE, -4320, @Now)), -- buổi lẻ hôm nay 20:30: PT 7 có chuỗi khung 19:00–20:30 ngày thường nên không dùng 20:00 (DBR-33)
  (215, 13, '2026-09-21', '07:30:00', '09:00:00', 'Booked', NULL, NULL, '2026-09-11 21:00:00'),
  (216, 13, '2026-09-22', '07:30:00', '09:00:00', 'Booked', NULL, NULL, '2026-09-12 21:00:00'),
  (217, 13, '2026-09-23', '07:30:00', '09:00:00', 'Booked', NULL, NULL, '2026-09-13 21:00:00'),

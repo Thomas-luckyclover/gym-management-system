@@ -351,11 +351,35 @@ def _mins(t):
     return t.hour * 60 + t.minute
 
 
+# Khung "sống" (ngày = @Today ± n, chỉ biết lúc chạy script): (pt, số ngày lệch, phút bắt đầu, phút kết thúc).
+# Không kiểm được theo ngày khi sinh seed → render() gọi check_live_slots() để kiểm theo GIỜ TRONG NGÀY:
+# khung sống không được chồng giờ BẤT KỲ khung ngày cứng nào của cùng PT (vì @Today có thể rơi vào đúng ngày đó).
+# Lỗi cũ: khung sống 20:00 của PT 7 chồng chuỗi khung 19:00–20:30 ngày thường → chạy seed ngày 05/11 sinh 2 buổi chồng giờ.
+LIVE_SLOTS = []
+
+
+def check_live_slots():
+    """DBR-33 cho khung sống: chồng giờ khung ngày cứng của cùng PT (ở bất kỳ ngày nào) hoặc khung sống khác cùng ngày lệch → lỗi."""
+    for i, (pt, offset, s0, e0) in enumerate(LIVE_SLOTS):
+        assert time(5, 30) <= time(s0 // 60, s0 % 60) and e0 <= 22 * 60, f'GBR-11 giờ mở cửa: khung sống PT {pt}'
+        for (bpt, bday), spans in BUSY.items():
+            if bpt != pt:
+                continue
+            for a, b in spans:
+                assert not (s0 < b and a < e0), (
+                    f'DBR-33 khung sống PT {pt} (@Today+{offset}) {s0 // 60:02d}:{s0 % 60:02d} chồng khung ngày cứng '
+                    f'{bday} {a // 60:02d}:{a % 60:02d} — chạy seed đúng ngày đó sẽ sinh 2 khung chồng giờ. Chọn giờ PT luôn rảnh.')
+        for pt2, offset2, s2, e2 in LIVE_SLOTS[i + 1:]:
+            assert not (pt2 == pt and offset2 == offset and s0 < e2 and s2 < e0), f'DBR-33 2 khung sống chồng giờ PT {pt}'
+
+
 def slot(pt, d, start, status='Free', held_order=None, hold_exp=None, created=None, check=True):
-    """Tạo slot 90' (P-06). d có thể là Live (slot "sống")."""
+    """Tạo slot 90' (P-06). d có thể là Live (slot "sống") — khung sống luôn được check_live_slots() kiểm."""
     st = time(*start) if isinstance(start, tuple) else start
     end = (datetime.combine(date(2000, 1, 1), st) + timedelta(minutes=SESSION_MIN)).time()
-    if check and not isinstance(d, Live):
+    if isinstance(d, Live):
+        LIVE_SLOTS.append((pt, d.days, _mins(st), _mins(st) + SESSION_MIN))
+    elif check:
         key = (pt, d)
         s0, e0 = _mins(st), _mins(st) + SESSION_MIN
         for a, b in BUSY.get(key, []):
@@ -543,6 +567,7 @@ SECTION = {}
 
 
 def render(now=None, header=''):
+    check_live_slots()
     out = [header]
     if now is None:
         out += ['USE GMS;', 'GO', '', 'SET ANSI_NULLS ON;', 'SET QUOTED_IDENTIFIER ON;  -- bắt buộc khi ghi vào bảng có filtered index', 'SET NOCOUNT ON;', 'SET XACT_ABORT ON;', 'BEGIN TRANSACTION;', '',
