@@ -69,7 +69,7 @@
               <input id="email" name="email" type="email" placeholder="ban@email.com" autocomplete="email" maxlength="100"
                      value="<c:out value='${email}' />" aria-describedby="emailHint"
                      required data-label="Email" data-rule="email" autofocus>
-              <span class="field-hint" id="emailHint"><i class="fa-solid fa-circle-info" aria-hidden="true"></i> Mã 6 số sẽ được gửi tới email này. Chỉ khôi phục qua email, không dùng số điện thoại.</span>
+              <span class="field-hint" id="emailHint">Mã 6 số sẽ gửi tới email này.</span>
               <span class="field-error" id="emailError" <c:if test="${empty fieldErrors.email}">hidden</c:if>><c:out value="${fieldErrors.email}" /></span>
             </label>
             <button class="btn btn-primary btn-block" type="submit">Gửi mã xác thực</button>
@@ -173,13 +173,13 @@
 
             <button class="btn btn-primary btn-block" type="submit">Đặt mật khẩu mới</button>
 
-            <p class="recovery-note"><i class="fa-solid fa-circle-info" aria-hidden="true"></i> Đổi xong, mọi thiết bị đang đăng nhập tài khoản này sẽ bị đăng xuất.</p>
+            <p class="recovery-note">Đổi xong, các thiết bị khác sẽ tự đăng xuất.</p>
           </form>
         </c:otherwise>
 
       </c:choose>
 
-      <p class="auth-switch">Nhớ ra mật khẩu? <a href="${ctx}/login">Đăng nhập</a></p>
+      <%-- Không in thêm "Nhớ ra mật khẩu? Đăng nhập" — đã có link "Về đăng nhập" ở góc trên. --%>
     </div>
 
     <p class="auth-foot-note">© 2026 Super Gym</p>

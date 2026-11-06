@@ -45,9 +45,9 @@
                 width: 100%;
                 aspect-ratio: 1;
                 padding: var(--space-3);
-                border: var(--border-width) solid rgba(255, 255, 255, 0.5);
+                border: var(--border-width) solid var(--auth-field-border-hover);
                 border-radius: var(--radius-sm);
-                background: rgba(255, 255, 255, 0.06);
+                background: var(--auth-input-solid);
                 color: inherit;
                 font: inherit;
                 font-weight: var(--font-weight-semibold);
@@ -56,17 +56,20 @@
                 transition: transform var(--duration-base) var(--ease-out), border-color var(--duration-base) var(--ease-out),
                         background-color var(--duration-base) var(--ease-out), box-shadow var(--duration-base) var(--ease-out);
             }
-            .role-tile i { color: var(--color-lime); font-size: 2rem; }
+            /* Icon + viền khi trỏ chuột = cam thương hiệu (--brand-sunset), cùng màu nút Đăng nhập và link Đăng xuất. */
+            .role-tile i { color: var(--brand-sunset); font-size: var(--font-size-3xl); }
             .role-tile:hover,
             .role-tile:focus-visible {
-                transform: translateY(-4px);
-                border-color: var(--color-lime);
-                background: rgba(255, 255, 255, 0.08);
-                box-shadow: 0 14px 28px -16px rgba(242, 92, 27, 0.7);
+                transform: translateY(calc(-1 * var(--space-1)));
+                border-color: var(--brand-sunset);
+                background: var(--color-primary-tint);
             }
-            .role-tile:focus-visible { outline: 2px solid var(--color-lime); outline-offset: 2px; }
-            .role-tile:active { transform: translateY(-1px); }
-            .role-tile.is-current { border-color: var(--color-lime); }
+            .role-tile:focus-visible { outline: 2px solid var(--auth-focus); outline-offset: 2px; }
+            .role-tile:active { transform: none; }
+            .role-tile.is-current { border-color: var(--brand-sunset); }
+            /* Đăng xuất: chữ cam đậm, đậm nét, đủ to để thấy là nút thoát. */
+            .role-logout { margin-top: var(--space-5); text-align: center; }
+            .role-logout a { font-size: var(--font-size-md); font-weight: var(--font-weight-bold); }
             .role-tile small { position: absolute; top: var(--space-2); right: var(--space-2); font-size: var(--font-size-xs); font-weight: var(--font-weight-regular); opacity: .8; }
             @media (prefers-reduced-motion: reduce) {
                 .role-tile { transition: none; }
@@ -97,7 +100,7 @@
                      chooseRoleMessage = MSG74 (doGet B5). Câu "Bạn có thể đổi…" viết cứng. --%>
                 <div class="auth-head">
                     <h1>Chọn vai trò</h1>
-                    <p><c:out value="${chooseRoleMessage}" /> Bạn có thể đổi vai trò bất cứ lúc nào trên menu tài khoản.</p>
+                    <p><c:out value="${chooseRoleMessage}" /> Đổi lại được bất cứ lúc nào trên menu tài khoản.</p>
                 </div>
 
                 <%-- ===== KHỐI 2. DANH SÁCH VAI TRÒ =====
@@ -137,8 +140,8 @@
                 <%-- ===== KHỐI 3. ĐĂNG XUẤT =====
                      Link GET /logout → LogoutServlet: hủy session → về /login.
                      Chưa chọn vai trò vẫn bấm được vì AuthFilter B2b cho /logout đi qua. --%>
-                <p class="auth-switch">
-                    <a href="${pageContext.request.contextPath}/logout">Đăng xuất</a>
+                <p class="auth-switch role-logout">
+                    <a href="${pageContext.request.contextPath}/logout"><i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>&nbsp;Đăng xuất</a>
                 </p>
             </div>
             <p class="auth-foot-note">© 2026 Super Gym</p>

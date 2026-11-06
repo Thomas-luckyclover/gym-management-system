@@ -1187,12 +1187,16 @@ function bindFieldValidation(form) {
         }
     }
 
+    // Rời ô: chỉ kiểm tra ô ĐÃ GÕ GÌ ĐÓ. Ô còn trống (chưa gõ) thì im lặng — lỗi "… là bắt buộc"
+    // chỉ hiện khi bấm nút gửi (validateForm). Tránh cảnh vừa mở trang (autofocus) bấm ra ngoài / bấm con mắt
+    // là đỏ cả form dù khách chưa kịp gõ.
     form.addEventListener("focusout", function (event) {
         const field = event.target;
         const isFormField = field.matches("input, select, textarea");
-        if (isFormField) {
-            checkFieldAndShowError(field);
+        if (!isFormField || isUntouchedEmptyField(field)) {
+            return;
         }
+        checkFieldAndShowError(field);
     });
 
     form.addEventListener("input", function (event) {
@@ -1200,7 +1204,25 @@ function bindFieldValidation(form) {
         if (field.classList.contains("invalid")) {
             checkFieldAndShowError(field);
         }
+        // Đổi ô gốc (VD Mật khẩu) khi ô "Nhập lại" đang báo lệch → kiểm lại ô "Nhập lại" để lỗi tự mất khi đã khớp
+        const matchFields = form.querySelectorAll('[data-match="' + field.id + '"]');
+        for (const matchField of matchFields) {
+            if (matchField.classList.contains("invalid")) {
+                checkFieldAndShowError(matchField);
+            }
+        }
     });
+}
+
+// Ô chưa gõ gì và chưa bị báo lỗi → true (rời ô thì không báo "bắt buộc"; ô checkbox chưa tích cũng tính là trống)
+function isUntouchedEmptyField(field) {
+    if (field.classList.contains("invalid")) {
+        return false;
+    }
+    if (field.type === "checkbox" || field.type === "radio") {
+        return !field.checked;
+    }
+    return isBlank(field.value);
 }
 
 // Gắn kiểm tra cho form gửi THƯỜNG (POST về Servlet, có thuộc tính data-validate) — initCommon tự gọi
