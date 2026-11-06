@@ -199,7 +199,7 @@ public class PtSessionHandleService {
         LocalDate newDate = createNew ? parseDate(newDateText) : null;
         LocalTime newStart = createNew ? parseQuarterTime(newStartText) : null;
         if (createNew && (newDate == null || newStart == null)) {
-            return ServiceResult.fail("Chọn ngày và giờ bắt đầu cho khung mới (mốc 15 phút: :00, :15, :30, :45).");
+            return ServiceResult.fail(Messages.MSG336_PT_NEW_SLOT_TIME_REQUIRED);
         }
         String note = trimToNull(reason);
         if (note != null && note.length() > REASON_MAX) {
@@ -273,8 +273,8 @@ public class PtSessionHandleService {
         LocalDate from = max(now.toLocalDate(), session.getTermStart());
         LocalDate to = min(now.toLocalDate().plusDays(MOVE_SEARCH_DAYS - 1), session.getTermEnd());
         if (date.isBefore(from) || date.isAfter(to)) {
-            throw new IllegalArgumentException("Ngày mới phải từ " + DateTimeUtil.formatDate(from) + " đến "
-                    + DateTimeUtil.formatDate(to) + " (trong hạn gói và " + MOVE_SEARCH_DAYS + " ngày tới).");
+            throw new IllegalArgumentException(String.format(Messages.MSG337_PT_NEW_SLOT_DATE_RANGE,
+                    DateTimeUtil.formatDate(from), DateTimeUtil.formatDate(to), MOVE_SEARCH_DAYS));
         }
 
         // B2
@@ -282,7 +282,7 @@ public class PtSessionHandleService {
         LocalTime[] hours = PtScheduleService.parseOpeningHours(configService.getString(SystemConfigService.OPENING_HOURS));
         LocalTime end = start.plusMinutes(minutes);
         if (!end.isAfter(start)) {
-            throw new IllegalArgumentException("Giờ bắt đầu quá muộn: buổi " + minutes + " phút sẽ qua ngày hôm sau.");
+            throw new IllegalArgumentException(String.format(Messages.MSG338_PT_NEW_SLOT_PAST_MIDNIGHT, minutes));
         }
         PtSlotDraft draft = new PtSlotDraft(date, start, end);
         PtScheduleService.validateDrafts(

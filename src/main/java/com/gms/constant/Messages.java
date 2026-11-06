@@ -984,6 +984,19 @@ public final class Messages {
     public static final String MSG324_SHIFT_PAST_DAY_NOT_CLOSED =
             "%s ngày %s chưa được chốt. Vui lòng chốt ca cũ và mở ca hôm nay trước khi bán.";
 
+    // MSG325–MSG335 đã có trong SRS (VNPay, đổi ngày bắt đầu, thông báo đơn online) — chưa đưa vào file này.
+
+    // UC-34 Dời buổi → "Giờ khác" (BR-64): PT tự chọn ngày + giờ chưa mở khung, hệ thống tạo khung rồi dời.
+    // In red, top of the dialog (+ toast) · thiếu ngày / giờ, hoặc giờ lệch mốc 15 phút.
+    public static final String MSG336_PT_NEW_SLOT_TIME_REQUIRED =
+            "Chọn ngày và giờ bắt đầu cho khung mới (mốc 15 phút: :00, :15, :30, :45).";
+    // In red, top of the dialog (+ toast) · ngày ngoài khoảng dời được. %s = từ ngày, %s = đến ngày, %d = 14.
+    public static final String MSG337_PT_NEW_SLOT_DATE_RANGE =
+            "Ngày mới phải từ %s đến %s (trong hạn gói và %d ngày tới).";
+    // In red, top of the dialog (+ toast) · giờ bắt đầu + thời lượng buổi (P-06) qua nửa đêm. %d = P-06.
+    public static final String MSG338_PT_NEW_SLOT_PAST_MIDNIGHT =
+            "Giờ bắt đầu quá muộn: buổi %d phút sẽ qua ngày hôm sau.";
+
     private Messages() {
     }
 }
