@@ -175,6 +175,26 @@ public class ManagerTransactionService {
      * @param orderId mã đơn hàng
      * @return ServiceResult chứa ManagerOrderDetailView
      */
+    /**
+     * Lấy danh sách các đơn hàng phát sinh trong một ca làm việc cụ thể.
+     *
+     * @param shiftId mã ca làm việc
+     * @return ServiceResult chứa danh sách ManagerTransactionItem
+     */
+    public ServiceResult<List<ManagerTransactionItem>> getOrdersByShift(int shiftId) {
+        if (shiftId <= 0) {
+            return ServiceResult.fail("Mã ca làm việc không hợp lệ.");
+        }
+
+        try {
+            List<ManagerTransactionItem> orders = transactionDAO.findOrdersByShiftId(shiftId);
+            return ServiceResult.ok(orders);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+        }
+    }
+
     public ServiceResult<ManagerOrderDetailView> getOrderDetail(int orderId) {
         if (orderId <= 0) {
             return ServiceResult.fail(Messages.MSG170_ORDER_CODE_INVALID_FULL);

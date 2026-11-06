@@ -187,20 +187,18 @@
                                                   minlength="5" maxlength="500" required></textarea>
                                     </div>
 
-                                    <%-- Cảnh báo buổi tập PT trong kỳ bảo lưu (chỉ hiển thị khi có buổi PT bị ảnh hưởng) --%>
-                                    <div class="pt-impact-box" id="ptImpactBox" style="display:none;">
-                                        <div class="pt-impact-head">
-                                            <h4><i class="fa-solid fa-calendar-xmark text-danger"></i> Buổi tập PT trong thời gian bảo lưu (<span id="impactCount">0</span> buổi)</h4>
-                                        </div>
-                                        <p class="pt-impact-text">
-                                            Lưu ý: Các buổi tập PT đã lên lịch sẽ tự động ghi nhận vắng (không hoàn buổi). Huấn luyện viên sẽ được giải phóng lịch để tiếp nhận học viên khác.
-                                        </p>
-                                        <div id="impactSessionsContainer">
-                                            <div class="empty-pt-note" id="noSessionsNotice">
-                                                <i class="fa-solid fa-circle-check"></i> Không có buổi tập PT nào trong khoảng thời gian này.
+                                    <%-- Cảnh báo buổi tập PT trong kỳ bảo lưu --%>
+                                    <c:if test="${not empty freezeCustomer.affectedSessions}">
+                                        <div class="pt-impact-box" id="ptImpactBox" role="alert">
+                                            <div class="banner-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                                            <div class="banner-content">
+                                                <h4>Lưu ý: Có <b>${fn:length(freezeCustomer.affectedSessions)} buổi tập PT</b> trong thời gian bảo lưu</h4>
+                                                <p>
+                                                    Theo quy chế phòng tập, các buổi tập PT trong kỳ bảo lưu vẫn giữ lịch hẹn. Nếu hội viên không mở lại thẻ tập trước giờ tập, hệ thống sẽ tự động ghi nhận vắng. Lễ tân vui lòng nhắc nhở hội viên.
+                                                </p>
                                             </div>
                                         </div>
-                                    </div>
+                                    </c:if>
 
                                     <button type="submit" class="btn btn-primary" id="btnSubmitFreeze" style="margin-top:var(--space-4); width:100%;">
                                         <i class="fa-solid fa-snowflake"></i> Lưu bảo lưu gói tập
@@ -538,12 +536,13 @@
                         </table>
                     </div>
 
-                    
-
-                        
-
-                                <%-- Phân trang danh sách hội viên chuẩn phong cách BF-07 --%>
+                    <%-- Phân trang danh sách hội viên chuẩn phong cách BF-07 --%>
                     <c:if test="${membershipsPage.totalPages > 1}">
+                        <c:url var="pageBaseUrl" value="/receptionist/freeze">
+                            <c:param name="tab" value="members" />
+                            <c:if test="${not empty query}"><c:param name="q" value="${query}" /></c:if>
+                            <c:if test="${not empty currentFilter}"><c:param name="filter" value="${currentFilter}" /></c:if>
+                        </c:url>
                         <div class="freeze-pagination">
                             <div class="freeze-pagination-info">
                                 Trang <b>${membershipsPage.pageNumber}</b> / <b>${membershipsPage.totalPages}</b> 
@@ -554,13 +553,7 @@
                                 <%-- Nút Trang trước --%>
                                 <c:choose>
                                     <c:when test="${membershipsPage.hasPrevious}">
-                                        <c:url var="prevPageUrl" value="/receptionist/freeze">
-                                            <c:param name="tab" value="members" />
-                                            <c:param name="page" value="${membershipsPage.pageNumber - 1}" />
-                                            <c:if test="${not empty query}"><c:param name="q" value="${query}" /></c:if>
-                                            <c:if test="${not empty currentFilter}"><c:param name="filter" value="${currentFilter}" /></c:if>
-                                        </c:url>
-                                        <a class="btn btn-outline btn-sm freeze-nav-btn" href="${prevPageUrl}" title="Về trang trước">
+                                        <a class="btn btn-outline btn-sm freeze-nav-btn" href="${pageBaseUrl}&page=${membershipsPage.pageNumber - 1}" title="Về trang trước">
                                             <i class="fa-solid fa-chevron-left"></i> Trước
                                         </a>
                                     </c:when>
@@ -582,13 +575,7 @@
                                                         <span class="btn btn-sm btn-primary is-active" aria-current="page">${p}</span>
                                                     </c:when>
                                                     <c:otherwise>
-                                                        <c:url var="pUrl" value="/receptionist/freeze">
-                                                            <c:param name="tab" value="members" />
-                                                            <c:param name="page" value="${p}" />
-                                                            <c:if test="${not empty query}"><c:param name="q" value="${query}" /></c:if>
-                                                            <c:if test="${not empty currentFilter}"><c:param name="filter" value="${currentFilter}" /></c:if>
-                                                        </c:url>
-                                                        <a class="btn btn-sm btn-ghost page-num-btn" href="${pUrl}">${p}</a>
+                                                        <a class="btn btn-sm btn-ghost page-num-btn" href="${pageBaseUrl}&page=${p}">${p}</a>
                                                     </c:otherwise>
                                                 </c:choose>
                                             </c:forEach>
@@ -596,28 +583,19 @@
 
                                         <%-- Khi > 8 trang: hiển thị thông minh kèm dấu rút gọn ... --%>
                                         <c:otherwise>
-                                            <%-- Trang đầu (1) --%>
                                             <c:choose>
                                                 <c:when test="${membershipsPage.pageNumber == 1}">
                                                     <span class="btn btn-sm btn-primary is-active" aria-current="page">1</span>
                                                 </c:when>
                                                 <c:otherwise>
-                                                    <c:url var="p1Url" value="/receptionist/freeze">
-                                                        <c:param name="tab" value="members" />
-                                                        <c:param name="page" value="1" />
-                                                        <c:if test="${not empty query}"><c:param name="q" value="${query}" /></c:if>
-                                                        <c:if test="${not empty currentFilter}"><c:param name="filter" value="${currentFilter}" /></c:if>
-                                                    </c:url>
-                                                    <a class="btn btn-sm btn-ghost page-num-btn" href="${p1Url}">1</a>
+                                                    <a class="btn btn-sm btn-ghost page-num-btn" href="${pageBaseUrl}&page=1">1</a>
                                                 </c:otherwise>
                                             </c:choose>
 
-                                            <%-- Dấu ... trước --%>
                                             <c:if test="${membershipsPage.pageNumber > 3}">
                                                 <span class="page-ellipsis">…</span>
                                             </c:if>
 
-                                            <%-- Các trang lân cận --%>
                                             <c:forEach var="p" begin="${membershipsPage.pageNumber - 1}" end="${membershipsPage.pageNumber + 1}">
                                                 <c:if test="${p > 1 and p < membershipsPage.totalPages}">
                                                     <c:choose>
@@ -625,36 +603,22 @@
                                                             <span class="btn btn-sm btn-primary is-active" aria-current="page">${p}</span>
                                                         </c:when>
                                                         <c:otherwise>
-                                                            <c:url var="pUrl" value="/receptionist/freeze">
-                                                                <c:param name="tab" value="members" />
-                                                                <c:param name="page" value="${p}" />
-                                                                <c:if test="${not empty query}"><c:param name="q" value="${query}" /></c:if>
-                                                                <c:if test="${not empty currentFilter}"><c:param name="filter" value="${currentFilter}" /></c:if>
-                                                            </c:url>
-                                                            <a class="btn btn-sm btn-ghost page-num-btn" href="${pUrl}">${p}</a>
+                                                            <a class="btn btn-sm btn-ghost page-num-btn" href="${pageBaseUrl}&page=${p}">${p}</a>
                                                         </c:otherwise>
                                                     </c:choose>
                                                 </c:if>
                                             </c:forEach>
 
-                                            <%-- Dấu ... sau --%>
                                             <c:if test="${membershipsPage.pageNumber < membershipsPage.totalPages - 2}">
                                                 <span class="page-ellipsis">…</span>
                                             </c:if>
 
-                                            <%-- Trang cuối --%>
                                             <c:choose>
                                                 <c:when test="${membershipsPage.pageNumber == membershipsPage.totalPages}">
                                                     <span class="btn btn-sm btn-primary is-active" aria-current="page">${membershipsPage.totalPages}</span>
                                                 </c:when>
                                                 <c:otherwise>
-                                                    <c:url var="pLastUrl" value="/receptionist/freeze">
-                                                        <c:param name="tab" value="members" />
-                                                        <c:param name="page" value="${membershipsPage.totalPages}" />
-                                                        <c:if test="${not empty query}"><c:param name="q" value="${query}" /></c:if>
-                                                        <c:if test="${not empty currentFilter}"><c:param name="filter" value="${currentFilter}" /></c:if>
-                                                    </c:url>
-                                                    <a class="btn btn-sm btn-ghost page-num-btn" href="${pLastUrl}">${membershipsPage.totalPages}</a>
+                                                    <a class="btn btn-sm btn-ghost page-num-btn" href="${pageBaseUrl}&page=${membershipsPage.totalPages}">${membershipsPage.totalPages}</a>
                                                 </c:otherwise>
                                             </c:choose>
                                         </c:otherwise>
@@ -664,13 +628,7 @@
                                 <%-- Nút Trang sau --%>
                                 <c:choose>
                                     <c:when test="${membershipsPage.hasNext}">
-                                        <c:url var="nextPageUrl" value="/receptionist/freeze">
-                                            <c:param name="tab" value="members" />
-                                            <c:param name="page" value="${membershipsPage.pageNumber + 1}" />
-                                            <c:if test="${not empty query}"><c:param name="q" value="${query}" /></c:if>
-                                            <c:if test="${not empty currentFilter}"><c:param name="filter" value="${currentFilter}" /></c:if>
-                                        </c:url>
-                                        <a class="btn btn-outline btn-sm freeze-nav-btn" href="${nextPageUrl}" title="Sang trang sau">
+                                        <a class="btn btn-outline btn-sm freeze-nav-btn" href="${pageBaseUrl}&page=${membershipsPage.pageNumber + 1}" title="Sang trang sau">
                                             Sau <i class="fa-solid fa-chevron-right"></i>
                                         </a>
                                     </c:when>

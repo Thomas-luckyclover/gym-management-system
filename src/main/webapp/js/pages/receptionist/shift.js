@@ -75,9 +75,6 @@ document.addEventListener('DOMContentLoaded', function () {
     // Gắn sự kiện mở modal Chốt ca
     if (btnCloseShiftModal) {
         btnCloseShiftModal.addEventListener('click', function () {
-            if (this.disabled || this.getAttribute('aria-disabled') === 'true') {
-                return;
-            }
             openModal(modalCloseShift);
             if (inputCountedCash) {
                 const val = parseNumericOnly(inputCountedCash.value);
@@ -197,10 +194,6 @@ document.addEventListener('DOMContentLoaded', function () {
     // Lắng nghe sự kiện người dùng gõ vào ô tiền mặt thực tế
     if (inputCountedCash) {
         inputCountedCash.addEventListener('input', function () {
-            if (countedCashError) {
-                countedCashError.hidden = true;
-                countedCashError.textContent = '';
-            }
             recalculateVariance();
         });
 
@@ -237,15 +230,6 @@ document.addEventListener('DOMContentLoaded', function () {
             const counted = parseNumericOnly(inputCountedCash ? inputCountedCash.value : '0');
             const expected = parseNumericOnly(expectedCashRaw ? expectedCashRaw.value : '0');
             const diff = counted - expected;
-
-            if (counted < 0) {
-                e.preventDefault();
-                if (countedCashError) {
-                    countedCashError.textContent = 'Số tiền đếm được không thể là số âm.';
-                    countedCashError.hidden = false;
-                }
-                return false;
-            }
 
             // Nếu có chênh lệch, bắt buộc lý do ≥ 5 ký tự và ≤ 500 ký tự (GBR-09, BR-46)
             if (diff !== 0) {

@@ -186,6 +186,31 @@ public class TransactionDAO {
      * @return ManagerOrderDetailView hoặc null nếu không tìm thấy
      * @throws SQLException khi truy vấn lỗi
      */
+    /**
+     * Lấy danh sách tất cả đơn hàng được lập trong một ca làm việc cụ thể.
+     *
+     * @param shiftId mã ca làm việc
+     * @return danh sách ManagerTransactionItem của ca
+     * @throws SQLException khi truy vấn lỗi
+     */
+    public List<ManagerTransactionItem> findOrdersByShiftId(int shiftId) throws SQLException {
+        String sql = buildSelectManagerTransactionsSql()
+                + " AND o.ShiftId = ? "
+                + " ORDER BY o.CreatedAt DESC, o.OrderId DESC ";
+
+        List<ManagerTransactionItem> list = new ArrayList<>();
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, shiftId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapResultSetToManagerTransactionItem(rs));
+                }
+            }
+        }
+        return list;
+    }
+
     public ManagerOrderDetailView findOrderDetailForManager(int orderId) throws SQLException {
         String sql = "SELECT "
                 + "    o.OrderId, o.OrderCode, o.Channel, o.CreatedAt, o.PaymentDueAt, o.PaidAt, o.Status, "

@@ -1,23 +1,21 @@
 /**
- * Client script cho màn hình Bảo lưu gói tập Lễ tân (UC-18, BF-09, Prototype bao-luu.html).
+ * Client script cho màn hình Bảo lưu gói tập Lễ tân (UC-18, BF-09).
  */
 document.addEventListener('DOMContentLoaded', function () {
     const startInput = document.getElementById('startDate');
     const endInput = document.getElementById('plannedEndDate');
     const startDisplay = document.getElementById('startDateDisplay');
     const endDisplay = document.getElementById('plannedEndDateDisplay');
-    const customerIdHidden = document.getElementById('customerIdHidden');
     const pkgEndHidden = document.getElementById('packageEndDateHidden');
+
+    // ===== 1. TIỆN ÍCH XỬ LÝ & ĐỊNH DẠNG NGÀY THÁNG =====
 
     function parseDate(str) {
         if (!str) return null;
         const parts = str.split('-');
         if (parts.length !== 3) return null;
-        const y = parseInt(parts[0], 10);
-        const m = parseInt(parts[1], 10) - 1;
-        const d = parseInt(parts[2], 10);
-        const date = new Date(y, m, d);
-        return isNaN(date.getTime()) ? null : date;
+        const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+        return isNaN(d.getTime()) ? null : d;
     }
 
     function toIsoDate(d) {
@@ -30,8 +28,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function parseVietnameseDate(val) {
         if (!val) return null;
-        val = val.trim();
-        const match = /^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/.exec(val);
+        const match = /^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/.exec(val.trim());
         if (!match) return null;
         const d = parseInt(match[1], 10);
         const m = parseInt(match[2], 10);
@@ -48,8 +45,16 @@ document.addEventListener('DOMContentLoaded', function () {
     function formatVietnameseDate(isoStr) {
         if (!isoStr) return '';
         const parts = isoStr.split('-');
-        if (parts.length !== 3) return isoStr;
-        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : isoStr;
+    }
+
+    function formatDate(d) {
+        if (!d || isNaN(d.getTime())) return '--/--/----';
+        return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
+    }
+
+    function formatDateStr(str) {
+        return formatVietnameseDate(str);
     }
 
     function syncDisplayInputs() {
@@ -65,20 +70,17 @@ document.addEventListener('DOMContentLoaded', function () {
         return new Date(baseDate.getFullYear(), baseDate.getMonth() + months, baseDate.getDate() + days);
     }
 
+    // ===== 2. TÍNH TOÁN RÀNG BUỘC VÀ SỐ NGÀY BẢO LƯU =====
+
     // Tính ngày kết thúc tối đa (tối đa 1 tháng kể từ ngày bắt đầu nhưng không vượt quá hạn gói tập)
     function calculateMaxAllowedEnd(startIsoStr) {
         if (!startIsoStr) return '';
         const startDate = parseDate(startIsoStr);
         if (!startDate) return '';
 
-        const maxByDuration = addMonthsAndDays(startDate, 1, -1);
-        const maxByDurationStr = toIsoDate(maxByDuration);
-
-        const pkgEndStr = pkgEndHidden ? pkgEndHidden.value : (startInput.max || '');
-        if (pkgEndStr && pkgEndStr < maxByDurationStr) {
-            return pkgEndStr;
-        }
-        return maxByDurationStr;
+        const maxByDurationStr = toIsoDate(addMonthsAndDays(startDate, 1, -1));
+        const pkgEndStr = pkgEndHidden ? pkgEndHidden.value : (startInput ? startInput.max || '' : '');
+        return (pkgEndStr && pkgEndStr < maxByDurationStr) ? pkgEndStr : maxByDurationStr;
     }
 
     // Cập nhật min, max và hint cho ô Ngày kết thúc dựa trên Ngày bắt đầu
@@ -90,16 +92,12 @@ document.addEventListener('DOMContentLoaded', function () {
             endInput.max = maxAllowedEndStr;
             const hint = document.getElementById('plannedEndDateHint');
             if (hint) {
-                hint.textContent = 'Tối đa 1 tháng (đến ngày ' + formatDateStr(maxAllowedEndStr) + ').';
+                hint.textContent = 'Tối đa 1 tháng (đến ngày ' + formatVietnameseDate(maxAllowedEndStr) + ').';
             }
         }
         endInput.min = startInput.value;
 
         if (isStartChange) {
-            // Khi thay đổi ngày bắt đầu:
-            // Nếu ngày kết thúc chưa có, hoặc trước ngày bắt đầu mới, hoặc vượt quá ngày tối đa cho phép,
-            // hoặc người dùng chưa từng chỉnh sửa thủ công ngày kết thúc:
-            // -> Tự động đưa ngày kết thúc về ngày tối đa 1 tháng (maxAllowedEndStr) thay vì co về 1 ngày!
             const wasCustomModified = endInput.dataset && endInput.dataset.userModified === 'true';
             if (!wasCustomModified || !endInput.value || endInput.value < startInput.value || (endInput.max && endInput.value > endInput.max)) {
                 endInput.value = maxAllowedEndStr || startInput.value;
@@ -110,7 +108,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Xử lý khi Ngày bắt đầu thay đổi (change, blur)
+    // Xử lý khi Ngày bắt đầu thay đổi
     function handleStartDateChange() {
         if (!startInput) return;
         const pkgEndStr = pkgEndHidden ? pkgEndHidden.value : (startInput.max || '');
@@ -127,7 +125,7 @@ document.addEventListener('DOMContentLoaded', function () {
         calculateFreezeDays();
     }
 
-    // Xử lý khi Ngày kết thúc thay đổi (change, blur)
+    // Xử lý khi Ngày kết thúc thay đổi
     function handleEndDateChange() {
         if (!endInput) return;
 
@@ -146,33 +144,24 @@ document.addEventListener('DOMContentLoaded', function () {
         calculateFreezeDays();
     }
 
-    // Xử lý khi đang gõ phím trên ô input (input event):
-    // KHÔNG can thiệp / clamp giữa chừng để tránh kẹt phím spinbox
+    // Xử lý khi đang gõ phím trên ô input (không clamp giữa chừng)
     function handleDateInput() {
-        if (!startInput || !endInput) return;
-        if (!startInput.value || !endInput.value) return;
-
-        // Chỉ tính toán hiển thị nếu cả 2 ngày hợp lệ và trong khoảng hợp lệ
+        if (!startInput || !endInput || !startInput.value || !endInput.value) return;
         if (startInput.value <= endInput.value) {
-            const maxAllowedEndStr = calculateMaxAllowedEnd(startInput.value);
-            if (!maxAllowedEndStr || endInput.value <= maxAllowedEndStr) {
+            const maxAllowed = calculateMaxAllowedEnd(startInput.value);
+            if (!maxAllowed || endInput.value <= maxAllowed) {
                 calculateFreezeDays();
             }
         }
     }
 
-    // 1. Tự động tính toán số ngày bảo lưu và hạn mới khi chọn ngày
+    // Tự động tính toán số ngày bảo lưu và hạn mới khi chọn ngày
     function calculateFreezeDays() {
-        if (!startInput || !endInput) return;
-        if (!startInput.value || !endInput.value) return;
+        if (!startInput || !endInput || !startInput.value || !endInput.value) return;
 
         const start = parseDate(startInput.value);
         const end = parseDate(endInput.value);
-        if (!start || !end) return;
-
-        if (end < start) {
-            return;
-        }
+        if (!start || !end || end < start) return;
 
         // Số ngày bảo lưu = (end - start) + 1 ngày
         const diffDays = Math.max(1, Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1);
@@ -192,85 +181,53 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
         }
+    }
 
-        // Gửi AJAX xem trước buổi PT
-        if (customerIdHidden && customerIdHidden.value) {
-            fetchPtSessions(customerIdHidden.value, startInput.value, endInput.value);
+    // Đồng bộ 2 chiều giữa ô input text dd/mm/yyyy và ô input date native
+    function bindDisplayInput(displayEl, targetInput, changeHandler) {
+        if (!displayEl || !targetInput) return;
+        function sync() {
+            const parsed = parseVietnameseDate(displayEl.value);
+            if (parsed) {
+                targetInput.value = parsed.iso;
+                changeHandler();
+            } else if (targetInput.value) {
+                displayEl.value = formatVietnameseDate(targetInput.value);
+            }
         }
+        displayEl.addEventListener('change', sync);
+        displayEl.addEventListener('blur', sync);
     }
 
     if (startInput && endInput) {
-        startInput.addEventListener('change', handleStartDateChange);
-        startInput.addEventListener('blur', handleStartDateChange);
+        ['change', 'blur'].forEach(ev => {
+            startInput.addEventListener(ev, handleStartDateChange);
+            endInput.addEventListener(ev, handleEndDateChange);
+        });
         startInput.addEventListener('input', handleDateInput);
-
-        endInput.addEventListener('change', handleEndDateChange);
-        endInput.addEventListener('blur', handleEndDateChange);
         endInput.addEventListener('input', handleDateInput);
+
+        bindDisplayInput(startDisplay, startInput, handleStartDateChange);
+        bindDisplayInput(endDisplay, endInput, handleEndDateChange);
 
         updateEndDateConstraints(false);
         syncDisplayInputs();
-        calculateFreezeDays(); // Tính toán ban đầu
+        calculateFreezeDays();
     }
 
-    // Xử lý ô hiển thị Ngày bắt đầu (định dạng Việt Nam dd/mm/yyyy)
-    if (startDisplay) {
-        startDisplay.addEventListener('change', function () {
-            const parsed = parseVietnameseDate(this.value);
-            if (parsed && startInput) {
-                startInput.value = parsed.iso;
-                handleStartDateChange();
-            } else if (startInput && startInput.value) {
-                this.value = formatVietnameseDate(startInput.value);
-            }
-        });
-        startDisplay.addEventListener('blur', function () {
-            const parsed = parseVietnameseDate(this.value);
-            if (parsed && startInput) {
-                startInput.value = parsed.iso;
-                handleStartDateChange();
-            } else if (startInput && startInput.value) {
-                this.value = formatVietnameseDate(startInput.value);
-            }
-        });
-    }
-
-    // Xử lý ô hiển thị Ngày kết thúc (định dạng Việt Nam dd/mm/yyyy)
-    if (endDisplay) {
-        endDisplay.addEventListener('change', function () {
-            const parsed = parseVietnameseDate(this.value);
-            if (parsed && endInput) {
-                endInput.value = parsed.iso;
-                handleEndDateChange();
-            } else if (endInput && endInput.value) {
-                this.value = formatVietnameseDate(endInput.value);
-            }
-        });
-        endDisplay.addEventListener('blur', function () {
-            const parsed = parseVietnameseDate(this.value);
-            if (parsed && endInput) {
-                endInput.value = parsed.iso;
-                handleEndDateChange();
-            } else if (endInput && endInput.value) {
-                this.value = formatVietnameseDate(endInput.value);
-            }
-        });
-    }
-
-    // Mở lịch popup khi nhấn nút lịch
+    // Mở lịch popup khi nhấn nút biểu tượng lịch
     document.querySelectorAll('.freeze-calendar-button').forEach(btn => {
         btn.addEventListener('click', function (e) {
             e.preventDefault();
-            const targetId = this.getAttribute('data-picker-target');
-            const picker = document.getElementById(targetId);
+            const picker = document.getElementById(this.getAttribute('data-picker-target'));
             if (!picker) return;
-            if (typeof picker.showPicker === 'function') {
-                try {
+            try {
+                if (typeof picker.showPicker === 'function') {
                     picker.showPicker();
-                } catch (err) {
+                } else {
                     picker.focus();
                 }
-            } else {
+            } catch {
                 picker.focus();
             }
         });
@@ -300,180 +257,66 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // 2. Gửi AJAX lấy danh sách buổi PT bị ảnh hưởng
-    function fetchPtSessions(customerId, startDate, endDate) {
-        if (typeof window === 'undefined' || !window.location || typeof fetch !== 'function') return;
-        const url = (window.location.pathname || '') + '?action=previewSessions&customerId='
-            + encodeURIComponent(customerId)
-            + '&startDate=' + encodeURIComponent(startDate)
-            + '&plannedEndDate=' + encodeURIComponent(endDate);
+    // ===== 3. QUẢN LÝ MODAL POPUP (MỞ LẠI THẺ & XEM LÝ DO) =====
 
-        fetch(url, { headers: { 'Accept': 'application/json' } })
-            .then(res => res.json())
-            .then(result => {
-                const sessions = Array.isArray(result) ? result : (result.data || []);
-                renderPtSessions(sessions);
-            })
-            .catch(err => console.warn('Lỗi lấy buổi PT:', err));
+    function setupModal(modalEl, openTriggers, onOpen) {
+        if (!modalEl) return;
+        const close = () => modalEl.classList.remove('open');
+        modalEl.querySelectorAll('[data-close-modal], [data-close-reason-modal]').forEach(b => b.addEventListener('click', close));
+        modalEl.addEventListener('click', e => { if (e.target === modalEl) close(); });
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape' && modalEl.classList.contains('open')) close();
+        });
+        if (openTriggers) {
+            openTriggers.forEach(btn => {
+                btn.addEventListener('click', e => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (onOpen) onOpen(btn);
+                    modalEl.classList.add('open');
+                });
+            });
+        }
     }
 
-    function renderPtSessions(sessions) {
-        const container = document.getElementById('impactSessionsContainer');
-        const countSpan = document.getElementById('impactCount');
-        const ptBox = document.getElementById('ptImpactBox');
-        if (!container) return;
+    // Modal Mở lại thẻ trước hạn
+    setupModal(
+        document.getElementById('modalEarlyCancel'),
+        document.querySelectorAll('#btnOpenEarlyModal')
+    );
 
-        if (!sessions || sessions.length === 0) {
-            if (countSpan) countSpan.textContent = '0';
-            if (ptBox) ptBox.style.display = 'none';
-            container.innerHTML = '<div class="empty-pt-note"><i class="fa-solid fa-circle-check"></i> Không có buổi tập PT nào trong khoảng thời gian này.</div>';
-            return;
-        }
-
-        if (ptBox) ptBox.style.display = 'block';
-        if (countSpan) countSpan.textContent = sessions.length;
-        let html = '<div class="table-responsive"><table class="data-table pt-table">';
-        html += '<thead><tr><th>Ngày tập</th><th>Giờ tập</th><th>Huấn luyện viên</th><th>Loại gói</th><th>Tác động</th></tr></thead><tbody>';
-
-        sessions.forEach(s => {
-            const time = (s.startTime ? s.startTime.substring(0, 5) : '') + ' - ' + (s.endTime ? s.endTime.substring(0, 5) : '');
-            html += '<tr>';
-            html += '<td><b>' + escapeHtml(formatDateStr(s.slotDate)) + '</b></td>';
-            html += '<td>' + escapeHtml(time) + '</td>';
-            html += '<td>' + escapeHtml(s.ptName || '--') + '</td>';
-            html += '<td>' + escapeHtml(s.packageType || '--') + '</td>';
-            if (s.willBeMissed) {
-                html += '<td><span class="badge badge-danger">Vắng (Mất buổi)</span></td>';
-            } else {
-                html += '<td><span class="badge badge-ok">Giữ lịch</span></td>';
+    // Modal Xem chi tiết lý do bảo lưu
+    setupModal(
+        document.getElementById('modalViewReason'),
+        document.querySelectorAll('.btn-view-reason'),
+        btn => {
+            const textEl = document.getElementById('reasonModalText');
+            if (textEl) {
+                textEl.textContent = btn.getAttribute('data-reason') || '(Không ghi nhận lý do)';
             }
-            html += '</tr>';
-        });
+        }
+    );
 
-        html += '</tbody></table></div>';
-        container.innerHTML = html;
-    }
+    // ===== 4. BỘ LỌC VÀ TÌM KIẾM =====
 
-    // 3. Xử lý Modal Mở lại thẻ trước hạn (giống modal check-in)
-    const earlyModal = document.getElementById('modalEarlyCancel');
-    const openEarlyBtn = document.getElementById('btnOpenEarlyModal');
-    const closeBtns = document.querySelectorAll('[data-close-modal]');
-
-    function openModal() {
-        if (earlyModal) earlyModal.classList.add('open');
-    }
-
-    function closeModal() {
-        if (earlyModal) earlyModal.classList.remove('open');
-    }
-
-    if (openEarlyBtn) openEarlyBtn.addEventListener('click', openModal);
-    closeBtns.forEach(btn => btn.addEventListener('click', closeModal));
-
-    if (earlyModal) {
-        earlyModal.addEventListener('click', function (e) {
-            if (e.target === earlyModal) closeModal();
-        });
-    }
-
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && earlyModal && earlyModal.classList.contains('open')) {
-            closeModal();
+    // Tự động submit khi thay đổi lựa chọn dropdown
+    ['freezeFilterSelect', 'historyFilterSelect'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el && el.form) {
+            el.addEventListener('change', () => el.form.submit());
         }
     });
 
-    // 4. Quản lý Tabs: Sử dụng liên kết URL thuần (?tab=members hoặc ?tab=history) để tải lại trang độc lập
-
-    // 5. Thao tác chỉ thực hiện qua nút trong cột Thao tác (không click cả dòng)
-
-    // 6. Xử lý modal xem chi tiết lý do bảo lưu (chỉ hiển thị nội dung lý do)
-    const reasonModal = document.getElementById('modalViewReason');
-
-    function openReasonModal(btn) {
-        if (!reasonModal) return;
-        const reason = btn.getAttribute('data-reason') || '';
-        const textEl = document.getElementById('reasonModalText');
-
-        if (textEl) {
-            textEl.textContent = reason || '(Không ghi nhận lý do)';
-        }
-
-        reasonModal.classList.add('open');
-    }
-
-    function closeReasonModal() {
-        if (reasonModal) reasonModal.classList.remove('open');
-    }
-
-    document.querySelectorAll('.btn-view-reason').forEach(btn => {
-        btn.addEventListener('click', function (e) {
-            e.stopPropagation();
-            e.preventDefault();
-            openReasonModal(this);
-        });
-    });
-
-    document.querySelectorAll('[data-close-reason-modal]').forEach(btn => {
-        btn.addEventListener('click', closeReasonModal);
-    });
-
-    if (reasonModal) {
-        reasonModal.addEventListener('click', function (e) {
-            if (e.target === reasonModal) closeReasonModal();
-        });
-    }
-
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && reasonModal && reasonModal.classList.contains('open')) {
-            closeReasonModal();
-        }
-    });
-
-    // 7. Tự động áp dụng bộ lọc khi thay đổi lựa chọn ở Tab 1
-    const filterSelect = document.getElementById('freezeFilterSelect');
-    if (filterSelect) {
-        filterSelect.addEventListener('change', function () {
-            const form = document.getElementById('freezeSearchForm');
-            if (form) form.submit();
-        });
-    }
-
-    // 8. Tự động áp dụng bộ lọc trạng thái khi thay đổi lựa chọn ở Tab 2
-    const historyFilterSelect = document.getElementById('historyFilterSelect');
-    if (historyFilterSelect) {
-        historyFilterSelect.addEventListener('change', function () {
-            const form = document.getElementById('historySearchForm');
-            if (form) form.submit();
-        });
-    }
-
-    // 9. Tìm kiếm nhanh thời gian thực ở Tab 2 (Lịch sử bảo lưu)
+    // Lọc nhanh theo thời gian thực ở Tab 2
     const historyInput = document.getElementById('historyQueryInput');
     if (historyInput) {
         historyInput.addEventListener('input', function () {
             const val = this.value.trim().toLowerCase();
-            const rows = document.querySelectorAll('#tabHistory .gym-table tbody tr');
-            rows.forEach(r => {
+            document.querySelectorAll('.bf07-table tbody tr').forEach(r => {
                 if (r.querySelector('td[colspan]')) return;
-                if (!val) {
-                    r.style.display = '';
-                    return;
-                }
-                const text = r.textContent.toLowerCase();
-                r.style.display = text.includes(val) ? '' : 'none';
+                r.style.display = (!val || r.textContent.toLowerCase().includes(val)) ? '' : 'none';
             });
         });
-    }
-
-    function formatDate(d) {
-        if (!d || isNaN(d.getTime())) return '--/--/----';
-        return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
-    }
-
-    function formatDateStr(str) {
-        if (!str) return '';
-        const p = str.split('-');
-        return p.length === 3 ? (p[2] + '/' + p[1] + '/' + p[0]) : str;
     }
 
     function escapeHtml(str) {
@@ -483,6 +326,7 @@ document.addEventListener('DOMContentLoaded', function () {
         return div.innerHTML;
     }
 
+    // Export phục vụ kiểm thử đơn vị (Node.js test harness)
     if (typeof window !== 'undefined') {
         window._freezeMembership = {
             parseDate,

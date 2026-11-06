@@ -48,10 +48,12 @@ import java.util.logging.Logger;
  *       Missed không phục hồi.</li>
  *   <li><b>CBR-08, DBR-13:</b> Ngày bắt đầu bảo lưu sớm nhất là ngày mai. Thời lượng tối đa không vượt quá P-02 tháng
  *       và không vượt quá số ngày còn lại của gói tập.</li>
- *   <li><b>CBR-62:</b> Bảo lưu không bị chặn bởi buổi PT; các buổi Scheduled trong kỳ chuyển thành Missed
- *       (lý do MembershipFrozen, trừ buổi, không hoàn tiền). Danh sách buổi được liệt kê trước để thông báo khách.</li>
+ *   <li><b>CBR-62:</b> Bảo lưu không bị chặn bởi buổi PT và không làm thay đổi trạng thái buổi PT khi lưu: các buổi
+ *       Scheduled trong kỳ bảo lưu vẫn giữ Scheduled và được cảnh báo; sau mỗi ngày tập JOB-04 mới tự động chốt Missed /
+ *       MembershipFrozen nếu khách không vào được gym. Danh sách buổi được liệt kê trước để thông báo khách.</li>
  *   <li><b>CBR-67:</b> Buổi tập của gói đôi (PTCouple) chỉ bị Missed nếu người cùng tập cũng không có thẻ tập hợp lệ.</li>
- *   <li><b>CBR-68, DBR-36:</b> Các buổi chuyển thành Missed do bảo lưu nhả slot về Free để PT nhận khách khác.</li>
+ *   <li><b>BR-26, CBR-68:</b> Hủy bảo lưu sớm: các buổi PT sau ngày kết thúc thực tế vẫn tiếp tục là Scheduled bình thường;
+ *       các buổi đã bị JOB-04 chốt Missed trước đó không phục hồi lại.</li>
  *   <li><b>CBR-115:</b> Nhân viên không được tự thực hiện thao tác bảo lưu trên hồ sơ khách của chính mình.</li>
  * </ul>
  * </p>
@@ -164,7 +166,8 @@ public class FreezeService {
                 view.setEligibleToFreeze(false);
                 if (view.getIneligibilityReason() == null) {
                     view.setIneligibilityReason(String.format(Messages.MSG99_FREEZE_REFUSED,
-                            "khách hàng không có gói tập Membership nào đang hoạt động hoặc bảo lưu"));
+                            "khách hàng không có gói tập Membership nào đang sử dụng hoặc đang bảo lưu"
+                                    + " (gói mua nối tiếp chưa đến ngày bắt đầu thì chưa bảo lưu được)"));
                 }
             } else {
                 view.setHasMembership(true);
@@ -416,6 +419,14 @@ public class FreezeService {
                     return ServiceResult.fail(String.format(Messages.MSG99_FREEZE_REFUSED, "gói tập không ở trạng thái hoạt động"));
                 }
 
+                // Chỉ bảo lưu gói đang sử dụng: gói mua nối tiếp chưa đến ngày bắt đầu không được bảo lưu
+                if (sub.getStartDate() != null && sub.getStartDate().isAfter(today)) {
+                    conn.rollback();
+                    return ServiceResult.fail(String.format(Messages.MSG99_FREEZE_REFUSED,
+                            "gói tập chưa đến ngày bắt đầu (" + DateTimeUtil.formatDate(sub.getStartDate())
+                                    + "), chỉ bảo lưu được gói đang sử dụng"));
+                }
+
                 // Kiểm tra BR-24: Hạn mức số lần bảo lưu
                 int maxSnapshot = sub.getMaxFreezesSnapshot() != null ? sub.getMaxFreezesSnapshot() : 1;
                 if (sub.getFreezeUsed() >= maxSnapshot) {
@@ -472,18 +483,12 @@ public class FreezeService {
                 // B5: Cập nhật Customers -> Status = 'Frozen' (BR-20)
                 freezeRecordDAO.updateCustomerStatus(conn, sub.getCustomerId(), "Frozen");
 
-                // B6: Chuyển các buổi PT Scheduled trong kỳ thành Missed (MembershipFrozen) (CBR-62, CBR-67, CBR-68)
+                // B6: Truy vấn các buổi PT Scheduled trong kỳ (CBR-62, CBR-67, CBR-68)
+                // Theo CBR-62: Bảo lưu không làm thay đổi trạng thái buổi PT khi lưu; các buổi Scheduled trong kỳ
+                // vẫn giữ Scheduled. Sau mỗi ngày tập, JOB-04 mới tự động đóng thành Missed/MembershipFrozen
+                // nếu cả buổi tập không ai có quyền vào gym.
                 List<FreezeSessionImpactView> impactedSessions = freezeRecordDAO.findScheduledSessionsInPeriod(
                         conn, sub.getCustomerId(), startDate, plannedEndDate);
-
-                List<Integer> sessionIdsToMiss = impactedSessions.stream()
-                        .filter(FreezeSessionImpactView::isWillBeMissed)
-                        .map(FreezeSessionImpactView::getSessionId)
-                        .toList();
-
-                if (!sessionIdsToMiss.isEmpty()) {
-                    freezeRecordDAO.markSessionsMissedDueToFreeze(conn, sessionIdsToMiss);
-                }
 
                 // B7: Ghi AuditLog (đảm bảo Reason không vượt quá 500 ký tự cột DB)
                 String auditReason = "Lập phiếu bảo lưu #" + freezeRecordId + " (" + DateTimeUtil.formatDate(startDate)
@@ -510,8 +515,11 @@ public class FreezeService {
 
                 String msg = "Bảo lưu gói tập thành công từ ngày " + DateTimeUtil.formatDate(startDate)
                         + " đến ngày " + DateTimeUtil.formatDate(plannedEndDate) + ".";
-                if (!sessionIdsToMiss.isEmpty()) {
-                    msg += " Có " + sessionIdsToMiss.size() + " buổi PT trong kỳ đã được chốt Vắng theo quy định.";
+                if (!impactedSessions.isEmpty()) {
+                    long willBeMissedCount = impactedSessions.stream().filter(FreezeSessionImpactView::isWillBeMissed).count();
+                    if (willBeMissedCount > 0) {
+                        msg += " Có " + willBeMissedCount + " buổi PT nằm trong kỳ bảo lưu sẽ được JOB-04 tự động xử lý khi đến ngày tập.";
+                    }
                 }
                 return ServiceResult.ok(null, msg);
 
@@ -605,8 +613,13 @@ public class FreezeService {
                 freezeRecordDAO.updateActualEndDate(conn, freezeRecordId, actualEnd);
 
                 // B6: Mở lại gói tập và cộng số ngày thực tế vào EndDate
-                LocalDate newEndDate = sub.getEndDate().plusDays(daysFrozen);
+                LocalDate oldEndDate = sub.getEndDate();
+                LocalDate newEndDate = oldEndDate.plusDays(daysFrozen);
                 freezeRecordDAO.updateSubscriptionResume(conn, sub.getSubscriptionId(), "Active", newEndDate);
+
+                // B6b: Dời các gói Membership mua nối tiếp để không chồng lên phần hạn vừa cộng thêm
+                int shiftedCount = shiftFollowingMemberships(conn, sub.getCustomerId(), sub.getSubscriptionId(),
+                        oldEndDate, newEndDate, staffAccountId, Role.RECEPTIONIST);
 
                 // B7: Cập nhật Customers.Status = 'Active' (BR-26)
                 freezeRecordDAO.updateCustomerStatus(conn, sub.getCustomerId(), "Active");
@@ -635,6 +648,9 @@ public class FreezeService {
                 } else {
                     msg += "thời gian bảo lưu chưa bắt đầu nên hạn gói giữ nguyên ("
                             + DateTimeUtil.formatDate(newEndDate) + ").";
+                }
+                if (shiftedCount > 0) {
+                    msg += " Đã dời " + shiftedCount + " gói nối tiếp để bắt đầu sau ngày hết hạn mới.";
                 }
                 return ServiceResult.ok(null, msg);
 
@@ -692,13 +708,18 @@ public class FreezeService {
                     if (sub != null && sub.getStatus() == Subscription.Status.FROZEN) {
                         LocalDate actualEnd = freeze.getPlannedEndDate();
                         int daysFrozen = (int) ChronoUnit.DAYS.between(freeze.getStartDate(), actualEnd) + 1;
-                        LocalDate newEndDate = sub.getEndDate().plusDays(daysFrozen);
+                        LocalDate oldEndDate = sub.getEndDate();
+                        LocalDate newEndDate = oldEndDate.plusDays(daysFrozen);
 
                         // Cập nhật FreezeRecords.ActualEndDate = PlannedEndDate
                         freezeRecordDAO.updateActualEndDate(conn, freeze.getFreezeRecordId(), actualEnd);
 
                         // Mở lại gói tập
                         freezeRecordDAO.updateSubscriptionResume(conn, sub.getSubscriptionId(), "Active", newEndDate);
+
+                        // Dời các gói Membership mua nối tiếp để không chồng lên phần hạn vừa cộng thêm
+                        shiftFollowingMemberships(conn, sub.getCustomerId(), sub.getSubscriptionId(),
+                                oldEndDate, newEndDate, null, null);
 
                         // Mở lại trạng thái hội viên
                         freezeRecordDAO.updateCustomerStatus(conn, sub.getCustomerId(), "Active");
@@ -738,6 +759,67 @@ public class FreezeService {
 
         LOGGER.info("JOB-01: Hoàn tất mở lại " + successCount + "/" + expiredFreezes.size() + " gói bảo lưu.");
         return successCount;
+    }
+
+    /**
+     * Dời các gói Membership mua nối tiếp của khách về sau khi gói hiện tại được gia hạn do bảo lưu,
+     * để các gói không chạy chồng lên nhau (nếu không, khách sẽ mất đúng số ngày đã bảo lưu).
+     *
+     * <p>Duyệt các gói Active có StartDate sau ngày hết hạn CŨ của gói vừa mở lại, theo thứ tự ngày bắt đầu.
+     * Gói nào bắt đầu trước hoặc đúng ngày hết hạn của gói liền trước thì được dời tới ngày hôm sau, giữ nguyên
+     * độ dài gói; gói nào vốn đã cách xa (khách tự chọn ngày bắt đầu muộn hơn) và không bị chồng thì giữ nguyên.</p>
+     *
+     * @param conn kết nối trong transaction mở lại gói
+     * @param customerId khách hàng sở hữu gói
+     * @param resumedSubscriptionId gói vừa mở lại
+     * @param oldEndDate ngày hết hạn của gói vừa mở lại trước khi cộng ngày bảo lưu
+     * @param newEndDate ngày hết hạn mới của gói vừa mở lại
+     * @param actorAccountId tài khoản thao tác, null nếu do JOB-01
+     * @param actorRole vai trò thao tác, null nếu do JOB-01
+     * @return số gói đã được dời
+     */
+    private int shiftFollowingMemberships(Connection conn, int customerId, int resumedSubscriptionId,
+                                          LocalDate oldEndDate, LocalDate newEndDate,
+                                          Integer actorAccountId, Role actorRole) throws SQLException {
+        if (oldEndDate == null || newEndDate == null || !newEndDate.isAfter(oldEndDate)) {
+            return 0;
+        }
+
+        List<Subscription> following = freezeRecordDAO.findLaterMembershipsForUpdate(
+                conn, customerId, resumedSubscriptionId, oldEndDate);
+
+        LocalDate previousEnd = newEndDate;
+        int shiftedCount = 0;
+
+        for (Subscription next : following) {
+            if (next.getStartDate().isAfter(previousEnd)) {
+                // Không bị chồng: giữ nguyên, các gói sau nối tiếp theo gói này
+                previousEnd = next.getEndDate();
+                continue;
+            }
+
+            long shiftDays = ChronoUnit.DAYS.between(next.getStartDate(), previousEnd) + 1;
+            LocalDate newStart = next.getStartDate().plusDays(shiftDays);
+            LocalDate newEnd = next.getEndDate().plusDays(shiftDays);
+            freezeRecordDAO.updateSubscriptionDates(conn, next.getSubscriptionId(), newStart, newEnd);
+
+            auditLogDAO.insert(conn, new AuditLog(
+                    actorAccountId,
+                    actorRole,
+                    "SHIFT_MEMBERSHIP_AFTER_FREEZE",
+                    "Subscription",
+                    next.getSubscriptionId(),
+                    "StartDate/EndDate",
+                    DateTimeUtil.formatDate(next.getStartDate()) + " - " + DateTimeUtil.formatDate(next.getEndDate()),
+                    DateTimeUtil.formatDate(newStart) + " - " + DateTimeUtil.formatDate(newEnd),
+                    "Dời gói nối tiếp +" + shiftDays + " ngày do gói #" + resumedSubscriptionId
+                            + " được gia hạn sau bảo lưu (hạn mới: " + DateTimeUtil.formatDate(newEndDate) + ")"
+            ));
+
+            previousEnd = newEnd;
+            shiftedCount++;
+        }
+        return shiftedCount;
     }
 
     // =========================================================================

@@ -48,6 +48,7 @@ public class SystemTransactionServlet extends HttpServlet {
     private static final String TAB_SHIFTS = "shifts";
     private static final String ACTION_EXPORT = "export";
     private static final String ACTION_DETAIL = "detail";
+    private static final String ACTION_SHIFT_ORDERS = "shiftOrders";
     private static final String ACTION_REFUND = "refund";
 
     private final ManagerTransactionService managerTransactionService = new ManagerTransactionService();
@@ -68,6 +69,12 @@ public class SystemTransactionServlet extends HttpServlet {
         // B2: Xử lý xem chi tiết đơn hàng dạng JSON cho modal AJAX
         if (ACTION_DETAIL.equalsIgnoreCase(action)) {
             handleOrderDetailAjax(request, response);
+            return;
+        }
+
+        // B2.1: Xử lý xem danh sách các đơn hàng trong ca làm việc dạng JSON cho modal AJAX
+        if (ACTION_SHIFT_ORDERS.equalsIgnoreCase(action)) {
+            handleShiftOrdersAjax(request, response);
             return;
         }
 
@@ -110,7 +117,11 @@ public class SystemTransactionServlet extends HttpServlet {
             throws ServletException, IOException {
 
         HttpSession session = request.getSession(false);
-        Integer accountId = (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
+        if (session == null || session.getAttribute(SessionKey.ACCOUNT_ID) == null) {
+            RequestUtil.redirect(request, response, "/login");
+            return;
+        }
+        int accountId = (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
 
         // B1: Lấy thông tin tài khoản cho topbar header
         ServiceResult<AccountSettingsView> me = accountSettingsService.getAccountSettings(accountId, Role.MANAGER);
@@ -203,6 +214,27 @@ public class SystemTransactionServlet extends HttpServlet {
     /**
      * Xử lý AJAX lấy thông tin chi tiết đơn hàng và các lần thanh toán.
      */
+    /**
+     * Xử lý AJAX lấy danh sách các đơn hàng thuộc một ca làm việc cụ thể.
+     */
+    private void handleShiftOrdersAjax(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        int shiftId = RequestUtil.getIntParam(request, "shiftId", 0);
+        if (shiftId <= 0) {
+            JsonUtil.writeJson(response, HttpServletResponse.SC_BAD_REQUEST,
+                    JsonResponse.error("Mã ca làm việc không hợp lệ."));
+            return;
+        }
+
+        ServiceResult<java.util.List<ManagerTransactionItem>> result = managerTransactionService.getOrdersByShift(shiftId);
+        if (result.isSuccess()) {
+            JsonUtil.writeJson(response, HttpServletResponse.SC_OK, JsonResponse.success(result.getData()));
+        } else {
+            JsonUtil.writeJson(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    JsonResponse.error(result.getMessage()));
+        }
+    }
+
     private void handleOrderDetailAjax(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         int orderId = RequestUtil.getIntParam(request, "orderId", 0);

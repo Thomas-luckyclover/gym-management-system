@@ -9,10 +9,10 @@
   <title>Giao dịch toàn hệ thống · Super Gym</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css">
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/transaction-list.css">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/transaction-list.css?v=20261104v3">
 
   <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
-  <script src="${pageContext.request.contextPath}/js/pages/manager/transaction-list.js?v=20261031csrf" defer></script>
+  <script src="${pageContext.request.contextPath}/js/pages/manager/transaction-list.js?v=20261104v4" defer></script>
 </head>
 
 <body class="dock theme-manager">
@@ -190,7 +190,7 @@
                         <th>Thời gian</th>
                         <th>Khách hàng</th>
                         <th>Gói tập &amp; Voucher</th>
-                        <th class="text-right">Tổng tiền</th>
+                        <th>Tổng tiền</th>
                         <th>Phương thức</th>
                         <th>Trạng thái đơn</th>
                         <th>Hoàn tiền</th>
@@ -423,11 +423,12 @@
                         <th>Người mở</th>
                         <th>Người chốt</th>
                         <th>Giờ mở &mdash; đóng</th>
-                        <th class="text-right">Tiền mặt kiểm đếm</th>
-                        <th class="text-right">Tiền mặt dự tính</th>
-                        <th class="text-right">Chênh lệch tiền</th>
-                        <th class="text-right">Chuyển khoản</th>
+                        <th>Tiền mặt kiểm đếm</th>
+                        <th>Tiền mặt dự tính</th>
+                        <th>Chênh lệch tiền</th>
+                        <th>Chuyển khoản</th>
                         <th class="text-center">Số hóa đơn</th>
+                        <th class="text-center">Thao tác</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -483,7 +484,7 @@
                             </c:choose>
 
                             <c:if test="${not empty shift.varianceReason}">
-                              <div style="font-size: 11px; color: var(--color-text-soft); font-style: italic; max-width: 140px; margin-left: auto;"
+                              <div style="font-size: 11px; color: var(--color-text-soft); font-style: italic; max-width: 140px;"
                                    title="<c:out value='${shift.varianceReason}' />">
                                 Lý do: <c:out value="${shift.varianceReason}" />
                               </div>
@@ -498,6 +499,89 @@
                           <%-- Số hóa đơn --%>
                           <td class="text-center font-weight-bold">
                             <c:out value="${shift.totalInvoiceCount}" />
+                          </td>
+
+                          <%-- Thao tác xem đơn trong ca --%>
+                          <td class="text-center">
+                            <button type="button"
+                                    class="btn btn-outline btn-sm btn-view-shift-orders"
+                                    data-shift-id="${shift.shiftId}"
+                                    data-work-date="<c:out value='${gms:formatDate(shift.workDate)}' />"
+                                    data-shift-type="<c:out value='${shift.shiftType == "Morning" ? "Ca sáng" : (shift.shiftType == "Afternoon" ? "Ca chiều" : shift.shiftType)}' />"
+                                    data-opened-by="<c:out value='${shift.openedByName}' default='---' />"
+                                    data-closed-by="<c:out value='${shift.closedByName}' default='---' />"
+                                    data-counted-cash="${shift.countedCash}"
+                                    data-expected-cash="${shift.expectedCash}"
+                                    data-bank-transfer="${shift.totalBankTransfer}"
+                                    data-invoice-count="${shift.totalInvoiceCount}"
+                                    title="Xem danh sách các đơn hàng trong ca này">
+                              Chi tiết đơn
+                            </button>
+                            <jsp:useBean id="shiftLookupDao" class="com.gms.dao.ShiftDAO" scope="request" />
+                            <c:set var="shiftTxList" value="${shiftLookupDao.findTransactionsPage(shift.shiftId, null, 'all', 'all', 0, 200)}" />
+                            <template id="shift-orders-tpl-${shift.shiftId}">
+                              <c:choose>
+                                <c:when test="${not empty shiftTxList}">
+                                  <c:forEach var="tx" items="${shiftTxList}">
+                                    <tr>
+                                      <td><span class="col-code"><c:out value="${tx.orderCode}" /></span></td>
+                                      <td><c:out value="${gms:formatDateTime(tx.createdAt)}" /></td>
+                                      <td>
+                                        <div class="col-customer">
+                                          <span class="customer-name"><c:out value="${tx.customerName}" default="Khách lẻ" /></span>
+                                          <span class="customer-phone"><c:out value="${tx.customerPhone}" default="---" /></span>
+                                        </div>
+                                      </td>
+                                      <td>
+                                        <span class="package-name"><c:out value="${tx.packageName}" default="---" /></span>
+                                      </td>
+                                      <td class="money font-weight-bold"><c:out value="${gms:formatMoney(tx.amount)}" /></td>
+                                      <td>
+                                        <c:choose>
+                                          <c:when test="${tx.paymentMethod == 'Cash'}">
+                                            <span class="badge-method badge-method-cash">Tiền mặt</span>
+                                          </c:when>
+                                          <c:when test="${tx.paymentMethod == 'Transfer'}">
+                                            <span class="badge-method badge-method-transfer">Chuyển khoản</span>
+                                          </c:when>
+                                          <c:otherwise>
+                                            <span class="badge-method"><c:out value="${tx.paymentMethod}" default="---" /></span>
+                                          </c:otherwise>
+                                        </c:choose>
+                                      </td>
+                                      <td>
+                                        <c:choose>
+                                          <c:when test="${tx.orderStatus == 'Paid'}">
+                                            <span class="badge badge-success">Đã thanh toán</span>
+                                          </c:when>
+                                          <c:when test="${tx.orderStatus == 'Pending'}">
+                                            <span class="badge badge-warning">Chờ thanh toán</span>
+                                          </c:when>
+                                          <c:when test="${tx.orderStatus == 'Cancelled'}">
+                                            <span class="badge badge-danger">Đã hủy</span>
+                                            <c:if test="${not empty tx.cancelReason}">
+                                              <div style="font-size: 11px; color: var(--color-text-soft); font-style: italic; margin-top: 2px;">
+                                                Lý do: <c:out value="${tx.cancelReason}" />
+                                              </div>
+                                            </c:if>
+                                          </c:when>
+                                          <c:otherwise>
+                                            <span class="badge badge-neutral"><c:out value="${tx.orderStatus}" /></span>
+                                          </c:otherwise>
+                                        </c:choose>
+                                      </td>
+                                    </tr>
+                                  </c:forEach>
+                                </c:when>
+                                <c:otherwise>
+                                  <tr>
+                                    <td colspan="7" class="text-center" style="padding: 20px; color: var(--color-text-soft);">
+                                      Không có đơn hàng nào phát sinh trong ca này.
+                                    </td>
+                                  </tr>
+                                </c:otherwise>
+                              </c:choose>
+                            </template>
                           </td>
                         </tr>
                       </c:forEach>
@@ -642,7 +726,7 @@
                   <th>Mã GD</th>
                   <th>Phương thức</th>
                   <th>Trạng thái</th>
-                  <th class="text-right">Số tiền</th>
+                  <th>Số tiền</th>
                   <th>Mã đối soát</th>
                   <th>Thời điểm</th>
                   <th>Hoàn tiền</th>
@@ -713,6 +797,64 @@
           <button type="submit" class="btn btn-danger">Xác nhận đã hoàn tiền</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <%-- =====================================================================
+       MODAL 3: DANH SÁCH ĐƠN HÀNG TRONG CA LÀM VIỆC
+       ===================================================================== --%>
+  <div class="modal-overlay" id="shiftOrdersModal" aria-hidden="true" role="dialog" aria-labelledby="modalShiftOrdersTitle">
+    <div class="trans-modal-box" style="max-width: 880px;">
+      <div class="trans-modal-header">
+        <div>
+          <h3 id="modalShiftOrdersTitle">Danh sách đơn hàng trong ca &middot; <span id="shiftModalTitleInfo">---</span></h3>
+        </div>
+        <button type="button" class="trans-modal-close" aria-label="Đóng">&times;</button>
+      </div>
+
+      <div class="trans-modal-body">
+        <div class="detail-grid" style="grid-template-columns: repeat(4, minmax(0, 1fr));">
+          <div class="detail-item">
+            <span class="detail-label">Mở / Chốt ca</span>
+            <span class="detail-value" id="shiftModalStaff">---</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Tiền mặt (Đếm / Dự tính)</span>
+            <span class="detail-value" id="shiftModalCash">---</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Chuyển khoản</span>
+            <span class="detail-value" id="shiftModalTransfer">---</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Số hóa đơn</span>
+            <span class="detail-value" id="shiftModalInvoiceCount">---</span>
+          </div>
+        </div>
+
+        <div style="overflow-x: auto; border: 1px solid var(--color-border); border-radius: var(--radius-md);">
+          <table class="attempts-table">
+            <thead>
+              <tr>
+                <th>Mã đơn</th>
+                <th>Thời gian</th>
+                <th>Khách hàng</th>
+                <th>Gói tập &amp; Voucher</th>
+                <th>Tổng tiền</th>
+                <th>Phương thức</th>
+                <th>Trạng thái</th>
+              </tr>
+            </thead>
+            <tbody id="shiftOrdersModalBody">
+              <%-- Điền bằng JS --%>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="trans-modal-footer">
+        <button type="button" class="btn btn-ghost" data-modal-close>Đóng</button>
+      </div>
     </div>
   </div>
 

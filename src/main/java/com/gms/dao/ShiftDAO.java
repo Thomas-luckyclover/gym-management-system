@@ -46,13 +46,12 @@ public class ShiftDAO {
      * Đảm bảo ngày làm việc luôn có đủ 2 ca: Morning và Afternoon (CBR-104).
      * Nếu chưa tồn tại trong cơ sở dữ liệu, hàm sẽ tự động chèn mới với trạng thái NotOpened.
      *
-     * @param conn Connection tham gia transaction
      * @param date ngày làm việc cần kiểm tra
      * @throws SQLException khi truy vấn lỗi
      */
-    public void ensureShiftsForDate(Connection conn, LocalDate date) throws SQLException {
-        // CBR-104: Không sinh ca làm việc vào ngày đóng cửa cả ngày
-        if (isGymClosedOnDate(conn, date)) {
+    public void ensureShiftsForDate(LocalDate date) throws SQLException {
+        // CBR-104: Nếu hôm nay phòng tập đóng cửa nghỉ cả ngày thì thoát luôn, không tạo ca
+        if (isGymClosedOnDate(date)) {
             return;
         }
 
@@ -60,47 +59,40 @@ public class ShiftDAO {
         boolean hasMorning = false;
         boolean hasAfternoon = false;
 
-        // B1: Kiểm tra xem các ca nào đã có
-        try (PreparedStatement stmt = conn.prepareStatement(selectSql)) {
-            stmt.setDate(1, Date.valueOf(date));
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    String type = rs.getString("ShiftType");
-                    if ("Morning".equalsIgnoreCase(type)) {
-                        hasMorning = true;
-                    } else if ("Afternoon".equalsIgnoreCase(type)) {
-                        hasAfternoon = true;
+        try (Connection conn = DBContext.getConnection()) {
+            // B1: Kiểm tra trong DB ngày hôm nay đã có ca Sáng / ca Chiều chưa (tránh INSERT trùng khi F5 trang)
+            try (PreparedStatement stmt = conn.prepareStatement(selectSql)) {
+                stmt.setDate(1, Date.valueOf(date));
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        String type = rs.getString("ShiftType");
+                        if ("Morning".equalsIgnoreCase(type)) {
+                            hasMorning = true;
+                        } else if ("Afternoon".equalsIgnoreCase(type)) {
+                            hasAfternoon = true;
+                        }
                     }
                 }
             }
-        }
 
-        // B2: Chèn ca sáng nếu thiếu
-        String insertSql = "INSERT INTO Shifts (WorkDate, ShiftType, Status) VALUES (?, ?, 'NotOpened')";
-        if (!hasMorning) {
-            try (PreparedStatement insertStmt = conn.prepareStatement(insertSql)) {
-                insertStmt.setDate(1, Date.valueOf(date));
-                insertStmt.setString(2, "Morning");
-                insertStmt.executeUpdate();
+            // B2: Nếu chưa có ca Sáng thì tự động INSERT ca Sáng (trạng thái NotOpened)
+            String insertSql = "INSERT INTO Shifts (WorkDate, ShiftType, Status) VALUES (?, ?, 'NotOpened')";
+            if (!hasMorning) {
+                try (PreparedStatement insertStmt = conn.prepareStatement(insertSql)) {
+                    insertStmt.setDate(1, Date.valueOf(date));
+                    insertStmt.setString(2, "Morning");
+                    insertStmt.executeUpdate();
+                }
             }
-        }
 
-        // B3: Chèn ca chiều nếu thiếu
-        if (!hasAfternoon) {
-            try (PreparedStatement insertStmt = conn.prepareStatement(insertSql)) {
-                insertStmt.setDate(1, Date.valueOf(date));
-                insertStmt.setString(2, "Afternoon");
-                insertStmt.executeUpdate();
+            // B3: Nếu chưa có ca Chiều thì tự động INSERT ca Chiều (trạng thái NotOpened)
+            if (!hasAfternoon) {
+                try (PreparedStatement insertStmt = conn.prepareStatement(insertSql)) {
+                    insertStmt.setDate(1, Date.valueOf(date));
+                    insertStmt.setString(2, "Afternoon");
+                    insertStmt.executeUpdate();
+                }
             }
-        }
-    }
-
-    /**
-     * Phiên bản tự mở kết nối riêng lẻ của ensureShiftsForDate.
-     */
-    public void ensureShiftsForDate(LocalDate date) throws SQLException {
-        try (Connection conn = DBContext.getConnection()) {
-            ensureShiftsForDate(conn, date);
         }
     }
 
@@ -154,27 +146,18 @@ public class ShiftDAO {
     /**
      * Kiểm tra xem ngày có phải là ngày đóng cửa cả ngày theo OperatingHourExceptions hay không (BR-12, CBR-104).
      *
-     * @param conn Connection tham gia transaction
      * @param date ngày cần kiểm tra
      * @return true nếu đóng cửa cả ngày, false nếu mở cửa bình thường
      * @throws SQLException khi truy vấn lỗi
      */
-    public boolean isGymClosedOnDate(Connection conn, LocalDate date) throws SQLException {
+    public boolean isGymClosedOnDate(LocalDate date) throws SQLException {
         String sql = "SELECT 1 FROM OperatingHourExceptions WHERE ApplyDate = ? AND IsClosedAllDay = 1";
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setDate(1, Date.valueOf(date));
             try (ResultSet rs = stmt.executeQuery()) {
                 return rs.next();
             }
-        }
-    }
-
-    /**
-     * Phiên bản tự mở kết nối của isGymClosedOnDate.
-     */
-    public boolean isGymClosedOnDate(LocalDate date) throws SQLException {
-        try (Connection conn = DBContext.getConnection()) {
-            return isGymClosedOnDate(conn, date);
         }
     }
 
@@ -291,7 +274,7 @@ public class ShiftDAO {
 
         // B5: Nếu cả 2 đều chưa mở, xét theo giờ hiện tại (trước 13:00 là Sáng, từ 13:00 là Chiều)
         LocalDateTime now = LocalDateTime.now(DateTimeUtil.GYM_ZONE);
-        boolean isAfternoonTime = !now.toLocalTime().isBefore(AppConstants.AFTERNOON_SHIFT_START);   // mốc ca chung 13:00
+        boolean isAfternoonTime = !now.toLocalTime().isBefore(AppConstants.AFTERNOON_SHIFT_START);
 
         if (isAfternoonTime && afternoon != null) {
             return afternoon;
@@ -456,31 +439,7 @@ public class ShiftDAO {
 
         List<Object> params = new ArrayList<>();
         params.add(shiftId);
-
-        // B1: Bộ lọc từ khóa tìm kiếm (Mã đơn hoặc Tên khách không dấu)
-        if (search != null && !search.trim().isEmpty()) {
-            sql.append(" AND (o.OrderCode LIKE ? OR p.FullName COLLATE Vietnamese_CI_AI LIKE ?) ");
-            String searchPattern = "%" + search.trim() + "%";
-            params.add(searchPattern);
-            params.add(searchPattern);
-        }
-
-        // B2: Bộ lọc phương thức thanh toán
-        if (method != null && !"all".equalsIgnoreCase(method)) {
-            sql.append(" AND COALESCE(t.PaymentMethod, CASE WHEN o.Status = 'Pending' THEN 'Transfer' ELSE 'Cash' END) = ? ");
-            params.add("cash".equalsIgnoreCase(method) ? "Cash" : "Transfer");
-        }
-
-        // B3: Bộ lọc trạng thái đơn
-        if (status != null && !"all".equalsIgnoreCase(status)) {
-            if ("paid".equalsIgnoreCase(status) || "ok".equalsIgnoreCase(status)) {
-                sql.append(" AND o.Status = 'Paid' ");
-            } else if ("pending".equalsIgnoreCase(status)) {
-                sql.append(" AND o.Status = 'Pending' ");
-            } else if ("cancelled".equalsIgnoreCase(status) || "void".equalsIgnoreCase(status)) {
-                sql.append(" AND o.Status = 'Cancelled' ");
-            }
-        }
+        appendTransactionFilters(sql, params, search, method, status);
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
@@ -514,8 +473,7 @@ public class ShiftDAO {
                     o.Status AS OrderStatus,
                     o.CancelType,
                     o.CancelReason,
-                    o.CancelledAt,
-                    o.HolderCustomerId
+                    o.CancelledAt
                 FROM Orders o
                 JOIN Customers c ON c.CustomerId = o.HolderCustomerId
                 JOIN Persons p ON p.PersonId = c.PersonId
@@ -527,33 +485,8 @@ public class ShiftDAO {
 
         List<Object> params = new ArrayList<>();
         params.add(shiftId);
+        appendTransactionFilters(sql, params, search, method, status);
 
-        // B1: Bộ lọc từ khóa tìm kiếm
-        if (search != null && !search.trim().isEmpty()) {
-            sql.append(" AND (o.OrderCode LIKE ? OR p.FullName COLLATE Vietnamese_CI_AI LIKE ?) ");
-            String searchPattern = "%" + search.trim() + "%";
-            params.add(searchPattern);
-            params.add(searchPattern);
-        }
-
-        // B2: Bộ lọc phương thức thanh toán
-        if (method != null && !"all".equalsIgnoreCase(method)) {
-            sql.append(" AND COALESCE(t.PaymentMethod, 'Cash') = ? ");
-            params.add("cash".equalsIgnoreCase(method) ? "Cash" : "Transfer");
-        }
-
-        // B3: Bộ lọc trạng thái đơn
-        if (status != null && !"all".equalsIgnoreCase(status)) {
-            if ("paid".equalsIgnoreCase(status) || "ok".equalsIgnoreCase(status)) {
-                sql.append(" AND o.Status = 'Paid' ");
-            } else if ("pending".equalsIgnoreCase(status)) {
-                sql.append(" AND o.Status = 'Pending' ");
-            } else if ("cancelled".equalsIgnoreCase(status) || "void".equalsIgnoreCase(status)) {
-                sql.append(" AND o.Status = 'Cancelled' ");
-            }
-        }
-
-        // B4: Sắp xếp đơn mới nhất lên đầu và phân trang
         sql.append(" ORDER BY o.CreatedAt DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
         params.add(offset);
         params.add(pageSize);
@@ -566,37 +499,56 @@ public class ShiftDAO {
             }
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    int orderId = rs.getInt("OrderId");
-                    String orderCode = rs.getString("OrderCode");
-                    String customerName = rs.getString("CustomerName");
-                    String customerPhone = rs.getString("CustomerPhone");
-                    String packageName = rs.getString("PackageNameSnapshot");
-
                     Timestamp createdAtTs = rs.getTimestamp("CreatedAt");
-                    LocalDateTime createdAt = createdAtTs != null ? createdAtTs.toLocalDateTime() : null;
-
-                    String paymentMethod = rs.getString("PaymentMethod");
-                    long amount = rs.getLong("Amount");
-                    String orderStatus = rs.getString("OrderStatus");
-                    String cancelType = rs.getString("CancelType");
-                    String cancelReason = rs.getString("CancelReason");
-
                     Timestamp cancelledAtTs = rs.getTimestamp("CancelledAt");
-                    LocalDateTime cancelledAt = cancelledAtTs != null ? cancelledAtTs.toLocalDateTime() : null;
 
-                    // canCancel và canConfirmTransfer tạm gán sơ bộ theo trạng thái, Service sẽ hoàn thiện với SelfServiceGuard
-                    boolean isPending = "Pending".equalsIgnoreCase(orderStatus);
-                    boolean isCancelled = "Cancelled".equalsIgnoreCase(orderStatus);
-                    boolean canCancel = !isCancelled;
-                    boolean canConfirmTransfer = isPending && "Transfer".equalsIgnoreCase(paymentMethod);
-
-                    items.add(new ShiftTransactionItem(orderId, orderCode, customerName, customerPhone,
-                            packageName, createdAt, paymentMethod, amount, orderStatus, cancelType,
-                            cancelReason, cancelledAt, canCancel, canConfirmTransfer));
+                    items.add(new ShiftTransactionItem(
+                            rs.getInt("OrderId"),
+                            rs.getString("OrderCode"),
+                            rs.getString("CustomerName"),
+                            rs.getString("CustomerPhone"),
+                            rs.getString("PackageNameSnapshot"),
+                            createdAtTs != null ? createdAtTs.toLocalDateTime() : null,
+                            rs.getString("PaymentMethod"),
+                            rs.getLong("Amount"),
+                            rs.getString("OrderStatus"),
+                            rs.getString("CancelType"),
+                            rs.getString("CancelReason"),
+                            cancelledAtTs != null ? cancelledAtTs.toLocalDateTime() : null,
+                            false,
+                            false));
                 }
             }
         }
         return items;
+    }
+
+    /**
+     * Gắn điều kiện lọc chung (từ khóa, hình thức thanh toán, trạng thái đơn) cho truy vấn giao dịch trong ca.
+     */
+    private void appendTransactionFilters(StringBuilder sql, List<Object> params,
+                                          String search, String method, String status) {
+        if (search != null && !search.trim().isEmpty()) {
+            sql.append(" AND (o.OrderCode LIKE ? OR p.FullName COLLATE Vietnamese_CI_AI LIKE ?) ");
+            String searchPattern = "%" + search.trim() + "%";
+            params.add(searchPattern);
+            params.add(searchPattern);
+        }
+
+        if (method != null && !"all".equalsIgnoreCase(method)) {
+            sql.append(" AND COALESCE(t.PaymentMethod, CASE WHEN o.Status = 'Pending' THEN 'Transfer' ELSE 'Cash' END) = ? ");
+            params.add("cash".equalsIgnoreCase(method) ? "Cash" : "Transfer");
+        }
+
+        if (status != null && !"all".equalsIgnoreCase(status)) {
+            if ("paid".equalsIgnoreCase(status)) {
+                sql.append(" AND o.Status = 'Paid' ");
+            } else if ("pending".equalsIgnoreCase(status)) {
+                sql.append(" AND o.Status = 'Pending' ");
+            } else if ("cancelled".equalsIgnoreCase(status)) {
+                sql.append(" AND o.Status = 'Cancelled' ");
+            }
+        }
     }
 
     /**
@@ -612,12 +564,7 @@ public class ShiftDAO {
                     o.PackageNameSnapshot,
                     o.CreatedAt,
                     COALESCE(t.PaymentMethod, 'Transfer') AS PaymentMethod,
-                    (o.UnitPriceSnapshot - o.DiscountAmount) AS Amount,
-                    o.Status AS OrderStatus,
-                    o.CancelType,
-                    o.CancelReason,
-                    o.CancelledAt,
-                    o.HolderCustomerId
+                    (o.UnitPriceSnapshot - o.DiscountAmount) AS Amount
                 FROM Orders o
                 JOIN Customers c ON c.CustomerId = o.HolderCustomerId
                 JOIN Persons p ON p.PersonId = c.PersonId
@@ -632,21 +579,23 @@ public class ShiftDAO {
             stmt.setInt(1, shiftId);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    int orderId = rs.getInt("OrderId");
-                    String orderCode = rs.getString("OrderCode");
-                    String customerName = rs.getString("CustomerName");
-                    String customerPhone = rs.getString("CustomerPhone");
-                    String packageName = rs.getString("PackageNameSnapshot");
-
                     Timestamp createdAtTs = rs.getTimestamp("CreatedAt");
-                    LocalDateTime createdAt = createdAtTs != null ? createdAtTs.toLocalDateTime() : null;
 
-                    String paymentMethod = rs.getString("PaymentMethod");
-                    long amount = rs.getLong("Amount");
-
-                    list.add(new ShiftTransactionItem(orderId, orderCode, customerName, customerPhone,
-                            packageName, createdAt, paymentMethod, amount, "Pending", null, null,
-                            null, true, true));
+                    list.add(new ShiftTransactionItem(
+                            rs.getInt("OrderId"),
+                            rs.getString("OrderCode"),
+                            rs.getString("CustomerName"),
+                            rs.getString("CustomerPhone"),
+                            rs.getString("PackageNameSnapshot"),
+                            createdAtTs != null ? createdAtTs.toLocalDateTime() : null,
+                            rs.getString("PaymentMethod"),
+                            rs.getLong("Amount"),
+                            "Pending",
+                            null,
+                            null,
+                            null,
+                            true,
+                            true));
                 }
             }
         }

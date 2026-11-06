@@ -543,15 +543,7 @@ class ShiftServiceTest {
         public void ensureShiftsForDate(LocalDate date) {}
 
         @Override
-        public void ensureShiftsForDate(Connection conn, LocalDate date) {}
-
-        @Override
         public boolean isGymClosedOnDate(LocalDate date) {
-            return gymClosed;
-        }
-
-        @Override
-        public boolean isGymClosedOnDate(Connection conn, LocalDate date) {
             return gymClosed;
         }
 

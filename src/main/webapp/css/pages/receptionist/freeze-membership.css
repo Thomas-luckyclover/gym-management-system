@@ -74,75 +74,6 @@
   margin: var(--space-1) 0 0 0;
 }
 
-.toolbar {
-  display: flex;
-  gap: var(--space-3);
-  align-items: center;
-  flex-wrap: wrap;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: var(--space-3);
-}
-
-.toolbar .search {
-  position: relative;
-  flex: 1 1 240px;
-  min-width: 200px;
-}
-
-.toolbar .search > i {
-  position: absolute;
-  left: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: var(--font-size-sm);
-  color: var(--color-text-soft);
-  pointer-events: none;
-}
-
-.toolbar .search input {
-  width: 100%;
-  height: 40px;
-  padding: 0 var(--space-3) 0 36px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface);
-  color: var(--color-text);
-  font-size: var(--font-size-sm);
-  outline: none;
-  transition: border-color var(--duration-fast) var(--ease-standard);
-}
-
-.toolbar .search input:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
-}
-
-.search-filter-wrap {
-  display: flex;
-  align-items: center;
-}
-
-.freeze-filter-select {
-  height: 40px;
-  min-width: 175px;
-  padding: 0 var(--space-3);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface);
-  color: var(--color-text);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  cursor: pointer;
-  outline: none;
-  transition: border-color var(--duration-fast) var(--ease-standard);
-}
-
-.freeze-filter-select:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
-}
 
 /* ===== 3. AVATAR HÌNH NGƯỜI CHUNG (.common-user-avatar) ===== */
 .common-user-avatar {
@@ -173,61 +104,6 @@
   box-shadow: 0 2px 6px rgba(37, 99, 235, 0.08);
 }
 
-/* ===== 4. DANH SÁCH TÌM KIẾM HỘI VIÊN ===== */
-.freeze-search-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.freeze-search-row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
-  text-decoration: none;
-  color: inherit;
-  transition: all var(--duration-fast) var(--ease-standard);
-}
-
-.freeze-search-row:hover {
-  background: var(--color-surface-muted);
-  border-color: var(--color-primary);
-  transform: translateY(-1px);
-}
-
-.freeze-search-row .search-row-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.freeze-search-row .cust-title {
-  font-size: var(--font-size-md);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text);
-}
-
-.freeze-search-row .cust-sub {
-  display: flex;
-  gap: var(--space-3);
-  font-size: var(--font-size-xs);
-  color: var(--color-text-soft);
-  margin-top: 2px;
-}
-
-.freeze-search-row .search-row-arrow {
-  color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
-  transition: transform var(--duration-fast) var(--ease-standard);
-}
-
-.freeze-search-row:hover .search-row-arrow {
-  transform: translateX(3px);
-  color: var(--color-primary);
-}
 
 /* ===== 4. PHÂN TRANG (CHUẨN HÓA BẢNG BF-07) ===== */
 .freeze-pagination {
@@ -650,42 +526,43 @@
   font-weight: var(--font-weight-bold);
 }
 
-/* Cảnh báo buổi tập PT */
+/* Cảnh báo buổi tập PT (Banner cảnh báo nghiệp vụ CBR-62) */
 .pt-impact-box {
-  margin-top: var(--space-4);
-  background: var(--color-surface-muted);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: var(--space-4);
-}
-
-.pt-impact-head h4 {
-  margin: 0 0 var(--space-1) 0;
-  font-size: var(--font-size-md);
-  font-weight: var(--font-weight-bold);
-  color: var(--color-accent-ink);
+  margin-top: var(--space-3);
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-left: 3px solid var(--color-warning, #f59e0b);
+  border-radius: var(--radius-sm, 6px);
+  padding: 8px 12px;
   display: flex;
-  align-items: center;
-  gap: var(--space-2);
+  align-items: flex-start;
+  gap: 10px;
 }
 
-.pt-impact-text {
-  margin: 0 0 var(--space-3) 0;
-  font-size: var(--font-size-xs);
+.pt-impact-box .banner-icon {
+  font-size: 15px;
+  color: var(--color-warning, #f59e0b);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.pt-impact-box .banner-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.pt-impact-box h4 {
+  margin: 0 0 2px 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #fbbf24;
+}
+
+.pt-impact-box p {
+  margin: 0;
+  font-size: 11.5px;
   color: var(--color-text-soft);
-  line-height: 1.5;
-}
-
-.empty-pt-note {
-  font-size: var(--font-size-sm);
-  color: var(--color-success);
-  background: rgba(22, 163, 74, 0.08);
-  border: 1px solid rgba(22, 163, 74, 0.2);
-  border-radius: var(--radius-sm);
-  padding: var(--space-2) var(--space-3);
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
+  line-height: 1.45;
 }
 
 .table-responsive {
@@ -1104,56 +981,6 @@
   color: var(--color-text-soft);
 }
 
-/* Ô thông tin khách hàng - hiển thị gọn gàng, không bị ngắt dòng mã KH */
-.gym-cust-cell {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  min-width: 0;
-}
-
-.gym-cust-cell .gym-cust-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.gym-cust-cell .cust-name {
-  font-weight: var(--font-weight-bold);
-  font-size: var(--font-size-sm);
-  color: var(--color-accent-ink);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.gym-cust-cell .cust-meta {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: var(--font-size-xs);
-  color: var(--color-text-soft);
-  white-space: nowrap;
-}
-
-.gym-cust-cell .cust-code {
-  font-weight: var(--font-weight-bold);
-  color: var(--color-primary);
-  white-space: nowrap;
-}
-
-.gym-cust-cell .cust-dot {
-  color: var(--color-text-muted);
-}
-
-.gym-cust-cell .cust-phone {
-  color: var(--color-text-soft);
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
 
 /* Ô gói dịch vụ */
 .gym-pkg-cell {
@@ -1248,18 +1075,6 @@
   white-space: nowrap;
 }
 
-/* Căn thẳng tiêu đề cột Hội viên với khối text tên khách */
-.th-cust-flex {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-}
-
-.th-avatar-space {
-  width: 40px;
-  flex-shrink: 0;
-  display: inline-block;
-}
 
 /* Cột Lý do bảo lưu: Căn giữa hoàn toàn */
 .gym-reason-cell {
@@ -1678,20 +1493,6 @@
   gap: var(--space-1-5) !important;
 }
 
-/* Ô số ngày: Chữ màu đen/chuẩn như cột Thời gian bảo lưu, căn giữa */
-.gym-days-cell {
-  text-align: center;
-  vertical-align: middle;
-  color: var(--color-text);
-  font-size: var(--font-size-sm);
-  white-space: nowrap;
-  padding: 10px 16px;
-}
-
-.gym-days-cell b {
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text);
-}
 
 /* Ô trạng thái: Căn lề trái */
 .gym-status-cell {
@@ -1745,44 +1546,6 @@
   line-height: 1.3;
 }
 
-/* Header & Cell bổ sung cho lưới GymMaster chuyên nghiệp */
-.freeze-search-panel {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-5);
-  box-shadow: var(--shadow-card);
-}
-
-.search-panel-inner {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.search-title-wrap h2 {
-  margin: 0;
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-bold);
-  color: var(--color-accent-ink);
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.search-subtitle {
-  margin: 4px 0 0 0;
-  font-size: var(--font-size-sm);
-  color: var(--color-text-soft);
-}
-
-.search-toolbar {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  flex-wrap: wrap;
-}
-
 .customer-action-split {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;
@@ -1802,125 +1565,6 @@
   .customer-action-split {
     grid-template-columns: 1fr;
   }
-}
-
-.gym-table-header-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  margin-bottom: var(--space-3);
-  flex-wrap: wrap;
-}
-
-.gym-table-header-bar .search-toolbar {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.gym-table-header-bar .search-toolbar .search {
-  min-width: 250px;
-}
-
-@media (max-width: 768px) {
-  .gym-table-header-bar {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .gym-table-header-bar .search-toolbar {
-    margin-left: 0;
-    width: 100%;
-  }
-  .gym-table-header-bar .search-toolbar .search {
-    flex: 1 1 100%;
-    min-width: 0;
-  }
-}
-
-.header-titles h3 {
-  margin: 0;
-  font-size: var(--font-size-md);
-  font-weight: var(--font-weight-bold);
-  color: var(--color-accent-ink);
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.header-titles p {
-  margin: 2px 0 0 0;
-  font-size: var(--font-size-xs);
-  color: var(--color-text-soft);
-}
-
-.filter-indicator {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: var(--font-size-xs);
-  color: var(--color-text-soft);
-}
-
-.gym-contract-cell {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 130px;
-}
-
-.gym-contract-cell .contract-code {
-  font-weight: var(--font-weight-bold);
-  color: var(--color-primary);
-  font-size: var(--font-size-sm);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.gym-contract-cell .contract-meta {
-  font-size: 11px;
-  color: var(--color-text-muted);
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.contract-type-tag {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: var(--radius-sm);
-  background: rgba(37, 99, 235, 0.08);
-  color: var(--color-primary);
-  font-size: 11px;
-  font-weight: var(--font-weight-semibold);
-  white-space: nowrap;
-}
-
-.pkg-sub-status {
-  font-size: 11px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin-top: 2px;
-}
-
-.status-pill {
-  padding: 1px 6px;
-  border-radius: 4px;
-  font-size: 10px;
-  font-weight: var(--font-weight-bold);
-}
-
-.status-pill.ok {
-  background: rgba(16, 185, 129, 0.12);
-  color: #10b981;
-}
-
-.status-pill.warn {
-  background: rgba(245, 158, 11, 0.12);
-  color: #f59e0b;
 }
 
 /* ===== 10. MODAL POPUP MỞ LẠI TRƯỚC HẠN ===== */

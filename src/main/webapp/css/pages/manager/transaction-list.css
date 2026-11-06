@@ -217,6 +217,11 @@
     background: var(--color-surface-hover, #f8fafc);
 }
 
+html body.dock .trans-table td.money,
+html body.dock .attempts-table td.money {
+    text-align: left;
+}
+
 .trans-table .col-code {
     font-weight: var(--font-weight-bold);
     font-family: monospace;

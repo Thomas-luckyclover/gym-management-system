@@ -298,7 +298,9 @@ public class FreezeRecordDAO {
     }
 
     /**
-     * Lấy gói Membership đang hoạt động (Active) hoặc đang bảo lưu (Frozen) của một khách hàng.
+     * Lấy gói Membership HIỆN TẠI của khách hàng: gói đang bảo lưu (Frozen) hoặc gói Active đang trong
+     * thời hạn sử dụng (StartDate &lt;= hôm nay &lt;= EndDate). Gói mua nối tiếp chưa đến ngày bắt đầu
+     * không được chọn, vì chỉ gói đang dùng mới được bảo lưu.
      */
     public Subscription findActiveOrFrozenMembershipByCustomerId(Connection conn, int customerId) throws SQLException {
         String sql = """
@@ -324,9 +326,13 @@ public class FreezeRecordDAO {
                   AND s.SubscriptionType = 'Membership'
                   AND pkg.PackageType = 'Membership'
                   AND o.Status != 'Cancelled'
-                  AND (s.Status = 'Frozen' OR (s.Status = 'Active' AND s.EndDate >= CAST(SYSDATETIME() AS DATE)))
+                  AND (s.Status = 'Frozen'
+                       OR (s.Status = 'Active'
+                           AND s.StartDate <= CAST(SYSDATETIME() AS DATE)
+                           AND s.EndDate >= CAST(SYSDATETIME() AS DATE)))
                 ORDER BY CASE WHEN s.Status = 'Frozen' THEN 1 WHEN s.Status = 'Active' THEN 2 ELSE 3 END,
-                         s.EndDate DESC
+                         s.StartDate ASC,
+                         s.EndDate ASC
                 """;
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -383,6 +389,78 @@ public class FreezeRecordDAO {
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, status);
+            stmt.setDate(2, Date.valueOf(newEndDate));
+            stmt.setInt(3, subscriptionId);
+            return stmt.executeUpdate() == 1;
+        }
+    }
+
+    /**
+     * Lấy (và khóa) các gói Membership Active mua nối tiếp của khách có StartDate sau {@code afterDate},
+     * sắp theo StartDate tăng dần. Dùng khi mở lại gói sau bảo lưu để dời các gói này về sau,
+     * tránh chạy chồng lên phần hạn vừa được cộng thêm.
+     *
+     * @param conn kết nối trong transaction mở lại gói
+     * @param customerId khách hàng sở hữu gói
+     * @param excludeSubscriptionId gói vừa mở lại (bỏ qua chính nó)
+     * @param afterDate ngày hết hạn của gói vừa mở lại TRƯỚC khi cộng ngày bảo lưu
+     */
+    public List<Subscription> findLaterMembershipsForUpdate(Connection conn, int customerId,
+                                                            int excludeSubscriptionId, LocalDate afterDate)
+            throws SQLException {
+        String sql = """
+                SELECT
+                    SubscriptionId,
+                    OrderId,
+                    CustomerId,
+                    SubscriptionType,
+                    PtEmployeeId,
+                    StartDate,
+                    EndDate,
+                    FixedStartTime,
+                    GeneratedSessionCount,
+                    SwapsUsed,
+                    MaxSwapsSnapshot,
+                    FreezeUsed,
+                    MaxFreezesSnapshot,
+                    Status
+                FROM Subscriptions WITH (UPDLOCK, HOLDLOCK)
+                WHERE CustomerId = ?
+                  AND SubscriptionType = 'Membership'
+                  AND Status = 'Active'
+                  AND SubscriptionId <> ?
+                  AND StartDate > ?
+                ORDER BY StartDate ASC, SubscriptionId ASC
+                """;
+
+        List<Subscription> list = new ArrayList<>();
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, customerId);
+            stmt.setInt(2, excludeSubscriptionId);
+            stmt.setDate(3, Date.valueOf(afterDate));
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapResultSetToSubscription(rs));
+                }
+            }
+        }
+        return list;
+    }
+
+    /**
+     * Cập nhật ngày bắt đầu và ngày hết hạn của một gói (dời gói nối tiếp sau khi mở lại bảo lưu).
+     */
+    public boolean updateSubscriptionDates(Connection conn, int subscriptionId,
+                                           LocalDate newStartDate, LocalDate newEndDate) throws SQLException {
+        String sql = """
+                UPDATE Subscriptions
+                SET StartDate = ?,
+                    EndDate = ?
+                WHERE SubscriptionId = ?
+                """;
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setDate(1, Date.valueOf(newStartDate));
             stmt.setDate(2, Date.valueOf(newEndDate));
             stmt.setInt(3, subscriptionId);
             return stmt.executeUpdate() == 1;
@@ -749,7 +827,7 @@ public class FreezeRecordDAO {
         if ("FROZEN".equals(upper)) {
             return " AND openFr.FreezeRecordId IS NOT NULL ";
         } else if ("ELIGIBLE".equals(upper)) {
-            return " AND s.SubscriptionId IS NOT NULL AND s.Status = 'Active' AND openFr.FreezeRecordId IS NULL AND COALESCE(s.FreezeUsed, 0) < COALESCE(s.MaxFreezesSnapshot, 1) AND s.EndDate >= CAST(SYSDATETIME() AS DATE) ";
+            return " AND s.SubscriptionId IS NOT NULL AND s.Status = 'Active' AND openFr.FreezeRecordId IS NULL AND COALESCE(s.FreezeUsed, 0) < COALESCE(s.MaxFreezesSnapshot, 1) AND s.StartDate <= CAST(SYSDATETIME() AS DATE) AND s.EndDate >= CAST(SYSDATETIME() AS DATE) ";
         } else if ("ACTIVE".equals(upper)) {
             return " AND s.SubscriptionId IS NOT NULL AND s.Status = 'Active' ";
         }
@@ -778,7 +856,8 @@ public class FreezeRecordDAO {
                       AND (sub.Status = 'Frozen' OR (sub.Status = 'Active' AND sub.EndDate >= CAST(SYSDATETIME() AS DATE)))
                     ORDER BY 
                         CASE sub.Status WHEN 'Frozen' THEN 1 WHEN 'Active' THEN 2 ELSE 3 END,
-                        sub.EndDate DESC
+                        CASE WHEN sub.StartDate <= CAST(SYSDATETIME() AS DATE) THEN 0 ELSE 1 END,
+                        sub.StartDate ASC
                 ) s
                 LEFT JOIN FreezeRecords openFr ON openFr.SubscriptionId = s.SubscriptionId AND openFr.ActualEndDate IS NULL
                 WHERE c.DeletedAt IS NULL
@@ -847,7 +926,8 @@ public class FreezeRecordDAO {
                       AND (sub.Status = 'Frozen' OR (sub.Status = 'Active' AND sub.EndDate >= CAST(SYSDATETIME() AS DATE)))
                     ORDER BY 
                         CASE sub.Status WHEN 'Frozen' THEN 1 WHEN 'Active' THEN 2 ELSE 3 END,
-                        sub.EndDate DESC
+                        CASE WHEN sub.StartDate <= CAST(SYSDATETIME() AS DATE) THEN 0 ELSE 1 END,
+                        sub.StartDate ASC
                 ) s
                 LEFT JOIN Packages pkg ON pkg.PackageId = s.PackageId
                 LEFT JOIN FreezeRecords openFr ON openFr.SubscriptionId = s.SubscriptionId AND openFr.ActualEndDate IS NULL

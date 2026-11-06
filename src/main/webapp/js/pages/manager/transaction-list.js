@@ -324,6 +324,137 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    // ===== 2.5. MODAL XEM DANH SÁCH ĐƠN HÀNG TRONG CA LÀM VIỆC =====
+    const shiftOrdersModal = document.getElementById("shiftOrdersModal");
+
+    document.querySelectorAll(".btn-view-shift-orders").forEach(btn => {
+        btn.addEventListener("click", function () {
+            const shiftId = this.dataset.shiftId;
+            if (!shiftId) return;
+
+            const workDate = this.dataset.workDate || "---";
+            const shiftType = this.dataset.shiftType || "---";
+            const openedBy = this.dataset.openedBy || "---";
+            const closedBy = this.dataset.closedBy || "---";
+            const countedCash = this.dataset.countedCash || "0";
+            const expectedCash = this.dataset.expectedCash || "0";
+            const bankTransfer = this.dataset.bankTransfer || "0";
+            const invoiceCount = this.dataset.invoiceCount || "0";
+
+            const titleInfoEl = document.getElementById("shiftModalTitleInfo");
+            if (titleInfoEl) titleInfoEl.textContent = `${shiftType} (${workDate})`;
+
+            const staffEl = document.getElementById("shiftModalStaff");
+            if (staffEl) staffEl.textContent = `${openedBy} / ${closedBy}`;
+
+            const cashEl = document.getElementById("shiftModalCash");
+            if (cashEl) cashEl.textContent = `${formatMoneyVal(countedCash)} / ${formatMoneyVal(expectedCash)}`;
+
+            const transferEl = document.getElementById("shiftModalTransfer");
+            if (transferEl) transferEl.textContent = formatMoneyVal(bankTransfer);
+
+            const countEl = document.getElementById("shiftModalInvoiceCount");
+            if (countEl) countEl.textContent = `${invoiceCount} đơn`;
+
+            const tbody = document.getElementById("shiftOrdersModalBody");
+            const tpl = document.getElementById("shift-orders-tpl-" + shiftId);
+            if (tbody && tpl) {
+                tbody.innerHTML = tpl.innerHTML;
+                openModal(shiftOrdersModal);
+                return;
+            }
+
+            if (tbody) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center" style="padding: 20px; color: var(--color-text-soft);">Đang tải danh sách đơn hàng...</td></tr>`;
+            }
+
+            openModal(shiftOrdersModal);
+            loadShiftOrders(shiftId);
+        });
+    });
+
+    function loadShiftOrders(shiftId) {
+        const url = `${contextPath}/manager/transactions?action=shiftOrders&shiftId=${shiftId}`;
+
+        fetch(url, {
+            headers: {
+                "X-Requested-With": "XMLHttpRequest"
+            }
+        })
+        .then(res => res.json())
+        .then(res => {
+            const tbody = document.getElementById("shiftOrdersModalBody");
+            if (!tbody) return;
+
+            if (!res.success || !Array.isArray(res.data)) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center" style="padding: 20px; color: var(--color-danger);">${escapeHtmlVal(res.message || "Không thể tải danh sách đơn hàng trong ca.")}</td></tr>`;
+                return;
+            }
+
+            const orders = res.data;
+            if (orders.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center" style="padding: 20px; color: var(--color-text-soft);">Không có đơn hàng nào phát sinh trong ca này.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = "";
+            orders.forEach(item => {
+                const tr = document.createElement("tr");
+
+                let methodBadge = `<span class="badge-method">---</span>`;
+                if (item.paymentMethod === "Cash") {
+                    methodBadge = `<span class="badge-method badge-method-cash">Tiền mặt</span>`;
+                } else if (item.paymentMethod === "Transfer") {
+                    methodBadge = `<span class="badge-method badge-method-transfer">Chuyển khoản</span>`;
+                } else if (item.paymentMethod === "OnlineGateway") {
+                    methodBadge = `<span class="badge-method badge-method-vnpay">VNPay</span>`;
+                }
+
+                let statusBadge = `<span class="badge badge-neutral">${escapeHtmlVal(item.orderStatus || "---")}</span>`;
+                if (item.orderStatus === "Paid") {
+                    statusBadge = `<span class="badge badge-success">Đã thanh toán</span>`;
+                } else if (item.orderStatus === "Pending") {
+                    statusBadge = `<span class="badge badge-warning">Chờ thanh toán</span>`;
+                } else if (item.orderStatus === "Cancelled") {
+                    statusBadge = `<span class="badge badge-danger">Đã hủy</span>`;
+                    if (item.cancelReason) {
+                        statusBadge += `<div style="font-size: 11px; color: var(--color-text-soft); font-style: italic; margin-top: 2px;">Lý do: ${escapeHtmlVal(item.cancelReason)}</div>`;
+                    }
+                }
+
+                const voucherHtml = item.voucherCode
+                    ? `<div class="package-voucher">Voucher: <b>${escapeHtmlVal(item.voucherCode)}</b></div>`
+                    : "";
+
+                tr.innerHTML = `
+                    <td><span class="col-code">${escapeHtmlVal(item.orderCode || "---")}</span></td>
+                    <td>${formatDateTimeVal(item.createdAt)}</td>
+                    <td>
+                        <div class="col-customer">
+                            <span class="customer-name">${escapeHtmlVal(item.customerName || "Khách lẻ")}</span>
+                            <span class="customer-phone">${escapeHtmlVal(item.customerPhone || "---")}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="package-name">${escapeHtmlVal(item.packageName || "---")}</span>
+                        ${voucherHtml}
+                    </td>
+                    <td class="money font-weight-bold">${formatMoneyVal(item.totalAmount)}</td>
+                    <td>${methodBadge}</td>
+                    <td>${statusBadge}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        })
+        .catch(err => {
+            console.error("Lỗi tải danh sách đơn trong ca:", err);
+            const tbody = document.getElementById("shiftOrdersModalBody");
+            if (tbody) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center" style="padding: 20px; color: var(--color-danger);">Lỗi kết nối máy chủ khi tải danh sách đơn hàng.</td></tr>`;
+            }
+        });
+    }
+
     // ===== 3. TIỆN ÍCH ĐỊNH DẠNG & FORM LỌC =====
     function formatMoneyVal(val) {
         if (typeof formatMoney === "function") {
