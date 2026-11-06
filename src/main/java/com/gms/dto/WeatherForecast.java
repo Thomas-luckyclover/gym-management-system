@@ -89,6 +89,7 @@ public class WeatherForecast {
     }
 
     /** @return true khi API báo đang là ban ngày tại phòng gym */
+    // GETTER TỰ TÍNH — không có field/setter "day"; = trả thẳng field isDay; JSP: không dùng (chỉ Java/test)
     public boolean isDay() {
         return isDay;
     }

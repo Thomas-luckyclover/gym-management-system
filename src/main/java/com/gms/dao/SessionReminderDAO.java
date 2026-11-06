@@ -116,6 +116,10 @@ public class SessionReminderDAO {
     }
 
     // Gửi 1 thông báo cho 1 tài khoản, KHÔNG gửi trùng (cùng tiêu đề, do hệ thống gửi). Trả về: true = vừa gửi mới.
+    // Notifications (1 dòng = 1 thông báo)
+    // NotificationId, SentByEmployeeId (NULL = System Send), Title, Content, Audience (Individual = gửi riêng 1 ngày), SendAt (Thời điểm gửi)
+    // NotificationRecipents (Ai nhận, 1 dòng = 1 người), NotificationId trỏ về thông báo, AccountId (Tài khoản nhận), ReadAt (NULL = chưa đọc)
+    // Tách 2 bảng vì một thông báo có thể gửi cho nhiều người. Ví dụ quản lý gửi “Tết nghỉ 3 ngày” cho mọi khách: chỉ 1 dòng nội dung, nhưng nhiều dòng người nhận, mỗi người có ReadAt riêng.
     public boolean sendOnce(int accountId, String title, String content) throws SQLException {
         String checkSql = """
                 SELECT 1

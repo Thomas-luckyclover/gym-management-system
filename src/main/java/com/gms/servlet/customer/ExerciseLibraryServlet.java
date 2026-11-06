@@ -25,6 +25,11 @@ import java.io.IOException;
  *          → thanh đầu trang theo vai trò → forward customer/exercises.jsp hoặc pt/exercises.jsp
  *   Màn chỉ xem, không có POST.
  */
+
+// Trước khi tới đây, Filter đã kiểm vai trò theo URL:
+// /customer/* qua CustomerAreaFilter, phải là Hội viên;
+// /pt/* qua PtAreaFilter, phải là PT.
+// => Vì vậy khi code chạy tới Servlet, URL đã cho biết chắc người dùng là ai.
 @WebServlet({"/customer/exercises", "/pt/exercises"})
 public class ExerciseLibraryServlet extends HttpServlet {
 
@@ -53,6 +58,9 @@ public class ExerciseLibraryServlet extends HttpServlet {
         }
         request.setAttribute("libraryUrl", pageUrl);                // → link bộ lọc, chip, phân trang
 
+        
+        
+        
         // B3: thanh đầu trang + menu trái theo vai trò.
         if (isPt) {
             request.setAttribute("activeNav", "exercises");         // → layout-pt.jspf tô mục "Thư viện bài tập"
