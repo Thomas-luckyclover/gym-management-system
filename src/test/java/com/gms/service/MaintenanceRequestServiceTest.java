@@ -261,8 +261,8 @@ class MaintenanceRequestServiceTest {
     }
 
     @Test
-    @DisplayName("Tạo yêu cầu: Từ chối khi máy con đang UnderMaintenance")
-    void createRequest_underMaintenanceEquipmentItem_rejected() {
+    @DisplayName("Tạo yêu cầu: Không cho phép tạo yêu cầu khi máy con đang UnderMaintenance (BR-105)")
+    void createRequest_underMaintenanceEquipmentItem_fails() {
         ServiceResult<String> result = service.createRequest(
                 RECEPTIONIST_ACCOUNT_ID,
                 2,
@@ -273,6 +273,7 @@ class MaintenanceRequestServiceTest {
 
         assertFalse(result.isSuccess());
         assertTrue(result.getFieldErrors().containsKey("equipmentItemId"));
+        assertTrue(result.getMessage().contains("đang trong quá trình bảo trì"));
         assertTrue(fakeMaintenanceRequestDAO.requests.isEmpty());
     }
 
@@ -765,6 +766,11 @@ class MaintenanceRequestServiceTest {
         @Override
         public boolean hasInProgressRequest(Connection connection, int equipmentItemId) {
             return hasOtherInProgress;
+        }
+
+        @Override
+        public boolean hasActiveRequest(int equipmentItemId) {
+            return hasActiveRequest(null, equipmentItemId);
         }
     }
 

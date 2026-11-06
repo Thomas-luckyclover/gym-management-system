@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const bulkForm = document.getElementById("leave-bulk-form");
     const selectAll = document.getElementById("leave-select-all");
     const selectedButton = document.getElementById("leave-approve-selected");
-    const choices = document.querySelectorAll('input[name="leaveRequestIds"]:not([disabled])');
+    const choices = document.querySelectorAll('input[name="leaveRequestIds"]:not([disabled])');//
     const reasonTooltip = document.getElementById("leave-reason-tooltip");
     const reasonText = document.getElementById("leave-reason-text");
     let reasonTrigger = null;

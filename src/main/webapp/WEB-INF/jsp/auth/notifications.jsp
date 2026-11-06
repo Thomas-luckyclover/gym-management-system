@@ -16,7 +16,7 @@
 
   <link rel="stylesheet"
         href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css?v=20261101avatar">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css?v=20261106_v2">
 
 </head>
 

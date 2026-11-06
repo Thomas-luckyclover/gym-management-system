@@ -1,6 +1,8 @@
 package com.gms.service;
 
 import com.gms.dao.EquipmentItemDAO;
+import com.gms.dao.MaintenanceRequestDAO;
+import java.sql.Connection;
 import com.gms.dao.FacilityDAO;
 import com.gms.dao.MaintenanceRequestDAO;
 import com.gms.dto.ServiceResult;
@@ -168,6 +170,11 @@ public class FacilityServiceTest {
 
         @Override
         public boolean hasActiveRequest(int equipmentItemId) {
+            return hasActive;
+        }
+
+        @Override
+        public boolean hasActiveRequest(Connection connection, int equipmentItemId) {
             return hasActive;
         }
     }

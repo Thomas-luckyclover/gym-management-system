@@ -1,0 +1,316 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1970" height="4005" viewBox="0 0 1970 4005">
+<defs><marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M1,1 L9,4 L1,7" fill="none" stroke="#334155"/></marker></defs>
+<rect width="1970" height="4005" fill="white"/>
+<g font-family="Arial, sans-serif" fill="#0f172a">
+<text x="45" y="42" text-anchor="start" font-size="22" font-weight="bold" stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="45" dy="0">Process Leave Requests — UC-15 / MBF-07</tspan>
+</text>
+<rect x="40" y="80" width="240" height="58" fill="#dbeafe" stroke="#334155"/>
+<text x="160" y="114" text-anchor="middle" font-size="13" font-weight="bold" stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="160" dy="0">Manager</tspan>
+</text>
+<path d="M160,138 V3970" stroke="#94a3b8" stroke-dasharray="5 5"/>
+<rect x="315" y="80" width="240" height="58" fill="#dbeafe" stroke="#334155"/>
+<text x="435" y="114" text-anchor="middle" font-size="13" font-weight="bold" stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="435" dy="0">LeaveRequestListServlet</tspan>
+</text>
+<path d="M435,138 V3970" stroke="#94a3b8" stroke-dasharray="5 5"/>
+<rect x="590" y="80" width="240" height="58" fill="#dbeafe" stroke="#334155"/>
+<text x="710" y="114" text-anchor="middle" font-size="13" font-weight="bold" stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="710" dy="0">LeaveRequestReviewServlet</tspan>
+</text>
+<path d="M710,138 V3970" stroke="#94a3b8" stroke-dasharray="5 5"/>
+<rect x="865" y="80" width="240" height="58" fill="#dbeafe" stroke="#334155"/>
+<text x="985" y="114" text-anchor="middle" font-size="13" font-weight="bold" stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="985" dy="0">LeaveRequestService</tspan>
+</text>
+<path d="M985,138 V3970" stroke="#94a3b8" stroke-dasharray="5 5"/>
+<rect x="1140" y="80" width="240" height="58" fill="#dbeafe" stroke="#334155"/>
+<text x="1260" y="114" text-anchor="middle" font-size="13" font-weight="bold" stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="1260" dy="0">LeaveRequestDAO</tspan>
+</text>
+<path d="M1260,138 V3970" stroke="#94a3b8" stroke-dasharray="5 5"/>
+<rect x="1415" y="80" width="240" height="58" fill="#dbeafe" stroke="#334155"/>
+<text x="1535" y="114" text-anchor="middle" font-size="13" font-weight="bold" stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="1535" dy="0">NotificationService</tspan>
+</text>
+<path d="M1535,138 V3970" stroke="#94a3b8" stroke-dasharray="5 5"/>
+<rect x="1690" y="80" width="240" height="58" fill="#dcfce7" stroke="#334155"/>
+<text x="1810" y="105" text-anchor="middle" font-size="13" font-weight="bold" stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="1810" dy="0">manager JSP views</tspan>
+<tspan x="1810" dy="16">list / review</tspan>
+</text>
+<path d="M1810,138 V3970" stroke="#94a3b8" stroke-dasharray="5 5"/>
+<rect x="35" y="2022" width="1900" height="1376" fill="none" stroke="#334155"/>
+<rect x="35" y="3499" width="1900" height="411" fill="none" stroke="#334155"/>
+<rect x="80" y="193" width="1810" height="41" fill="#fff7d6" stroke="#c9a227"/>
+<text x="92" y="212" text-anchor="start" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="92" dy="0">Simplified sequence: Pending list and single-request review. JSP views are leave-request-list.jsp and leave-request-review.jsp. Controller checks session and CSRF for POST.</tspan>
+</text>
+<path d="M160,322 H435" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="297.5" y="296" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="297.5" dy="0">GET</tspan>
+<tspan x="297.5" dy="16">/manager/leave-requests?status=Pending&amp;page=1&amp;pageSize=10</tspan>
+</text>
+<rect x="431" y="322" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M435,388 H985" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="710.0" y="378" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="710.0" dy="0">createManagerFilter(keyword, status, position, leaveType, fromDate, toDate)</tspan>
+</text>
+<rect x="981" y="388" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M985,454 H435" stroke="#334155" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<text x="710.0" y="444" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="710.0" dy="0">LeaveRequestFilter</tspan>
+</text>
+<rect x="431" y="454" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M435,520 H985" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="710.0" y="510" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="710.0" dy="0">getRequestPage(filter, managerAccountId, 1, 10)</tspan>
+</text>
+<rect x="981" y="520" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M985,586 H1260" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="1122.5" y="576" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="1122.5" dy="0">countRequests(filter)</tspan>
+</text>
+<rect x="1256" y="586" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M1260,652 H985" stroke="#334155" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<text x="1122.5" y="642" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="1122.5" dy="0">int totalRequests (grouped rows)</tspan>
+</text>
+<rect x="981" y="652" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M985,696 h55 v22 h-55" fill="none" stroke="#334155" marker-end="url(#arrow)"/>
+<text x="1050" y="680" text-anchor="start" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="1050" dy="0">Clamp currentPage; calculate offset = (currentPage -</tspan>
+<tspan x="1050" dy="16">1) * pageSize</tspan>
+</text>
+<rect x="981" y="718" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M985,784 H1260" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="1122.5" y="758" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="1122.5" dy="0">findRequestPage(filter, 0, 10,</tspan>
+<tspan x="1122.5" dy="16">managerEmployeeId)</tspan>
+</text>
+<rect x="1256" y="784" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M1260,850 H985" stroke="#334155" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<text x="1122.5" y="840" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="1122.5" dy="0">List&lt;LeaveRequestRow&gt;</tspan>
+</text>
+<rect x="981" y="850" width="8" height="22" fill="white" stroke="#334155"/>
+<rect x="80" y="868" width="1810" height="41" fill="#fff7d6" stroke="#c9a227"/>
+<text x="92" y="887" text-anchor="start" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="92" dy="0">Service converts rows to LeaveRequestItemView, loads groups/approval summaries and grouped review parts as needed; then wraps items in PageResult.</tspan>
+</text>
+<path d="M985,997 H435" stroke="#334155" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<text x="710.0" y="987" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="710.0" dy="0">ServiceResult&lt;PageResult&lt;LeaveRequestItemView&gt;&gt;</tspan>
+</text>
+<rect x="431" y="997" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M435,1063 H985" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="710.0" y="1053" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="710.0" dy="0">getStatusCounts(filter)</tspan>
+</text>
+<rect x="981" y="1063" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M985,1129 H1260" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="1122.5" y="1119" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="1122.5" dy="0">getStatusCounts(filter)</tspan>
+</text>
+<rect x="1256" y="1129" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M1260,1195 H985" stroke="#334155" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<text x="1122.5" y="1185" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="1122.5" dy="0">Map&lt;String, Integer&gt;</tspan>
+</text>
+<rect x="981" y="1195" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M985,1261 H435" stroke="#334155" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<text x="710.0" y="1251" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="710.0" dy="0">ServiceResult&lt;Map&lt;String, Integer&gt;&gt; (includes All)</tspan>
+</text>
+<rect x="431" y="1261" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M435,1327 H1810" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="1122.5" y="1317" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="1122.5" dy="0">Set requestPage/statusCounts; forward leave-request-list.jsp</tspan>
+</text>
+<rect x="1806" y="1327" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M1810,1393 H160" stroke="#334155" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<text x="985.0" y="1383" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="985.0" dy="0">List HTML</tspan>
+</text>
+<rect x="156" y="1393" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M160,1459 H710" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="435.0" y="1449" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="435.0" dy="0">GET /manager/leave-requests/review?id=12</tspan>
+</text>
+<rect x="706" y="1459" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M710,1525 H985" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="847.5" y="1515" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="847.5" dy="0">getReviewDetail(12, managerAccountId)</tspan>
+</text>
+<rect x="981" y="1525" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M985,1591 H1260" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="1122.5" y="1581" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="1122.5" dy="0">findReviewDetail(12, managerEmployeeId)</tspan>
+</text>
+<rect x="1256" y="1591" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M1260,1657 H985" stroke="#334155" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<text x="1122.5" y="1647" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="1122.5" dy="0">LeaveReviewDetailView</tspan>
+</text>
+<rect x="981" y="1657" width="8" height="22" fill="white" stroke="#334155"/>
+<rect x="80" y="1675" width="1810" height="41" fill="#fff7d6" stroke="#c9a227"/>
+<text x="92" y="1694" text-anchor="start" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="92" dy="0">For Pending requests, call LeaveApprovalService.review(conn, request, workingPosition): annual quota, minimum staffing and Scheduled PT sessions. Attach checks, staffing rows, blocking message and group to the view.</tspan>
+</text>
+<path d="M985,1804 H710" stroke="#334155" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<text x="847.5" y="1794" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="847.5" dy="0">ServiceResult&lt;LeaveReviewDetailView&gt;</tspan>
+</text>
+<rect x="706" y="1804" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M710,1870 H1810" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="1260.0" y="1860" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="1260.0" dy="0">Set item; forward leave-request-review.jsp</tspan>
+</text>
+<rect x="1806" y="1870" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M1810,1936 H160" stroke="#334155" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<text x="985.0" y="1926" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="985.0" dy="0">Review detail page</tspan>
+</text>
+<rect x="156" y="1936" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M160,2002 H710" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="435.0" y="1976" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="435.0" dy="0">POST /manager/leave-requests/review: action, leaveRequestId=12,</tspan>
+<tspan x="435.0" dy="16">lateApprovalReason/rejectReason, csrfToken</tspan>
+</text>
+<rect x="706" y="2002" width="8" height="22" fill="white" stroke="#334155"/>
+<text x="45" y="2042" text-anchor="start" font-size="12" font-weight="bold" stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="45" dy="0">alt</tspan>
+</text>
+<text x="110" y="2042" text-anchor="start" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="110" dy="0">[action == approve]</tspan>
+</text>
+<path d="M710,2124 H985" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="847.5" y="2098" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="847.5" dy="0">approveRequest(managerAccountId, 12,</tspan>
+<tspan x="847.5" dy="16">lateApprovalReason)</tspan>
+</text>
+<rect x="981" y="2124" width="8" height="22" fill="white" stroke="#334155"/>
+<rect x="80" y="2142" width="1810" height="41" fill="#fff7d6" stroke="#c9a227"/>
+<text x="92" y="2161" text-anchor="start" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="92" dy="0">Begin transaction; lockDecisionScope and validateDecision: Working Manager + existing Pending request. Late approval needs a 5–500 character reason. validateApproval delegates to LeaveApprovalService.review(...).</tspan>
+</text>
+<path d="M985,2271 H1260" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="1122.5" y="2261" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="1122.5" dy="0">approve(conn, 12, managerEmployeeId)</tspan>
+</text>
+<rect x="1256" y="2271" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M1260,2337 H985" stroke="#334155" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<text x="1122.5" y="2327" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="1122.5" dy="0">boolean isApproved</tspan>
+</text>
+<rect x="981" y="2337" width="8" height="22" fill="white" stroke="#334155"/>
+<rect x="80" y="2355" width="1810" height="41" fill="#fff7d6" stroke="#c9a227"/>
+<text x="92" y="2374" text-anchor="start" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="92" dy="0">If allowed and updated: auditLogService.logInTransaction(...). If a validation fails or update returns false: rollback and return a failure, not the success path below.</tspan>
+</text>
+<path d="M985,2484 H1535" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="1260.0" y="2474" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="1260.0" dy="0">notifyEmployeeInTransaction(conn, requesterEmployeeId, title, content)</tspan>
+</text>
+<rect x="1531" y="2484" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M985,2528 h55 v22 h-55" fill="none" stroke="#334155" marker-end="url(#arrow)"/>
+<text x="1050" y="2528" text-anchor="start" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="1050" dy="0">connection.commit()</tspan>
+</text>
+<rect x="981" y="2550" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M985,2616 H710" stroke="#334155" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<text x="847.5" y="2606" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="847.5" dy="0">ServiceResult.ok(null)</tspan>
+</text>
+<rect x="706" y="2616" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M710,2682 H160" stroke="#334155" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<text x="435.0" y="2672" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="435.0" dy="0">Success toast; redirect to validated returnUrl or leave list</tspan>
+</text>
+<rect x="156" y="2682" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M35,2712 H1935" stroke="#334155" stroke-dasharray="6 5"/>
+<text x="110" y="2735" text-anchor="start" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="110" dy="0">[action == reject]</tspan>
+</text>
+<path d="M710,2810 H985" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="847.5" y="2784" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="847.5" dy="0">rejectRequest(managerAccountId, 12,</tspan>
+<tspan x="847.5" dy="16">rejectReason)</tspan>
+</text>
+<rect x="981" y="2810" width="8" height="22" fill="white" stroke="#334155"/>
+<rect x="80" y="2828" width="1810" height="41" fill="#fff7d6" stroke="#c9a227"/>
+<text x="92" y="2847" text-anchor="start" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="92" dy="0">Validate reason 5–500 characters and Working Manager. Begin transaction, lock and re-read Pending request; reject does not require approval quota/staffing checks.</tspan>
+</text>
+<path d="M985,2957 H1260" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="1122.5" y="2931" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="1122.5" dy="0">reject(conn, 12, managerEmployeeId,</tspan>
+<tspan x="1122.5" dy="16">rejectReason)</tspan>
+</text>
+<rect x="1256" y="2957" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M1260,3023 H985" stroke="#334155" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<text x="1122.5" y="3013" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="1122.5" dy="0">boolean isRejected</tspan>
+</text>
+<rect x="981" y="3023" width="8" height="22" fill="white" stroke="#334155"/>
+<rect x="80" y="3041" width="1810" height="41" fill="#fff7d6" stroke="#c9a227"/>
+<text x="92" y="3060" text-anchor="start" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="92" dy="0">After successful update: write audit log in the same transaction. Validation/update failure returns a failure after rollback.</tspan>
+</text>
+<path d="M985,3170 H1535" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="1260.0" y="3160" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="1260.0" dy="0">notifyEmployeeInTransaction(conn, requesterEmployeeId, title, content)</tspan>
+</text>
+<rect x="1531" y="3170" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M985,3214 h55 v22 h-55" fill="none" stroke="#334155" marker-end="url(#arrow)"/>
+<text x="1050" y="3214" text-anchor="start" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="1050" dy="0">connection.commit()</tspan>
+</text>
+<rect x="981" y="3236" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M985,3302 H710" stroke="#334155" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<text x="847.5" y="3292" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="847.5" dy="0">ServiceResult.ok(null)</tspan>
+</text>
+<rect x="706" y="3302" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M710,3368 H160" stroke="#334155" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<text x="435.0" y="3358" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="435.0" dy="0">Success toast; redirect to validated returnUrl or leave list</tspan>
+</text>
+<rect x="156" y="3368" width="8" height="22" fill="white" stroke="#334155"/>
+<rect x="80" y="3416" width="1810" height="41" fill="#fff7d6" stroke="#c9a227"/>
+<text x="92" y="3435" text-anchor="start" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="92" dy="0">POST failure: controller preserves reason/errors and reloads the review JSP. SQL/runtime transaction errors roll back. Bulk approval is described separately below; it is not one UPDATE for every selected ID.</tspan>
+</text>
+<text x="45" y="3519" text-anchor="start" font-size="12" font-weight="bold" stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="45" dy="0">opt</tspan>
+</text>
+<text x="110" y="3519" text-anchor="start" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="110" dy="0">[action == approveMany from list; 1–50 selected IDs]</tspan>
+</text>
+<path d="M160,3601 H710" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="435.0" y="3591" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="435.0" dy="0">POST: action=approveMany, leaveRequestIds[], csrfToken, returnUrl</tspan>
+</text>
+<rect x="706" y="3601" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M710,3667 H985" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="847.5" y="3641" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="847.5" dy="0">approveRequests(managerAccountId,</tspan>
+<tspan x="847.5" dy="16">requestIds)</tspan>
+</text>
+<rect x="981" y="3667" width="8" height="22" fill="white" stroke="#334155"/>
+<rect x="80" y="3685" width="1810" height="41" fill="#fff7d6" stroke="#c9a227"/>
+<text x="92" y="3704" text-anchor="start" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="92" dy="0">Validate IDs and remove duplicates. For each ID call approveRequest(managerAccountId, id): one transaction per request; collect approvedCount and failedRequests. Late approval without a reason fails for that request.</tspan>
+</text>
+<path d="M985,3814 H710" stroke="#334155" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<text x="847.5" y="3804" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="847.5" dy="0">ServiceResult&lt;LeaveBulkApprovalResult&gt;</tspan>
+</text>
+<rect x="706" y="3814" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M710,3880 H160" stroke="#334155" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<text x="435.0" y="3870" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="435.0" dy="0">Store bulk result in session; redirect to list for one-time result display</tspan>
+</text>
+<rect x="156" y="3880" width="8" height="22" fill="white" stroke="#334155"/>
+</g></svg>

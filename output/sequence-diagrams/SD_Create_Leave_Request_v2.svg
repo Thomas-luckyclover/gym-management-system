@@ -1,0 +1,236 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1970" height="2803" viewBox="0 0 1970 2803">
+<defs><marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M1,1 L9,4 L1,7" fill="none" stroke="#334155"/></marker></defs>
+<rect width="1970" height="2803" fill="white"/>
+<g font-family="Arial, sans-serif" fill="#0f172a">
+<text x="45" y="42" text-anchor="start" font-size="22" font-weight="bold" stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="45" dy="0">Create Leave Request — UC-14 / MBF-07</tspan>
+</text>
+<rect x="40" y="80" width="240" height="58" fill="#dbeafe" stroke="#334155"/>
+<text x="160" y="114" text-anchor="middle" font-size="13" font-weight="bold" stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="160" dy="0">PT / Receptionist</tspan>
+</text>
+<path d="M160,138 V2768" stroke="#94a3b8" stroke-dasharray="5 5"/>
+<rect x="315" y="80" width="240" height="58" fill="#dbeafe" stroke="#334155"/>
+<text x="435" y="114" text-anchor="middle" font-size="13" font-weight="bold" stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="435" dy="0">LeaveRequestFormServlet</tspan>
+</text>
+<path d="M435,138 V2768" stroke="#94a3b8" stroke-dasharray="5 5"/>
+<rect x="590" y="80" width="240" height="58" fill="#dbeafe" stroke="#334155"/>
+<text x="710" y="114" text-anchor="middle" font-size="13" font-weight="bold" stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="710" dy="0">LeaveRequestPreviewServlet</tspan>
+</text>
+<path d="M710,138 V2768" stroke="#94a3b8" stroke-dasharray="5 5"/>
+<rect x="865" y="80" width="240" height="58" fill="#dbeafe" stroke="#334155"/>
+<text x="985" y="114" text-anchor="middle" font-size="13" font-weight="bold" stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="985" dy="0">StaffLeaveService</tspan>
+</text>
+<path d="M985,138 V2768" stroke="#94a3b8" stroke-dasharray="5 5"/>
+<rect x="1140" y="80" width="240" height="58" fill="#dbeafe" stroke="#334155"/>
+<text x="1260" y="114" text-anchor="middle" font-size="13" font-weight="bold" stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="1260" dy="0">LeaveRequestDAO</tspan>
+</text>
+<path d="M1260,138 V2768" stroke="#94a3b8" stroke-dasharray="5 5"/>
+<rect x="1415" y="80" width="240" height="58" fill="#dbeafe" stroke="#334155"/>
+<text x="1535" y="114" text-anchor="middle" font-size="13" font-weight="bold" stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="1535" dy="0">NotificationService</tspan>
+</text>
+<path d="M1535,138 V2768" stroke="#94a3b8" stroke-dasharray="5 5"/>
+<rect x="1690" y="80" width="240" height="58" fill="#dcfce7" stroke="#334155"/>
+<text x="1810" y="105" text-anchor="middle" font-size="13" font-weight="bold" stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="1810" dy="0">staff/</tspan>
+<tspan x="1810" dy="16">leave-request-form.jsp</tspan>
+</text>
+<path d="M1810,138 V2768" stroke="#94a3b8" stroke-dasharray="5 5"/>
+<rect x="35" y="870" width="1900" height="477" fill="none" stroke="#334155"/>
+<rect x="35" y="2054" width="1900" height="279" fill="none" stroke="#334155"/>
+<rect x="35" y="1672" width="1900" height="955" fill="none" stroke="#334155"/>
+<rect x="80" y="193" width="1810" height="41" fill="#fff7d6" stroke="#c9a227"/>
+<text x="92" y="212" text-anchor="start" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="92" dy="0">Simplified code-level sequence. GET/POST base URL: /pt/leave-requests or /receptionist/leave-requests. Authentication and CSRF are checked by the controller; accountId comes from the session.</tspan>
+</text>
+<path d="M160,322 H435" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="297.5" y="312" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="297.5" dy="0">GET /{role}/leave-requests</tspan>
+</text>
+<rect x="431" y="322" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M435,388 H985" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="710.0" y="378" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="710.0" dy="0">getStaffLeaveForm(accountId)</tspan>
+</text>
+<rect x="981" y="388" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M985,454 H1260" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="1122.5" y="428" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="1122.5" dy="0">countOnDuty(conn, date, shiftType,</tspan>
+<tspan x="1122.5" dy="16">position, 0)</tspan>
+</text>
+<rect x="1256" y="454" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M1260,520 H985" stroke="#334155" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<text x="1122.5" y="510" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="1122.5" dy="0">Current staffing counts</tspan>
+</text>
+<rect x="981" y="520" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M985,586 H1260" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="1122.5" y="576" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="1122.5" dy="0">findByEmployeeId(employeeId, 10)</tspan>
+</text>
+<rect x="1256" y="586" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M1260,652 H985" stroke="#334155" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<text x="1122.5" y="642" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="1122.5" dy="0">List&lt;LeaveRequest&gt;</tspan>
+</text>
+<rect x="981" y="652" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M985,718 H435" stroke="#334155" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<text x="710.0" y="708" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="710.0" dy="0">ServiceResult&lt;StaffLeaveFormView&gt;</tspan>
+</text>
+<rect x="431" y="718" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M435,784 H1810" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="1122.5" y="774" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="1122.5" dy="0">setAttribute(&quot;formView&quot;, data); forward(&quot;staff/leave-request-form&quot;)</tspan>
+</text>
+<rect x="1806" y="784" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M1810,850 H160" stroke="#334155" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<text x="985.0" y="840" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="985.0" dy="0">HTML form and request history</tspan>
+</text>
+<rect x="156" y="850" width="8" height="22" fill="white" stroke="#334155"/>
+<text x="45" y="890" text-anchor="start" font-size="12" font-weight="bold" stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="45" dy="0">opt</tspan>
+</text>
+<text x="110" y="890" text-anchor="start" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="110" dy="0">[User changes dates, shift or leave type — preview only, no writes]</tspan>
+</text>
+<path d="M160,972 H710" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="435.0" y="946" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="435.0" dy="0">GET /{role}/leave-requests/preview?date=...&amp;toDate=...&amp;shift=...&amp;leaveType=...</tspan>
+<tspan x="435.0" dy="16">(form JS)</tspan>
+</text>
+<rect x="706" y="972" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M710,1038 H985" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="847.5" y="1012" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="847.5" dy="0">previewSubmission(accountId, type,</tspan>
+<tspan x="847.5" dy="16">fromDate, toDate, shift)</tspan>
+</text>
+<rect x="981" y="1038" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M985,1082 h55 v22 h-55" fill="none" stroke="#334155" marker-end="url(#arrow)"/>
+<text x="1050" y="1066" text-anchor="start" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="1050" dy="0">calculateSubmission(...): annual balance and</tspan>
+<tspan x="1050" dy="16">Annual/Unpaid allocation</tspan>
+</text>
+<rect x="981" y="1104" width="8" height="22" fill="white" stroke="#334155"/>
+<rect x="80" y="1122" width="1810" height="41" fill="#fff7d6" stroke="#c9a227"/>
+<text x="92" y="1141" text-anchor="start" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="92" dy="0">For PT only: findConflictingSessions(...) checks Scheduled sessions; preview includes conflicts and staffing. JS displays the plan and asks for unpaid consent when required.</tspan>
+</text>
+<path d="M985,1251 H710" stroke="#334155" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<text x="847.5" y="1241" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="847.5" dy="0">ServiceResult&lt;LeaveSubmissionPreview&gt;</tspan>
+</text>
+<rect x="706" y="1251" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M710,1317 H160" stroke="#334155" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<text x="435.0" y="1307" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="435.0" dy="0">JSON: allocation, balance, conflicts and staffing</tspan>
+</text>
+<rect x="156" y="1317" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M160,1439 H435" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="297.5" y="1381" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="297.5" dy="0">POST /{role}/leave-requests: leaveType,</tspan>
+<tspan x="297.5" dy="16">leaveDate, toDate, shiftType, reason,</tspan>
+<tspan x="297.5" dy="16">acceptUnpaid, expectedAnnualDays,</tspan>
+<tspan x="297.5" dy="16">expectedUnpaidDays, csrfToken</tspan>
+</text>
+<rect x="431" y="1439" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M435,1505 H985" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="710.0" y="1479" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="710.0" dy="0">submitLeaveRequest(accountId, type, leaveDate, toDate, shift, reason,</tspan>
+<tspan x="710.0" dy="16">acceptUnpaid, expectedAnnualDays, expectedUnpaidDays)</tspan>
+</text>
+<rect x="981" y="1505" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M985,1549 h55 v22 h-55" fill="none" stroke="#334155" marker-end="url(#arrow)"/>
+<text x="1050" y="1533" text-anchor="start" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="1050" dy="0">Validate input, staff role and submission cut-off</tspan>
+<tspan x="1050" dy="16">P-12</tspan>
+</text>
+<rect x="981" y="1571" width="8" height="22" fill="white" stroke="#334155"/>
+<rect x="80" y="1589" width="1810" height="41" fill="#fff7d6" stroke="#c9a227"/>
+<text x="92" y="1608" text-anchor="start" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="92" dy="0">Transaction: lockDecisionScope(conn), re-check Working position and cut-off. Check hasConflictingLeave(...), Scheduled PT conflicts and annual quota. Recalculate allocation and validate consent/expected values before saving.</tspan>
+</text>
+<text x="45" y="1692" text-anchor="start" font-size="12" font-weight="bold" stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="45" dy="0">alt</tspan>
+</text>
+<text x="110" y="1692" text-anchor="start" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="110" dy="0">[Validation fails / conflicting leave / PT sessions / missing or stale consent]</tspan>
+</text>
+<path d="M985,1774 H435" stroke="#334155" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<text x="710.0" y="1764" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="710.0" dy="0">ServiceResult.fail(...) / failField(...); rollback if transaction started</tspan>
+</text>
+<rect x="431" y="1774" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M435,1840 H1810" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="1122.5" y="1830" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="1122.5" dy="0">Reload form data; preserve input and field errors; forward JSP</tspan>
+</text>
+<rect x="1806" y="1840" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M1810,1906 H160" stroke="#334155" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<text x="985.0" y="1896" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="985.0" dy="0">Form with error / revised plan</tspan>
+</text>
+<rect x="156" y="1906" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M35,1936 H1935" stroke="#334155" stroke-dasharray="6 5"/>
+<text x="110" y="1959" text-anchor="start" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="110" dy="0">[All checks pass]</tspan>
+</text>
+<path d="M985,2012 h55 v22 h-55" fill="none" stroke="#334155" marker-end="url(#arrow)"/>
+<text x="1050" y="1996" text-anchor="start" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="1050" dy="0">createRequestParts(...): one request or Annual +</tspan>
+<tspan x="1050" dy="16">Unpaid sharing LeaveGroupId</tspan>
+</text>
+<rect x="981" y="2034" width="8" height="22" fill="white" stroke="#334155"/>
+<text x="45" y="2074" text-anchor="start" font-size="12" font-weight="bold" stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="45" dy="0">loop</tspan>
+</text>
+<text x="110" y="2074" text-anchor="start" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="110" dy="0">[For each request part — one or two parts]</tspan>
+</text>
+<path d="M985,2156 H1260" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="1122.5" y="2146" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="1122.5" dy="0">insert(conn, part)</tspan>
+</text>
+<rect x="1256" y="2156" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M1260,2222 H985" stroke="#334155" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<text x="1122.5" y="2212" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="1122.5" dy="0">int leaveRequestId</tspan>
+</text>
+<rect x="981" y="2222" width="8" height="22" fill="white" stroke="#334155"/>
+<rect x="80" y="2240" width="1810" height="41" fill="#fff7d6" stroke="#c9a227"/>
+<text x="92" y="2259" text-anchor="start" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="92" dy="0">saveRequestParts(...) also writes an audit entry for each part using AuditLogService and the same connection.</tspan>
+</text>
+<path d="M985,2399 H1535" stroke="#334155"  marker-end="url(#arrow)"/>
+<text x="1260.0" y="2373" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="1260.0" dy="0">notifyRoleInTransaction(conn, Role.MANAGER, title, content) — once for the</tspan>
+<tspan x="1260.0" dy="16">submission</tspan>
+</text>
+<rect x="1531" y="2399" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M985,2443 h55 v22 h-55" fill="none" stroke="#334155" marker-end="url(#arrow)"/>
+<text x="1050" y="2443" text-anchor="start" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="1050" dy="0">connection.commit()</tspan>
+</text>
+<rect x="981" y="2465" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M985,2531 H435" stroke="#334155" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<text x="710.0" y="2521" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="710.0" dy="0">ServiceResult.ok(newLeaveRequestId)</tspan>
+</text>
+<rect x="431" y="2531" width="8" height="22" fill="white" stroke="#334155"/>
+<path d="M435,2597 H160" stroke="#334155" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<text x="297.5" y="2571" text-anchor="middle" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="297.5" dy="0">Redirect to the role-specific leave</tspan>
+<tspan x="297.5" dy="16">page; success toast</tspan>
+</text>
+<rect x="156" y="2597" width="8" height="22" fill="white" stroke="#334155"/>
+<rect x="80" y="2645" width="1810" height="41" fill="#fff7d6" stroke="#c9a227"/>
+<text x="92" y="2664" text-anchor="start" font-size="12"  stroke="white" stroke-width="4" paint-order="stroke">
+<tspan x="92" dy="0">Any SQL/runtime failure inside the transaction rolls back all parts, audit entries and notifications. Withdrawal and JOB-07 are separate sequences.</tspan>
+</text>
+</g></svg>

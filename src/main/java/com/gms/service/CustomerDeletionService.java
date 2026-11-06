@@ -472,7 +472,7 @@ public class CustomerDeletionService {
                     null, !packages.isEmpty() || !sessions.isEmpty(), pending != null, pendingId,
                     customer.getJoinedAt(), customer.getDeletedAt());
             profile.setOwnProfile(account.getPersonId() == customer.getPersonId());
-            return ServiceResult.ok(new CustomerProfileDetailView(profile, packages, sessions, pending));
+            return ServiceResult.ok(new CustomerProfileDetailView(profile, packages, sessions, pending, person, customer));
         } catch (SQLException exception) {
             exception.printStackTrace();
             return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);

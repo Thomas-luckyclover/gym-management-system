@@ -8,10 +8,10 @@
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Giao dịch toàn hệ thống · Super Gym</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css?v=20261106_v2">
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/transaction-list.css">
 
-  <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
+  <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js?v=20261106_v2" defer></script>
   <script src="${pageContext.request.contextPath}/js/pages/manager/transaction-list.js?v=20261031csrf" defer></script>
 </head>
 

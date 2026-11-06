@@ -32,3 +32,10 @@ cookies.txt
 
 # Upload ảnh checkin
 src/main/webapp/uploads/checkin/
+
+# Local account exports and AI conversation logs
+/accounts_out.txt
+/demo_accounts_full.txt
+/output/ai-log-filled.md
+/output/conversation-export/
+/output/iteration-logs/

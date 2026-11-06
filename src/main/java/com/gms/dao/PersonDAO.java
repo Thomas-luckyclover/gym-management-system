@@ -81,6 +81,43 @@ public class PersonDAO {
          * @param person đối tượng Person chứa dữ liệu mới
          * @throws SQLException khi truy vấn gặp lỗi
          */
+        /** Đọc và khóa Person trong transaction sửa hồ sơ, tránh ghi đè liên hệ vừa đổi. */
+        public Person findForProfileUpdate(Connection conn, int personId) throws SQLException {
+                String sql = "SELECT PersonId, FullName, DateOfBirth, Phone, Email, Avatar, IsReleased, CreatedAt "
+                                + "FROM Persons WITH (UPDLOCK, ROWLOCK) WHERE PersonId = ?";
+                try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                        stmt.setInt(1, personId);
+                        try (ResultSet rs = stmt.executeQuery()) {
+                                return rs.next() ? mapResultSetToPerson(rs) : null;
+                        }
+                }
+        }
+
+        /** Lưu liên hệ bằng Connection của Service để cùng commit với tên/ngày sinh. */
+        public void updateCustomerContacts(Connection conn, int personId, String phone, String email) throws SQLException {
+                String sql = "UPDATE Persons SET Phone = ?, Email = ? WHERE PersonId = ?";
+                try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                        stmt.setString(1, phone);
+                        stmt.setString(2, email);
+                        stmt.setInt(3, personId);
+                        if (stmt.executeUpdate() != 1) {
+                                throw new SQLException("Không cập nhật được liên hệ.");
+                        }
+                }
+        }
+
+        public void updateCustomerIdentity(Connection conn, int personId, String fullName, java.time.LocalDate dateOfBirth) throws SQLException {
+                String sql = "UPDATE Persons SET FullName = ?, DateOfBirth = ? WHERE PersonId = ?";
+                try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                        stmt.setString(1, fullName);
+                        stmt.setDate(2, Date.valueOf(dateOfBirth));
+                        stmt.setInt(3, personId);
+                        if (stmt.executeUpdate() != 1) {
+                                throw new SQLException("Không cập nhật được thông tin cá nhân.");
+                        }
+                }
+        }
+
         public void updateProfile(Connection conn, Person person) throws SQLException {
                 String sql = "UPDATE Persons SET FullName = ?, DateOfBirth = ?, Avatar = ? WHERE PersonId = ?";
 

@@ -22,7 +22,7 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css">
 
         <%-- BF-07: hai vai trò dùng chung bố cục; token màu thay đổi theo theme. --%>
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/customer-list.css?v=20261031-fixed-page">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/customer-list.css?v=20261105-actions">
 
         <script src="${pageContext.request.contextPath}/js/pages/receptionist/customer-list.js?v=20261031-fixed-page" defer>
         </script>
@@ -50,31 +50,37 @@
 
                     <%-- ===== Điều hướng: managerView và currentTab do Servlet đặt ===== --%>
                     <c:url var="listUrl" value="${listPath}" />
-                    <nav class="bf07-tabs" aria-label="Hồ sơ và yêu cầu xóa">
-                        <c:choose>
-                            <c:when test="${managerView}">
-                                <a href="${listUrl}?tab=all" class="bf07-tab <c:if test="${currentTab == 'all'}">is-active</c:if>" <c:if test="${currentTab == 'all'}">aria-current="page"</c:if>>
-                                    Tất cả hội viên
-                                </a>
-                                <a href="${listUrl}?tab=pending-deletions" class="bf07-tab <c:if test="${currentTab == 'pending-deletions'}">is-active</c:if>" <c:if test="${currentTab == 'pending-deletions'}">aria-current="page"</c:if>>
-                                    Chờ duyệt xóa
-                                    <c:if test="${pendingCount != null}">
-                                        <span class="bf07-count">
-                                            <c:out value="${pendingCount}" />
-                                        </span>
-                                    </c:if>
-                                </a>
-                            </c:when>
-                            <c:otherwise>
-                                <a href="${listUrl}?tab=profiles" class="bf07-tab <c:if test="${currentTab == 'profiles'}">is-active</c:if>" <c:if test="${currentTab == 'profiles'}">aria-current="page"</c:if>>
-                                    Danh sách khách hàng
-                                </a>
-                                <a href="${listUrl}?tab=my-requests" class="bf07-tab <c:if test="${currentTab == 'my-requests'}">is-active</c:if>" <c:if test="${currentTab == 'my-requests'}">aria-current="page"</c:if>>
-                                    Yêu cầu xóa của tôi
-                                </a>
-                            </c:otherwise>
-                        </c:choose>
-                    </nav>
+                    <%-- Manager chỉ xem; giao diện Thêm chỉ dành cho khu vực Lễ tân. --%>
+                    <div class="bf07-list-toolbar">
+                        <nav class="bf07-tabs" aria-label="Hồ sơ và yêu cầu xóa">
+                            <c:choose>
+                                <c:when test="${managerView}">
+                                    <a href="${listUrl}?tab=all" class="bf07-tab <c:if test="${currentTab == 'all'}">is-active</c:if>" <c:if test="${currentTab == 'all'}">aria-current="page"</c:if>>
+                                        Tất cả hội viên
+                                    </a>
+                                    <a href="${listUrl}?tab=pending-deletions" class="bf07-tab <c:if test="${currentTab == 'pending-deletions'}">is-active</c:if>" <c:if test="${currentTab == 'pending-deletions'}">aria-current="page"</c:if>>
+                                        Chờ duyệt xóa
+                                        <c:if test="${pendingCount != null}">
+                                            <span class="bf07-count">
+                                                <c:out value="${pendingCount}" />
+                                            </span>
+                                        </c:if>
+                                    </a>
+                                </c:when>
+                                <c:otherwise>
+                                    <a href="${listUrl}?tab=profiles" class="bf07-tab <c:if test="${currentTab == 'profiles'}">is-active</c:if>" <c:if test="${currentTab == 'profiles'}">aria-current="page"</c:if>>
+                                        Danh sách khách hàng
+                                    </a>
+                                    <a href="${listUrl}?tab=my-requests" class="bf07-tab <c:if test="${currentTab == 'my-requests'}">is-active</c:if>" <c:if test="${currentTab == 'my-requests'}">aria-current="page"</c:if>>
+                                        Yêu cầu xóa của tôi
+                                    </a>
+                                </c:otherwise>
+                            </c:choose>
+                        </nav>
+                        <c:if test="${not managerView}">
+                            <a class="btn btn-primary" href="${pageContext.request.contextPath}/receptionist/customers/form?mode=create">＋ Thêm hội viên</a>
+                        </c:if>
+                    </div>
 
                     <%-- ===== Bộ lọc hồ sơ: keyword, statusFilter; cố định 10 dòng/trang ===== --%>
                     <c:if test="${currentTab == 'all' or currentTab == 'profiles'}">
@@ -153,7 +159,7 @@
                                     <c:when test="${currentTab == 'all' or currentTab == 'profiles'}">
 
                                         <%-- pageData.items: List<CustomerProfileRowView>; Service tính ownProfile. --%>
-                                        <table class="bf07-table bf07-profile-table">
+                                        <table class="bf07-table bf07-profile-table ${managerView ? '' : 'bf07-profile-table-actions'}">
                                             <caption class="visually-hidden">Hồ sơ hội viên và thao tác</caption>
                                             <thead>
                                                 <tr>
@@ -216,9 +222,13 @@
                                                             </c:if>
                                                         </td>
                                                         <td data-label="Thao tác">
-                                                            <div class="bf07-row-actions">
-                                                                <a class="btn btn-outline" href="${detailUrl}">Chi tiết</a>
+                                                            <%-- Manager: Chi tiết/Xem yêu cầu; Lễ tân giữ giao diện Thêm/Sửa và luồng xóa. --%>
+                                                            <div class="bf07-row-actions ${managerView ? '' : 'bf07-profile-actions'}">
+                                                                <a class="btn btn-outline ${managerView ? '' : 'bf07-short-action'}" href="${detailUrl}">${managerView ? 'Chi tiết' : 'Xem'}</a>
                                                                 <c:if test="${not managerView}">
+                                                                    <c:if test="${not profile.inactive and not profile.ownProfile}">
+                                                                        <a class="btn btn-outline bf07-short-action" href="${detailUrl}&amp;mode=edit">Sửa</a>
+                                                                    </c:if>
                                                                     <c:choose>
                                                                         <c:when test="${profile.ownProfile}">
                                                                             <span class="bf07-sub">Hồ sơ của bạn</span>
@@ -237,6 +247,7 @@
                                                                     <c:url var="reviewUrl" value="/manager/member-deletions/review">
                                                                         <c:param name="id" value="${profile.pendingRequestId}" />
                                                                     </c:url>
+                                                                    <%-- Chỉ mở trang xét duyệt; không xóa hồ sơ khi bấm liên kết này. --%>
                                                                     <a class="btn btn-primary" href="${reviewUrl}">Xem yêu cầu</a>
                                                                 </c:if>
                                                             </div>
