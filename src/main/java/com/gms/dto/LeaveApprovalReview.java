@@ -10,6 +10,7 @@ public class LeaveApprovalReview {
     private final List<ReviewCheck> checks = new ArrayList<>();
 
     /** null nghĩa là mọi điều kiện đạt; giao diện và POST đọc cùng kết quả này. */
+    // GETTER TỰ TÍNH — không có field/setter "blockingMessage"; = message của mục kiểm tra đầu tiên có áp dụng mà không đạt, không có → null; JSP: không dùng (chỉ Java/test)
     public String getBlockingMessage() {
         for (ReviewCheck check : checks) {
             if (check.isApplicable() && !check.isOk()) {

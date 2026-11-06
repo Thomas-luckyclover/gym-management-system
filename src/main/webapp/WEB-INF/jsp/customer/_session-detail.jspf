@@ -8,6 +8,7 @@
        "26/10/2026 · 18:00 – 19:30" (TimeSlots.SlotDate, StartTime, EndTime) --%>
 <div class="session-detail-heading">
     <span class="session-status" data-status="${s.statusKey}"><c:out value="${s.statusLabel}" /></span>
+    <%-- s.singleSession = getter tự tính isSingleSession() · dto/MyPtSessionRow.java (s = MyPtSessionRow) --%>
     <h3><c:out value="${s.typeLabel}" /><c:if test="${not s.singleSession}"> · ${s.sessionNo}/${s.totalSessions}</c:if></h3>
     <p>${gms:formatDate(s.slotDate)} · ${gms:formatTime(s.startTime)} – ${gms:formatTime(s.endTime)}</p>
 </div>

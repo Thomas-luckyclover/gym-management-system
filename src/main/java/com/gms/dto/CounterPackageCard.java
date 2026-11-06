@@ -187,6 +187,7 @@ public class CounterPackageCard {
     }
 
     // Quyền được bấm tiếp tục với gói này tại quầy (false thì vô hiệu hóa nút).
+    // GETTER TỰ TÍNH — không có field/setter "continueAllowed"; = trả thẳng field isContinueAllowed; JSP: receptionist/_counter-card.jspf:16 …
     public boolean isContinueAllowed() {
         return isContinueAllowed;
     }

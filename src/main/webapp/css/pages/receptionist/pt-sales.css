@@ -628,6 +628,16 @@ html body.dock.pt-sale-page .content .sale-card :is(h2, h3) {
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
 }
+.sale-pt-info {
+  display: grid;
+  gap: 1px;
+  line-height: 1.3;
+}
+.sale-pt-info small {
+  color: var(--arena-steel-ink);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-regular);
+}
 .sale-pt .sale-avatar {
   width: 32px;
   height: 32px;
@@ -1528,6 +1538,12 @@ html body.dock.pt-sale-page .sale-summary {
   margin-top: 1px;
   accent-color: var(--arena-700);
 }
+/* Chưa tích "Đã nhận đủ" mà bấm thu tiền → pt-sales.js (initPayConfirm) thêm .is-invalid: viền đỏ + toast nhắc. */
+.sale-confirm.is-invalid {
+  padding: var(--space-2);
+  border-radius: var(--arena-radius-chip);
+  box-shadow: inset 0 0 0 2px var(--color-danger);
+}
 /* Ô "Đã xác nhận với PT": khung vàng giống hộp nhắc bên trái → lễ tân thấy 2 chỗ là 1 việc. */
 .sale-pt-confirm {
   padding: var(--space-3);
@@ -1674,4 +1690,20 @@ html body.dock.pt-sale-page .sale-summary {
   #sale-form.is-busy {
     transition: none !important;
   }
+}
+
+/* 2 dòng tách thuế: nhãn dài xuống dòng trong cột trái, số tiền giữ nguyên 1 dòng bên phải (không tràn). */
+.sale-facts > .sale-fact-tax {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+.sale-fact-tax dt small {
+  display: block;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-regular);
+  line-height: 1.3;
+  text-wrap: pretty;
+}
+.sale-fact-tax dd {
+  text-align: right;
+  white-space: nowrap;
 }

@@ -21,7 +21,7 @@ public class PtSessionHandleDAO {
     // Câu đọc khung trống dùng chung 3 hàm find…Slots (chỗ %s: gợi ý khóa + điều kiện riêng).
     // Mỗi khung Free, chưa giữ, chưa có buổi, của PT đang làm, kèm 4 cờ:
     //   GymClosed (phòng nghỉ) · PtOnLeave (PT có đơn nghỉ trùng ca) · CustomerBusy (khách có buổi khác chồng giờ)
-    //   · HasGymAccess (khách có Membership / DayPass không bảo lưu ngày đó).
+    //   · HasGymAccess (CBR-117: khách có Membership không bảo lưu, HOẶC có DayPass, ngày đó).
     private static final String SLOT_SQL = """
             SELECT t.TimeSlotId, t.PtEmployeeId, p.FullName AS PtName, e.CommissionRate,
                    t.SlotDate, t.StartTime, t.EndTime,
@@ -51,12 +51,13 @@ public class PtSessionHandleDAO {
                                        AND gym.SubscriptionType IN ('Membership', 'DayPass')
                                        AND gym.Status IN ('Active', 'Frozen')
                                        AND t.SlotDate BETWEEN gym.StartDate AND gym.EndDate
-                                       AND NOT EXISTS (SELECT 1 FROM Subscriptions m
+                                       -- bảo lưu chỉ chặn gói thành viên; vé ngày vẫn tính (CBR-117)
+                                       AND (gym.SubscriptionType = 'DayPass' OR NOT EXISTS (SELECT 1 FROM Subscriptions m
                                                        JOIN FreezeRecords f ON f.SubscriptionId = m.SubscriptionId
                                                        WHERE m.CustomerId = gym.CustomerId
                                                          AND m.SubscriptionType = 'Membership'
                                                          AND t.SlotDate BETWEEN f.StartDate
-                                                             AND COALESCE(f.ActualEndDate, f.PlannedEndDate)))
+                                                             AND COALESCE(f.ActualEndDate, f.PlannedEndDate))))
                         THEN 1 ELSE 0 END AS HasGymAccess
             FROM TimeSlots t %s
             JOIN Employees e ON e.EmployeeId = t.PtEmployeeId AND e.Position = 'PT' AND e.Status = 'Working'

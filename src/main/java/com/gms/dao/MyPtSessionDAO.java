@@ -230,6 +230,18 @@ public class MyPtSessionDAO {
         return countByCustomerAndDate(sql, customerId, date) > 0;
     }
 
+    /** Khách có VÉ NGÀY phủ ngày này không? (vé ngày không bị bảo lưu chặn — CBR-117) */
+    public boolean hasDayPass(int customerId, LocalDate date) throws SQLException {
+        String sql = """
+                SELECT COUNT(*)
+                FROM Subscriptions
+                WHERE CustomerId = ?
+                  AND ? BETWEEN StartDate AND EndDate
+                  AND SubscriptionType = 'DayPass' AND Status IN ('Active', 'Used', 'Expired')
+                """;
+        return countByCustomerAndDate(sql, customerId, date) > 0;
+    }
+
     /** Ngày này có nằm trong kỳ BẢO LƯU Membership của khách không? */
     public boolean isFrozen(int customerId, LocalDate date) throws SQLException {
         String sql = """

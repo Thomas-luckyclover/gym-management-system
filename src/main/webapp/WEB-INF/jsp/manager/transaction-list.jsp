@@ -333,6 +333,7 @@
             </div>
 
             <%-- Phân trang Tab 1 --%>
+            <%-- orderPage.totalPages = getter tự tính getTotalPages() · dto/PageResult.java --%>
             <c:if test="${orderPage.totalPages > 1}">
               <div class="trans-pagination">
                 <div>
@@ -340,6 +341,7 @@
                 </div>
 
                 <div class="pagination-controls">
+                  <%-- orderPage.hasPrevious = getter tự tính isHasPrevious() · dto/PageResult.java --%>
                   <c:if test="${orderPage.hasPrevious}">
                     <c:url var="prevUrl" value="/manager/transactions">
                       <c:param name="tab" value="orders" />
@@ -355,6 +357,7 @@
                     <a href="${prevUrl}" class="btn btn-ghost btn-sm">&larr; Trang trước</a>
                   </c:if>
 
+                  <%-- orderPage.hasNext = getter tự tính isHasNext() · dto/PageResult.java --%>
                   <c:if test="${orderPage.hasNext}">
                     <c:url var="nextUrl" value="/manager/transactions">
                       <c:param name="tab" value="orders" />
@@ -513,6 +516,7 @@
             </div>
 
             <%-- Phân trang Tab 2 --%>
+            <%-- getter tự tính: shiftPage.totalPages = getTotalPages(), shiftPage.hasPrevious = isHasPrevious(), shiftPage.hasNext = isHasNext() · dto/PageResult.java --%>
             <c:if test="${shiftPage.totalPages > 1}">
               <div class="trans-pagination">
                 <div>

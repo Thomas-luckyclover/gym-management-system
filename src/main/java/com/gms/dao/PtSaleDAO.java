@@ -69,12 +69,22 @@ public class PtSaleDAO {
         public final int personId;         // Employees.PersonId → so với khách (PT không tự bán cho mình)
         public final String fullName;      // Persons.FullName → IN tên PT, chữ tắt "ĐS"
         public final int commissionRate;   // Employees.CommissionRate (%) → Sessions.CommissionAmount khi thu tiền
+        public final String specialty;     // Employees.Specialty (có thể null) → IN chữ nhỏ dưới tên PT
+        public final int yearsOfExperience; // Employees.YearsOfExperience (null → 0) → IN chữ nhỏ dưới tên PT
 
-        public PtRow(int employeeId, int personId, String fullName, int commissionRate) {
+        public PtRow(
+                int employeeId,
+                int personId,
+                String fullName,
+                int commissionRate,
+                String specialty,
+                int yearsOfExperience) {
             this.employeeId = employeeId;
             this.personId = personId;
             this.fullName = fullName;
             this.commissionRate = commissionRate;
+            this.specialty = specialty;
+            this.yearsOfExperience = yearsOfExperience;
         }
     }
 
@@ -87,6 +97,8 @@ public class PtSaleDAO {
         public Integer partnerId;
         public int packageId;
         public long price;
+        public int vatRate;             // Orders.VatRateSnapshot (chỉ findHeldOrder đọc)
+        public long vatAmount;          // Orders.VatAmount (chỉ findHeldOrder đọc)
         public LocalDateTime createdAt;
         public LocalDateTime expiresAt; // hạn giữ sớm nhất trong các khung (null = không còn khung nào giữ)
         public int ptId;
@@ -120,8 +132,8 @@ public class PtSaleDAO {
     }
 
     /**
-     * [search; prepare khi tắt JS] Customers + Persons (+ Subscriptions, FreezeRecords): R tối đa 8 dòng.
-     * Ô tìm khách kiểu Google: tối đa 8 khách khớp MỘT trong 3 cách (không phân biệt hoa thường, dấu):
+     * [search; prepare khi tắt JS] Customers + Persons (+ Subscriptions, FreezeRecords): R mọi dòng khớp.
+     * Ô tìm khách kiểu Google: mọi khách khớp MỘT trong 3 cách (không phân biệt hoa thường, dấu):
      *   tên chứa các từ gõ theo đúng thứ tự ("mai", "do mai" đều khớp "Đỗ Thị Mai")
      *   ·  SĐT / SĐT giám hộ chứa dãy số  ·  mã KH chứa chữ gõ.
      * Latin1_General_CI_AI (không phải Vietnamese_CI_AI): bản tiếng Việt coi ă, ê, đ… là chữ riêng → "van" không khớp "Văn".
@@ -130,7 +142,7 @@ public class PtSaleDAO {
      */
     public List<PtSaleCustomer> searchCustomers(Connection connection, String text, String digits, LocalDate today)
             throws SQLException {
-        String sql = "SELECT TOP 8 c.CustomerId, c.PersonId, c.CustomerCode, c.CustomerType, p.FullName, p.Phone, p.DateOfBirth, "
+        String sql = "SELECT c.CustomerId, c.PersonId, c.CustomerCode, p.FullName, p.Phone, p.DateOfBirth, "
                 + MEMBERSHIP_COLUMNS
                 + """
                  FROM Customers c JOIN Persons p ON p.PersonId = c.PersonId
@@ -179,7 +191,7 @@ public class PtSaleDAO {
      * Kèm MembershipEnd (gói thành viên Active/Frozen phủ hôm nay) và IsFrozen (hôm nay đang bảo lưu).
      */
     public PtSaleCustomer findCustomer(Connection connection, int customerId, LocalDate today) throws SQLException {
-        String sql = "SELECT c.CustomerId, c.PersonId, c.CustomerCode, c.CustomerType, p.FullName, p.Phone, p.DateOfBirth, "
+        String sql = "SELECT c.CustomerId, c.PersonId, c.CustomerCode, p.FullName, p.Phone, p.DateOfBirth, "
                 + MEMBERSHIP_COLUMNS
                 + " FROM Customers c JOIN Persons p ON p.PersonId = c.PersonId"
                 + " WHERE c.DeletedAt IS NULL AND c.CustomerId = ?";
@@ -212,7 +224,6 @@ public class PtSaleDAO {
                 rs.getInt("CustomerId"),
                 rs.getInt("PersonId"),
                 rs.getString("CustomerCode"),
-                rs.getString("CustomerType"),
                 rs.getString("FullName"),
                 rs.getString("Phone"),
                 rs.getDate("DateOfBirth").toLocalDate(),
@@ -307,7 +318,7 @@ public class PtSaleDAO {
     }
 
     private static final String PT_SQL = """
-            SELECT e.EmployeeId, e.PersonId, p.FullName, e.CommissionRate
+            SELECT e.EmployeeId, e.PersonId, p.FullName, e.CommissionRate, e.Specialty, e.YearsOfExperience
             FROM Employees e
             JOIN Persons p   ON p.PersonId = e.PersonId
             JOIN Accounts a  ON a.PersonId = e.PersonId AND a.Status = 'Active'
@@ -320,7 +331,9 @@ public class PtSaleDAO {
                 rs.getInt("EmployeeId"),
                 rs.getInt("PersonId"),
                 rs.getString("FullName"),
-                rs.getInt("CommissionRate"));
+                rs.getInt("CommissionRate"),
+                rs.getString("Specialty"),
+                rs.getInt("YearsOfExperience"));
     }
 
     /**
@@ -431,12 +444,22 @@ public class PtSaleDAO {
      * [prepare → loadHeld (lock = false); pay, release, releaseExpired (lock = true)] Orders + Packages + TimeSlots: R.
      * Đơn tại quầy theo mã + mọi khung đang Held cho đơn đó. lock = true (khi thu tiền / hủy): khóa đơn và khung.
      * Không phải đơn tại quầy gói PT → null.
+     * Cột Orders đọc: mã, trạng thái, khách, gói, UnitPriceSnapshot, VatRateSnapshot, VatAmount, CreatedAt.
      */
+    
+    // findHeldOrder chạy 2 câu SQL, Khi lock = true, cả hai câu được thêm WITH (UPDLOCK, HOLDLOCK). Khi false thì chuỗi này rỗng, đọc bình thường.
+    // UPDLOCK: khóa dòng đang đọc để chuẩn bị sửa. Người khác vẫn đọc xem được, nhưng không ai khóa hay sửa được dòng đó cho tới khi transaction của mình xong.
+    // HOLDLOCK: giữ khóa tới hết transaction thay vì nhả ngay sau khi đọc.
+
+    
     public HeldOrder findHeldOrder(Connection connection, int orderId, boolean lock) throws SQLException {
         String hint = lock ? "WITH (UPDLOCK, HOLDLOCK)" : "";
+        
+        // Câu 1: đọc đơn: chỉ lấy đơn bán tại quầy (Counter) của gói PT, gồm khách, người tập cùng, gói, giá. Không thấy đơn thì trả null.
+        // Câu 1 này đọc Order và ktra đơn còn PENDING ko 
         String orderSql = """
                 SELECT o.OrderId, o.OrderCode, o.Status, o.HolderCustomerId, o.PartnerCustomerId, o.PackageId,
-                       o.UnitPriceSnapshot, o.CreatedAt
+                       o.UnitPriceSnapshot, o.VatRateSnapshot, o.VatAmount, o.CreatedAt
                 FROM Orders o %s
                 JOIN Packages p ON p.PackageId = o.PackageId AND p.PackageType IN ('PTSingle', 'PTCouple')
                 WHERE o.OrderId = ? AND o.Channel = 'Counter'
@@ -455,6 +478,8 @@ public class PtSaleDAO {
                     held.partnerId = rs.wasNull() ? null : partner;
                     held.packageId = rs.getInt("PackageId");
                     held.price = rs.getLong("UnitPriceSnapshot");
+                    held.vatRate = rs.getInt("VatRateSnapshot");
+                    held.vatAmount = rs.getLong("VatAmount");
                     held.createdAt = rs.getTimestamp("CreatedAt").toLocalDateTime();
                 }
             }
@@ -463,6 +488,9 @@ public class PtSaleDAO {
             return null;
         }
 
+        
+        // Câu 2 đọc các khung giờ đang giữ của đơn đó (Status = 'Held'), sắp theo ngày giờ. Từ đó lấy PT, các ngày + bắt đầu kết thúc + hạn giữ đơn
+        // Câu 2 để biết đơn đang giữ những buổi nào
         String slotSql = """
                 SELECT TimeSlotId, PtEmployeeId, SlotDate, StartTime, EndTime, HoldExpiresAt
                 FROM TimeSlots %s
@@ -482,7 +510,9 @@ public class PtSaleDAO {
                     held.slots.add(slot);
                     held.ptId = rs.getInt("PtEmployeeId");
                     LocalDateTime expires = rs.getTimestamp("HoldExpiresAt").toLocalDateTime();
-                    held.expiresAt = held.expiresAt == null || expires.isBefore(held.expiresAt) ? expires : held.expiresAt;
+                    
+                    // Khung đầu tiên thì lấy luôn hạn của nó, đề phòng sau này các khung có hạn khác nhau
+                    held.expiresAt = held.expiresAt == null || expires.isBefore(held.expiresAt) ? expires : held.expiresAt; 
                 }
             }
         }
@@ -682,14 +712,14 @@ public class PtSaleDAO {
 
     /**
      * [pay] Subscriptions: C 1 dòng Active.
-     * Gói PT của khách: khung giờ cố định, số buổi đã sinh, trần đổi buổi (P-08 × số tháng, chốt lúc bán).
+     * Gói PT của khách: khung giờ cố định, số buổi đã sinh.
      */
     public int insertSubscription(Connection connection, int orderId, int customerId, String type, int ptId,
-            LocalDate start, LocalDate end, LocalTime fixedTime, int sessionCount, int maxSwaps) throws SQLException {
+            LocalDate start, LocalDate end, LocalTime fixedTime, int sessionCount) throws SQLException {
         String sql = """
                 INSERT INTO Subscriptions (OrderId, CustomerId, SubscriptionType, PtEmployeeId, StartDate, EndDate,
-                                           FixedStartTime, GeneratedSessionCount, MaxSwapsSnapshot, Status)
-                VALUES (?, ?, ?, ?, ?, ?, CAST(? AS time), ?, ?, 'Active')
+                                           FixedStartTime, GeneratedSessionCount, Status)
+                VALUES (?, ?, ?, ?, ?, ?, CAST(? AS time), ?, 'Active')
                 """;
         try (PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             statement.setInt(1, orderId);
@@ -700,7 +730,6 @@ public class PtSaleDAO {
             statement.setDate(6, Date.valueOf(end));
             statement.setString(7, fixedTime.toString());
             statement.setInt(8, sessionCount);
-            statement.setInt(9, maxSwaps);
             statement.executeUpdate();
             return generatedId(statement);
         }
@@ -803,6 +832,7 @@ public class PtSaleDAO {
      */
     public void releaseHold(Connection connection, int orderId, LocalDateTime orderCreatedAt, String cancelType,
             String reason, LocalDateTime now) throws SQLException {
+        // Câu 1: Hủy đơn
         String cancelSql = """
                 UPDATE Orders SET Status = 'Cancelled', CancelType = ?, CancelledAt = ?, CancelReason = ?
                 WHERE OrderId = ? AND Status = 'Pending'
@@ -814,12 +844,14 @@ public class PtSaleDAO {
             statement.setInt(4, orderId);
             statement.executeUpdate();
         }
+        // Câu 2: Xóa đơn do lần giữ này tạo ra, Khung tạo ra (lễ tân thêm + confirm vs PT) => Xóa
         String deleteSql = "DELETE FROM TimeSlots WHERE HeldByOrderId = ? AND Status = 'Held' AND CreatedAt >= ?";
         try (PreparedStatement statement = connection.prepareStatement(deleteSql)) {
             statement.setInt(1, orderId);
-            statement.setTimestamp(2, Timestamp.valueOf(orderCreatedAt.withNano(0)));
+            statement.setTimestamp(2, Timestamp.valueOf(orderCreatedAt.withNano(0))); // withNano(0) = xóa phần lẻ của giây, chỉ giữ tới giây chẵn 10:00:00.617482300  →  withNano(0)  →  10:00:00, nếu ko có nana Java sẽ làm tròn sai CreateAt
             statement.executeUpdate();
         }
+        // Trả các khung còn lại về Free: Các khung khác trả về Free
         String freeSql = "UPDATE TimeSlots SET Status = 'Free', HeldByOrderId = NULL, HoldExpiresAt = NULL WHERE HeldByOrderId = ? AND Status = 'Held'";
         try (PreparedStatement statement = connection.prepareStatement(freeSql)) {
             statement.setInt(1, orderId);
@@ -841,3 +873,154 @@ public class PtSaleDAO {
         throw new SQLException("Không nhận được mã vừa tạo");
     }
 }
+
+
+
+/*
+ * ============================================================================================================
+ * PHỤ LỤC — BẢN ĐỒ DTO MÀN BÁN GÓI PT: FIELD NÀO · HÀM NÀO TẠO · ĐI QUA ĐÂU · HIỆN Ở ĐÂU
+ * ============================================================================================================
+ *
+ * A. CÂY GỌI HÀM — ai tạo PtSaleView
+ *
+ *   (1) XEM TRANG CHỌN   GET /receptionist/pt-sales            (không ?order=)
+ *       showPage → prepare → releaseExpired → findReceptionist → newView → build(lock = false) → loadPendingHolds
+ *                                                                build = loadHolder → loadPackage → [loadPartner] → loadPt → loadPlan
+ *                                                                loadPlan(false) = B1–B2 → B3 → buildPlan → B5 → planJson
+ *   (2) TRANG ĐANG GIỮ   GET /receptionist/pt-sales?order=<id>
+ *       showPage → prepare → releaseExpired → findReceptionist → newView → loadHeld          (KHÔNG build, KHÔNG pendingHolds)
+ *   (3) GIỮ LỊCH         POST action=hold
+ *       hold → releaseExpired → [transaction] requireReceptionist → newView → lockPt → build(lock = true) → firstProblem …
+ *                                            loadPlan(true) = B1–B2 → B6 → checkRequested → B8 → planBlock.days
+ *       (view này KHÔNG đưa ra JSP — chỉ để kiểm rồi ghi DB. Lỗi → Servlet gọi lại (1) để vẽ trang.)
+ *
+ *   JSP đọc tất cả qua biến "sale" = PtSaleView (showPage: request.setAttribute("sale", view)).
+ *
+ * ------------------------------------------------------------------------------------------------------------
+ * B. PtSaleView (sale) — gốc, chứa 4 khối + danh sách đơn đang giữ
+ * ------------------------------------------------------------------------------------------------------------
+ *   choice        PtSaleChoiceBlock    new sẵn trong PtSaleView      → mục C
+ *   buyer         PtSaleBuyerBlock     new sẵn                       → mục D
+ *   plan          PtSalePlanBlock      new sẵn                       → mục E
+ *   heldOrder     PtSaleHeldBlock      new sẵn                       → mục F
+ *   pendingHolds  List<PtSalePendingHold>   prepare → loadPendingHolds ← DAO findActiveHoldOrders       → mục G
+ *                                      CHỈ (1). (2) return trước nên luôn rỗng.        → _pt-sale-holds.jspf
+ *   held          (getter isHeld, KHÔNG phải field) = heldOrder.orderId != null       → JSP sale.held: chọn nhánh trang
+ *   ready         (getter isReady)  = !held && plan.sessionCount > 0 && plan.planError == null
+ *
+ * ------------------------------------------------------------------------------------------------------------
+ * C. PtSaleChoiceBlock (sale.choice) — khối "Gói & PT" + tóm tắt Đơn bán
+ * ------------------------------------------------------------------------------------------------------------
+ *   field            (1) xem / (3) giữ lịch                         (2) đang giữ                  hiện ở
+ *   packageId        newView ← ?package=                             loadHeld ← đơn                radio gói tích sẵn, ô ẩn form Giữ lịch
+ *   ptId             newView ← ?pt=                                  loadHeld ← khung giữ          radio PT tích sẵn, ô ẩn
+ *   startDate        newView ← ?start= (trống = ngày mai)            prepare xóa nếu URL thiếu start
+ *                                                                    → loadHeld = ngày khung đầu   ô "Ngày bắt đầu kỳ", ô ẩn start
+ *   minStart         newView = hôm nay                               (giữ từ newView)              min ô ngày
+ *   maxStart         newView = hôm nay + START_DAYS_AHEAD (30)       (giữ từ newView)              max ô ngày
+ *   packages         build → loadPackage ← DAO findPtPackages        —                             các ô gói (List<PtSaleOption>, mục H)
+ *   pts              build → loadPt ← DAO findWorkingPts             —                             các nút PT (rỗng khi chưa có gói hợp lệ → ẩn)
+ *   choiceError      loadPackage (gói ngừng bán) · loadPt (PT sai, ngày ngoài khoảng)   —           chữ đỏ khối Gói & PT; firstProblem
+ *   couple           loadPackage = PackageType == 'PTCouple'         —                             c:if hiện ô "Người tập cùng", customerReady
+ *   packageName      loadPackage ← DAO findPackage                   loadHeld ← findPackage        Đơn bán "Gói"
+ *   price            loadPackage ← giá gói hiện tại                  loadHeld ← đơn (snapshot)     "Phải thu", sessionValue
+ *   months           loadPackage                                     loadHeld                      "· N tháng", tính endDate
+ *   ptName           loadPt ← DAO findPt                             loadHeld ← findPt             Đơn bán "PT", hộp nhắc PT chưa công bố
+ *   commissionRate   loadPt                                          —                             không in (hoa hồng)
+ *   endDate          loadPt = calculateEndDateByMonths(start, months)   loadHeld (cùng công thức)  "Kỳ", done2 (JSP), kỳ của loadPlan
+ *
+ * ------------------------------------------------------------------------------------------------------------
+ * D. PtSaleBuyerBlock (sale.buyer) — khối "Khách mua gói"
+ * ------------------------------------------------------------------------------------------------------------
+ *   customerId       newView ← ?customer=                            loadHeld ← đơn                ô ẩn customer, link Đổi khách
+ *   partnerId        newView ← ?partner=                             —                             ô ẩn partner
+ *   searchQuery      newView ← ?q= (chỉ khi gửi form tìm, tắt JS)    —                             chữ trong ô tìm
+ *   searchResults    build → loadHolder ← DAO searchCustomers (+ whyCannotBuy từng dòng)            danh sách kết quả dự phòng
+ *   holder           build → loadHolder ← DAO findCustomer (+ whyCannotBuy)   loadHeld ← findCustomer (KHÔNG chạy whyCannotBuy)
+ *                                                                                                  thẻ "Người đứng tên", customerReady
+ *   partner          build → loadPartner ← findCustomer (+ whyCannotBuy)      loadHeld (nếu đơn có người tập cùng)
+ *                                                                                                  thẻ "Người tập cùng"
+ *   holderError      loadHolder: không tìm thấy khách / tìm không ra ai      —                     chữ đỏ dưới ô tìm; firstProblem
+ *   partnerError     loadPartner: chưa chọn / trùng người đứng tên           —                     dòng dưới ô tìm người tập cùng; firstProblem
+ *
+ * ------------------------------------------------------------------------------------------------------------
+ * E. PtSalePlanBlock (sale.plan) — khối "Lịch tập" + lưới đang giữ
+ * ------------------------------------------------------------------------------------------------------------
+ *   weekTimes        newView ← ?t1..t5                               loadHeld ← giờ khung giữ theo thứ   loadPlan B3/B6 đọc
+ *   unpublishedWeekdays   loadPlan B2 ← unpublishedWeekdays(slots)   —                             getter unpublishedText → hộp nhắc vàng
+ *   planJson         (1) loadPlan B5d = JsonUtil.toJson(PtSalePlan)   —   ((3): luôn null)         <script id="sale-plan-data"> (mục J)
+ *   planError        (3) loadPlan B7a / B7b (checkRequested ném lỗi)   —                           firstProblem; JSP khi planJson rỗng
+ *   days             (3) loadPlan B8 ← checkRequested → checkDay     loadHeld: mỗi khung = 1 PtSaleDay "book"   hold() ghi DB · _pt-sale-held.jspf
+ *   sessionCount     (3) loadPlan B8 = days.size()                   loadHeld = days.size()        "N buổi tập", MSG307, ô Buổi
+ *   sessionValue     (3) loadPlan B8 = sessionValue(price, n)        loadHeld (cùng công thức)     ô Buổi "x đ/buổi"
+ *   noteCount        (getter) đếm days không có buổi / có warning    —                             _pt-sale-held.jspf ghi chú dưới lưới
+ *   ※ (1) xem: days / sessionCount / sessionValue = rỗng / 0 → số buổi trên màn do JS tự đếm từ planJson.
+ *
+ * ------------------------------------------------------------------------------------------------------------
+ * F. PtSaleHeldBlock (sale.heldOrder) — CHỈ trang (2), các trang khác null / 0
+ * ------------------------------------------------------------------------------------------------------------
+ *   orderId          loadHeld ← tham số orderId (?order=)   → isHeld() = true · ô ẩn "order" form Thu tiền / Hủy giữ
+ *   orderCode        loadHeld ← DAO findHeldOrder          → mã đơn cột phải, hộp xác nhận hủy
+ *   holdSeconds      loadHeld = held.expiresAt − now (≥ 0) → data-countdown-seconds, common.js bindCountdowns
+ *
+ * ------------------------------------------------------------------------------------------------------------
+ * G. PtSalePendingHold (phần tử sale.pendingHolds) — tạo bằng constructor trong loadPendingHolds
+ * ------------------------------------------------------------------------------------------------------------
+ *   orderId · orderCode       ← DAO findActiveHoldOrders                    → link "Tiếp tục thu tiền" ?order=, mã đơn
+ *   secondsLeft               = MIN(HoldExpiresAt) − now (≥ 0)              → "còn mm:ss"
+ *
+ * ------------------------------------------------------------------------------------------------------------
+ * H. PtSaleOption (phần tử choice.packages / choice.pts) — tạo bằng constructor, field final, KHÔNG có setter
+ * ------------------------------------------------------------------------------------------------------------
+ *                    gói (loadPackage)                              PT (loadPt)
+ *   value            PackageId                                      EmployeeId                → value radio (?package= / ?pt=)
+ *   label            tên gói                                        họ tên PT                 → chữ đậm
+ *   note             money(price) + " · N tháng · " + loại          initials(fullName) "ĐS"   → dòng nhỏ / avatar
+ *   (bản máy bạn có thêm field thứ 4 cho PT ← ptDetail(row): "chuyên môn · N năm kinh nghiệm")
+ *   Ô nào được tích: JSP so o.value eq sale.choice.packageId / ptId.
+ *
+ * ------------------------------------------------------------------------------------------------------------
+ * I. PtSaleCustomer (buyer.holder / partner / searchResults[] · JSON gợi ý) — DAO tạo, Service chỉ điền blockReason
+ * ------------------------------------------------------------------------------------------------------------
+ *   customerId · personId · fullName · customerCode · phone · dateOfBirth · membershipEnd · frozen
+ *                    ← PtSaleDAO.searchCustomers / findCustomer (constructor, final)
+ *   blockReason      ← whyCannotBuy (4 luật: chính lễ tân · đủ tuổi P-05 · có gói thành viên hôm nay · không bảo lưu)
+ *                      gọi ở: search (AJAX) · loadHolder · loadPartner.   loadHeld KHÔNG gọi → trang đang giữ luôn null.
+ *   Hiện ở: JSON gợi ý (PtSaleServlet.writeSuggestions: id, name, code, phone, ok, note) · _sale-customer.jspf (biến cust).
+ *
+ * ------------------------------------------------------------------------------------------------------------
+ * J. PtSalePlan (CHỈ để đổi thành planJson ở (1)) — loadPlan B4 buildPlan tạo, B5 điền thêm, B5d toJson
+ * ------------------------------------------------------------------------------------------------------------
+ *   start · end · price · minutes   buildPlan                  → JS: price (giá/buổi ô Đơn bán); minutes, start, end JS không đọc
+ *   times            buildPlan ← candidates (= published)      → nút giờ mỗi dòng Lịch mẫu
+ *   days[]           buildPlan: mỗi ngày T2–T6 trong kỳ         → JS vẽ lịch, đếm buổi
+ *     .date .weekday .label                                    → ô ngày, gom tuần, "Tối đa N buổi"
+ *     .options[]     mỗi giờ của ngày → checkDay
+ *        .time .end            giờ bắt đầu / kết thúc          → "07:00 – 08:00"
+ *        .ok                   checkDay.isSession()            → xếp được không
+ *        .reason .warning      whySkip / warningFor            → "Còn x/y buổi · PT có khách", ô vàng
+ *        .fresh                checkDay action == "create"     → "PT chưa mở", ô xác nhận PT (needConfirm)
+ *   unpublished      B5 ← unpublishedWeekdays                  → nhãn "PT chưa công bố" trên dòng thứ
+ *   published        B5 ← formatTimes(published)               → giờ ngoài danh sách = "PT chưa mở"
+ *   open · close     B5 ← giờ mở cửa / đóng cửa − thời lượng   → min / max ô "+ Thêm giờ"
+ *   pattern[5]       B5a ← weekTimes (chỉ giờ dùng được)       → nút tích sẵn Lịch mẫu
+ *   custom[5]        B5a ← weekdayExtra (giờ tự thêm hợp lệ)   → thêm nút giờ đúng thứ đó
+ *   requested[]      B5b ← parseSessions(input.sessions)       → JS khôi phục buổi sửa riêng
+ *   notice           B5c ← giờ tự nhập sai                     → <p> đỏ đầu khung Lịch tập
+ *   ⚠ PtSalePlan.days[] (mọi ngày × mọi giờ) KHÁC PtSalePlanBlock.days (các buổi đã chốt, mục E).
+ *
+ * ------------------------------------------------------------------------------------------------------------
+ * K. PtSaleDay (phần tử plan.days) — 1 ngày + 1 giờ = 1 buổi (mỗi ngày tối đa 1 buổi)
+ * ------------------------------------------------------------------------------------------------------------
+ *   Tạo ở 2 nơi:
+ *     checkDay (constructor) ← checkRequested (hold, (3)) · ← buildPlan (xem, (1): đổi ngay thành PtSalePlan.Option rồi bỏ)
+ *     loadHeld (constructor) — khung đang giữ, action = "book", reason / warning = null
+ *   date · dayLabel · startTime · endTime                      → ô lưới, ghi chú; INSERT khung mới (create)
+ *   action           checkDay: "book" (có khung Free đúng giờ) | "create" (PT chưa mở) | "skip" (không xếp được)
+ *                    → hold: book = holdFreeSlot · create = insertHeldSlot; countNewSlots đếm create
+ *   slotId           checkDay: TimeSlotId khung Free (chỉ book)  → holdFreeSlot UPDATE khung này
+ *   reason           whySkip (chỉ skip)                          → ô xám + ghi chú
+ *   warning          warningFor (phòng nghỉ / PT có đơn nghỉ)    → ô vàng + ghi chú
+ *   session          (getter isSession) = action != "skip"
+ * ============================================================================================================
+ */

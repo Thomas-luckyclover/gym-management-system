@@ -1,7 +1,7 @@
 ﻿/* ============================================================================
    GMS — FILE: 2_Seed_Data.sql  ·  v26
    SINH TỰ ĐỘNG bởi database/tools/seeddata.py — muốn sửa dữ liệu thì sửa file .py rồi sinh lại.
-   v26    : CheckedIn/Used, tự chốt JOB-04, đánh giá PT theo tháng, P-22 thay P-07.
+   v26    : CheckedIn/Used, tự chốt JOB-04, đánh giá PT theo tháng.
    CHẠY   : 0_Reset_Database.sql → 1_Init_Schema.sql → 2_Seed_Data.sql (database rỗng).
    MỐC    : lịch sử cố định quanh Thứ Bảy 03/10/2026 (tháng 6 → tháng 11/2026).
             Dữ liệu "sống" (mã xác thực, khóa tạm 5 phút, đơn online còn hạn, slot đang giữ,
@@ -551,7 +551,7 @@ Miễn phí nước uống
 Tặng 3 buổi đo InBody', 5490000, 549000, 10, 449182, 'Paid', '2026-09-20 20:30:00', '2026-09-20 20:10:00', '2026-09-20 20:12:00', NULL, NULL, NULL),
  (3, 'DH-2026-0003', 1, NULL, 13, NULL, NULL, NULL, 'Online', N'Buổi PT Lẻ', N'Một buổi tập cùng huấn luyện viên.', N'Không ràng buộc kỳ hạn', 450000, 0, 10, 40909, 'Paid', '2026-09-24 21:20:00', '2026-09-24 21:00:00', '2026-09-24 21:02:00', NULL, NULL, NULL),
  (4, 'DH-2026-0004', 1, NULL, 13, NULL, NULL, NULL, 'Online', N'Buổi PT Lẻ', N'Một buổi tập cùng huấn luyện viên.', N'Không ràng buộc kỳ hạn', 450000, 0, 10, 40909, 'Cancelled', DATEADD(MINUTE, 10, @Now), DATEADD(MINUTE, -10, @Now), NULL, 'ReplacedByNewOrder', DATEADD(MINUTE, -2, @Now), NULL), -- bị thay bằng đơn mới (CBR-41, CBR-71)
- (5, 'DH-2026-0005', 1, NULL, 13, NULL, NULL, NULL, 'Online', N'Buổi PT Lẻ', N'Một buổi tập cùng huấn luyện viên.', N'Không ràng buộc kỳ hạn', 450000, 0, 10, 40909, 'Pending', DATEADD(MINUTE, 18, @Now), DATEADD(MINUTE, -2, @Now), NULL, NULL, NULL, NULL), -- đang giữ slot ngày mai 14:00 (CBR-53)
+ (5, 'DH-2026-0005', 1, NULL, 13, NULL, NULL, NULL, 'Online', N'Buổi PT Lẻ', N'Một buổi tập cùng huấn luyện viên.', N'Không ràng buộc kỳ hạn', 450000, 0, 10, 40909, 'Pending', DATEADD(MINUTE, 18, @Now), DATEADD(MINUTE, -2, @Now), NULL, NULL, NULL, NULL), -- đang giữ slot ngày mai 20:30 (CBR-53)
  (6, 'DH-2026-0006', 2, NULL, 2, 1, NULL, NULL, 'Online', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
 Dùng đủ thiết bị khu cardio và khu tạ
 Miễn phí nước uống', 799000, 79900, 10, 65373, 'Paid', '2026-09-03 20:40:00', '2026-09-03 20:20:00', '2026-09-03 20:22:00', NULL, NULL, NULL),
@@ -1196,180 +1196,180 @@ SET IDENTITY_INSERT Transactions OFF;
    Subscriptions — 173 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT Subscriptions ON;
-INSERT INTO Subscriptions (SubscriptionId, OrderId, CustomerId, SubscriptionType, PtEmployeeId, StartDate, EndDate, FixedStartTime, GeneratedSessionCount, SwapsUsed, MaxSwapsSnapshot, FreezeUsed, MaxFreezesSnapshot, Status) VALUES
- (1, 1, 1, 'Membership', NULL, '2026-07-06', '2026-10-15', NULL, NULL, 0, NULL, 1, 1, 'Active'), -- bảo lưu 03/08 → hủy sớm 12/08: hạn +9 ngày (DBR-51)
- (2, 2, 1, 'Membership', NULL, '2026-10-16', '2027-07-16', NULL, NULL, 0, NULL, 0, 1, 'Active'), -- gia hạn trước: bắt đầu ngay sau gói cũ (DBR-52)
- (3, 3, 1, 'SingleSession', 5, '2026-09-26', '2026-09-26', NULL, 1, 0, NULL, 0, NULL, 'Used'),
- (4, 6, 2, 'Membership', NULL, '2026-09-03', '2026-10-03', NULL, NULL, 0, NULL, 0, 1, 'Active'), -- hết hạn đúng 03/10/2026
- (5, 8, 2, 'SingleSession', 5, '2026-09-26', '2026-09-26', NULL, 1, 0, NULL, 0, NULL, 'Used'),
- (6, 9, 3, 'Membership', NULL, '2026-07-01', '2026-08-01', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
- (7, 10, 3, 'PTSingle', 5, '2026-07-06', '2026-08-06', '07:00:00', 24, 0, 3, 0, NULL, 'Expired'), -- gói PT đã hết; 03–05/08 Missed vì hết gói tập (CBR-64)
- (8, 11, 4, 'Membership', NULL, '2026-07-29', '2027-01-29', NULL, NULL, 0, NULL, 1, 1, 'Frozen'), -- đang bảo lưu, hết lượt bảo lưu (BR-24)
- (9, 12, 4, 'PTSingle', 7, '2026-09-07', '2026-11-07', '17:00:00', 45, 0, 6, 0, NULL, 'Active'),
- (10, 13, 6, 'Membership', NULL, '2026-09-04', '2026-10-04', NULL, NULL, 0, NULL, 0, 1, 'Active'), -- hết 04/10 trước gói PT → buổi sau đó gắn nhãn "Không có gói tập" (CBR-66)
- (11, 14, 6, 'PTSingle', 5, '2026-09-07', '2026-11-07', '18:00:00', 45, 1, 6, 0, NULL, 'Active'), -- swap 1/6 (gói 2 tháng × 3); 1 buổi chuyển PT → hoa hồng cho PT mới (BR-68)
- (12, 15, 7, 'Membership', NULL, '2026-08-20', '2026-11-20', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (13, 16, 8, 'Membership', NULL, '2026-08-20', '2026-09-20', NULL, NULL, 0, NULL, 0, 1, 'Expired'), -- hết 20/09 → Expired nhưng vẫn còn buổi couple (CBR-63, CBR-67)
- (14, 17, 7, 'PTCouple', 6, '2026-08-24', '2026-10-24', '19:30:00', 45, 0, 6, 0, NULL, 'Active'), -- couple: chung hạn mức; 02/09 nghỉ lễ khai báo trước → không sinh buổi
- (15, 18, 9, 'Membership', NULL, '2026-09-03', '2026-12-03', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (16, 19, 11, 'Membership', NULL, '2026-07-15', '2027-07-15', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (17, 20, 12, 'Membership', NULL, '2026-03-01', '2026-04-01', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
- (18, 21, 13, 'Membership', NULL, '2026-09-21', '2026-10-21', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (19, 24, 17, 'Membership', NULL, '2026-09-10', '2026-12-10', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (20, 25, 17, 'PTSingle', 7, '2026-09-14', '2026-10-14', '12:00:00', 23, 0, 3, 0, NULL, 'Active'), -- 18/09 nghỉ khai báo TRƯỚC khi bán → không sinh buổi
- (21, 26, 18, 'Membership', NULL, '2026-09-15', '2026-10-15', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (22, 27, 19, 'Membership', NULL, '2026-08-01', '2026-11-01', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (23, 28, 20, 'Membership', NULL, '2026-07-01', '2026-08-01', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
- (24, 29, 21, 'Membership', NULL, '2026-09-01', '2026-12-01', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (25, 30, 21, 'PTSingle', 5, '2026-09-14', '2026-10-14', '06:30:00', 23, 1, 3, 0, NULL, 'Active'),
- (26, 31, 103, 'Membership', NULL, '2026-09-01', '2026-12-01', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (27, 32, 5, 'DayPass', NULL, @Today, @Today, NULL, NULL, 0, NULL, 0, NULL, 'Used'), -- đã check-in → hết hiệu lực (BR-29)
- (28, 33, 16, 'DayPass', NULL, @Today, @Today, NULL, NULL, 0, NULL, 0, NULL, 'Active'), -- gói ngày chưa check-in
- (29, 34, 16, 'SingleSession', 7, @Today, @Today, NULL, 1, 0, NULL, 0, NULL, 'Active'),
- (30, 36, 10, 'DayPass', NULL, @Today, @Today, NULL, NULL, 0, NULL, 0, NULL, 'Cancelled'),
- (31, 37, 201, 'Membership', NULL, '2026-09-07', '2026-10-07', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (32, 38, 202, 'Membership', NULL, '2026-06-26', '2026-07-26', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
- (33, 39, 203, 'Membership', NULL, '2026-06-17', '2026-09-17', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
- (34, 40, 203, 'Membership', NULL, '2026-09-18', '2026-12-18', NULL, NULL, 0, NULL, 0, 1, 'Active'), -- gia hạn nối tiếp (DBR-52)
- (35, 41, 204, 'Membership', NULL, '2026-06-17', '2026-09-17', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
- (36, 42, 205, 'Membership', NULL, '2026-09-08', '2026-12-08', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (37, 43, 206, 'Membership', NULL, '2026-06-19', '2027-03-19', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (38, 44, 207, 'Membership', NULL, '2026-07-11', '2027-07-11', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (39, 45, 208, 'Membership', NULL, '2026-08-06', '2027-05-06', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (40, 46, 209, 'Membership', NULL, '2026-06-29', '2026-09-29', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
- (41, 47, 210, 'DayPass', NULL, '2026-09-15', '2026-09-15', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (42, 48, 210, 'DayPass', NULL, '2026-09-28', '2026-09-28', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (43, 49, 211, 'Membership', NULL, '2026-08-10', '2026-11-10', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (44, 50, 212, 'Membership', NULL, '2026-07-16', '2026-10-16', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (45, 51, 213, 'Membership', NULL, '2026-07-18', '2027-04-18', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (46, 52, 214, 'Membership', NULL, '2026-09-17', '2026-10-17', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (47, 53, 215, 'Membership', NULL, '2026-09-12', '2026-10-12', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (48, 54, 216, 'Membership', NULL, '2026-07-13', '2026-08-13', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
- (49, 55, 216, 'Membership', NULL, '2026-08-14', '2026-11-14', NULL, NULL, 0, NULL, 0, 1, 'Active'), -- gia hạn nối tiếp (DBR-52)
- (50, 56, 217, 'Membership', NULL, '2026-07-08', '2026-08-08', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
- (51, 57, 217, 'Membership', NULL, '2026-08-09', '2026-09-09', NULL, NULL, 0, NULL, 0, 1, 'Expired'), -- gia hạn nối tiếp (DBR-52)
- (52, 58, 218, 'Membership', NULL, '2026-06-02', '2026-07-02', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
- (53, 59, 219, 'Membership', NULL, '2026-06-04', '2027-03-04', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (54, 60, 220, 'DayPass', NULL, '2026-08-25', '2026-08-25', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (55, 61, 221, 'Membership', NULL, '2026-06-20', '2027-03-20', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (56, 62, 222, 'Membership', NULL, '2026-09-16', '2026-10-16', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (57, 63, 223, 'Membership', NULL, '2026-08-03', '2026-09-03', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
- (58, 64, 224, 'Membership', NULL, '2026-09-08', '2027-09-08', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (59, 65, 225, 'Membership', NULL, '2026-07-26', '2027-04-26', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (60, 66, 226, 'Membership', NULL, '2026-06-26', '2026-07-26', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
- (61, 67, 226, 'Membership', NULL, '2026-07-27', '2026-08-27', NULL, NULL, 0, NULL, 0, 1, 'Expired'), -- gia hạn nối tiếp (DBR-52)
- (62, 68, 227, 'Membership', NULL, '2026-06-28', '2026-07-28', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
- (63, 69, 228, 'Membership', NULL, '2026-09-15', '2026-10-15', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (64, 70, 229, 'Membership', NULL, '2026-08-20', '2027-05-20', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (65, 71, 230, 'DayPass', NULL, '2026-08-13', '2026-08-13', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (66, 72, 231, 'Membership', NULL, '2026-07-14', '2026-10-14', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (67, 73, 232, 'Membership', NULL, '2026-08-22', '2026-09-22', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
- (68, 74, 232, 'Membership', NULL, '2026-09-23', '2026-10-23', NULL, NULL, 0, NULL, 0, 1, 'Active'), -- gia hạn nối tiếp (DBR-52)
- (69, 75, 233, 'Membership', NULL, '2026-08-29', '2026-09-29', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
- (70, 76, 233, 'Membership', NULL, '2026-09-30', '2026-12-30', NULL, NULL, 0, NULL, 0, 1, 'Active'), -- gia hạn nối tiếp (DBR-52)
- (71, 77, 234, 'Membership', NULL, '2026-08-01', '2027-05-01', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (72, 78, 235, 'Membership', NULL, '2026-07-05', '2026-08-05', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
- (73, 79, 235, 'Membership', NULL, '2026-08-06', '2026-09-06', NULL, NULL, 0, NULL, 0, 1, 'Expired'), -- gia hạn nối tiếp (DBR-52)
- (74, 80, 236, 'Membership', NULL, '2026-06-02', '2027-06-02', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (75, 81, 237, 'Membership', NULL, '2026-08-26', '2026-11-26', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (76, 82, 238, 'Membership', NULL, '2026-06-24', '2027-06-24', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (77, 83, 239, 'Membership', NULL, '2026-08-17', '2026-09-17', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
- (78, 84, 239, 'Membership', NULL, '2026-09-18', '2026-10-18', NULL, NULL, 0, NULL, 0, 1, 'Active'), -- gia hạn nối tiếp (DBR-52)
- (79, 85, 240, 'DayPass', NULL, '2026-06-18', '2026-06-18', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (80, 86, 201, 'PTSingle', 13, '2026-09-21', '2026-10-21', '07:30:00', 23, 0, 3, 0, NULL, 'Active'), -- khách thường mua gói PT
- (81, 87, 203, 'PTSingle', 6, '2026-09-21', '2026-10-21', '06:00:00', 23, 0, 3, 0, NULL, 'Active'), -- khách thường mua gói PT
- (82, 88, 205, 'PTSingle', 5, '2026-09-28', '2026-11-28', '15:00:00', 45, 0, 6, 0, NULL, 'Active'), -- khách thường mua gói PT
- (83, 89, 204, 'PTSingle', 14, '2026-09-14', '2026-10-14', '10:00:00', 23, 0, 3, 0, NULL, 'Active'), -- khách thường mua gói PT
- (84, 90, 206, 'PTSingle', 7, '2026-10-05', '2026-11-05', '19:00:00', 24, 0, 3, 0, NULL, 'Active'), -- khách thường mua gói PT
- (85, 91, 220, 'DayPass', NULL, '2026-09-01', '2026-09-01', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (86, 92, 220, 'DayPass', NULL, '2026-09-03', '2026-09-03', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (87, 93, 210, 'DayPass', NULL, '2026-09-03', '2026-09-03', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (88, 94, 240, 'DayPass', NULL, '2026-09-04', '2026-09-04', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (89, 95, 230, 'DayPass', NULL, '2026-09-04', '2026-09-04', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (90, 96, 210, 'DayPass', NULL, '2026-09-05', '2026-09-05', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (91, 97, 220, 'DayPass', NULL, '2026-09-06', '2026-09-06', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (92, 98, 230, 'DayPass', NULL, '2026-09-06', '2026-09-06', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (93, 99, 210, 'DayPass', NULL, '2026-09-06', '2026-09-06', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (94, 100, 240, 'DayPass', NULL, '2026-09-07', '2026-09-07', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (95, 101, 230, 'DayPass', NULL, '2026-09-07', '2026-09-07', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (96, 102, 230, 'DayPass', NULL, '2026-09-08', '2026-09-08', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (97, 103, 240, 'DayPass', NULL, '2026-09-08', '2026-09-08', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (98, 104, 240, 'DayPass', NULL, '2026-09-09', '2026-09-09', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (99, 105, 230, 'DayPass', NULL, '2026-09-10', '2026-09-10', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (100, 106, 220, 'DayPass', NULL, '2026-09-11', '2026-09-11', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (101, 107, 230, 'DayPass', NULL, '2026-09-12', '2026-09-12', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (102, 108, 220, 'DayPass', NULL, '2026-09-12', '2026-09-12', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (103, 109, 230, 'DayPass', NULL, '2026-09-13', '2026-09-13', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (104, 110, 240, 'DayPass', NULL, '2026-09-13', '2026-09-13', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (105, 111, 220, 'DayPass', NULL, '2026-09-14', '2026-09-14', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (106, 112, 230, 'DayPass', NULL, '2026-09-15', '2026-09-15', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (107, 113, 240, 'DayPass', NULL, '2026-09-16', '2026-09-16', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (108, 114, 230, 'DayPass', NULL, '2026-09-16', '2026-09-16', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (109, 115, 230, 'DayPass', NULL, '2026-09-17', '2026-09-17', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (110, 116, 230, 'DayPass', NULL, '2026-09-19', '2026-09-19', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (111, 117, 220, 'DayPass', NULL, '2026-09-19', '2026-09-19', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (112, 118, 240, 'DayPass', NULL, '2026-09-20', '2026-09-20', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (113, 119, 220, 'DayPass', NULL, '2026-09-21', '2026-09-21', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (114, 120, 220, 'DayPass', NULL, '2026-09-22', '2026-09-22', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (115, 121, 210, 'DayPass', NULL, '2026-09-22', '2026-09-22', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (116, 122, 230, 'DayPass', NULL, '2026-09-23', '2026-09-23', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (117, 123, 210, 'DayPass', NULL, '2026-09-23', '2026-09-23', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (118, 124, 210, 'DayPass', NULL, '2026-09-24', '2026-09-24', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (119, 125, 240, 'DayPass', NULL, '2026-09-25', '2026-09-25', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (120, 126, 230, 'DayPass', NULL, '2026-09-25', '2026-09-25', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (121, 127, 220, 'DayPass', NULL, '2026-09-26', '2026-09-26', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (122, 128, 240, 'DayPass', NULL, '2026-09-27', '2026-09-27', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (123, 129, 240, 'DayPass', NULL, '2026-09-28', '2026-09-28', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (124, 130, 210, 'DayPass', NULL, '2026-09-29', '2026-09-29', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (125, 131, 230, 'DayPass', NULL, '2026-09-29', '2026-09-29', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (126, 132, 230, 'DayPass', NULL, '2026-09-30', '2026-09-30', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (127, 133, 230, 'DayPass', NULL, '2026-10-01', '2026-10-01', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (128, 134, 220, 'DayPass', NULL, '2026-10-01', '2026-10-01', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (129, 135, 210, 'DayPass', NULL, '2026-10-01', '2026-10-01', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (130, 136, 230, 'DayPass', NULL, '2026-10-02', '2026-10-02', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (131, 137, 220, 'DayPass', NULL, '2026-10-02', '2026-10-02', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (132, 138, 201, 'SingleSession', 6, '2026-09-23', '2026-09-23', NULL, 1, 0, NULL, 0, NULL, 'Used'),
- (133, 139, 203, 'SingleSession', 7, '2026-09-05', '2026-09-05', NULL, 1, 0, NULL, 0, NULL, 'Used'),
- (134, 140, 204, 'SingleSession', 13, '2026-09-12', '2026-09-12', NULL, 1, 0, NULL, 0, NULL, 'Used'),
- (135, 141, 205, 'SingleSession', 7, '2026-09-27', '2026-09-27', NULL, 1, 0, NULL, 0, NULL, 'Used'),
- (136, 142, 206, 'SingleSession', 6, '2026-09-14', '2026-09-14', NULL, 1, 0, NULL, 0, NULL, 'Used'),
- (137, 143, 207, 'SingleSession', 6, '2026-09-29', '2026-09-29', NULL, 1, 0, NULL, 0, NULL, 'Expired'),
- (138, 144, 208, 'SingleSession', 13, '2026-09-20', '2026-09-20', NULL, 1, 0, NULL, 0, NULL, 'Used'),
- (139, 145, 209, 'SingleSession', 7, '2026-09-17', '2026-09-17', NULL, 1, 0, NULL, 0, NULL, 'Used'),
- (140, 146, 211, 'SingleSession', 13, '2026-09-27', '2026-09-27', NULL, 1, 0, NULL, 0, NULL, 'Used'),
- (141, 147, 212, 'SingleSession', 13, '2026-09-21', '2026-09-21', NULL, 1, 0, NULL, 0, NULL, 'Used'),
- (142, 148, 213, 'SingleSession', 5, '2026-09-05', '2026-09-05', NULL, 1, 0, NULL, 0, NULL, 'Used'),
- (143, 149, 214, 'SingleSession', 5, '2026-09-30', '2026-09-30', NULL, 1, 0, NULL, 0, NULL, 'Expired'),
- (144, 150, 215, 'SingleSession', 6, '2026-09-23', '2026-09-23', NULL, 1, 0, NULL, 0, NULL, 'Used'),
- (145, 151, 216, 'SingleSession', 7, '2026-09-11', '2026-09-11', NULL, 1, 0, NULL, 0, NULL, 'Used'),
- (146, 152, 219, 'SingleSession', 5, '2026-09-24', '2026-09-24', NULL, 1, 0, NULL, 0, NULL, 'Used'),
- (147, 153, 221, 'SingleSession', 7, '2026-09-25', '2026-09-25', NULL, 1, 0, NULL, 0, NULL, 'Used'),
- (148, 154, 222, 'SingleSession', 5, '2026-09-29', '2026-09-29', NULL, 1, 0, NULL, 0, NULL, 'Used'),
- (149, 155, 224, 'SingleSession', 6, '2026-09-11', '2026-09-11', NULL, 1, 0, NULL, 0, NULL, 'Used'),
- (150, 156, 2, 'Membership', NULL, '2026-10-21', '2027-01-21', NULL, NULL, 0, NULL, 0, 1, 'Active'), -- gia hạn sau khi hết 03/10
- (151, 157, 3, 'Membership', NULL, '2026-10-21', '2027-01-21', NULL, NULL, 0, NULL, 0, 1, 'Active'), -- quay lại tập sau 3 tháng nghỉ
- (152, 158, 6, 'Membership', NULL, '2026-10-22', '2027-01-22', NULL, NULL, 0, NULL, 0, 1, 'Active'), -- Mai gia hạn: từ 22/10 các buổi PT hết "Cần chú ý"
- (153, 159, 8, 'Membership', NULL, '2026-10-22', '2027-01-22', NULL, NULL, 0, NULL, 0, 1, 'Active'), -- Hà gia hạn để mua tiếp gói đôi
- (154, 160, 1, 'PTSingle', 5, '2026-10-26', '2026-11-26', '07:00:00', 24, 0, 3, 0, NULL, 'Active'), -- An: PT Sơn 07:00, bắt đầu 26/10
- (155, 161, 3, 'PTSingle', 13, '2026-11-02', '2026-12-02', '11:00:00', 23, 0, 3, 0, NULL, 'Active'), -- Quân: PT Long 11:00, bắt đầu 02/11
- (156, 162, 7, 'PTCouple', 6, '2026-10-26', '2026-11-26', '19:30:00', 24, 0, 3, 0, NULL, 'Active'), -- Hưng & Hà mua tiếp gói đôi 1 tháng với PT Trang
- (157, 163, 6, 'PTSingle', 5, '2026-11-09', '2027-01-09', '18:00:00', 45, 0, 6, 0, NULL, 'Active'), -- Mai: gói PT 2 tháng nối tiếp gói cũ (hết 07/11), cùng giờ 18:00
- (158, 164, 201, 'Membership', NULL, '2026-10-21', '2027-01-21', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (159, 165, 202, 'Membership', NULL, '2026-10-22', '2026-11-22', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (160, 166, 204, 'Membership', NULL, '2026-10-23', '2027-01-23', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (161, 167, 209, 'Membership', NULL, '2026-10-21', '2026-11-21', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (162, 168, 212, 'Membership', NULL, '2026-10-22', '2027-01-22', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (163, 169, 214, 'Membership', NULL, '2026-10-23', '2026-11-23', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (164, 170, 215, 'Membership', NULL, '2026-10-21', '2027-01-21', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (165, 171, 217, 'Membership', NULL, '2026-10-22', '2026-11-22', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (166, 172, 218, 'Membership', NULL, '2026-10-23', '2027-01-23', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (167, 173, 222, 'Membership', NULL, '2026-10-21', '2026-11-21', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (168, 174, 223, 'Membership', NULL, '2026-10-22', '2027-01-22', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (169, 175, 226, 'Membership', NULL, '2026-10-23', '2026-11-23', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (170, 176, 1, 'SingleSession', 7, '2026-10-29', '2026-10-29', NULL, 1, 0, NULL, 0, NULL, 'Active'),
- (171, 177, 2, 'SingleSession', 6, '2026-10-27', '2026-10-27', NULL, 1, 0, NULL, 0, NULL, 'Active'),
- (172, 178, 2, 'SingleSession', 5, '2026-10-30', '2026-10-30', NULL, 1, 0, NULL, 0, NULL, 'Active'),
- (173, 179, 6, 'SingleSession', 13, '2026-10-31', '2026-10-31', NULL, 1, 0, NULL, 0, NULL, 'Active');
+INSERT INTO Subscriptions (SubscriptionId, OrderId, CustomerId, SubscriptionType, PtEmployeeId, StartDate, EndDate, FixedStartTime, GeneratedSessionCount, FreezeUsed, MaxFreezesSnapshot, Status) VALUES
+ (1, 1, 1, 'Membership', NULL, '2026-07-06', '2026-10-15', NULL, NULL, 1, 1, 'Active'), -- bảo lưu 03/08 → hủy sớm 12/08: hạn +9 ngày (DBR-51)
+ (2, 2, 1, 'Membership', NULL, '2026-10-16', '2027-07-16', NULL, NULL, 0, 1, 'Active'), -- gia hạn trước: bắt đầu ngay sau gói cũ (DBR-52)
+ (3, 3, 1, 'SingleSession', 5, '2026-09-26', '2026-09-26', NULL, 1, 0, NULL, 'Used'),
+ (4, 6, 2, 'Membership', NULL, '2026-09-03', '2026-10-03', NULL, NULL, 0, 1, 'Active'), -- hết hạn đúng 03/10/2026
+ (5, 8, 2, 'SingleSession', 5, '2026-09-26', '2026-09-26', NULL, 1, 0, NULL, 'Used'),
+ (6, 9, 3, 'Membership', NULL, '2026-07-01', '2026-08-01', NULL, NULL, 0, 1, 'Expired'),
+ (7, 10, 3, 'PTSingle', 5, '2026-07-06', '2026-08-06', '07:00:00', 24, 0, NULL, 'Expired'), -- gói PT đã hết; 03–05/08 Missed vì hết gói tập (CBR-64)
+ (8, 11, 4, 'Membership', NULL, '2026-07-29', '2027-01-29', NULL, NULL, 1, 1, 'Frozen'), -- đang bảo lưu, hết lượt bảo lưu (BR-24)
+ (9, 12, 4, 'PTSingle', 7, '2026-09-07', '2026-11-07', '17:00:00', 45, 0, NULL, 'Active'),
+ (10, 13, 6, 'Membership', NULL, '2026-09-04', '2026-10-04', NULL, NULL, 0, 1, 'Active'), -- hết 04/10 trước gói PT → buổi sau đó gắn nhãn "Không có gói tập" (CBR-66)
+ (11, 14, 6, 'PTSingle', 5, '2026-09-07', '2026-11-07', '18:00:00', 45, 0, NULL, 'Active'), -- swap 1/6 (gói 2 tháng × 3); 1 buổi chuyển PT → hoa hồng cho PT mới (BR-68)
+ (12, 15, 7, 'Membership', NULL, '2026-08-20', '2026-11-20', NULL, NULL, 0, 1, 'Active'),
+ (13, 16, 8, 'Membership', NULL, '2026-08-20', '2026-09-20', NULL, NULL, 0, 1, 'Expired'), -- hết 20/09 → Expired nhưng vẫn còn buổi couple (CBR-63, CBR-67)
+ (14, 17, 7, 'PTCouple', 6, '2026-08-24', '2026-10-24', '19:30:00', 45, 0, NULL, 'Active'), -- couple: chung hạn mức; 02/09 nghỉ lễ khai báo trước → không sinh buổi
+ (15, 18, 9, 'Membership', NULL, '2026-09-03', '2026-12-03', NULL, NULL, 0, 1, 'Active'),
+ (16, 19, 11, 'Membership', NULL, '2026-07-15', '2027-07-15', NULL, NULL, 0, 1, 'Active'),
+ (17, 20, 12, 'Membership', NULL, '2026-03-01', '2026-04-01', NULL, NULL, 0, 1, 'Expired'),
+ (18, 21, 13, 'Membership', NULL, '2026-09-21', '2026-10-21', NULL, NULL, 0, 1, 'Active'),
+ (19, 24, 17, 'Membership', NULL, '2026-09-10', '2026-12-10', NULL, NULL, 0, 1, 'Active'),
+ (20, 25, 17, 'PTSingle', 7, '2026-09-14', '2026-10-14', '12:00:00', 23, 0, NULL, 'Active'), -- 18/09 nghỉ khai báo TRƯỚC khi bán → không sinh buổi
+ (21, 26, 18, 'Membership', NULL, '2026-09-15', '2026-10-15', NULL, NULL, 0, 1, 'Active'),
+ (22, 27, 19, 'Membership', NULL, '2026-08-01', '2026-11-01', NULL, NULL, 0, 1, 'Active'),
+ (23, 28, 20, 'Membership', NULL, '2026-07-01', '2026-08-01', NULL, NULL, 0, 1, 'Expired'),
+ (24, 29, 21, 'Membership', NULL, '2026-09-01', '2026-12-01', NULL, NULL, 0, 1, 'Active'),
+ (25, 30, 21, 'PTSingle', 5, '2026-09-14', '2026-10-14', '06:30:00', 23, 0, NULL, 'Active'),
+ (26, 31, 103, 'Membership', NULL, '2026-09-01', '2026-12-01', NULL, NULL, 0, 1, 'Active'),
+ (27, 32, 5, 'DayPass', NULL, @Today, @Today, NULL, NULL, 0, NULL, 'Used'), -- đã check-in → hết hiệu lực (BR-29)
+ (28, 33, 16, 'DayPass', NULL, @Today, @Today, NULL, NULL, 0, NULL, 'Active'), -- gói ngày chưa check-in
+ (29, 34, 16, 'SingleSession', 7, @Today, @Today, NULL, 1, 0, NULL, 'Active'),
+ (30, 36, 10, 'DayPass', NULL, @Today, @Today, NULL, NULL, 0, NULL, 'Cancelled'),
+ (31, 37, 201, 'Membership', NULL, '2026-09-07', '2026-10-07', NULL, NULL, 0, 1, 'Active'),
+ (32, 38, 202, 'Membership', NULL, '2026-06-26', '2026-07-26', NULL, NULL, 0, 1, 'Expired'),
+ (33, 39, 203, 'Membership', NULL, '2026-06-17', '2026-09-17', NULL, NULL, 0, 1, 'Expired'),
+ (34, 40, 203, 'Membership', NULL, '2026-09-18', '2026-12-18', NULL, NULL, 0, 1, 'Active'), -- gia hạn nối tiếp (DBR-52)
+ (35, 41, 204, 'Membership', NULL, '2026-06-17', '2026-09-17', NULL, NULL, 0, 1, 'Expired'),
+ (36, 42, 205, 'Membership', NULL, '2026-09-08', '2026-12-08', NULL, NULL, 0, 1, 'Active'),
+ (37, 43, 206, 'Membership', NULL, '2026-06-19', '2027-03-19', NULL, NULL, 0, 1, 'Active'),
+ (38, 44, 207, 'Membership', NULL, '2026-07-11', '2027-07-11', NULL, NULL, 0, 1, 'Active'),
+ (39, 45, 208, 'Membership', NULL, '2026-08-06', '2027-05-06', NULL, NULL, 0, 1, 'Active'),
+ (40, 46, 209, 'Membership', NULL, '2026-06-29', '2026-09-29', NULL, NULL, 0, 1, 'Expired'),
+ (41, 47, 210, 'DayPass', NULL, '2026-09-15', '2026-09-15', NULL, NULL, 0, NULL, 'Used'),
+ (42, 48, 210, 'DayPass', NULL, '2026-09-28', '2026-09-28', NULL, NULL, 0, NULL, 'Used'),
+ (43, 49, 211, 'Membership', NULL, '2026-08-10', '2026-11-10', NULL, NULL, 0, 1, 'Active'),
+ (44, 50, 212, 'Membership', NULL, '2026-07-16', '2026-10-16', NULL, NULL, 0, 1, 'Active'),
+ (45, 51, 213, 'Membership', NULL, '2026-07-18', '2027-04-18', NULL, NULL, 0, 1, 'Active'),
+ (46, 52, 214, 'Membership', NULL, '2026-09-17', '2026-10-17', NULL, NULL, 0, 1, 'Active'),
+ (47, 53, 215, 'Membership', NULL, '2026-09-12', '2026-10-12', NULL, NULL, 0, 1, 'Active'),
+ (48, 54, 216, 'Membership', NULL, '2026-07-13', '2026-08-13', NULL, NULL, 0, 1, 'Expired'),
+ (49, 55, 216, 'Membership', NULL, '2026-08-14', '2026-11-14', NULL, NULL, 0, 1, 'Active'), -- gia hạn nối tiếp (DBR-52)
+ (50, 56, 217, 'Membership', NULL, '2026-07-08', '2026-08-08', NULL, NULL, 0, 1, 'Expired'),
+ (51, 57, 217, 'Membership', NULL, '2026-08-09', '2026-09-09', NULL, NULL, 0, 1, 'Expired'), -- gia hạn nối tiếp (DBR-52)
+ (52, 58, 218, 'Membership', NULL, '2026-06-02', '2026-07-02', NULL, NULL, 0, 1, 'Expired'),
+ (53, 59, 219, 'Membership', NULL, '2026-06-04', '2027-03-04', NULL, NULL, 0, 1, 'Active'),
+ (54, 60, 220, 'DayPass', NULL, '2026-08-25', '2026-08-25', NULL, NULL, 0, NULL, 'Used'),
+ (55, 61, 221, 'Membership', NULL, '2026-06-20', '2027-03-20', NULL, NULL, 0, 1, 'Active'),
+ (56, 62, 222, 'Membership', NULL, '2026-09-16', '2026-10-16', NULL, NULL, 0, 1, 'Active'),
+ (57, 63, 223, 'Membership', NULL, '2026-08-03', '2026-09-03', NULL, NULL, 0, 1, 'Expired'),
+ (58, 64, 224, 'Membership', NULL, '2026-09-08', '2027-09-08', NULL, NULL, 0, 1, 'Active'),
+ (59, 65, 225, 'Membership', NULL, '2026-07-26', '2027-04-26', NULL, NULL, 0, 1, 'Active'),
+ (60, 66, 226, 'Membership', NULL, '2026-06-26', '2026-07-26', NULL, NULL, 0, 1, 'Expired'),
+ (61, 67, 226, 'Membership', NULL, '2026-07-27', '2026-08-27', NULL, NULL, 0, 1, 'Expired'), -- gia hạn nối tiếp (DBR-52)
+ (62, 68, 227, 'Membership', NULL, '2026-06-28', '2026-07-28', NULL, NULL, 0, 1, 'Expired'),
+ (63, 69, 228, 'Membership', NULL, '2026-09-15', '2026-10-15', NULL, NULL, 0, 1, 'Active'),
+ (64, 70, 229, 'Membership', NULL, '2026-08-20', '2027-05-20', NULL, NULL, 0, 1, 'Active'),
+ (65, 71, 230, 'DayPass', NULL, '2026-08-13', '2026-08-13', NULL, NULL, 0, NULL, 'Used'),
+ (66, 72, 231, 'Membership', NULL, '2026-07-14', '2026-10-14', NULL, NULL, 0, 1, 'Active'),
+ (67, 73, 232, 'Membership', NULL, '2026-08-22', '2026-09-22', NULL, NULL, 0, 1, 'Expired'),
+ (68, 74, 232, 'Membership', NULL, '2026-09-23', '2026-10-23', NULL, NULL, 0, 1, 'Active'), -- gia hạn nối tiếp (DBR-52)
+ (69, 75, 233, 'Membership', NULL, '2026-08-29', '2026-09-29', NULL, NULL, 0, 1, 'Expired'),
+ (70, 76, 233, 'Membership', NULL, '2026-09-30', '2026-12-30', NULL, NULL, 0, 1, 'Active'), -- gia hạn nối tiếp (DBR-52)
+ (71, 77, 234, 'Membership', NULL, '2026-08-01', '2027-05-01', NULL, NULL, 0, 1, 'Active'),
+ (72, 78, 235, 'Membership', NULL, '2026-07-05', '2026-08-05', NULL, NULL, 0, 1, 'Expired'),
+ (73, 79, 235, 'Membership', NULL, '2026-08-06', '2026-09-06', NULL, NULL, 0, 1, 'Expired'), -- gia hạn nối tiếp (DBR-52)
+ (74, 80, 236, 'Membership', NULL, '2026-06-02', '2027-06-02', NULL, NULL, 0, 1, 'Active'),
+ (75, 81, 237, 'Membership', NULL, '2026-08-26', '2026-11-26', NULL, NULL, 0, 1, 'Active'),
+ (76, 82, 238, 'Membership', NULL, '2026-06-24', '2027-06-24', NULL, NULL, 0, 1, 'Active'),
+ (77, 83, 239, 'Membership', NULL, '2026-08-17', '2026-09-17', NULL, NULL, 0, 1, 'Expired'),
+ (78, 84, 239, 'Membership', NULL, '2026-09-18', '2026-10-18', NULL, NULL, 0, 1, 'Active'), -- gia hạn nối tiếp (DBR-52)
+ (79, 85, 240, 'DayPass', NULL, '2026-06-18', '2026-06-18', NULL, NULL, 0, NULL, 'Used'),
+ (80, 86, 201, 'PTSingle', 13, '2026-09-21', '2026-10-21', '07:30:00', 23, 0, NULL, 'Active'), -- khách thường mua gói PT
+ (81, 87, 203, 'PTSingle', 6, '2026-09-21', '2026-10-21', '06:00:00', 23, 0, NULL, 'Active'), -- khách thường mua gói PT
+ (82, 88, 205, 'PTSingle', 5, '2026-09-28', '2026-11-28', '15:00:00', 45, 0, NULL, 'Active'), -- khách thường mua gói PT
+ (83, 89, 204, 'PTSingle', 14, '2026-09-14', '2026-10-14', '10:00:00', 23, 0, NULL, 'Active'), -- khách thường mua gói PT
+ (84, 90, 206, 'PTSingle', 7, '2026-10-05', '2026-11-05', '19:00:00', 24, 0, NULL, 'Active'), -- khách thường mua gói PT
+ (85, 91, 220, 'DayPass', NULL, '2026-09-01', '2026-09-01', NULL, NULL, 0, NULL, 'Used'),
+ (86, 92, 220, 'DayPass', NULL, '2026-09-03', '2026-09-03', NULL, NULL, 0, NULL, 'Used'),
+ (87, 93, 210, 'DayPass', NULL, '2026-09-03', '2026-09-03', NULL, NULL, 0, NULL, 'Used'),
+ (88, 94, 240, 'DayPass', NULL, '2026-09-04', '2026-09-04', NULL, NULL, 0, NULL, 'Used'),
+ (89, 95, 230, 'DayPass', NULL, '2026-09-04', '2026-09-04', NULL, NULL, 0, NULL, 'Used'),
+ (90, 96, 210, 'DayPass', NULL, '2026-09-05', '2026-09-05', NULL, NULL, 0, NULL, 'Used'),
+ (91, 97, 220, 'DayPass', NULL, '2026-09-06', '2026-09-06', NULL, NULL, 0, NULL, 'Used'),
+ (92, 98, 230, 'DayPass', NULL, '2026-09-06', '2026-09-06', NULL, NULL, 0, NULL, 'Used'),
+ (93, 99, 210, 'DayPass', NULL, '2026-09-06', '2026-09-06', NULL, NULL, 0, NULL, 'Used'),
+ (94, 100, 240, 'DayPass', NULL, '2026-09-07', '2026-09-07', NULL, NULL, 0, NULL, 'Used'),
+ (95, 101, 230, 'DayPass', NULL, '2026-09-07', '2026-09-07', NULL, NULL, 0, NULL, 'Used'),
+ (96, 102, 230, 'DayPass', NULL, '2026-09-08', '2026-09-08', NULL, NULL, 0, NULL, 'Used'),
+ (97, 103, 240, 'DayPass', NULL, '2026-09-08', '2026-09-08', NULL, NULL, 0, NULL, 'Used'),
+ (98, 104, 240, 'DayPass', NULL, '2026-09-09', '2026-09-09', NULL, NULL, 0, NULL, 'Used'),
+ (99, 105, 230, 'DayPass', NULL, '2026-09-10', '2026-09-10', NULL, NULL, 0, NULL, 'Used'),
+ (100, 106, 220, 'DayPass', NULL, '2026-09-11', '2026-09-11', NULL, NULL, 0, NULL, 'Used'),
+ (101, 107, 230, 'DayPass', NULL, '2026-09-12', '2026-09-12', NULL, NULL, 0, NULL, 'Used'),
+ (102, 108, 220, 'DayPass', NULL, '2026-09-12', '2026-09-12', NULL, NULL, 0, NULL, 'Used'),
+ (103, 109, 230, 'DayPass', NULL, '2026-09-13', '2026-09-13', NULL, NULL, 0, NULL, 'Used'),
+ (104, 110, 240, 'DayPass', NULL, '2026-09-13', '2026-09-13', NULL, NULL, 0, NULL, 'Used'),
+ (105, 111, 220, 'DayPass', NULL, '2026-09-14', '2026-09-14', NULL, NULL, 0, NULL, 'Used'),
+ (106, 112, 230, 'DayPass', NULL, '2026-09-15', '2026-09-15', NULL, NULL, 0, NULL, 'Used'),
+ (107, 113, 240, 'DayPass', NULL, '2026-09-16', '2026-09-16', NULL, NULL, 0, NULL, 'Used'),
+ (108, 114, 230, 'DayPass', NULL, '2026-09-16', '2026-09-16', NULL, NULL, 0, NULL, 'Used'),
+ (109, 115, 230, 'DayPass', NULL, '2026-09-17', '2026-09-17', NULL, NULL, 0, NULL, 'Used'),
+ (110, 116, 230, 'DayPass', NULL, '2026-09-19', '2026-09-19', NULL, NULL, 0, NULL, 'Used'),
+ (111, 117, 220, 'DayPass', NULL, '2026-09-19', '2026-09-19', NULL, NULL, 0, NULL, 'Used'),
+ (112, 118, 240, 'DayPass', NULL, '2026-09-20', '2026-09-20', NULL, NULL, 0, NULL, 'Used'),
+ (113, 119, 220, 'DayPass', NULL, '2026-09-21', '2026-09-21', NULL, NULL, 0, NULL, 'Used'),
+ (114, 120, 220, 'DayPass', NULL, '2026-09-22', '2026-09-22', NULL, NULL, 0, NULL, 'Used'),
+ (115, 121, 210, 'DayPass', NULL, '2026-09-22', '2026-09-22', NULL, NULL, 0, NULL, 'Used'),
+ (116, 122, 230, 'DayPass', NULL, '2026-09-23', '2026-09-23', NULL, NULL, 0, NULL, 'Used'),
+ (117, 123, 210, 'DayPass', NULL, '2026-09-23', '2026-09-23', NULL, NULL, 0, NULL, 'Used'),
+ (118, 124, 210, 'DayPass', NULL, '2026-09-24', '2026-09-24', NULL, NULL, 0, NULL, 'Used'),
+ (119, 125, 240, 'DayPass', NULL, '2026-09-25', '2026-09-25', NULL, NULL, 0, NULL, 'Used'),
+ (120, 126, 230, 'DayPass', NULL, '2026-09-25', '2026-09-25', NULL, NULL, 0, NULL, 'Used'),
+ (121, 127, 220, 'DayPass', NULL, '2026-09-26', '2026-09-26', NULL, NULL, 0, NULL, 'Used'),
+ (122, 128, 240, 'DayPass', NULL, '2026-09-27', '2026-09-27', NULL, NULL, 0, NULL, 'Used'),
+ (123, 129, 240, 'DayPass', NULL, '2026-09-28', '2026-09-28', NULL, NULL, 0, NULL, 'Used'),
+ (124, 130, 210, 'DayPass', NULL, '2026-09-29', '2026-09-29', NULL, NULL, 0, NULL, 'Used'),
+ (125, 131, 230, 'DayPass', NULL, '2026-09-29', '2026-09-29', NULL, NULL, 0, NULL, 'Used'),
+ (126, 132, 230, 'DayPass', NULL, '2026-09-30', '2026-09-30', NULL, NULL, 0, NULL, 'Used'),
+ (127, 133, 230, 'DayPass', NULL, '2026-10-01', '2026-10-01', NULL, NULL, 0, NULL, 'Used'),
+ (128, 134, 220, 'DayPass', NULL, '2026-10-01', '2026-10-01', NULL, NULL, 0, NULL, 'Used'),
+ (129, 135, 210, 'DayPass', NULL, '2026-10-01', '2026-10-01', NULL, NULL, 0, NULL, 'Used'),
+ (130, 136, 230, 'DayPass', NULL, '2026-10-02', '2026-10-02', NULL, NULL, 0, NULL, 'Used'),
+ (131, 137, 220, 'DayPass', NULL, '2026-10-02', '2026-10-02', NULL, NULL, 0, NULL, 'Used'),
+ (132, 138, 201, 'SingleSession', 6, '2026-09-23', '2026-09-23', NULL, 1, 0, NULL, 'Used'),
+ (133, 139, 203, 'SingleSession', 7, '2026-09-05', '2026-09-05', NULL, 1, 0, NULL, 'Used'),
+ (134, 140, 204, 'SingleSession', 13, '2026-09-12', '2026-09-12', NULL, 1, 0, NULL, 'Used'),
+ (135, 141, 205, 'SingleSession', 7, '2026-09-27', '2026-09-27', NULL, 1, 0, NULL, 'Used'),
+ (136, 142, 206, 'SingleSession', 6, '2026-09-14', '2026-09-14', NULL, 1, 0, NULL, 'Used'),
+ (137, 143, 207, 'SingleSession', 6, '2026-09-29', '2026-09-29', NULL, 1, 0, NULL, 'Expired'),
+ (138, 144, 208, 'SingleSession', 13, '2026-09-20', '2026-09-20', NULL, 1, 0, NULL, 'Used'),
+ (139, 145, 209, 'SingleSession', 7, '2026-09-17', '2026-09-17', NULL, 1, 0, NULL, 'Used'),
+ (140, 146, 211, 'SingleSession', 13, '2026-09-27', '2026-09-27', NULL, 1, 0, NULL, 'Used'),
+ (141, 147, 212, 'SingleSession', 13, '2026-09-21', '2026-09-21', NULL, 1, 0, NULL, 'Used'),
+ (142, 148, 213, 'SingleSession', 5, '2026-09-05', '2026-09-05', NULL, 1, 0, NULL, 'Used'),
+ (143, 149, 214, 'SingleSession', 5, '2026-09-30', '2026-09-30', NULL, 1, 0, NULL, 'Expired'),
+ (144, 150, 215, 'SingleSession', 6, '2026-09-23', '2026-09-23', NULL, 1, 0, NULL, 'Used'),
+ (145, 151, 216, 'SingleSession', 7, '2026-09-11', '2026-09-11', NULL, 1, 0, NULL, 'Used'),
+ (146, 152, 219, 'SingleSession', 5, '2026-09-24', '2026-09-24', NULL, 1, 0, NULL, 'Used'),
+ (147, 153, 221, 'SingleSession', 7, '2026-09-25', '2026-09-25', NULL, 1, 0, NULL, 'Used'),
+ (148, 154, 222, 'SingleSession', 5, '2026-09-29', '2026-09-29', NULL, 1, 0, NULL, 'Used'),
+ (149, 155, 224, 'SingleSession', 6, '2026-09-11', '2026-09-11', NULL, 1, 0, NULL, 'Used'),
+ (150, 156, 2, 'Membership', NULL, '2026-10-21', '2027-01-21', NULL, NULL, 0, 1, 'Active'), -- gia hạn sau khi hết 03/10
+ (151, 157, 3, 'Membership', NULL, '2026-10-21', '2027-01-21', NULL, NULL, 0, 1, 'Active'), -- quay lại tập sau 3 tháng nghỉ
+ (152, 158, 6, 'Membership', NULL, '2026-10-22', '2027-01-22', NULL, NULL, 0, 1, 'Active'), -- Mai gia hạn: từ 22/10 các buổi PT hết "Cần chú ý"
+ (153, 159, 8, 'Membership', NULL, '2026-10-22', '2027-01-22', NULL, NULL, 0, 1, 'Active'), -- Hà gia hạn để mua tiếp gói đôi
+ (154, 160, 1, 'PTSingle', 5, '2026-10-26', '2026-11-26', '07:00:00', 24, 0, NULL, 'Active'), -- An: PT Sơn 07:00, bắt đầu 26/10
+ (155, 161, 3, 'PTSingle', 13, '2026-11-02', '2026-12-02', '11:00:00', 23, 0, NULL, 'Active'), -- Quân: PT Long 11:00, bắt đầu 02/11
+ (156, 162, 7, 'PTCouple', 6, '2026-10-26', '2026-11-26', '19:30:00', 24, 0, NULL, 'Active'), -- Hưng & Hà mua tiếp gói đôi 1 tháng với PT Trang
+ (157, 163, 6, 'PTSingle', 5, '2026-11-09', '2027-01-09', '18:00:00', 45, 0, NULL, 'Active'), -- Mai: gói PT 2 tháng nối tiếp gói cũ (hết 07/11), cùng giờ 18:00
+ (158, 164, 201, 'Membership', NULL, '2026-10-21', '2027-01-21', NULL, NULL, 0, 1, 'Active'),
+ (159, 165, 202, 'Membership', NULL, '2026-10-22', '2026-11-22', NULL, NULL, 0, 1, 'Active'),
+ (160, 166, 204, 'Membership', NULL, '2026-10-23', '2027-01-23', NULL, NULL, 0, 1, 'Active'),
+ (161, 167, 209, 'Membership', NULL, '2026-10-21', '2026-11-21', NULL, NULL, 0, 1, 'Active'),
+ (162, 168, 212, 'Membership', NULL, '2026-10-22', '2027-01-22', NULL, NULL, 0, 1, 'Active'),
+ (163, 169, 214, 'Membership', NULL, '2026-10-23', '2026-11-23', NULL, NULL, 0, 1, 'Active'),
+ (164, 170, 215, 'Membership', NULL, '2026-10-21', '2027-01-21', NULL, NULL, 0, 1, 'Active'),
+ (165, 171, 217, 'Membership', NULL, '2026-10-22', '2026-11-22', NULL, NULL, 0, 1, 'Active'),
+ (166, 172, 218, 'Membership', NULL, '2026-10-23', '2027-01-23', NULL, NULL, 0, 1, 'Active'),
+ (167, 173, 222, 'Membership', NULL, '2026-10-21', '2026-11-21', NULL, NULL, 0, 1, 'Active'),
+ (168, 174, 223, 'Membership', NULL, '2026-10-22', '2027-01-22', NULL, NULL, 0, 1, 'Active'),
+ (169, 175, 226, 'Membership', NULL, '2026-10-23', '2026-11-23', NULL, NULL, 0, 1, 'Active'),
+ (170, 176, 1, 'SingleSession', 7, '2026-10-29', '2026-10-29', NULL, 1, 0, NULL, 'Active'),
+ (171, 177, 2, 'SingleSession', 6, '2026-10-27', '2026-10-27', NULL, 1, 0, NULL, 'Active'),
+ (172, 178, 2, 'SingleSession', 5, '2026-10-30', '2026-10-30', NULL, 1, 0, NULL, 'Active'),
+ (173, 179, 6, 'SingleSession', 13, '2026-10-31', '2026-10-31', NULL, 1, 0, NULL, 'Active');
 SET IDENTITY_INSERT Subscriptions OFF;
 
 /* ============================================================================
@@ -2223,7 +2223,7 @@ SET IDENTITY_INSERT TimeSlots ON;
 INSERT INTO TimeSlots (TimeSlotId, PtEmployeeId, SlotDate, StartTime, EndTime, Status, HeldByOrderId, HoldExpiresAt, CreatedAt) VALUES
  (1, 5, '2026-09-26', '09:00:00', '10:30:00', 'Booked', NULL, NULL, '2026-09-21 21:00:00'),
  (2, 7, DATEADD(DAY, 1, @Today), '15:30:00', '17:00:00', 'Free', NULL, NULL, DATEADD(MINUTE, -4320, @Now)),
- (3, 7, DATEADD(DAY, 1, @Today), '14:00:00', '15:30:00', 'Held', 5, DATEADD(MINUTE, 18, @Now), DATEADD(MINUTE, -4320, @Now)),
+ (3, 7, DATEADD(DAY, 1, @Today), '20:30:00', '22:00:00', 'Held', 5, DATEADD(MINUTE, 18, @Now), DATEADD(MINUTE, -4320, @Now)),
  (4, 5, '2026-09-26', '10:30:00', '12:00:00', 'Booked', NULL, NULL, '2026-09-22 19:00:00'),
  (5, 5, '2026-07-06', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-06-26 21:00:00'),
  (6, 5, '2026-07-07', '07:00:00', '08:30:00', 'Free', NULL, NULL, '2026-06-27 21:00:00'),
@@ -2434,7 +2434,7 @@ INSERT INTO TimeSlots (TimeSlotId, PtEmployeeId, SlotDate, StartTime, EndTime, S
  (211, 5, '2026-10-12', '06:30:00', '08:00:00', 'Booked', NULL, NULL, '2026-10-02 21:00:00'),
  (212, 5, '2026-10-13', '06:30:00', '08:00:00', 'Booked', NULL, NULL, '2026-10-03 21:00:00'),
  (213, 5, '2026-10-14', '06:30:00', '08:00:00', 'Booked', NULL, NULL, '2026-10-04 21:00:00'),
- (214, 7, @Today, '20:00:00', '21:30:00', 'Booked', NULL, NULL, DATEADD(MINUTE, -4320, @Now)),
+ (214, 7, @Today, '20:30:00', '22:00:00', 'Booked', NULL, NULL, DATEADD(MINUTE, -4320, @Now)), -- buổi lẻ hôm nay 20:30: PT 7 có chuỗi khung 19:00–20:30 ngày thường nên không dùng 20:00 (DBR-33)
  (215, 13, '2026-09-21', '07:30:00', '09:00:00', 'Booked', NULL, NULL, '2026-09-11 21:00:00'),
  (216, 13, '2026-09-22', '07:30:00', '09:00:00', 'Booked', NULL, NULL, '2026-09-12 21:00:00'),
  (217, 13, '2026-09-23', '07:30:00', '09:00:00', 'Booked', NULL, NULL, '2026-09-13 21:00:00'),
@@ -5427,7 +5427,6 @@ INSERT INTO SystemConfigs (SystemConfigId, ConfigKey, ConfigValue, Description, 
  (4, 'P-04', '1D,1M,3M,9M,12M', N'Thời hạn gói tập: D = ngày, M = tháng', '2026-09-01 09:00:00', 2),
  (5, 'P-05', '10', N'Tuổi tối thiểu dùng dịch vụ PT', '2026-09-01 09:00:00', 2),
  (6, 'P-06', '90', N'Độ dài một buổi PT (phút)', '2026-09-01 09:00:00', 2),
- (8, 'P-08', '3', N'Số lượt đổi buổi mỗi tháng của gói PT (hạn mức gói = P-08 × số tháng)', '2026-09-01 09:00:00', 2),
  (9, 'P-09', '20', N'Hạn thanh toán đơn online = thời gian giữ slot (phút)', '2026-09-01 09:00:00', 2),
  (10, 'P-10', '10', N'Thuế VAT (%) đã nằm trong giá bán', '2026-09-01 09:00:00', 2),
  (11, 'P-11', '70', N'Tỷ lệ hoa hồng mặc định cho PT mới (%)', '2026-09-01 09:00:00', 2),
@@ -5440,7 +5439,6 @@ INSERT INTO SystemConfigs (SystemConfigId, ConfigKey, ConfigValue, Description, 
  (18, 'P-18', '5', N'Thời gian khóa tạm (phút)', '2026-09-01 09:00:00', 2),
  (19, 'P-19', '05:30-22:00', N'Giờ mở cửa mặc định hằng ngày', '2026-09-01 09:00:00', 2),
  (21, 'P-21', '1M,2M,3M', N'Thời hạn gói PT (tháng)', '2026-09-01 09:00:00', 2),
- (22, 'P-22', '3', N'Số khách tối thiểu để hiện điểm đánh giá trung bình của PT', '2026-10-06 09:00:00', 2),
  (23, 'P-23', '14', N'Định mức phép năm demo (ngày/năm)', '2026-09-01 09:00:00', 2);
 SET IDENTITY_INSERT SystemConfigs OFF;
 

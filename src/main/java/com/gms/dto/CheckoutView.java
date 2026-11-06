@@ -56,11 +56,6 @@ public class CheckoutView {
         this.chainEndText = chainEndText;
     }
 
-    /** Gói này sẽ chạy nối sau gói đang dùng. */
-    public boolean isChained() {
-        return chainStartText != null;
-    }
-
     /** Ngày hết hạn của gói đang dùng. */
     public String getChainCurrentEndText() {
         return chainCurrentEndText;
@@ -114,6 +109,7 @@ public class CheckoutView {
     /**
      * Quyền lợi là snapshot từ Orders, không gán nội dung cố định theo tên gói.
      */
+    // GETTER TỰ TÍNH — không có field/setter "benefitLines"; = tách snapshot quyền lợi gói theo từng dòng; JSP: customer/checkout.jsp:56
     public List<String> getBenefitLines() {
         String benefits = order.getPackageBenefitsSnapshot();
         if (benefits == null || benefits.isBlank()) {
@@ -126,6 +122,7 @@ public class CheckoutView {
      * JSP dùng cho thông báo đã áp dụng; tổng giảm ở bảng giá, không lặp lại
      * dưới ô.
      */
+    // GETTER TỰ TÍNH — không có field/setter "voucherMessage"; = "Đã áp dụng mã …", chưa có mã → ""; JSP: customer/checkout.jsp:103
     public String getVoucherMessage() {
         return voucherCode == null ? "" : "Đã áp dụng mã " + voucherCode;
     }
@@ -133,18 +130,22 @@ public class CheckoutView {
     /**
      * Các chuỗi tiền do MoneyUtil định dạng để AJAX và JSP cùng hiển thị.
      */
+    // GETTER TỰ TÍNH — không có field/setter "priceText"; = UnitPriceSnapshot định dạng tiền; JSP: customer/checkout.jsp:74
     public String getPriceText() {
         return MoneyUtil.formatMoney(order.getUnitPriceSnapshot());
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "discountText"; = DiscountAmount định dạng tiền; JSP: customer/checkout.jsp:79
     public String getDiscountText() {
         return MoneyUtil.formatMoney(order.getDiscountAmount());
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "totalText"; = FinalAmount định dạng tiền; JSP: customer/checkout.jsp:111
     public String getTotalText() {
         return MoneyUtil.formatMoney(order.getFinalAmount());
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "vatText"; = VatAmount định dạng tiền; JSP: customer/checkout.jsp:113
     public String getVatText() {
         return MoneyUtil.formatMoney(order.getVatAmount());
     }
@@ -152,6 +153,7 @@ public class CheckoutView {
     /**
      * Tiền trước thuế = tổng tiền sau giảm - phần VAT đã bao gồm.
      */
+    // GETTER TỰ TÍNH — không có field/setter "preTaxText"; = FinalAmount − VatAmount định dạng tiền; JSP: không dùng (chỉ Java/test)
     public String getPreTaxText() {
         long preTaxAmount = order.getFinalAmount() - order.getVatAmount();
         return MoneyUtil.formatMoney(preTaxAmount);

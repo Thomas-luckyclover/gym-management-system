@@ -20,7 +20,7 @@
    ┌ CỘT TRÁI (sale-flow) ─────────────────────┐  ┌ CỘT PHẢI "Đơn bán" (sale-summary) ───────┐
    │ _pt-sale-step1.jspf   1. Gói & PT         │  │ mã đơn + đồng hồ (khi đang giữ)           │
    │ _pt-sale-plan.jspf    2. Lịch tập (JS vẽ) │  │ _pt-sale-customer-box.jspf  3. Khách      │
-   │ _pt-sale-held.jspf    lưới buổi đang giữ  │  │ Gói / PT / Kỳ / Buổi / Phải thu           │
+   │ _pt-sale-held.jspf    lưới buổi đang giữ  │  │ Gói/PT/Kỳ/Buổi/Trước VAT/VAT/Phải thu     │
    └───────────────────────────────────────────┘  │ _pt-sale-actions.jspf  nút Giữ / Thu / Hủy│
                                                   └───────────────────────────────────────────┘
  JS: pt-sales.js (ô gợi ý khách, form bước 1 tự gửi) · pt-sale-plan.js (vẽ Lịch tập, điền ô ẩn form Giữ lịch)
@@ -32,8 +32,8 @@
 <head>
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Bán gói PT · Super Gym Lễ tân</title>
-    <link rel="stylesheet" href="${ctx}/css/pages/receptionist/pt-sales.css?v=20261103e">
-    <script src="${ctx}/js/pages/receptionist/pt-sales.js?v=20261103d" defer></script>
+    <link rel="stylesheet" href="${ctx}/css/pages/receptionist/pt-sales.css?v=20261106color">
+    <script src="${ctx}/js/pages/receptionist/pt-sales.js?v=20261106toast" defer></script>
     <script src="${ctx}/js/pages/receptionist/pt-sale-plan.js?v=20261103d" defer></script>
 </head>
 <body class="dock theme-staff pt-sale-page">
@@ -74,17 +74,18 @@
         <c:otherwise>
 
             <%-- Biến dùng chung cho các khối bên dưới:
-                 holderOk       có khách đứng tên và khách đó mua được
-                 customerReady  đủ khách để giữ lịch (gói đôi cần cả người tập cùng mua được)
+                 holderOk       có khách đứng tên và khách đó mua được, sale = cả màn, buyer - PtSaleBuyerBlock (khối "người mua").holder → PtSaleCustomer(khách đứng tên). blockReason  lí do ko bán được
+                 customerReady  đủ khách để giữ lịch (gói đôi cần cả người tập cùng mua được), choice - PtSaleChoiceBlock
                  done2          đã chọn đủ gói + PT + ngày bắt đầu (Service tính được ngày kết thúc kỳ) --%>
             <c:set var="holderOk" value="${not empty sale.buyer.holder and empty sale.buyer.holder.blockReason}" />
             <c:set var="customerReady" value="${holderOk and (not sale.choice.couple or (not empty sale.buyer.partner and empty sale.buyer.partner.blockReason))}" />
             <c:set var="done2" value="${not empty sale.choice.endDate}" />
 
 
+            <%-- Các đơn đang held --%>
             <%@ include file="/WEB-INF/jsp/receptionist/_pt-sale-holds.jspf" %>
 
-
+            <%-- 2. Thanh 4 bước ===== --%>
             <%@ include file="/WEB-INF/jsp/receptionist/_pt-sale-stepper.jspf" %>
 
 
@@ -93,10 +94,14 @@
             <%-- ===================== BẮT ĐẦU: CỘT TRÁI — TƯ VẤN ===================== --%>
             <div class="sale-flow">
 
+                <%-- 3. Gói + PT + Ngảy bắt đầu ===== --%>
                 <%@ include file="/WEB-INF/jsp/receptionist/_pt-sale-step1.jspf" %>
 
+                
+                <%-- Vẽ lịch full lên màn hình --%>
                 <%@ include file="/WEB-INF/jsp/receptionist/_pt-sale-plan.jspf" %>
 
+                <%-- Giao diện thứ 2: Phần lưới buổi đang giữ --%>
                 <%@ include file="/WEB-INF/jsp/receptionist/_pt-sale-held.jspf" %>
 
             </div>
@@ -106,6 +111,7 @@
             <%-- ===================== BẮT ĐẦU: CỘT PHẢI — "ĐƠN BÁN" ===================== --%>
             <aside class="sale-card sale-summary" aria-labelledby="sale-h-sum">
                 <header class="sale-card-head"><h2 id="sale-h-sum">Đơn bán</h2>
+                    <%-- sale.held = getter tự tính isHeld() · dto/PtSaleView.java --%>
                     <c:if test="${sale.held}"><p class="sale-code"><c:out value="${sale.heldOrder.orderCode}" /></p></c:if></header>
 
                 <c:if test="${sale.held}">
@@ -118,6 +124,8 @@
                 </c:if>
 
 
+                    
+                    <%-- Chọn khách = searchbox  --%>
                 <%@ include file="/WEB-INF/jsp/receptionist/_pt-sale-customer-box.jspf" %>
 
 
@@ -127,13 +135,23 @@
                     <div><dt>PT</dt><dd><c:out value="${not empty sale.choice.ptName ? sale.choice.ptName : '—'}" /></dd></div>
                     <div><dt>Kỳ</dt><dd><c:choose><c:when test="${done2}"><c:out value="${gms:formatDate(sale.choice.startDate)}" /> – <c:out value="${gms:formatDate(sale.choice.endDate)}" /></c:when><c:otherwise>—</c:otherwise></c:choose></dd></div>
                     <div><dt>Buổi</dt><dd data-plan-count><c:choose><c:when test="${sale.plan.sessionCount gt 0}"><c:out value="${sale.plan.sessionCount}" /> buổi · <c:out value="${gms:formatMoney(sale.plan.sessionValue)}" />/buổi</c:when><c:otherwise>—</c:otherwise></c:choose></dd></div>
+                    <%-- Tách thuế (DBR-57): đang giữ → sale.heldOrder (snapshot trên đơn) · chưa giữ → sale.choice (tạm theo P-10). Giá đã gồm VAT. --%>
+                    <c:set var="saleTax" value="${sale.held ? sale.heldOrder : sale.choice}" />
+                    <c:if test="${sale.choice.price gt 0 and not empty saleTax.vatAmount and not empty saleTax.preTaxAmount}">
+                        <div class="sale-fact-tax"><dt>Trước thuế VAT<small>Đã bao gồm trong tổng hóa đơn</small></dt><dd><c:out value="${gms:formatMoney(saleTax.preTaxAmount)}" /></dd></div>
+                        <div class="sale-fact-tax"><dt>Thuế VAT <c:out value="${saleTax.vatRate}" />%<small>Đã bao gồm trong tổng hóa đơn</small></dt><dd><c:out value="${gms:formatMoney(saleTax.vatAmount)}" /></dd></div>
+                    </c:if>
                 </dl>
                 <p class="sale-total"><span>Phải thu</span><strong><c:choose><c:when test="${sale.choice.price gt 0}"><c:out value="${gms:formatMoney(sale.choice.price)}" /></c:when><c:otherwise>—</c:otherwise></c:choose></strong></p>
 
-                <%-- Bấm "Giữ lịch" bị từ chối → PtSaleServlet đặt saleError, vẽ lại trang với câu lỗi ở đây. --%>
-                <c:if test="${not empty saleError}"><p class="sale-msg is-error" role="alert"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> <c:out value="${saleError}" /></p></c:if>
+                <%-- Bấm "Giữ lịch" / "Thu tiền" bị SERVER từ chối (PtSaleService.hold / pay, VD MSG324 ca ngày trước chưa chốt)
+                     → PtSaleServlet đặt saleError, vẽ lại trang. pt-sales.js (showServerErrorToast) đọc dòng này, hiện TOAST đỏ
+                     "Hệ thống chưa giữ được lịch: …" rồi giữ lại 1 dòng gọn ở đây để còn đọc lại sau khi đóng toast. --%>
+                <c:if test="${not empty saleError}"><p class="sale-msg is-error" role="alert" data-server-error><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> <c:out value="${saleError}" /></p></c:if>
 
 
+                
+                <%-- Cột phải: 2 giao diện: Form chọn + Form thu tiền/Hủy đơn --%>
                 <%@ include file="/WEB-INF/jsp/receptionist/_pt-sale-actions.jspf" %>
 
             </aside>

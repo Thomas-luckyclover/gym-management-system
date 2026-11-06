@@ -10,6 +10,7 @@ import java.util.List;
 /**
  * JOB-08 — gửi thông báo cho khách có buổi PT NGÀY MAI nhưng chưa vào gym được (không gói / bảo lưu).
  * Mỗi khách chỉ nhận 1 lần cho 1 ngày (SessionReminderDAO.sendOnce kiểm trùng tiêu đề).
+ JOB-08 là bước phòng ngừa: lúc 00:05 mỗi ngày, hệ thống tìm khách có buổi PT ngày mai nhưng chưa có quyền vào gym, rồi gửi thông báo nhắc mua gói hoặc vé ngày, hoặc liên hệ lễ tân nếu đang bảo lưu. Khách sửa kịp thì buổi không bị tính vắng.
  */
 public class SessionReminderService {
     private final SessionReminderDAO reminderDAO = new SessionReminderDAO();

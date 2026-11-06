@@ -15,7 +15,6 @@ FUTURE_FROM = date(2026, 10, 5)     # buổi PT từ ngày này trở đi = Sche
 HASH = '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu'  # Gms@2026
 VAT = 10
 SESSION_MIN = 90
-SWAPS_PER_MONTH = 3                 # P-08: lượt đổi buổi cho MỖI THÁNG của gói PT (gói 1/2/3 tháng → 3/6/9 lượt)
 rng = random.Random(2026)
 
 
@@ -285,16 +284,12 @@ def subscription(oid, start, status=None, pt=None, fixed=None, end=None, note=No
     pkg = get('Packages', o['PackageId'])
     t = pkg['PackageType']
     end = end or (start if t == 'SingleSession' else end_of(start, pkg))
-    # Hạn mức đổi buổi chốt lúc bán = P-08 × số tháng của gói PT (BR-73, GBR-04).
-    # Gói PT luôn tính theo tháng (P-21); buổi lẻ không được đổi (BR-74) nên để NULL.
-    max_swaps = None
+    # Gói PT luôn tính theo tháng (P-21).
     if t in ('PTSingle', 'PTCouple'):
         assert pkg['DurationUnit'] == 'Month', 'Gói PT phải tính theo tháng (P-21)'
-        max_swaps = SWAPS_PER_MONTH * pkg['DurationValue']
     r = dict(OrderId=oid, CustomerId=o['HolderCustomerId'], SubscriptionType=t, PtEmployeeId=pt,
              StartDate=start, EndDate=end, FixedStartTime=fixed,
-             GeneratedSessionCount=1 if t == 'SingleSession' else None, SwapsUsed=0,
-             MaxSwapsSnapshot=max_swaps, FreezeUsed=0,
+             GeneratedSessionCount=1 if t == 'SingleSession' else None, FreezeUsed=0,
              MaxFreezesSnapshot=1 if t == 'Membership' else None, Status=status or 'Active')
     return add('Subscriptions', r, note)
 
@@ -356,11 +351,35 @@ def _mins(t):
     return t.hour * 60 + t.minute
 
 
+# Khung "sống" (ngày = @Today ± n, chỉ biết lúc chạy script): (pt, số ngày lệch, phút bắt đầu, phút kết thúc).
+# Không kiểm được theo ngày khi sinh seed → render() gọi check_live_slots() để kiểm theo GIỜ TRONG NGÀY:
+# khung sống không được chồng giờ BẤT KỲ khung ngày cứng nào của cùng PT (vì @Today có thể rơi vào đúng ngày đó).
+# Lỗi cũ: khung sống 20:00 của PT 7 chồng chuỗi khung 19:00–20:30 ngày thường → chạy seed ngày 05/11 sinh 2 buổi chồng giờ.
+LIVE_SLOTS = []
+
+
+def check_live_slots():
+    """DBR-33 cho khung sống: chồng giờ khung ngày cứng của cùng PT (ở bất kỳ ngày nào) hoặc khung sống khác cùng ngày lệch → lỗi."""
+    for i, (pt, offset, s0, e0) in enumerate(LIVE_SLOTS):
+        assert time(5, 30) <= time(s0 // 60, s0 % 60) and e0 <= 22 * 60, f'GBR-11 giờ mở cửa: khung sống PT {pt}'
+        for (bpt, bday), spans in BUSY.items():
+            if bpt != pt:
+                continue
+            for a, b in spans:
+                assert not (s0 < b and a < e0), (
+                    f'DBR-33 khung sống PT {pt} (@Today+{offset}) {s0 // 60:02d}:{s0 % 60:02d} chồng khung ngày cứng '
+                    f'{bday} {a // 60:02d}:{a % 60:02d} — chạy seed đúng ngày đó sẽ sinh 2 khung chồng giờ. Chọn giờ PT luôn rảnh.')
+        for pt2, offset2, s2, e2 in LIVE_SLOTS[i + 1:]:
+            assert not (pt2 == pt and offset2 == offset and s0 < e2 and s2 < e0), f'DBR-33 2 khung sống chồng giờ PT {pt}'
+
+
 def slot(pt, d, start, status='Free', held_order=None, hold_exp=None, created=None, check=True):
-    """Tạo slot 90' (P-06). d có thể là Live (slot "sống")."""
+    """Tạo slot 90' (P-06). d có thể là Live (slot "sống") — khung sống luôn được check_live_slots() kiểm."""
     st = time(*start) if isinstance(start, tuple) else start
     end = (datetime.combine(date(2000, 1, 1), st) + timedelta(minutes=SESSION_MIN)).time()
-    if check and not isinstance(d, Live):
+    if isinstance(d, Live):
+        LIVE_SLOTS.append((pt, d.days, _mins(st), _mins(st) + SESSION_MIN))
+    elif check:
         key = (pt, d)
         s0, e0 = _mins(st), _mins(st) + SESSION_MIN
         for a, b in BUSY.get(key, []):
@@ -422,7 +441,6 @@ def pt_package(oid, pt, start, fixed, events=None, freeze=None, holder_checkin_r
     value = round(o['_payable'] / len(dates))
     pt_acc = account_of_person(emp_person(pt))
     holder_acc = account_of_person(cust_person(holder))
-    swaps = 0
     for d in dates:
         ev = events.get(d)
         at = datetime.combine(d, time(*fixed))
@@ -436,8 +454,6 @@ def pt_package(oid, pt, start, fixed, events=None, freeze=None, holder_checkin_r
             at = datetime.combine(nd, time(*nt))
             end_at = at + timedelta(minutes=SESSION_MIN)
             cur_pt = npt
-            if mtype in ('CustomerSwap', 'PtOnBehalfSwap'):
-                swaps += 1
             requester = holder_acc if mtype == 'CustomerSwap' else account_of_person(emp_person(pt))
             sess_id = _session_status(sid, new_slot, cur_pt, value, nd, at, end_at, holder, partner, freeze, holder_checkin_rate)
             add('SessionMoveLogs', dict(SessionId=sess_id, MoveType=mtype, OldTimeSlotId=old_slot,
@@ -446,7 +462,7 @@ def pt_package(oid, pt, start, fixed, events=None, freeze=None, holder_checkin_r
                                         MovedAt=datetime.combine(min(d, nd) - timedelta(days=2), time(20, 15))))
             continue
         # Ngày nghỉ tương lai giữ Scheduled để PT dời; ngày đã qua mô phỏng JOB-04.
-        # Xét trước quyền vào gym/check-in; không nhả slot quá khứ, không tăng SwapsUsed.
+        # Xét trước quyền vào gym/check-in; không nhả slot quá khứ.
         if d in CLOSED and d < FUTURE_FROM:
             sl = slot(pt, d, fixed, 'Booked')
             session(sid, sl, pt, 'Cancelled', value, CancelType='GymClosed',
@@ -475,7 +491,6 @@ def pt_package(oid, pt, start, fixed, events=None, freeze=None, holder_checkin_r
         # Buổi trong bảo lưu đã qua ngày sẽ được session() chuyển Missed (và nhả slot như mọi buổi Missed).
         sl = slot(pt, d, fixed, 'Booked')
         _session_status(sid, sl, pt, value, d, at, end_at, holder, partner, freeze, holder_checkin_rate)
-    sub['SwapsUsed'] = swaps
     sub['Status'] = 'Expired' if end < SEED else 'Active'
     return sid
 
@@ -552,6 +567,7 @@ SECTION = {}
 
 
 def render(now=None, header=''):
+    check_live_slots()
     out = [header]
     if now is None:
         out += ['USE GMS;', 'GO', '', 'SET ANSI_NULLS ON;', 'SET QUOTED_IDENTIFIER ON;  -- bắt buộc khi ghi vào bảng có filtered index', 'SET NOCOUNT ON;', 'SET XACT_ABORT ON;', 'BEGIN TRANSACTION;', '',

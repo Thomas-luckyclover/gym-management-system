@@ -24,31 +24,22 @@ public class PtClientPackageView {
     private final boolean hasMembershipOnSessionDate;
     // ← có FreezeRecords phủ ngày đó
     private final boolean frozenOnSessionDate;
-    // ← ngày hết membership gần nhất → nhãn "Đã hết hạn" / "Không bao phủ ngày tập"
-    private final LocalDate membershipEndDate;
-    // ← ngày hết bảo lưu
-    private final LocalDate freezeEndDate;
-    // ← ngày hết gói PT
-    private final LocalDate ptEndDate;
-    // ← số buổi Scheduled còn lại của gói
-    private final int scheduledSessionCount;
 
-    public PtClientPackageView(int customerId, String customerName, int ptSubscriptionId,
-            Package.Type ptSubscriptionType, LocalDate ptEndDate, int scheduledSessionCount,
-            LocalDate sessionDate, LocalDate membershipEndDate, boolean hasMembershipOnSessionDate,
-            boolean frozenOnSessionDate, LocalDate freezeEndDate) {
+    public PtClientPackageView(
+            int customerId,
+            String customerName,
+            int ptSubscriptionId,
+            Package.Type ptSubscriptionType,
+            LocalDate sessionDate,
+            boolean hasMembershipOnSessionDate,
+            boolean frozenOnSessionDate) {
         this.customerId = customerId;
         this.customerName = customerName;
         this.ptSubscriptionId = ptSubscriptionId;
         this.ptSubscriptionType = ptSubscriptionType;
-        this.ptEndDate = ptEndDate;
-        this.scheduledSessionCount = scheduledSessionCount;
-
         this.sessionDate = sessionDate;
-        this.membershipEndDate = membershipEndDate;
         this.hasMembershipOnSessionDate = hasMembershipOnSessionDate;
         this.frozenOnSessionDate = frozenOnSessionDate;
-        this.freezeEndDate = freezeEndDate;
     }
 
     public int getCustomerId() {
@@ -67,20 +58,8 @@ public class PtClientPackageView {
         return ptSubscriptionType;
     }
 
-    public LocalDate getPtEndDate() {
-        return ptEndDate;
-    }
-
-    public int getScheduledSessionCount() {
-        return scheduledSessionCount;
-    }
-
     public LocalDate getSessionDate() {
         return sessionDate;
-    }
-
-    public LocalDate getMembershipEndDate() {
-        return membershipEndDate;
     }
 
     public boolean isHasMembershipOnSessionDate() {
@@ -89,9 +68,5 @@ public class PtClientPackageView {
 
     public boolean isFrozenOnSessionDate() {
         return frozenOnSessionDate;
-    }
-
-    public LocalDate getFreezeEndDate() {
-        return freezeEndDate;
     }
 }

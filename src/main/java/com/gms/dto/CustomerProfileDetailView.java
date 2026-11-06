@@ -74,6 +74,7 @@ public class CustomerProfileDetailView {
         return pendingRequest;
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "hasActiveAssets"; = có gói đang hiệu lực hoặc buổi đã xếp; JSP: receptionist/customer-form.jsp:151 …
     public boolean isHasActiveAssets() {
         return !activePackages.isEmpty() || !scheduledSessions.isEmpty();
     }

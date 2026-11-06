@@ -15,11 +15,16 @@
 
 <%-- ===== BẮT ĐẦU: NÚT CHÍNH ===== --%>
                 <c:choose>
-                    <%-- Bước 4: đang giữ → thu tiền hoặc hủy giữ. --%>
+                    <%-- Bước 4: đang giữ → thu tiền hoặc hủy giữ.
+                    sale.held => Ở giao diện Thu Tiền/Hủy Đơn
+                    --%>
+                    <%-- sale.held = getter tự tính isHeld() · dto/PtSaleView.java --%>
                     <c:when test="${sale.held}">
 
-                        <%-- FORM THU TIỀN → POST action=pay. Ô ẩn: order (mã đơn đang giữ), start (ngày bắt đầu kỳ). Ô tích "Đã nhận đủ" chỉ trình duyệt bắt (required). --%>
-                        <form class="sale-pay" method="post" action="${base}">
+                        <%-- FORM THU TIỀN → POST action=pay. Ô ẩn: order (mã đơn đang giữ), start (ngày bắt đầu kỳ).
+                             Ô tích "Đã nhận đủ": novalidate + pt-sales.js (initPayConfirm) báo bằng TOAST khi chưa tích
+                             (không dùng bong bóng "Please check this box" của trình duyệt). --%>
+                        <form class="sale-pay" method="post" action="${base}" novalidate data-pay-form>
                             <input type="hidden" name="csrfToken" value="<c:out value='${csrfToken}' />">
                             <input type="hidden" name="action" value="pay">
                             <input type="hidden" name="order" value="${sale.heldOrder.orderId}">
@@ -31,7 +36,7 @@
                             </fieldset>
                             <label class="sale-field sale-ref"><span class="sale-field-label">Mã giao dịch <small>(không bắt buộc)</small></span>
                                 <input name="reference" type="text" maxlength="50" autocomplete="off"></label>
-                            <label class="sale-confirm"><input type="checkbox" required>
+                            <label class="sale-confirm"><input type="checkbox" name="receivedInFull" value="1" data-pay-confirm>
                                 <span>Đã nhận đủ <b><c:out value="${gms:formatMoney(sale.choice.price)}" /></b>.</span></label>
                             <button class="btn btn-primary sale-main" type="submit">Xác nhận đã thu tiền</button>
                         </form>
@@ -45,8 +50,13 @@
                             <button class="btn btn-ghost sale-release" type="submit" data-confirm-message="Hủy giữ chỗ ${sale.heldOrder.orderCode}? Các khung sẽ trả lại cho PT." data-confirm-title="Hủy giữ chỗ" data-confirm-text="Hủy giữ chỗ">Hủy giữ chỗ</button>
                         </form>
                     </c:when>
+                        
+                        
+                        
                     <%-- Bước 3: giữ lịch (khung chuyển "Đang giữ" ngay, người khác không lấy được).
-                         pt-sale-plan.js điền t1..t5 (lịch mẫu) + sessions (các buổi), mở nút khi có ít nhất 1 buổi. --%>
+                         pt-sale-plan.js điền t1..t5 (lịch mẫu) + sessions (các buổi), mở nút khi có ít nhất 1 buổi. 
+                    TH2: sale.held empty => form chọn
+                    --%>
                     <c:when test="${not empty sale.plan.planJson}">
 
                         <%-- FORM GIỮ LỊCH → POST action=hold. data-plan-form = chỗ pt-sale-plan.js tìm form này; data-customer-ready = JSP báo cho JS biết đã đủ khách chưa. --%>
@@ -63,6 +73,7 @@
                             <c:forEach var="n" begin="1" end="5"><input type="hidden" name="t${n}" value="" data-plan-t="${n}"></c:forEach>
                             <input type="hidden" name="sessions" value="" data-plan-sessions>
                             <%-- Chỉ hiện khi lịch có buổi "PT chưa mở" (pt-sale-plan.js bật / tắt; PtSaleService.hold kiểm tra lại). --%>
+                            <%-- data-plan-confirm gửi sang JS đánh dấu --%>
                             <label class="sale-confirm sale-pt-confirm" data-plan-confirm hidden>
                                 <input type="checkbox" name="confirmPt" value="1">
                                 <span><b>Đã xác nhận với PT</b>

@@ -3,7 +3,7 @@
 ================================================================================
  _pt-sale-customer-box.jspf — Ô "KHÁCH MUA GÓI" (+ "Người tập cùng" nếu gói đôi) trong cột Đơn bán
  Nhúng vào: pt-sales.jsp (static include → dùng chung biến với trang cha).
- Chưa có khách:  ô tìm (data-combobox="customer") — pt-sales.js gõ ≥ 2 ký tự → GET …/customers?q= → gợi ý.
+ Chưa có khách:  ô tìm (data-combobox="customer") — pt-sales.js gõ ≥ 1 ký tự → GET …/customers?q= → gợi ý.
                  Chọn 1 gợi ý → URL thêm customer=<id>, GIỮ NGUYÊN package, pt, start, t1..t5, sessions (withPlan).
                  Tắt JS: Enter → ?q=… → sale.buyer.searchResults in danh sách link bên dưới.
  Đã có khách:    thẻ khách (_sale-customer.jspf) + link "Đổi khách" (keepUrl bỏ customer).
@@ -11,23 +11,41 @@
 ================================================================================ --%>
 
 <%-- ===== BẮT ĐẦU: Ô KHÁCH MUA GÓI ===== --%>
-                <%-- KHÁCH — chọn lúc nào cũng được. Chọn / đổi → URL đổi customer (partner), giữ nguyên gói, PT, ngày,
-                     lịch mẫu (t1..t5) và các buổi sửa riêng (sessions) — pt-sales.js ghép URL. --%>
+                <%-- ===== keepUrl — URL CỦA LINK "ĐỔI KHÁCH" (dùng ở nhánh "đã có khách" bên dưới) =====
+                     = /receptionist/pt-sales + package, pt, start đang chọn, CỐ Ý KHÔNG có customer
+                     → bấm "Đổi khách" thì trang tải lại không còn khách, ô tìm hiện ra để chọn lại.
+                     Không có t1..t5 / sessions: lịch do JS giữ, link có data-keep-plan → pt-sales.js (withPlan) gắn thêm lúc bấm.
+                     Ô tìm khách KHÔNG dùng keepUrl (form tìm tự giữ gói / PT / ngày bằng ô ẩn). 
+                Đổi khách đổi cả: holder + partner
+                keepURL bỏ customerID
+                --%>
                 <c:url var="keepUrl" value="/receptionist/pt-sales">
                     <c:if test="${not empty sale.choice.packageId}"><c:param name="package" value="${sale.choice.packageId}" /></c:if>
                     <c:if test="${not empty sale.choice.ptId}"><c:param name="pt" value="${sale.choice.ptId}" /></c:if>
                     <c:if test="${done2}"><c:param name="start" value="${sale.choice.startDate}" /></c:if>
                 </c:url>
+
                 <section class="sale-who" aria-labelledby="sale-h1">
+
+                    <%-- Tiêu đề "Khách mua gói" + nút i (hint box chung, common.js bật / tắt popover). --%>
                     <div class="sale-label-row">
                         <h3 id="sale-h1" class="sale-field-label">Khách mua gói</h3>
                         <span class="pt-info"><button type="button" class="pt-info-trigger" aria-label="Cách tìm khách" aria-describedby="sale-q-help"><span aria-hidden="true">i</span></button><span id="sale-q-help" class="pt-info-popover" role="tooltip">Gõ tên <b>không cần dấu</b> ("bui thu ha"), số điện thoại ("0901…") hoặc mã khách ("KH-1001"). Tư vấn gói, PT, lịch trước rồi chọn khách sau cũng được — lịch đang xếp giữ nguyên.</span></span>
                     </div>
+
+                    <%-- ===== NGƯỜI ĐỨNG TÊN: chưa có → ô tìm · đã có → thẻ khách =====
+                         sale.buyer.holder ← loadHolder (URL có customer=<id> → đọc hồ sơ; không có → null). --%>
                     <c:choose>
                         <c:when test="${empty sale.buyer.holder}">
-                            <%-- Gõ → gợi ý (JS). Tắt JS: Enter → ?q=… (ô ẩn giữ gói / PT / ngày) → danh sách bên dưới. --%>
 
-                            <%-- Ô TÌM KHÁCH. data-combobox="customer" = chỗ pt-sales.js (initSaleCombobox) gắn gợi ý. Form GET chỉ dùng khi tắt JS. --%>
+                            <%-- ===== Ô TÌM KHÁCH (chưa chọn khách) =====
+                                 ĐƯỜNG CHÍNH (bật JS): data-combobox="customer" = chỗ pt-sales.js (initSaleCombobox) gắn gợi ý.
+                                   Gõ ≥ 1 ký tự → chờ 200 ms → AJAX GET /receptionist/pt-sales/customers?q=… → JSON
+                                   → JS vẽ <li> vào <ul role="listbox"> (rỗng, hidden lúc tải trang). KHÔNG tải lại trang, KHÔNG gửi form.
+                                 ĐƯỜNG DỰ PHÒNG: form GET action = ${base} — chỉ gửi khi tắt JS, hoặc bấm Enter lúc chưa tô dòng gợi ý nào.
+                                   3 ô ẩn giữ package / pt / start → GET /receptionist/pt-sales?package=…&pt=…&start=…&q=…
+                                   → loadHolder tìm khách → sale.buyer.searchResults (danh sách bên dưới).
+                                 value ô q = sale.buyer.searchQuery → giữ lại chữ đã gõ sau khi trang tải lại. --%>
                             <form class="sale-search is-small" method="get" action="${base}" role="search" data-combobox="customer">
                                 <c:if test="${not empty sale.choice.packageId}"><input type="hidden" name="package" value="${sale.choice.packageId}"></c:if>
                                 <c:if test="${not empty sale.choice.ptId}"><input type="hidden" name="pt" value="${sale.choice.ptId}"></c:if>
@@ -41,7 +59,15 @@
                                     <ul class="sale-suggest" id="sale-q-list" role="listbox" aria-label="Khách gợi ý" hidden></ul>
                                 </div>
                             </form>
+
+                            <%-- Lỗi người đứng tên: sale.buyer.holderError ← loadHolder
+                                 ("Không tìm thấy khách này" khi customer=<id> không có · "Không tìm thấy khách nào khớp …" khi tìm không ra). --%>
                             <c:if test="${not empty sale.buyer.holderError}"><p class="sale-msg is-error" role="alert"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> <c:out value="${sale.buyer.holderError}" /></p></c:if>
+
+                            <%-- ===== DANH SÁCH KẾT QUẢ (chỉ có ở ĐƯỜNG DỰ PHÒNG, sau khi gửi form ?q=) =====
+                                 sale.buyer.searchResults = List<PtSaleCustomer> ← loadHolder → PtSaleDAO.searchCustomers.
+                                 Mỗi dòng = 1 link pickUrl = gói / PT / ngày đang chọn + customer=<mã khách> → bấm = chọn khách (tải lại trang).
+                                 Chữ cuối dòng: blockReason rỗng → "Mua được" (is-ok) · có lý do → in lý do (is-blocked, chữ đỏ). --%>
                             <c:if test="${not empty sale.buyer.searchResults}">
                                 <ul class="sale-results" aria-label="Kết quả tìm kiếm">
                                     <c:forEach var="r" items="${sale.buyer.searchResults}">
@@ -57,18 +83,26 @@
                         </c:when>
                         <c:otherwise>
 
-                            <%-- ĐÃ CÓ KHÁCH: đặt cust + custRole rồi nhúng thẻ khách dùng chung. data-keep-plan: pt-sales.js giữ t1..t5 + sessions khi bấm link. --%>
+                            <%-- ===== ĐÃ CÓ KHÁCH: THẺ KHÁCH + "ĐỔI KHÁCH" =====
+                                 Đặt cust = sale.buyer.holder, custRole = "Người đứng tên" rồi nhúng thẻ dùng chung _sale-customer.jspf
+                                 (tên, mã, SĐT, ngày sinh · blockReason rỗng → "Gói thành viên tới …" xanh · có lý do → chữ đỏ).
+                                 "Đổi khách" → keepUrl (bỏ customer) — ẩn khi đang giữ chỗ (sale.held) vì đơn đã chốt người mua. --%>
                             <c:set var="cust" value="${sale.buyer.holder}" />
                             <c:set var="custRole" value="Người đứng tên" />
                             <%@ include file="/WEB-INF/jsp/receptionist/_sale-customer.jspf" %>
+                            <%-- sale.held = getter tự tính isHeld() · dto/PtSaleView.java --%>
                             <c:if test="${not sale.held}"><a class="btn btn-ghost btn-sm sale-inline" href="${keepUrl}" data-keep-plan>Đổi khách</a></c:if>
                         </c:otherwise>
                     </c:choose>
 
-                    <%-- Gói đôi: người tập cùng (chọn sau người đứng tên hay trước đều được). --%>
+                    <%-- ===== NGƯỜI TẬP CÙNG (chỉ gói đôi: sale.choice.couple ← loadPackage) =====
+                         Chọn trước hay sau người đứng tên đều được. sale.buyer.partner ← loadPartner. --%>
                     <c:if test="${sale.choice.couple}">
                         <c:choose>
                             <c:when test="${not empty sale.buyer.partner}">
+
+                                <%-- Đã có người tập cùng: thẻ dùng chung (custRole = "Người tập cùng").
+                                     "Đổi người tập cùng" → noPartnerUrl = gói / PT / ngày + GIỮ customer, BỎ partner. --%>
                                 <c:set var="cust" value="${sale.buyer.partner}" />
                                 <c:set var="custRole" value="Người tập cùng" />
                                 <%@ include file="/WEB-INF/jsp/receptionist/_sale-customer.jspf" %>
@@ -79,16 +113,24 @@
                             </c:when>
                             <c:otherwise>
 
-                                <%-- Ô TÌM NGƯỜI TẬP CÙNG (chỉ gói đôi). Không phải form: chỉ chạy bằng JS, chọn → URL thêm partner=<id>. --%>
+                                <%-- Chưa có người tập cùng: ô tìm data-combobox="partner" — CHỈ chạy bằng JS (là <div>, không phải form → tắt JS không tìm được).
+                                     Cùng hàm initSaleCombobox như ô khách, cùng URL AJAX …/customers?q=; JS lọc bỏ chính người đứng tên khỏi gợi ý.
+                                     Chọn → URL thêm partner=<id>. Hướng dẫn nằm trong nút (i).
+                                     partnerError ← loadPartner: chưa chọn (partnerId rỗng) chỉ là lời nhắc cho nút Giữ lịch, không in ở đây;
+                                     đã chọn mà sai (trùng người đứng tên) mới in khung đỏ. --%>
+                                <div class="sale-label-row">
+                                    <h3 class="sale-field-label">Người tập cùng</h3>
+                                    <span class="pt-info"><button type="button" class="pt-info-trigger" aria-label="Vì sao cần người tập cùng" aria-describedby="sale-partner-help"><span aria-hidden="true">i</span></button><span id="sale-partner-help" class="pt-info-popover" role="tooltip">Gói đôi cần thêm <b>1 người tập chung</b>. Gõ tên <b>không cần dấu</b>, số điện thoại hoặc mã khách. Chọn trước hay sau người đứng tên đều được.</span></span>
+                                </div>
                                 <div class="sale-search is-small" data-combobox="partner">
                                     <div class="sale-search-box">
                                         <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
                                         <input id="sale-partner" type="search" placeholder="Người tập cùng: tên, SĐT, mã" autocomplete="off" spellcheck="false"
-                                               role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="sale-partner-list" aria-label="Tìm người tập cùng">
+                                               role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="sale-partner-list" aria-label="Tìm người tập cùng" aria-describedby="sale-partner-help">
                                         <ul class="sale-suggest" id="sale-partner-list" role="listbox" aria-label="Người tập cùng gợi ý" hidden></ul>
                                     </div>
                                 </div>
-                                <c:if test="${not empty sale.buyer.partnerError}"><p class="sale-msg"><c:out value="${sale.buyer.partnerError}" /></p></c:if>
+                                <c:if test="${not empty sale.buyer.partnerId and not empty sale.buyer.partnerError}"><p class="sale-msg is-error" role="alert"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> <c:out value="${sale.buyer.partnerError}" /></p></c:if>
                             </c:otherwise>
                         </c:choose>
                     </c:if>

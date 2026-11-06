@@ -96,6 +96,7 @@
                                 <div>
                                     <dt>Ngày tập còn lại</dt>
                                     <dd>
+                                        <%-- getter tự tính: dashboard.activeMembership = getActiveMembership(), activeMembership.daysRemaining = getDaysRemaining() · dto/CustomerDashboardView.java --%>
                                         <c:out
                                             value="${empty dashboard.activeMembership ? 0 : dashboard.activeMembership.daysRemaining}" />
                                     </dd>
@@ -167,7 +168,9 @@
                                             <button type="button" class="customer-day ${scheduleDay.today ? 'is-active' : ''}"
                                                     data-schedule-day="${dayLoop.index}" aria-controls="customer-day-${dayLoop.index}"
                                                     aria-pressed="${scheduleDay.today}">
+                                                <%-- scheduleDay.dayLabel = getter tự tính getDayLabel() · dto/CustomerDashboardView.java (scheduleDay = ScheduleDay) --%>
                                                 <span><c:out value="${scheduleDay.dayLabel}" /></span>
+                                                <%-- scheduleDay.dateLabel = getter tự tính getDateLabel() · dto/CustomerDashboardView.java (scheduleDay = ScheduleDay) --%>
                                                 <b><c:out value="${scheduleDay.dateLabel}" /></b>
                                                 <small>${empty scheduleDay.sessions ? 'Trống' : fn:length(scheduleDay.sessions)}<c:if test="${not empty scheduleDay.sessions}"> buổi</c:if></small>
                                             </button>
@@ -203,15 +206,20 @@
                                     <div class="panel-head"><h2>Gói tập của bạn</h2></div>
                                     <div class="customer-package-grid">
                                         <c:forEach var="subscription" items="${dashboard.visibleSubscriptions}">
+                                            <%-- subscription.ptPackage = getter tự tính isPtPackage() · dto/CustomerDashboardView.java (subscription = SubscriptionRow) --%>
                                             <c:set var="picker" value="${not subscription.ptPackage and subscription.subscriptionId == dashboard.activeMembership.subscriptionId ? dashboard.startPicker : null}" />
+                                            <%-- picker.editable = getter tự tính isEditable() · dto/StartDatePicker.java --%>
                                             <article class="customer-package-card" <c:if test="${picker.editable}">data-sdp data-sdp-url="/customer/subscription/start-date" data-sdp-sub="${picker.subscriptionId}" data-sdp-csrf="<c:out value='${csrfToken}' />"</c:if>>
+                                                <%-- subscription.statusLabel = getter tự tính getStatusLabel() · dto/CustomerDashboardView.java (subscription = SubscriptionRow) --%>
                                                 <small><c:out value="${subscription.ptPackage ? 'Gói tập cùng PT' : 'Gói tập gym'}" /> · <c:out value="${subscription.statusLabel}" /></small>
                                                 <h3><c:out value="${subscription.packageName}" /></h3>
                                                 <p>Hết hạn <strong data-sdp-end><c:out value="${gms:formatDate(subscription.endDate)}" /></strong></p>
                                                 <c:choose>
+                                                    <%-- subscription.expiredForDisplay = getter tự tính isExpiredForDisplay() · dto/CustomerDashboardView.java (subscription = SubscriptionRow) --%>
                                                     <c:when test="${subscription.expiredForDisplay}">
                                                         <b class="customer-package-balance">Đã hết hạn</b>
                                                     </c:when>
+                                                    <%-- subscription.pending = getter tự tính isPending() · dto/CustomerDashboardView.java (subscription = SubscriptionRow) --%>
                                                     <c:when test="${subscription.pending}">
                                                         <b class="customer-package-balance">Bắt đầu ${gms:formatDate(subscription.startDate)}</b>
                                                     </c:when>
@@ -219,6 +227,7 @@
                                                         <b class="customer-package-balance">Còn ${subscription.remainingSessions == null ? 0 : subscription.remainingSessions}/${subscription.totalSessions == null ? 0 : subscription.totalSessions} buổi</b>
                                                     </c:when>
                                                     <c:otherwise>
+                                                        <%-- subscription.daysRemaining = getter tự tính getDaysRemaining() · dto/CustomerDashboardView.java (subscription = SubscriptionRow) --%>
                                                         <b class="customer-package-balance">Còn ${subscription.daysRemaining} ngày</b>
                                                     </c:otherwise>
                                                 </c:choose>
@@ -250,8 +259,10 @@
                                             </c:forEach>
                                             <div class="customer-trainer-actions">
                                                 <c:choose>
+                                                    <%-- trainer.phoneUrl = getter tự tính getPhoneUrl() · dto/CustomerDashboardView.java (trainer = TrainerContact) --%>
                                                     <c:when test="${not empty trainer.phoneUrl}">
                                                         <a class="btn btn-outline btn-sm" href="<c:out value='${trainer.phoneUrl}' />"><i class="fa-solid fa-phone" aria-hidden="true"></i> <c:out value="${trainer.phone}" /></a>
+                                                        <%-- trainer.zaloUrl = getter tự tính getZaloUrl() · dto/CustomerDashboardView.java (trainer = TrainerContact) --%>
                                                         <c:if test="${not empty trainer.zaloUrl}">
                                                             <a class="btn btn-outline btn-sm customer-zalo" href="<c:out value='${trainer.zaloUrl}' />" target="_blank" rel="noopener noreferrer">Zalo ↗</a>
                                                         </c:if>

@@ -1,7 +1,7 @@
 <%@ page pageEncoding="UTF-8" %>
 <%--
 ================================================================================
- _pt-sale-plan.jspf — BƯỚC 2. LỊCH TẬP (cột trái, chọn giờ không tải lại trang)
+_pt-sale-plan.jspf — BƯỚC 2. LỊCH TẬP (cột trái, chọn giờ không tải lại trang)
  Nhúng vào: pt-sales.jsp (static include → dùng chung biến với trang cha).
  Hiện khi:  chưa giữ chỗ VÀ đã có kỳ (done2).
  Server KHÔNG vẽ lịch ở đây: chỉ nhúng sale.plan.planJson (PtSalePlan → JSON, PtSaleService.loadPlan) vào
@@ -10,24 +10,47 @@
      [data-week-tabs]    các tab tuần · [data-week-label] chữ "Tuần 1 · 03/11 – 07/11" · [data-week-step] nút ‹ ›
      [data-week]         5 ô ngày của tuần đang xem · [data-editor] hộp sửa riêng 1 ngày
      [data-plan-total]   "24 buổi · 3 buổi/tuần"
- Gson đã thoát < > & trong JSON nên in thẳng vào <script> an toàn.
 ================================================================================ --%>
 
-<%-- ===== BẮT ĐẦU: BƯỚC 2 — LỊCH TẬP ===== --%>
+<%-- ===== BẮT ĐẦU: BƯỚC 2 — LỊCH TẬP: Hiện khi: not sale.held (chế độ chọn, chưa có ?order=) VÀ done2 (choice.endDate có giá trị = gói + PT + ngày đều hợp lệ ===== --%>
+            <%-- sale.held = getter tự tính isHeld() · dto/PtSaleView.java --%>
             <c:if test="${not sale.held and done2}">
             <section class="sale-card sale-plan" aria-labelledby="sale-h3">
+                
+                
+                  <%--Tiêu đề + ô [data-plan-total] RỖNG: pt-sale-plan.js (renderSummary) ghi "36 buổi · 3 buổi/tuần"
+                     và nút "N ngày chưa xếp được — xem" mỗi lần chọn giờ. aria-live: trình đọc màn hình đọc lại khi số đổi. --%>
                 <header class="sale-card-head">
                     <h2 id="sale-h3">Lịch tập</h2>
+                    <%--ghi "36 buổi · 3 buổi/tuần--%>
                     <p class="plan-total" data-plan-total aria-live="polite"></p>
                 </header>
+                
+                
+                
                 <c:choose>
+                    
+                    <%-- Ko load được lịch tập => in lỗi--%>
                     <c:when test="${empty sale.plan.planJson}">
                         <p class="sale-empty"><c:out value="${sale.plan.planError}" /></p>
                     </c:when>
+                    
+                    
+                   <%-- ===== DỮ LIỆU LỊCH =====
+                             plan.planJson = PtSalePlan đổi sang JSON (loadPlan B5d). type="application/json" → trình duyệt KHÔNG chạy,
+                             chỉ là chỗ cất chữ. Sau đó pt-sale-plan.js tìm id "sale-plan-data" → JSON.parse → initPlan vẽ mọi ô rỗng bên dưới.
+                             Tắt JS → noscript báo cần bật JavaScript (lịch không vẽ được nếu thiếu JS). 
+                   Full khối bên dưới vẽ bằng planJSON lock = false
+                   
+                   
+                   --%>
                     <c:otherwise>
                         <script type="application/json" id="sale-plan-data">${sale.plan.planJson}</script>
                         <noscript><p class="sale-msg is-error">Cần bật JavaScript để chọn lịch tập.</p></noscript>
+                        
+                        
                         <%-- Nhắc: Thứ PT chưa công bố khung nào. Việc bắt tích "Đã xác nhận với PT" xét từng buổi (ô "PT chưa mở"). --%>
+                        <%-- sale.plan.unpublishedText = getter tự tính getUnpublishedText() · dto/PtSalePlanBlock.java --%>
                         <c:if test="${not empty sale.plan.unpublishedText}">
                             <div class="plan-alert" role="note">
                                 <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>

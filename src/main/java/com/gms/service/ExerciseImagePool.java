@@ -45,6 +45,9 @@ final class ExerciseImagePool {
     private static final Map<Integer, List<String>> POOL = new LinkedHashMap<>();
     private static final Map<String, String> BY_NAME = new LinkedHashMap<>();
 
+    
+    // chạy 1 lần khi class được dùng lần đầu
+    // Khối static { … } thuộc về class, không thuộc về object nào, nên JVM chỉ chạy nó một lần khi class được khởi tạo.
     static {
         load();
     }
@@ -59,6 +62,8 @@ final class ExerciseImagePool {
     }
 
     private static void load() {
+        
+        // mở file JSON trong project
         try (InputStream in = ExerciseImagePool.class.getResourceAsStream(MANIFEST)) {
             if (in == null) {
                 LOGGER.warning("Không thấy " + MANIFEST + " — bài thiếu ảnh wger sẽ không có ảnh minh họa");
@@ -66,6 +71,7 @@ final class ExerciseImagePool {
             }
             Type type = new TypeToken<Map<String, List<Entry>>>() { }.getType();
             try (Reader reader = new InputStreamReader(in, StandardCharsets.UTF_8)) {
+                // Gson đọc JSON → Map
                 Map<String, List<Entry>> raw = new Gson().fromJson(reader, type);
                 for (Map.Entry<String, List<Entry>> group : raw.entrySet()) {
                     List<String> files = new ArrayList<>();

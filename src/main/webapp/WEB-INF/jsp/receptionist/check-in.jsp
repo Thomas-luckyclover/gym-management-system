@@ -157,10 +157,12 @@
                                 </div>
 
                                 <%-- Thanh phân trang --%>
+                                  <%-- searchResultsPage.totalPages = getter tự tính getTotalPages() · dto/PageResult.java --%>
                                   <c:if test="${not empty searchResultsPage and searchResultsPage.totalPages > 1}">
                                   <%-- hiển thị thanh phân trang nếu có số page > 1, kiểm tra empty tránh nullpointex --%>
                                     <div class="ci-pagination">
                                       <c:choose>
+                                        <%-- searchResultsPage.hasPrevious = getter tự tính isHasPrevious() · dto/PageResult.java --%>
                                         <c:when test="${searchResultsPage.hasPrevious}">
                                           <c:url var="prevUrl" value="/receptionist/check-in">
                                             <c:param name="q" value="${query}" />
@@ -180,6 +182,7 @@
                                         <b>${searchResultsPage.totalPages}</b></span> <%-- hiển thị trang hiện tại / tổng số trang --%>
 
                                       <c:choose>
+                                        <%-- searchResultsPage.hasNext = getter tự tính isHasNext() · dto/PageResult.java --%>
                                         <c:when test="${searchResultsPage.hasNext}">
                                           <c:url var="nextUrl" value="/receptionist/check-in">
                                             <c:param name="q" value="${query}" />

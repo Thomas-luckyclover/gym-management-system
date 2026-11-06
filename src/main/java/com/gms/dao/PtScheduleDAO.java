@@ -13,6 +13,7 @@ import java.sql.SQLException;
 import java.sql.Time;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -358,13 +359,41 @@ public class PtScheduleDAO {
         }
     }
 
+    // Id khung của PT đúng ngày + giờ bắt đầu (UQ_TimeSlots_PtDateStart → tối đa 1 dòng). null = chưa có.
+    // Dùng sau insertOrReopenSlot để lấy id khung vừa tạo (Dời buổi → "Giờ khác").
+    public Integer findSlotIdByStart(Connection connection, int ptId, LocalDate date, LocalTime start)
+            throws SQLException {
+        String sql = """
+                SELECT TimeSlotId FROM TimeSlots
+                WHERE PtEmployeeId = ? AND SlotDate = ? AND StartTime = CAST(? AS time)
+                """;
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, ptId);
+            statement.setDate(2, Date.valueOf(date));
+            statement.setString(3, start.toString());
+
+            try (ResultSet rs = statement.executeQuery()) {
+                return rs.next() ? rs.getInt("TimeSlotId") : null;
+            }
+        }
+    }
+
     // Công bố 1 khung nháp:
     public void insertOrReopenSlot(Connection connection, int ptId, PtSlotDraft draft) throws SQLException {
         // B1: có khung Withdrawn đúng ngày + giờ bắt đầu + giờ kết thúc → mở lại: Withdrawn → Free (xong)
+        //     Lớp chặn cuối trong SQL (giống B2): KHÔNG mở lại nếu đang có khung khác còn hiệu lực chồng giờ
+        //     → rơi xuống B2, B2 cũng không chèn được → báo "trùng khung". (Service validateDrafts đã kiểm trước.)
         String reopenSql = """
                 UPDATE TimeSlots SET Status = 'Free'
                 WHERE PtEmployeeId = ? AND SlotDate = ? AND StartTime = CAST(? AS time) AND EndTime = CAST(? AS time)
                   AND Status = 'Withdrawn'
+                  AND NOT EXISTS (
+                      SELECT 1 FROM TimeSlots other
+                      WHERE other.PtEmployeeId = TimeSlots.PtEmployeeId AND other.SlotDate = TimeSlots.SlotDate
+                        AND other.TimeSlotId <> TimeSlots.TimeSlotId AND other.Status <> 'Withdrawn'
+                        AND other.StartTime < TimeSlots.EndTime AND other.EndTime > TimeSlots.StartTime
+                  )
                 """;
 
         try (PreparedStatement statement = connection.prepareStatement(reopenSql)) {

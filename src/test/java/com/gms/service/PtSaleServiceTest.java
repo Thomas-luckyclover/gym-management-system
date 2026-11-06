@@ -29,7 +29,7 @@ class PtSaleServiceTest {
 
     /** Khách mẫu (personId 50) — chỉ đổi ngày sinh / gói thành viên / bảo lưu để thử từng luật. */
     private PtSaleCustomer customer(LocalDate dateOfBirth, LocalDate membershipEnd, boolean frozen) {
-        return new PtSaleCustomer(1, 50, "KH-1001", "Self", "Nguyễn Văn An", "0901234567",
+        return new PtSaleCustomer(1, 50, "KH-1001", "Nguyễn Văn An", "0901234567",
                 dateOfBirth, membershipEnd, frozen);
     }
 
@@ -267,6 +267,22 @@ class PtSaleServiceTest {
     void moneyAndShift() {
         assertEquals(375000, PtSaleService.sessionValue(16_500_000, 44));
         assertEquals(1_500_000, PtSaleService.vatAmount(16_500_000, 10));
+    }
+
+    @Test
+    void vatBreakdownAddsUpToPrice() {
+        long price = 23_900_000;
+
+        // DBR-57: VAT nằm trong giá = round(giá × VAT ÷ (100 + VAT)), trước thuế = giá − VAT
+        long vat8 = PtSaleService.vatAmount(price, 8);
+        assertEquals(Math.round(price * 8.0 / 108), vat8);
+        assertEquals(1_770_370, vat8);
+        assertEquals(22_129_630, price - vat8);
+
+        long vat10 = PtSaleService.vatAmount(price, 10);
+        assertEquals(Math.round(price * 10.0 / 110), vat10);
+        assertEquals(2_172_727, vat10);
+        assertEquals(21_727_273, price - vat10);
     }
 
     @Test

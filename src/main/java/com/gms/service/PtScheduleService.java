@@ -277,6 +277,77 @@ public class PtScheduleService {
                 }
             }
         }
+
+        // Ô chồng giờ (VD buổi đã hủy 19:30 nằm cùng giờ khung mới 19:15) → chia làn RIÊNG cho cụm đó,
+        // các ô khác trong ngày vẫn rộng đủ cột.
+        for (PtScheduleDay day : week.getDays()) {
+            assignLanes(day.getItems());
+        }
+    }
+
+    /**
+     * HÀM PHỤ (fillWeek) — xếp làn cho các ô CHỒNG GIỜ trong 1 ngày, giống Google Calendar.
+     * Input: ô của 1 ngày. Output: mỗi ô có lane (làn thứ mấy) + laneCount (cụm có mấy làn) → JSP in --lane / --lanes.
+     *
+     * Ví dụ 1 ngày: 07:00–08:30 · 19:00–20:30 · 20:00–21:30
+     *   Cụm 1 = {07:00}            → 1 làn  → ô 07:00 rộng đủ cột
+     *   Cụm 2 = {19:00, 20:00}     → 2 làn  → 19:00 ở làn 0 (nửa trái), 20:00 ở làn 1 (nửa phải)
+     * Trước đây cột ngày là CSS grid tự thêm cột khi có ô chồng → MỌI ô trong ngày bị co (lỗi "1 cái co là tất cả co").
+     *
+     * B1: xếp ô theo giờ bắt đầu; cùng giờ thì ô đang chiếm giờ (khung trống / buổi Scheduled) đứng trước,
+     *     buổi đã hủy / vắng / check-in (chỉ để xem) dạt sang phải.
+     * B2: duyệt từng ô; ô bắt đầu khi cụm hiện tại đã kết thúc → chốt số làn cho cụm cũ, mở cụm mới.
+     * B3: đặt ô vào làn đầu tiên đã trống (làn kết thúc trước giờ bắt đầu ô); hết làn trống → mở làn mới.
+     * B4: chốt cụm cuối.
+     */
+    static void assignLanes(List<PtScheduleItem> items) {
+        // B1
+        List<PtScheduleItem> sorted = new ArrayList<>(items);
+        sorted.sort(Comparator.comparing(PtScheduleItem::getStartTime)
+                .thenComparing(item -> item.isBlocking() ? 0 : 1));
+
+        List<PtScheduleItem> cluster = new ArrayList<>();   // các ô của cụm đang xét
+        List<LocalTime> laneEnds = new ArrayList<>();       // giờ kết thúc ô cuối của từng làn trong cụm
+        LocalTime clusterEnd = null;                        // giờ kết thúc muộn nhất của cụm
+
+        for (PtScheduleItem item : sorted) {
+            // B2
+            boolean startsNewCluster = clusterEnd != null && !item.getStartTime().isBefore(clusterEnd);
+            if (startsNewCluster) {
+                closeCluster(cluster, laneEnds.size());
+                cluster.clear();
+                laneEnds.clear();
+                clusterEnd = null;
+            }
+
+            // B3
+            int lane = -1;
+            for (int i = 0; i < laneEnds.size(); i++) {
+                if (!laneEnds.get(i).isAfter(item.getStartTime())) {
+                    lane = i;
+                    break;
+                }
+            }
+            if (lane < 0) {
+                lane = laneEnds.size();
+                laneEnds.add(item.getEndTime());
+            } else {
+                laneEnds.set(lane, item.getEndTime());
+            }
+            item.setLane(lane);
+            cluster.add(item);
+            clusterEnd = clusterEnd == null || item.getEndTime().isAfter(clusterEnd) ? item.getEndTime() : clusterEnd;
+        }
+
+        // B4
+        closeCluster(cluster, laneEnds.size());
+    }
+
+    /** HÀM PHỤ (assignLanes) — ghi số làn của cụm vào mọi ô trong cụm (cụm rỗng thì thôi). */
+    private static void closeCluster(List<PtScheduleItem> cluster, int laneCount) {
+        for (PtScheduleItem item : cluster) {
+            item.setLaneCount(Math.max(1, laneCount));
+        }
     }
 
     /**

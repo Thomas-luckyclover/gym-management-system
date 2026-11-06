@@ -91,6 +91,8 @@
                                          (month.prevMonth / nextMonth hoặc timetable.prevWeek / nextWeek).
                                          Tiêu đề giữa: "Tháng 10/2026" hoặc "26/10/2026 – 01/11/2026" (timetable.weekStart / weekEnd). --%>
                                     <nav class="schedule-period" aria-label="Đổi khoảng thời gian">
+                                        <%-- timetable.prevWeek = getter tự tính getPrevWeek() · dto/TimetableView.java --%>
+                                        <%-- month.prevMonth = getter tự tính getPrevMonth() · dto/MonthView.java --%>
                                         <a class="btn btn-outline schedule-step" aria-label="${view eq 'month' ? 'Tháng trước' : 'Tuần trước'}"
                                            href="${pageUrl}?view=${view}&amp;date=${view eq 'month' ? month.prevMonth : timetable.prevWeek}"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></a>
                                         <h2>
@@ -99,6 +101,8 @@
                                                 <c:otherwise>${gms:formatDate(timetable.weekStart)} – ${gms:formatDate(timetable.weekEnd)}</c:otherwise>
                                             </c:choose>
                                         </h2>
+                                        <%-- timetable.nextWeek = getter tự tính getNextWeek() · dto/TimetableView.java --%>
+                                        <%-- month.nextMonth = getter tự tính getNextMonth() · dto/MonthView.java --%>
                                         <a class="btn btn-outline schedule-step" aria-label="${view eq 'month' ? 'Tháng sau' : 'Tuần sau'}"
                                            href="${pageUrl}?view=${view}&amp;date=${view eq 'month' ? month.nextMonth : timetable.nextWeek}"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></a>
                                         <%-- Không gửi date → Servlet lấy hôm nay. --%>

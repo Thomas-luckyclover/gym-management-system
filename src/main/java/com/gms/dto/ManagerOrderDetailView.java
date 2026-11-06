@@ -245,23 +245,4 @@ public class ManagerOrderDetailView {
         return attempts;
     }
 
-    /** Tìm giao dịch cần hoàn tiền mà chưa hoàn (nếu có). */
-    public TransactionAttemptView getPendingRefundAttempt() {
-        for (TransactionAttemptView attempt : attempts) {
-            if (attempt.isNeedsRefund() && attempt.getRefundedAt() == null) {
-                return attempt;
-            }
-        }
-        return null;
-    }
-
-    /** Tìm giao dịch đã được hoàn tiền (nếu có). */
-    public TransactionAttemptView getCompletedRefundAttempt() {
-        for (TransactionAttemptView attempt : attempts) {
-            if (attempt.isNeedsRefund() && attempt.getRefundedAt() != null) {
-                return attempt;
-            }
-        }
-        return null;
-    }
 }

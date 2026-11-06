@@ -48,9 +48,11 @@
 
                                                     <%--
                                                       MỖI Ô (item = PtScheduleItem): vị trí --start / chiều cao --length (phút) · màu is-<item.kind> · mờ khi item.past
+                                                      · --lane / --lanes (PtScheduleService.assignLanes): chỉ các ô CHỒNG GIỜ mới chia bề ngang, ô khác vẫn rộng đủ
                                                       · id="session-<id>" (ô có khách, để cuộn tới) · data-start/end (ô chiếm giờ, JS chặn thêm khung chồng).
                                                     --%>
                                                     <c:forEach var="item" items="${day.items}">
+                                                        <%-- week.shiftSplitHour = getter tự tính getShiftSplitHour() · dto/PtScheduleWeek.java --%>
                                                         <c:if test="${item.startTime.hour lt week.shiftSplitHour}"><c:set var="hasAm" value="true" /></c:if>
                                                         <c:if test="${item.startTime.hour ge week.shiftSplitHour}"><c:set var="hasPm" value="true" /></c:if>
                                                     </c:forEach>
@@ -61,10 +63,12 @@
 
                                                         <c:set var="timeText" value="${gms:formatTime(item.startTime)} – ${gms:formatTime(item.endTime)}" />
 
-                                                        <article class="pt-slot is-${item.kind} ${item.past ? 'is-past' : ''} ${item.canHandle ? 'is-handleable' : ''}"
+                                                        <article class="pt-slot is-${item.kind} ${item.past ? 'is-past' : ''} ${item.canHandle ? 'is-handleable' : ''} ${item.laneCount gt 1 ? 'is-narrow' : ''}"
+                                                                 <%-- item.booked = getter tự tính isBooked() · dto/PtScheduleItem.java (item = PtScheduleItem) --%>
                                                                  <c:if test="${item.booked}">id="session-${item.sessionId}"</c:if>
                                                                  data-status="<c:out value='${item.sessionStatus}' />"
-                                                                 style="--start: ${item.startMinute}; --length: ${item.lengthMinutes}"
+                                                                 style="--start: ${item.startMinute}; --length: ${item.lengthMinutes}; --lane: ${item.lane}; --lanes: ${item.laneCount}"
+                                                                 <%-- getter tự tính: item.startOfDay = getStartOfDay(), item.endOfDay = getEndOfDay(), item.blocking = isBlocking() · dto/PtScheduleItem.java (item = PtScheduleItem) --%>
                                                                  <c:if test="${item.blocking}">data-start="${item.startOfDay}" data-end="${item.endOfDay}"</c:if>
                                                                  title="${fn:escapeXml(timeText)}${item.booked ? ' · ' : ''}${fn:escapeXml(item.customerNames)} · ${fn:escapeXml(item.statusLabel)}">
                                                             <c:choose>

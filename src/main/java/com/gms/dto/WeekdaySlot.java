@@ -40,6 +40,7 @@ public class WeekdaySlot {
     public LocalTime getEndTime() { return endTime; }
     public int getCount() { return count; }
 
+    // GETTER TỰ TÍNH — không có field/setter "fixed"; = kind là KIND_MAIN hoặc KIND_ODD; JSP: customer/my-bookings.jsp:324
     public boolean isFixed() {
         return KIND_MAIN.equals(kind) || KIND_ODD.equals(kind);
     }

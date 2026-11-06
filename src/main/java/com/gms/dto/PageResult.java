@@ -53,6 +53,7 @@ public class PageResult<T> {
      * Tổng số trang; luôn ít nhất 1 để thanh phân trang không bị "trang 1 / 0".
      * @return tổng số trang
      */
+    // GETTER TỰ TÍNH — không có field/setter "totalPages"; = (totalItems + pageSize − 1) ÷ pageSize, ít nhất 1; JSP: manager/leave-request-list.jsp:218 …
     public int getTotalPages() {
         long pages = (totalItems + pageSize - 1) / pageSize;
         if (pages < 1) {
@@ -61,23 +62,17 @@ public class PageResult<T> {
         return (int) pages;
     }
 
-    /**
-     * Vị trí bắt đầu của trang, dùng tính STT hiển thị (Mục 14 — STT theo vị trí sau khi sort, không lấy từ DB).
-     * Trang 2, 10 dòng/trang → 10, nên dòng đầu trang 2 có STT = 10 + 0 + 1 = 11.
-     * @return số dòng đứng trước trang hiện tại
-     */
-    public int getStartIndex() {
-        return (pageNumber - 1) * pageSize;
-    }
-
+    // GETTER TỰ TÍNH — không có field/setter "empty"; = items null hoặc rỗng; JSP: không dùng (chỉ Java/test)
     public boolean isEmpty() {
         return items == null || items.isEmpty();
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "hasPrevious"; = pageNumber > 1; JSP: manager/leave-request-list.jsp:221 …
     public boolean isHasPrevious() {
         return pageNumber > 1;
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "hasNext"; = pageNumber < getTotalPages(); JSP: manager/leave-request-list.jsp:238 …
     public boolean isHasNext() {
         return pageNumber < getTotalPages();
     }

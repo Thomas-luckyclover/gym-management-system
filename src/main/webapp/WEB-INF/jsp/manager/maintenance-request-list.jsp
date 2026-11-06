@@ -284,9 +284,11 @@
           </div>
 
           <%-- Phân trang --%>
+          <%-- requestPage.totalPages = getter tự tính getTotalPages() · dto/PageResult.java --%>
           <c:if test="${requestPage.totalPages > 1}">
             <div class="table-pagination-row">
               <c:choose>
+                <%-- requestPage.hasPrevious = getter tự tính isHasPrevious() · dto/PageResult.java --%>
                 <c:when test="${requestPage.hasPrevious}">
                   <c:url var="prevUrl" value="/manager/maintenance-requests">
                     <c:param name="page" value="${requestPage.pageNumber - 1}" />
@@ -306,6 +308,7 @@
               <span class="page-counter">Trang ${requestPage.pageNumber} / ${requestPage.totalPages}</span>
 
               <c:choose>
+                <%-- requestPage.hasNext = getter tự tính isHasNext() · dto/PageResult.java --%>
                 <c:when test="${requestPage.hasNext}">
                   <c:url var="nextUrl" value="/manager/maintenance-requests">
                     <c:param name="page" value="${requestPage.pageNumber + 1}" />

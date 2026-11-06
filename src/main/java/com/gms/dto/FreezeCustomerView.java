@@ -182,10 +182,6 @@ public class FreezeCustomerView {
         return subscriptionStatus;
     }
 
-    public String getPackageStatus() {
-        return subscriptionStatus;
-    }
-
     public void setSubscriptionStatus(String subscriptionStatus) {
         this.subscriptionStatus = subscriptionStatus;
     }
@@ -326,6 +322,7 @@ public class FreezeCustomerView {
         this.canCancelEarly = canCancelEarly;
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "ownProfile"; = trả thẳng field isOwnProfile; JSP: không dùng (chỉ Java/test)
     public boolean isOwnProfile() {
         return isOwnProfile;
     }
@@ -350,29 +347,4 @@ public class FreezeCustomerView {
         this.freezeHistory = freezeHistory;
     }
 
-    public Long getDaysRemaining() {
-        if (!hasMembership || packageEndDate == null) {
-            return null;
-        }
-        LocalDate today = LocalDate.now();
-        try {
-            today = com.gms.util.DateTimeUtil.today();
-        } catch (Throwable ignored) {
-        }
-        return java.time.temporal.ChronoUnit.DAYS.between(today, packageEndDate);
-    }
-
-    public String getDaysRemainingText() {
-        Long days = getDaysRemaining();
-        if (days == null) {
-            return "";
-        }
-        if (days < 0) {
-            return "Đã hết hạn";
-        } else if (days == 0) {
-            return "Hết hạn hôm nay";
-        } else {
-            return "Còn " + days + " ngày";
-        }
-    }
 }

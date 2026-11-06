@@ -52,6 +52,7 @@ public class PtScheduleWeek {
     public int getAxisEndHour() { return axisEndHour; }
     public void setAxisEndHour(int axisEndHour) { this.axisEndHour = axisEndHour; }
 
+    // GETTER TỰ TÍNH — không có field/setter "shiftSplitHour"; = giờ của AppConstants.AFTERNOON_SHIFT_START; JSP: pt/schedule.jsp:111 …
     public int getShiftSplitHour() { return AppConstants.AFTERNOON_SHIFT_START.getHour(); }
 
     public int getSessionMinutes() { return sessionMinutes; }

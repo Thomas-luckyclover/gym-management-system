@@ -838,8 +838,10 @@
   --auth-field-border-hover: rgba(255, 247, 239, 0.36);
   --auth-panel-border: rgba(255, 247, 239, 0.14);
   --auth-panel-shadow: 0 32px 64px -32px rgba(0, 0, 0, 0.7);
-  --auth-link: #FF986B;
-  --auth-link-hover: #FFF7EF;
+  /* Link + icon nhấn trên màn xác thực = đúng cam thương hiệu (#FF4F2B, cùng màu chữ S trên logo).
+     Bản cũ #FF986B (cam đào) bị nhạt, lệch màu app. Tương phản trên nền thẻ #0E1A2C ≈ 5.3:1 (đạt AA). */
+  --auth-link: var(--brand-sunset);
+  --auth-link-hover: var(--brand-sunset-hi);
   --auth-focus: #23ACB4;
   --auth-focus-ring: 0 0 0 3px rgba(35, 172, 180, 0.32);
   --auth-figure-ink: #03070F;

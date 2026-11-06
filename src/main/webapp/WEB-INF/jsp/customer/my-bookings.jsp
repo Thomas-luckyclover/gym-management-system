@@ -24,6 +24,7 @@
 <c:set var="weekLink" value="${ctx}/customer/pt-sessions?view=week&amp;backPackage=${backPackageKey}" />
 
 <%-- Tab mở sẵn: đang xem buổi lẻ → "single" · gói đã kết thúc → "ended" · còn lại → "active". --%>
+<%-- sp.active = getter tự tính isActive() · dto/MyPtPackageView.java (sp = MyPtPackageView) --%>
 <c:set var="openTab" value="${booking.singleSelected ? 'single' : (not empty sp and not sp.active ? 'ended' : 'active')}" />
 <!DOCTYPE html>
 <html lang="vi">
@@ -60,6 +61,7 @@
                         </c:when>
 
                         <%-- TRỐNG: booking.isNoData() = không gói, không buổi lẻ → mời "Đặt buổi lẻ". --%>
+                        <%-- booking.noData = getter tự tính isNoData() · dto/MyBookingView.java --%>
                         <c:when test="${booking.noData}">
                             <div class="empty-state">
                                 <h2>Bạn chưa có gói PT hoặc buổi lẻ</h2>
@@ -198,6 +200,7 @@
                                                             Buổi tới<c:if test="${booking.daysUntilFocus eq 0}"> · <strong>Hôm nay</strong></c:if><c:if test="${booking.daysUntilFocus eq 1}"> · <strong>Ngày mai</strong></c:if>
                                                         </p>
                                                         <p class="booking-next-when">
+                                                            <%-- f.dayName = getter tự tính getDayName() · dto/MyPtSessionRow.java (f = MyPtSessionRow) --%>
                                                             <c:out value="${f.dayName}" />, <c:out value="${fn:substring(gms:formatDate(f.slotDate), 0, 5)}" /> · <c:out value="${gms:formatTime(f.startTime)}" /> – <c:out value="${gms:formatTime(f.endTime)}" />
                                                             <c:if test="${f.statusKey eq 'warn'}">
                                                                 <span class="booking-next-warn" title="${fn:escapeXml(f.explanation)}"><c:out value="${f.noGymPass ? 'Cần Membership/DayPass' : (fn:contains(f.explanation, 'Phòng tập nghỉ') ? 'Ngày phòng nghỉ' : 'Cần chú ý')}" /></span>
@@ -225,6 +228,7 @@
                                         <c:if test="${not empty sp}">
                                             <c:set var="left" value="${sp.totalSessions - sp.pastSessions}" />
                                             <div class="booking-progress">
+                                                <%-- sp.progressPercent = getter tự tính getProgressPercent() · dto/MyPtPackageView.java (sp = MyPtPackageView) --%>
                                                 <div class="booking-ring ${left le 3 ? 'is-ending' : ''}" style="--p: ${sp.progressPercent}" role="img" aria-label="Còn ${left} buổi, đã qua ${sp.pastSessions} trên ${sp.totalSessions} buổi">
                                                     <p class="booking-ring-text">còn <b><c:out value="${left}" /></b> buổi</p>
                                                 </div>
@@ -316,6 +320,7 @@
                                                         <li class="booking-day is-${d.kind} ${sp.active and st.index + 1 eq booking.todayWeekday ? 'is-today' : ''}">
                                                             <span class="booking-day-name">${d.dayName}</span>
                                                             <c:choose>
+                                                                <%-- d.fixed = getter tự tính isFixed() · dto/WeekdaySlot.java (d = WeekdaySlot) --%>
                                                                 <c:when test="${d.fixed}">
                                                                     <b>${gms:formatTime(d.startTime)}</b>
                                                                     <small>${d.kind eq 'odd' ? 'giờ khác · ' : ''}${d.count} buổi</small>
