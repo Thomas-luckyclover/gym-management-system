@@ -71,8 +71,8 @@ public class CustomerDashboardDAO {
     public boolean canUseGymToday(int customerId) throws SQLException {
         String sql = "SELECT COUNT(*) FROM Subscriptions "
                 + "WHERE CustomerId = ? "
-                + "AND Status = 'Active' "
-                + "AND SubscriptionType IN ('Membership', 'DayPass') "
+                + "AND (   (SubscriptionType = 'Membership' AND Status = 'Active') "      // Frozen = bảo lưu → không tính
+                + "     OR (SubscriptionType = 'DayPass' AND Status IN ('Active', 'Used'))) " // vé ngày (kể cả đã vào hôm nay)
                 + "AND StartDate <= ? AND EndDate >= ?";
 
         try (Connection conn = DBContext.getConnection();
@@ -311,13 +311,13 @@ public class CustomerDashboardDAO {
         String dateCondition = isWeek
                 ? "AND t.SlotDate >= ? AND t.SlotDate < DATEADD(DAY, 7, ?) AND t.StartTime >= CAST(? AS TIME) "
                 : "AND (t.SlotDate > ? OR (t.SlotDate = ? AND t.StartTime > CAST(? AS TIME))) ";
-        // Điều kiện khách có Membership / DayPass (nếu SingleSession) ngày đó,
-        // không trong khoảng bảo lưu.
+        // Vào gym được ngày đó (CBR-117, CBR-63): gói thành viên phủ ngày đó và KHÔNG bảo lưu, HOẶC vé ngày phủ ngày đó
+        // — cho mọi loại buổi (gói PT lẫn buổi lẻ). Bảo lưu chỉ gắn với gói thành viên nên NOT EXISTS FreezeRecords
+        // bên dưới chỉ loại gói thành viên đang bảo lưu, vé ngày vẫn tính (khách bảo lưu có vé ngày vẫn vào được).
         String hasMembership = "EXISTS (SELECT 1 FROM Subscriptions m "
                 + "WHERE m.CustomerId = sub.CustomerId "
                 + "AND m.Status <> 'Cancelled' "
-                + "AND (m.SubscriptionType = 'Membership' "
-                + "     OR (sub.SubscriptionType = 'SingleSession' AND m.SubscriptionType = 'DayPass')) "
+                + "AND m.SubscriptionType IN ('Membership', 'DayPass') "
                 + "AND t.SlotDate BETWEEN m.StartDate AND m.EndDate "
                 + "AND NOT EXISTS (SELECT 1 FROM FreezeRecords f "
                 + "  WHERE f.SubscriptionId = m.SubscriptionId "

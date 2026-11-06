@@ -304,16 +304,18 @@ public class MyPtSessionService {
 
     /**
      * Cảnh báo quyền vào gym cho 1 buổi chưa diễn ra (giống JOB-04 — notes 10/10). Null = không cảnh báo.
-     * "Vào được gym" = có Membership HOẶC DayPass phủ ngày đó VÀ không đang bảo lưu.
+     * "Vào được gym" (CBR-117) = (có Membership phủ ngày đó VÀ không bảo lưu) HOẶC có DayPass phủ ngày đó.
+     * Bảo lưu chỉ chặn gói thành viên: khách bảo lưu mua vé ngày vẫn vào tập được (quyết định 06/11/2026).
      * Gói đôi: chỉ cần 1 trong 2 người vào được; câu chữ nói theo góc nhìn người đang xem.
      */
     private String buildGymWarning(MyPtSessionRow row, int myCustomerId) throws SQLException {
+        // (canUseGym ngay dưới hàm này)
         LocalDate day = row.getSlotDate();
 
         // B1: người đứng tên
         int holderId = row.getHolderCustomerId();
         boolean holderFrozen = sessionDAO.isFrozen(holderId, day);
-        boolean holderOk = sessionDAO.hasGymPass(holderId, day) && !holderFrozen;
+        boolean holderOk = canUseGym(holderId, day, holderFrozen);
 
         // B2: gói cá nhân / buổi lẻ → chỉ xét người đứng tên
         if (!row.isCouple() || row.getPartnerCustomerId() == null) {
@@ -329,7 +331,7 @@ public class MyPtSessionService {
         // B3: gói đôi → xét thêm người đi kèm
         int partnerId = row.getPartnerCustomerId();
         boolean partnerFrozen = sessionDAO.isFrozen(partnerId, day);
-        boolean partnerOk = sessionDAO.hasGymPass(partnerId, day) && !partnerFrozen;
+        boolean partnerOk = canUseGym(partnerId, day, partnerFrozen);
 
         // B4: đổi sang góc nhìn "tôi" / "người còn lại"
         boolean iAmHolder = holderId == myCustomerId;
@@ -355,6 +357,17 @@ public class MyPtSessionService {
             return "Buổi tập trùng kỳ bảo lưu và cả hai chưa có quyền vào gym hợp lệ. Hãy kiểm tra Membership hoặc DayPass trước ngày tập.";
         }
         return "Cả hai chưa có Membership hoặc DayPass cho ngày này. Mua trước ngày tập để không bị tính vắng.";
+    }
+
+
+    /**
+     * HÀM PHỤ (buildGymWarning) — 1 khách vào gym được ngày đó không (CBR-117).
+     * frozen = gói thành viên bảo lưu ngày đó (đã đọc sẵn để chọn câu cảnh báo).
+     *   không bảo lưu → có Membership HOẶC DayPass là được (hasGymPass)
+     *   đang bảo lưu → chỉ vé ngày mới cho vào (hasDayPass)
+     */
+    private boolean canUseGym(int customerId, LocalDate day, boolean frozen) throws SQLException {
+        return frozen ? sessionDAO.hasDayPass(customerId, day) : sessionDAO.hasGymPass(customerId, day);
     }
 
     /** Mã loại gói → chữ tiếng Việt. */

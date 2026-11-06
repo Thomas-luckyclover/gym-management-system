@@ -156,7 +156,8 @@ public class AutoCloseSessionService {
         // B2: gói đôi thì xét cả người tập cùng
         boolean coupleSession = isCoupleSession(data);
 
-        // B3: từng người có quyền vào gym ngày đó không: có membership hoặc vé ngày, và không bảo lưu
+        // B3: từng người có quyền vào gym ngày đó không (CBR-117): gói thành viên phủ ngày đó và KHÔNG bảo lưu,
+        //     HOẶC vé ngày phủ ngày đó (bảo lưu chỉ áp cho gói thành viên — BR-21, nên vé ngày vẫn dùng được)
         boolean holderCanUseGym = canUseGym(
                 data.hasHolderMembership(),
                 data.hasHolderDayPass(),
@@ -199,11 +200,13 @@ public class AutoCloseSessionService {
     }
 
     /**
-     * HÀM PHỤ (evaluate B3) — vào gym được = (có membership HOẶC vé ngày) VÀ không bảo lưu.
+     * HÀM PHỤ (evaluate B3) — vào gym được ngày đó (CBR-117) = (có gói thành viên VÀ gói đó không bảo lưu) HOẶC có vé ngày.
+     * isFrozen = gói thành viên đang bảo lưu ngày đó (FreezeRecords). Bảo lưu không chặn vé ngày (quyết định 06/11/2026):
+     * VD khách bảo lưu 01/11–30/11, mua vé ngày 10/11 → 10/11 vào gym được → buổi PT 10/11 xét check-in như thường.
      */
-    private static boolean canUseGym(boolean hasMembership, boolean hasDayPass,
+    static boolean canUseGym(boolean hasMembership, boolean hasDayPass,
             boolean isFrozen) {
-        return (hasMembership || hasDayPass) && !isFrozen;
+        return (hasMembership && !isFrozen) || hasDayPass;
     }
 
     /**

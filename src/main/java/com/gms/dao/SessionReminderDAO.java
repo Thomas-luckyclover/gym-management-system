@@ -26,8 +26,10 @@ public class SessionReminderDAO {
 
     // Đọc khách có buổi Scheduled vào sessionDate (người đứng tên + người tập cùng của gói đôi).
     //   Bỏ: ngày phòng nghỉ cả ngày, buổi ngoài giờ mở cửa (OperatingHourExceptions / P-19) — JOB-04 sẽ tự hủy GymClosed.
-    //   Mỗi người: IsFrozen (FreezeRecords phủ ngày) + HasAccess (Membership / DayPass Active|Frozen phủ ngày).
-    // Trả về: List<Reminder> — CHỈ người không vào gym được (HasAccess = 0 hoặc đang bảo lưu).
+    //   Mỗi người: IsFrozen (gói thành viên bị bảo lưu ngày đó) + HasMembership (gói thành viên phủ ngày)
+    //   + HasDayPass (vé ngày phủ ngày).
+    // Trả về: List<Reminder> — CHỈ người không vào gym được theo CBR-117:
+    //   vào được = (HasMembership VÀ không bảo lưu) HOẶC HasDayPass (bảo lưu không chặn vé ngày).
     public List<Reminder> findCustomersToRemind(LocalDate sessionDate) throws SQLException {
         String sql = """
                 WITH Attendees AS (
@@ -72,10 +74,17 @@ public class SessionReminderDAO {
                        CASE WHEN EXISTS (
                            SELECT 1 FROM Subscriptions gym
                            WHERE gym.CustomerId = a.CustomerId
-                             AND gym.SubscriptionType IN ('Membership', 'DayPass')
+                             AND gym.SubscriptionType = 'Membership'
                              AND gym.Status IN ('Active', 'Frozen')
                              AND ? BETWEEN gym.StartDate AND gym.EndDate
-                       ) THEN 1 ELSE 0 END AS HasAccess
+                       ) THEN 1 ELSE 0 END AS HasMembership,
+                       CASE WHEN EXISTS (
+                           SELECT 1 FROM Subscriptions gym
+                           WHERE gym.CustomerId = a.CustomerId
+                             AND gym.SubscriptionType = 'DayPass'
+                             AND gym.Status IN ('Active', 'Used')
+                             AND ? BETWEEN gym.StartDate AND gym.EndDate
+                       ) THEN 1 ELSE 0 END AS HasDayPass
                 FROM Attendees a
                 JOIN Customers c        ON c.CustomerId = a.CustomerId
                 JOIN Accounts acc       ON acc.PersonId = c.PersonId AND acc.Status = 'Active'
@@ -89,19 +98,22 @@ public class SessionReminderDAO {
         try (Connection connection = DBContext.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
             Date date = Date.valueOf(sessionDate);
-            // ? 1, ? 2 = ngày tập (2 nhánh UNION) · ? 3, ? 4 = ngày tập (kiểm bảo lưu / quyền vào gym)
+            // ? 1, ? 2 = ngày tập (2 nhánh UNION) · ? 3, ? 4, ? 5 = ngày tập (bảo lưu / gói thành viên / vé ngày)
             statement.setDate(1, date);
             statement.setDate(2, date);
             statement.setDate(3, date);
             statement.setDate(4, date);
+            statement.setDate(5, date);
 
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
                     boolean frozen = rs.getBoolean("IsFrozen");
-                    boolean hasAccess = rs.getBoolean("HasAccess");
+                    boolean hasMembership = rs.getBoolean("HasMembership");
+                    boolean hasDayPass = rs.getBoolean("HasDayPass");
 
-                    // Vào gym được bình thường → không cần nhắc
-                    if (hasAccess && !frozen) {
+                    // Vào gym được (CBR-117) → không cần nhắc. Bảo lưu nhưng có vé ngày cũng vào được.
+                    boolean canUseGym = (hasMembership && !frozen) || hasDayPass;
+                    if (canUseGym) {
                         continue;
                     }
                     reminders.add(new Reminder(

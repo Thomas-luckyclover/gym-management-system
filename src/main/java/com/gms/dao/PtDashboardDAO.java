@@ -191,15 +191,21 @@ public class PtDashboardDAO {
                 )
                 SELECT cp.CustomerId, p.FullName AS CustomerName,
                        cp.PtSubscriptionId, cp.PtSubscriptionType, cp.SessionDate,
-                       -- B1.3: chỉ hỏi có membership bao phủ ngày tập, chưa xét bảo lưu.
+                       -- B1.3: có gói vào gym phủ ngày tập: membership (chưa xét bảo lưu) HOẶC vé ngày (CBR-63).
                        CAST(CASE WHEN EXISTS (
                            SELECT 1 FROM Subscriptions m
                            WHERE m.CustomerId = cp.CustomerId
-                             AND m.SubscriptionType = 'Membership'
-                             AND m.Status IN ('Active', 'Frozen')
+                             AND (   (m.SubscriptionType = 'Membership' AND m.Status IN ('Active', 'Frozen'))
+                                  OR (m.SubscriptionType = 'DayPass'    AND m.Status IN ('Active', 'Used')))
                              AND m.StartDate <= cp.SessionDate AND m.EndDate >= cp.SessionDate
                        ) THEN 1 ELSE 0 END AS BIT) AS HasMembershipOnSessionDate,
+                       -- Bảo lưu chỉ chặn khi KHÔNG có vé ngày ngày đó (CBR-117: bảo lưu không chặn vé ngày).
                        CAST(CASE WHEN freezePeriod.FreezeEndDate IS NOT NULL
+                                  AND NOT EXISTS (
+                                      SELECT 1 FROM Subscriptions d
+                                      WHERE d.CustomerId = cp.CustomerId AND d.SubscriptionType = 'DayPass'
+                                        AND d.Status IN ('Active', 'Used')
+                                        AND d.StartDate <= cp.SessionDate AND d.EndDate >= cp.SessionDate)
                            THEN 1 ELSE 0 END AS BIT) AS FrozenOnSessionDate
                 FROM ClientPackages cp
                 JOIN Customers c ON c.CustomerId = cp.CustomerId
