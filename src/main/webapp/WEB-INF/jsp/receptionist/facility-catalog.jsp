@@ -6,7 +6,7 @@
 <head>
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Báo hỏng thiết bị · Bước 1/2 · Super Gym</title>
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/facility-catalog.css?v=20261028v2">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/facility-catalog.css?v=20261106_v2">
 </head>
 
 <body class="dock theme-staff">
