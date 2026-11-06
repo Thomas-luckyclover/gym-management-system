@@ -36,7 +36,7 @@
                             </fieldset>
                             <label class="sale-field sale-ref"><span class="sale-field-label">Mã giao dịch <small>(không bắt buộc)</small></span>
                                 <input name="reference" type="text" maxlength="50" autocomplete="off"></label>
-                            <label class="sale-confirm"><input type="checkbox" data-pay-confirm>
+                            <label class="sale-confirm"><input type="checkbox" name="receivedInFull" value="1" data-pay-confirm>
                                 <span>Đã nhận đủ <b><c:out value="${gms:formatMoney(sale.choice.price)}" /></b>.</span></label>
                             <button class="btn btn-primary sale-main" type="submit">Xác nhận đã thu tiền</button>
                         </form>

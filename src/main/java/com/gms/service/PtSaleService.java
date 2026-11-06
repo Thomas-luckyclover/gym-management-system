@@ -919,6 +919,7 @@ public class PtSaleService {
         String warning = warningFor(
                 date,
                 time,
+                endTime,
                 leaves,
                 exceptions);
         return new PtSaleDay(date, label, time, endTime, exact != null ? "book" : "create",
@@ -961,14 +962,30 @@ public class PtSaleService {
     }
 
     /** HÀM PHỤ (checkDay) — có buổi nhưng cảnh báo vàng: phòng nghỉ cả ngày / PT có đơn nghỉ trùng giờ. */
+    /**
+     * HÀM PHỤ (checkDay) — nhãn vàng cho buổi VẪN ĐƯỢC TẠO nhưng PT cần dời (BR-40, CBR-56, CBR-124); null = không cảnh báo.
+     *   phòng đóng cả ngày · buổi nằm ngoài giờ mở cửa riêng của ngày đó (VD lễ chỉ mở 08:00–17:00, buổi 18:00)
+     *   · PT có đơn nghỉ ca đó.
+     * Bản cũ chỉ xét "đóng cả ngày" → buổi ngoài giờ riêng không được đánh dấu, JOB-04 hủy GymClosed mà lễ tân không biết.
+     */
     private static String warningFor(
             LocalDate date,
             LocalTime time,
+            LocalTime endTime,
             List<LeaveInfo> leaves,
             List<HourException> exceptions) {
         for (HourException exception : exceptions) {
-            if (date.equals(exception.getApplyDate()) && exception.isClosedAllDay()) {
+            if (!date.equals(exception.getApplyDate())) {
+                continue;
+            }
+            if (exception.isClosedAllDay()) {
                 return "Phòng nghỉ ngày này — PT cần dời buổi";
+            }
+            boolean outsideHours = exception.getOpenTime() != null && exception.getCloseTime() != null
+                    && (time.isBefore(exception.getOpenTime()) || endTime.isAfter(exception.getCloseTime()));
+            if (outsideHours) {
+                return "Ngày này phòng chỉ mở " + DateTimeUtil.formatTime(exception.getOpenTime()) + "–"
+                        + DateTimeUtil.formatTime(exception.getCloseTime()) + " — PT cần dời buổi";
             }
         }
         PtScheduleItem candidate = new PtScheduleItem();
@@ -1353,12 +1370,23 @@ public class PtSaleService {
      */
     public ServiceResult<Integer> pay(int accountId, int orderId, String startText, String method, String reference,
             LocalDateTime now) {
+        return pay(accountId, orderId, startText, method, reference, true, now);
+    }
+
+    /** Như trên, kèm receivedInFull = ô "Đã nhận đủ" đã tích (CBR-77: bắt buộc khi chuyển khoản → MSG326). */
+    public ServiceResult<Integer> pay(int accountId, int orderId, String startText, String method, String reference,
+            boolean receivedInFull, LocalDateTime now) {
 
         // ===== B0. KIỂM DỮ LIỆU GỬI LÊN (chưa mở transaction, chưa đụng DB) =====
 
         // B0a. Cách trả chỉ được là "Cash" hoặc "Transfer". Sửa DevTools gửi giá trị khác → MSG308.
         if (!"Cash".equals(method) && !"Transfer".equals(method)) {
             return ServiceResult.fail(Messages.MSG308_PT_SALE_METHOD_REQUIRED);
+        }
+        // B0a'. Chuyển khoản: lễ tân phải tích "Đã nhận đủ" sau khi kiểm tiền đã vào tài khoản (CBR-77) → MSG326.
+        //       Trước đây chỉ trình duyệt kiểm ô này; gửi thẳng request (bỏ JS / DevTools) vẫn thu tiền được.
+        if ("Transfer".equals(method) && !receivedInFull) {
+            return ServiceResult.fail(Messages.MSG326_TRANSFER_RECEIVED_REQUIRED);
         }
 
         // B0b. Mã giao dịch: để trống hoặc trả tiền mặt → bỏ (null). Có nhập thì cắt khoảng trắng 2 đầu.

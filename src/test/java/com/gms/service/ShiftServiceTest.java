@@ -668,7 +668,7 @@ class ShiftServiceTest {
         }
 
         @Override
-        public int cancelCounterOrder(Connection conn, int orderId, String reason, LocalDateTime now) {
+        public int cancelCounterOrder(Connection conn, int orderId, String reason, LocalDateTime now, int accountId) {
             return 1;
         }
     }

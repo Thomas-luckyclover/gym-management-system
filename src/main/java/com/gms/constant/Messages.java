@@ -984,7 +984,11 @@ public final class Messages {
     public static final String MSG324_SHIFT_PAST_DAY_NOT_CLOSED =
             "%s ngày %s chưa được chốt. Vui lòng chốt ca cũ và mở ca hôm nay trước khi bán.";
 
-    // MSG325–MSG335 đã có trong SRS (VNPay, đổi ngày bắt đầu, thông báo đơn online) — chưa đưa vào file này.
+    // MSG325, MSG327–MSG335 đã có trong SRS (VNPay, đổi ngày bắt đầu, thông báo đơn online) — chưa đưa vào file này.
+
+    // Toast (error) · thu tiền CHUYỂN KHOẢN tại quầy mà chưa tích "Đã nhận đủ" (CBR-77) — Bán gói PT kiểm cả ở server.
+    public static final String MSG326_TRANSFER_RECEIVED_REQUIRED =
+            "Vui lòng tick xác nhận đã nhận đủ tiền trong tài khoản trước khi hoàn tất.";
 
     // UC-34 Dời buổi → "Giờ khác" (BR-64): PT tự chọn ngày + giờ chưa mở khung, hệ thống tạo khung rồi dời.
     // In red, top of the dialog (+ toast) · thiếu ngày / giờ, hoặc giờ lệch mốc 15 phút.

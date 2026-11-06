@@ -170,7 +170,7 @@ public class PtSaleServlet extends HttpServlet {
      *        được → toast xanh MSG307 + redirect ?order=<mã đơn>&start=…   (trang đang giữ)
      *        bị từ chối → attribute "saleError" + showPage (vẽ lại trang, giữ nguyên lựa chọn, chữ đỏ ở cột phải)
      *   3. action=pay / release cần ô ẩn "order" (thiếu → 400)
-     *        pay     → saleService.pay(accountId, orderId, start, method, reference, now)
+     *        pay     → saleService.pay(accountId, orderId, start, method, reference, receivedInFull, now)
      *        release → saleService.release(accountId, orderId, now)
      *        → toast; pay thất bại thì quay lại ?order= để thử lại, còn lại về trang trống
      */
@@ -215,7 +215,8 @@ public class PtSaleServlet extends HttpServlet {
         ServiceResult<Integer> result = "release".equals(action)
                 ? saleService.release(accountId, orderId, DateTimeUtil.now())
                 : saleService.pay(accountId, orderId, start, request.getParameter("method"),
-                        request.getParameter("reference"), DateTimeUtil.now());
+                        request.getParameter("reference"), "1".equals(request.getParameter("receivedInFull")),
+                        DateTimeUtil.now());
         RequestUtil.setFlashToast(request, result.isSuccess() ? "success" : "error", result.getMessage());
         
         

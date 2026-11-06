@@ -57,7 +57,7 @@ public class BackgroundJobScheduler implements ServletContextListener {
     /** Job hằng ngày — THỨ TỰ TRONG LIST LÀ THỨ TỰ CHẠY, không đảo. */
     private static final List<BackgroundJob> DAILY_JOBS = List.of(
             new ResumeExpiredFreezesJob(),        // JOB-01: hết bảo lưu (khung TODO)
-            new ExpireMembershipPackagesJob(),    // JOB-02: gói hết hạn → Expired (khung TODO)
+            new ExpireMembershipPackagesJob(),    // JOB-02: gói tập / gói PT hết hạn → Expired (ExpirePackagesService)
             new ExpireUnusedDayPassesJob(),       // JOB-03: vé ngày không dùng → Expired (khung TODO)
             new AutoCloseUnmarkedSessionsJob(),   // JOB-04: chốt buổi PT đã qua ngày (AutoCloseSessionService)
             new RemindMissingGymAccessJob()       // JOB-08: chạy SAU các job hết hạn để xét quyền vào gym mới nhất
