@@ -21,8 +21,10 @@
                     <%-- sale.held = getter tự tính isHeld() · dto/PtSaleView.java --%>
                     <c:when test="${sale.held}">
 
-                        <%-- FORM THU TIỀN → POST action=pay. Ô ẩn: order (mã đơn đang giữ), start (ngày bắt đầu kỳ). Ô tích "Đã nhận đủ" chỉ trình duyệt bắt (required). --%>
-                        <form class="sale-pay" method="post" action="${base}">
+                        <%-- FORM THU TIỀN → POST action=pay. Ô ẩn: order (mã đơn đang giữ), start (ngày bắt đầu kỳ).
+                             Ô tích "Đã nhận đủ": novalidate + pt-sales.js (initPayConfirm) báo bằng TOAST khi chưa tích
+                             (không dùng bong bóng "Please check this box" của trình duyệt). --%>
+                        <form class="sale-pay" method="post" action="${base}" novalidate data-pay-form>
                             <input type="hidden" name="csrfToken" value="<c:out value='${csrfToken}' />">
                             <input type="hidden" name="action" value="pay">
                             <input type="hidden" name="order" value="${sale.heldOrder.orderId}">
@@ -34,7 +36,7 @@
                             </fieldset>
                             <label class="sale-field sale-ref"><span class="sale-field-label">Mã giao dịch <small>(không bắt buộc)</small></span>
                                 <input name="reference" type="text" maxlength="50" autocomplete="off"></label>
-                            <label class="sale-confirm"><input type="checkbox" required>
+                            <label class="sale-confirm"><input type="checkbox" data-pay-confirm>
                                 <span>Đã nhận đủ <b><c:out value="${gms:formatMoney(sale.choice.price)}" /></b>.</span></label>
                             <button class="btn btn-primary sale-main" type="submit">Xác nhận đã thu tiền</button>
                         </form>

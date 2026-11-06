@@ -23,10 +23,10 @@
  *   a[data-keep-plan]                link "Đổi khách", "Đổi người tập cùng", kết quả tìm      đi link nhưng giữ lịch
  *   [data-plan-sessions]             _pt-sale-actions.jspf: ô ẩn "sessions" của form Giữ lịch (pt-sale-plan.js điền)
  *
- * HÀM LẤY TỪ common.js (nạp trước file này): getJson(url, params) → Promise {success, data, message}.
+ * HÀM LẤY TỪ common.js (nạp trước file này): getJson(url, params) → Promise {success, data, message}; showToast(loại, chữ).
  *
  * BỐ CỤC: HÀM CHÍNH (chạy khi trang tải xong) → PHẦN 1 ô gợi ý (+ hàm phụ) → PHẦN 2 form tự gửi (+ hàm phụ)
- *         → PHẦN 3 khung "Đơn đang giữ chỗ" (gỡ dòng hết giờ).
+ *         → PHẦN 3 khung "Đơn đang giữ chỗ" (gỡ dòng hết giờ) → PHẦN 4 báo lỗi bằng toast (lỗi server, ô "Đã nhận đủ").
  * ============================================================================================================
  */
 
@@ -53,7 +53,53 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // 4. Khung "Đơn đang giữ chỗ": đơn nào đếm về 00:00 thì gỡ dòng đó (hết hạn rồi bấm "Tiếp tục thu tiền" chỉ ra MSG108).
     initHoldList(document.querySelector(".sale-holds"));
+
+    // 5. Server vừa từ chối Giữ lịch / Thu tiền → toast đỏ nói rõ là HỆ THỐNG chặn + lý do.
+    showServerErrorToast(document.querySelector("[data-server-error]"));
+
+    // 6. Form thu tiền: chưa tích "Đã nhận đủ" → toast, không gửi.
+    initPayConfirm(document.querySelector("[data-pay-form]"));
 });
+
+/* ==================== PHẦN 4 — BÁO LỖI BẰNG TOAST (06/11) ==================== */
+
+/**
+ * HÀM PHỤ — gọi ở bước 5 của HÀM CHÍNH. line = <p data-server-error> do JSP in khi có saleError (null → thôi).
+ * Toast đỏ ở lại tới khi bấm đóng (showToast loại "error"); dòng đỏ trong cột vẫn giữ để đọc lại.
+ * VD: "Hệ thống chưa giữ được lịch: Ca sáng ngày 05/11/2026 chưa được chốt. Vui lòng chốt ca cũ và mở ca hôm nay trước khi bán."
+ */
+function showServerErrorToast(line) {
+    if (!line) {
+        return;
+    }
+    const isPayStep = document.querySelector("[data-pay-form]") !== null;
+    const prefix = isPayStep ? "Hệ thống chưa ghi nhận thu tiền: " : "Hệ thống chưa giữ được lịch: ";
+    showToast("error", prefix + line.textContent.trim());
+}
+
+/**
+ * HÀM PHỤ — gọi ở bước 6 của HÀM CHÍNH. form = form thu tiền (chỉ có ở bước "Đang giữ").
+ * Chưa tích "Đã nhận đủ …" → chặn gửi, toast vàng nhắc + viền đỏ ô tích. Tích rồi → gửi bình thường.
+ */
+function initPayConfirm(form) {
+    if (!form) {
+        return;
+    }
+    const box = form.querySelector("[data-pay-confirm]");
+    form.addEventListener("submit", function (event) {
+        if (box && !box.checked) {
+            event.preventDefault();
+            box.closest("label").classList.add("is-invalid");
+            box.focus();
+            showToast("warning", "Đếm tiền / kiểm chuyển khoản xong thì tích ô \"Đã nhận đủ\" rồi mới bấm Xác nhận đã thu tiền.");
+        }
+    });
+    if (box) {
+        box.addEventListener("change", function () {
+            box.closest("label").classList.remove("is-invalid");
+        });
+    }
+}
 
 /* ==================== PHẦN 3 — KHUNG "ĐƠN ĐANG GIỮ CHỖ" ==================== */
 

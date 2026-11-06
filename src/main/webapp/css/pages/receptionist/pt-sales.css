@@ -1538,6 +1538,12 @@ html body.dock.pt-sale-page .sale-summary {
   margin-top: 1px;
   accent-color: var(--arena-700);
 }
+/* Chưa tích "Đã nhận đủ" mà bấm thu tiền → pt-sales.js (initPayConfirm) thêm .is-invalid: viền đỏ + toast nhắc. */
+.sale-confirm.is-invalid {
+  padding: var(--space-2);
+  border-radius: var(--arena-radius-chip);
+  box-shadow: inset 0 0 0 2px var(--color-danger);
+}
 /* Ô "Đã xác nhận với PT": khung vàng giống hộp nhắc bên trái → lễ tân thấy 2 chỗ là 1 việc. */
 .sale-pt-confirm {
   padding: var(--space-3);

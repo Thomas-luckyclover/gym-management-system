@@ -32,8 +32,8 @@
 <head>
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Bán gói PT · Super Gym Lễ tân</title>
-    <link rel="stylesheet" href="${ctx}/css/pages/receptionist/pt-sales.css?v=20261105vat">
-    <script src="${ctx}/js/pages/receptionist/pt-sales.js?v=20261105suggest" defer></script>
+    <link rel="stylesheet" href="${ctx}/css/pages/receptionist/pt-sales.css?v=20261106color">
+    <script src="${ctx}/js/pages/receptionist/pt-sales.js?v=20261106toast" defer></script>
     <script src="${ctx}/js/pages/receptionist/pt-sale-plan.js?v=20261103d" defer></script>
 </head>
 <body class="dock theme-staff pt-sale-page">
@@ -144,8 +144,10 @@
                 </dl>
                 <p class="sale-total"><span>Phải thu</span><strong><c:choose><c:when test="${sale.choice.price gt 0}"><c:out value="${gms:formatMoney(sale.choice.price)}" /></c:when><c:otherwise>—</c:otherwise></c:choose></strong></p>
 
-                <%-- Bấm "Giữ lịch" bị từ chối → PtSaleServlet đặt saleError, vẽ lại trang với câu lỗi ở đây. --%>
-                <c:if test="${not empty saleError}"><p class="sale-msg is-error" role="alert"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> <c:out value="${saleError}" /></p></c:if>
+                <%-- Bấm "Giữ lịch" / "Thu tiền" bị SERVER từ chối (PtSaleService.hold / pay, VD MSG324 ca ngày trước chưa chốt)
+                     → PtSaleServlet đặt saleError, vẽ lại trang. pt-sales.js (showServerErrorToast) đọc dòng này, hiện TOAST đỏ
+                     "Hệ thống chưa giữ được lịch: …" rồi giữ lại 1 dòng gọn ở đây để còn đọc lại sau khi đóng toast. --%>
+                <c:if test="${not empty saleError}"><p class="sale-msg is-error" role="alert" data-server-error><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> <c:out value="${saleError}" /></p></c:if>
 
 
                 
