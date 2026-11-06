@@ -51,6 +51,11 @@ public class PtScheduleItem {
     private int startMinute;
     // ← classify: độ dài khung → chiều cao ô (--length)
     private int lengthMinutes;
+    // ← PtScheduleService.assignLanes: ô này đứng ở làn thứ mấy (0 = sát trái) trong CỤM ô chồng giờ → --lane
+    //   VD 19:00–20:30 (làn 0) và 20:00–21:30 (làn 1) chồng nhau → 2 ô chia đôi bề ngang; ô 07:00 không chồng ai vẫn rộng đủ.
+    private int lane;
+    // ← PtScheduleService.assignLanes: số làn của cụm ô chồng giờ chứa ô này (1 = không chồng ai) → --lanes (chia bề ngang)
+    private int laneCount = 1;
 
     // ===== IN RA MÀN — loại ô và nhãn (classify) =====
     // ← booked (có buổi) | held (đơn tại quầy đang giữ) | locked (trùng ca nghỉ) | free → màu ô (is-<kind>)
@@ -149,6 +154,12 @@ public class PtScheduleItem {
 
     public int getLengthMinutes() { return lengthMinutes; }
     public void setLengthMinutes(int lengthMinutes) { this.lengthMinutes = lengthMinutes; }
+
+    public int getLane() { return lane; }
+    public void setLane(int lane) { this.lane = lane; }
+
+    public int getLaneCount() { return laneCount; }
+    public void setLaneCount(int laneCount) { this.laneCount = laneCount; }
 
     public boolean isCanRemove() { return canRemove; }
     public void setCanRemove(boolean canRemove) { this.canRemove = canRemove; }

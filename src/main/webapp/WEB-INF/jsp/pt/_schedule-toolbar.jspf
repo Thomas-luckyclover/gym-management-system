@@ -40,7 +40,7 @@
 
                                                 <details class="pt-plan-add">
                                                     <summary class="btn btn-outline"><i class="fa-solid fa-calendar-plus" aria-hidden="true"></i> Thêm khung</summary>
-                                                    <form id="pt-add-form" class="pt-plan-add-form">
+                                                    <form id="pt-add-form" class="pt-plan-add-form" novalidate>
 
                                                         <label>Ngày
                                                             <select name="date">

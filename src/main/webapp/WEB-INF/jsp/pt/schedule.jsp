@@ -20,11 +20,11 @@
     <head>
         <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
         <title>Lịch dạy · Super Gym</title>
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/pt/header.css?v=20261025city">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/pt/schedule.css?v=20261031shift">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/pt/header.css?v=20261106help">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/pt/schedule.css?v=20261106lane">
 
         <%-- schedule.js chỉ nạp khi có lịch (week). --%>
-        <c:if test="${not empty week}"><script src="${pageContext.request.contextPath}/js/pages/pt/schedule.js?v=20261026t" defer></script></c:if>
+        <c:if test="${not empty week}"><script src="${pageContext.request.contextPath}/js/pages/pt/schedule.js?v=20261106toast" defer></script></c:if>
     </head>
     <body class="dock theme-pt pt-plan-page">
         <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
@@ -91,12 +91,13 @@
 
                                 <%-- CHÚ THÍCH MÀU: free · booked · held · locked · draft (nháp JS) · removing (đã tích gỡ). --%>
                                 <div class="pt-plan-legend" aria-label="Màu trạng thái">
-                                    <span data-kind="free">Còn trống</span>
-                                    <span data-kind="booked">Có khách</span>
-                                    <span data-kind="held">Đang giữ</span>
-                                    <span data-kind="locked">Tạm khóa</span>
-                                    <span data-kind="draft">Nháp mới</span>
-                                    <span data-kind="removing">Chờ gỡ</span>
+                                    <%-- title = giải thích khi rê chuột (bản đầy đủ nằm trong nút "i" cạnh tiêu đề). --%>
+                                    <span data-kind="free" title="Khung đã công bố, chưa ai đặt. Bấm để đánh dấu gỡ.">Còn trống</span>
+                                    <span data-kind="booked" title="Đã có buổi với khách. Bấm buổi sắp tới để Dời / Chuyển PT / Hủy.">Có khách</span>
+                                    <span data-kind="held" title="Một đơn mua gói PT đang giữ khung này chờ thanh toán. Trả tiền → Có khách; hết hạn / hủy đơn → Còn trống.">Đang giữ</span>
+                                    <span data-kind="locked" title="Khung trùng ca bạn xin nghỉ (chờ duyệt hoặc đã duyệt). Khách không đặt được.">Tạm khóa</span>
+                                    <span data-kind="draft" title="Khung vừa thêm, chưa lưu. Bấm Công bố để khách thấy, bấm × để bỏ.">Nháp mới</span>
+                                    <span data-kind="removing" title="Khung trống bạn đã đánh dấu gỡ. Bấm Công bố để gỡ thật.">Chờ gỡ</span>
                                 </div>
                                 <div class="pt-list-columns" aria-hidden="true">
                                     <span>Giờ tập</span><span>Buổi / khung giờ</span><span>Trạng thái</span><span>Thao tác</span>

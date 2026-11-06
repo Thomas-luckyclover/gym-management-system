@@ -60,8 +60,10 @@ public class PtHandleView {
     private List<PtHandleDay> moveDays = new ArrayList<>();
     // ← số khung dời được → "N khung" trên nút chọn, "N khung hợp lệ tới …"
     private int moveSlotCount;
-    // ← min(hôm nay + 13 ngày, hạn gói) → "tới dd/MM"
+    // ← min(hôm nay + 13 ngày, hạn gói) → "tới dd/MM" · max của ô ngày "Giờ khác"
     private LocalDate moveUntil;
+    // ← max(hôm nay, ngày bắt đầu gói) → min của ô ngày "Giờ khác" (PT tự chọn giờ, hệ thống tạo khung mới)
+    private LocalDate moveFrom;
 
     // ===== IN RA MÀN — tab Chuyển PT =====
     // ← PtSessionHandleDAO.findTransferSlots (PT khác trống ĐÚNG giờ này), đã lọc → "N PT trống" + danh sách PT
@@ -96,6 +98,9 @@ public class PtHandleView {
     public boolean isCouple() {
         return partnerCustomerId != null;
     }
+
+    public LocalDate getMoveFrom() { return moveFrom; }
+    public void setMoveFrom(LocalDate moveFrom) { this.moveFrom = moveFrom; }
 
     public int getSessionId() { return sessionId; }
     public void setSessionId(int sessionId) { this.sessionId = sessionId; }

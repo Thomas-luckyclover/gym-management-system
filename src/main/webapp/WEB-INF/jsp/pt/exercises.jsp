@@ -18,7 +18,7 @@
     <head>
         <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
         <title>Thư viện bài tập · Super Gym</title>
-        <link rel="stylesheet" href="${ctx}/css/pages/pt/header.css?v=20261025city">
+        <link rel="stylesheet" href="${ctx}/css/pages/pt/header.css?v=20261106help">
         <link rel="stylesheet" href="${ctx}/css/pages/shared/exercise-library.css?v=20261030jump">
     </head>
     <body class="dock theme-pt exercise-page">

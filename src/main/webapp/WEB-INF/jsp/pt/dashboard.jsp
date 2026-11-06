@@ -20,7 +20,7 @@
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
 
     <title><c:out value="${pageTitle}" /> · GMS</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/pt/header.css?v=20261025city">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/pt/header.css?v=20261106help">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/pt/dashboard.css?v=20261105month2">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/dashboard-weather.css?v=20261014s">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/dashboard-comic.css?v=20261015h">

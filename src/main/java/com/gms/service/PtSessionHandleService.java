@@ -7,6 +7,7 @@ import com.gms.dao.PtSessionHandleDAO;
 import com.gms.dto.PtHandleDay;
 import com.gms.dto.PtHandleSlot;
 import com.gms.dto.PtHandleView;
+import com.gms.dto.PtSlotDraft;
 import com.gms.dto.ServiceResult;
 import com.gms.util.DBContext;
 import com.gms.util.DateTimeUtil;
@@ -16,6 +17,7 @@ import java.time.DateTimeException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,10 +30,13 @@ public class PtSessionHandleService {
     static final int MOVE_SEARCH_DAYS = 14;
     static final int REASON_MIN = 5;
     static final int REASON_MAX = 500;
+    // Giá trị ô radio "Giờ khác" ở tab Dời buổi: PT tự chọn ngày + giờ → hệ thống tạo khung mới rồi dời luôn.
+    static final String NEW_SLOT_VALUE = "new";
 
     private final PtScheduleDAO scheduleDAO = new PtScheduleDAO();
     private final PtSessionHandleDAO handleDAO = new PtSessionHandleDAO();
     private final NotificationDAO notificationDAO = new NotificationDAO();
+    private final SystemConfigService configService = new SystemConfigService();
 
     @FunctionalInterface
     interface TransactionWork {
@@ -108,6 +113,7 @@ public class PtSessionHandleService {
             throws SQLException {
         LocalDate from = max(now.toLocalDate(), session.getTermStart());
         LocalDate to = min(now.toLocalDate().plusDays(MOVE_SEARCH_DAYS - 1), session.getTermEnd());
+        session.setMoveFrom(from);
         session.setMoveUntil(to);
         if (from.isAfter(to)) {
             return;
@@ -170,13 +176,30 @@ public class PtSessionHandleService {
         return days;
     }
 
-    // Nút "Dời buổi": sang khung trống khác CỦA CHÍNH PT. Trả về: ok(ngày mới, MSG315) | fail(câu lỗi).
+    // Nút "Dời buổi" (bản cũ, chỉ chọn khung có sẵn) — giữ để code / test cũ gọi được.
     public ServiceResult<LocalDate> reschedule(int accountId, int sessionId, String slotIdText, String reason,
             LocalDateTime now) {
-        // B1: chưa chọn khung → MSG313 · ghi chú > 500 ký tự → MSG314
-        Integer slotId = parseSlotId(slotIdText);
-        if (slotId == null) {
+        return reschedule(accountId, sessionId, slotIdText, null, null, reason, now);
+    }
+
+    /**
+     * Nút "Dời buổi": sang khung trống khác CỦA CHÍNH PT. Trả về: ok(ngày mới, MSG315) | fail(câu lỗi).
+     * Input: slotIdText = id khung có sẵn, HOẶC "new" (ô "Giờ khác") kèm newDateText "2026-11-12" + newStartText "17:30"
+     *        → hệ thống tạo khung Free mới cho PT rồi dời buổi sang đó trong CÙNG 1 transaction
+     *        (PT khỏi phải đóng hộp → Thêm khung → Công bố → mở lại buổi). Lỗi ở bất kỳ bước nào → rollback, không để lại khung thừa.
+     */
+    public ServiceResult<LocalDate> reschedule(int accountId, int sessionId, String slotIdText, String newDateText,
+            String newStartText, String reason, LocalDateTime now) {
+        // B1: chưa chọn khung → MSG313 · chọn "Giờ khác" mà ngày / giờ sai → câu lỗi · ghi chú > 500 ký tự → MSG314
+        boolean createNew = NEW_SLOT_VALUE.equals(slotIdText == null ? "" : slotIdText.trim());
+        Integer slotId = createNew ? null : parseSlotId(slotIdText);
+        if (!createNew && slotId == null) {
             return ServiceResult.fail(Messages.MSG313_PT_NEW_SLOT_REQUIRED);
+        }
+        LocalDate newDate = createNew ? parseDate(newDateText) : null;
+        LocalTime newStart = createNew ? parseQuarterTime(newStartText) : null;
+        if (createNew && (newDate == null || newStart == null)) {
+            return ServiceResult.fail("Chọn ngày và giờ bắt đầu cho khung mới (mốc 15 phút: :00, :15, :30, :45).");
         }
         String note = trimToNull(reason);
         if (note != null && note.length() > REASON_MAX) {
@@ -193,11 +216,16 @@ public class PtSessionHandleService {
                     ptId,
                     now);
 
+            // B2b: "Giờ khác" → tạo khung Free mới (kiểm như Công bố lịch) → lấy id khung vừa tạo làm khung đích
+            int targetSlotId = createNew
+                    ? createSlotForMove(connection, session, ptId, newDate, newStart, now)
+                    : slotId;
+
             // B3: khóa khung đích + kiểm (loadTarget); khung không phải của PT này → MSG103
             PtHandleSlot target = loadTarget(
                     connection,
                     session,
-                    slotId,
+                    targetSlotId,
                     now);
             if (target.getPtEmployeeId() != ptId) {
                 throw new IllegalArgumentException(Messages.MSG103_SLOT_ALREADY_TAKEN);
@@ -227,6 +255,71 @@ public class PtSessionHandleService {
 
             return ServiceResult.ok(target.getSlotDate(), String.format(Messages.MSG315_PT_SESSION_MOVED, newTime));
         });
+    }
+
+    /**
+     * HÀM PHỤ (reschedule B2b) — tạo khung Free mới cho chính PT để dời buổi sang ("Giờ khác").
+     * Input: ngày + giờ bắt đầu PT chọn. Output: TimeSlotId của khung vừa tạo (hoặc khung đã gỡ cùng giờ được mở lại).
+     *
+     * B1: ngày phải trong khoảng dời được (giống danh sách khung có sẵn): từ max(hôm nay, đầu gói) tới min(hôm nay + 13, hạn gói).
+     * B2: kiểm y như nút Công bố (PtScheduleService.validateDrafts): đã qua giờ · phòng nghỉ / ngoài giờ mở cửa
+     *     · trùng ca nghỉ phép · CHỒNG GIỜ khung khác của PT (kể cả khung hiện tại của buổi này).
+     * B3: ghi khung (PtScheduleDAO.insertOrReopenSlot — SQL tự chặn chồng giờ lần nữa) rồi đọc lại id.
+     * Lỗi → IllegalArgumentException kèm câu báo → inTransaction rollback, trả câu lỗi cho PT.
+     */
+    private int createSlotForMove(Connection connection, PtHandleView session, int ptId, LocalDate date,
+            LocalTime start, LocalDateTime now) throws SQLException {
+        // B1
+        LocalDate from = max(now.toLocalDate(), session.getTermStart());
+        LocalDate to = min(now.toLocalDate().plusDays(MOVE_SEARCH_DAYS - 1), session.getTermEnd());
+        if (date.isBefore(from) || date.isAfter(to)) {
+            throw new IllegalArgumentException("Ngày mới phải từ " + DateTimeUtil.formatDate(from) + " đến "
+                    + DateTimeUtil.formatDate(to) + " (trong hạn gói và " + MOVE_SEARCH_DAYS + " ngày tới).");
+        }
+
+        // B2
+        int minutes = configService.getInt(SystemConfigService.SESSION_DURATION_MINUTES);
+        LocalTime[] hours = PtScheduleService.parseOpeningHours(configService.getString(SystemConfigService.OPENING_HOURS));
+        LocalTime end = start.plusMinutes(minutes);
+        if (!end.isAfter(start)) {
+            throw new IllegalArgumentException("Giờ bắt đầu quá muộn: buổi " + minutes + " phút sẽ qua ngày hôm sau.");
+        }
+        PtSlotDraft draft = new PtSlotDraft(date, start, end);
+        PtScheduleService.validateDrafts(
+                List.of(draft),
+                scheduleDAO.findSlotsForPublish(connection, ptId, date, date),
+                scheduleDAO.findLeaves(connection, ptId, date, date),
+                scheduleDAO.findHourExceptions(connection, date, date),
+                hours,
+                now);
+
+        // B3
+        scheduleDAO.insertOrReopenSlot(connection, ptId, draft);
+        Integer slotId = scheduleDAO.findSlotIdByStart(connection, ptId, date, start);
+        if (slotId == null) {
+            throw new IllegalStateException("Không đọc lại được khung vừa tạo");
+        }
+        return slotId;
+    }
+
+    /** HÀM PHỤ (reschedule B1) — "2026-11-12" → LocalDate; trống / sai → null. */
+    static LocalDate parseDate(String text) {
+        try {
+            return text == null || text.isBlank() ? null : LocalDate.parse(text.trim());
+        } catch (DateTimeException exception) {
+            return null;
+        }
+    }
+
+    /** HÀM PHỤ (reschedule B1) — "17:30" → LocalTime đúng mốc 15 phút; trống / sai / lệch mốc → null. */
+    static LocalTime parseQuarterTime(String text) {
+        try {
+            LocalTime time = text == null || text.isBlank() ? null : LocalTime.parse(text.trim());
+            boolean onGrid = time != null && time.getMinute() % 15 == 0 && time.getSecond() == 0 && time.getNano() == 0;
+            return onGrid ? time : null;
+        } catch (DateTimeException exception) {
+            return null;
+        }
     }
 
     /**
