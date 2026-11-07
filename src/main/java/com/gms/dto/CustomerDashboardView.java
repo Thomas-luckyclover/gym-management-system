@@ -642,16 +642,24 @@ public class CustomerDashboardView {
         private final String message;
         /** Loại banner: FROZEN / EXPIRED / EXPIRING / MISSING_MEMBERSHIP / PENDING_ORDER. */
         private final String type;
+        /** Tên gói chốt trong đơn hàng, dùng khi JSP hiển thị banner chờ thanh toán. */
+        private final String packageName;
 
         public BannerItem(String level, String message, String type) {
+            this(level, message, type, null);
+        }
+
+        public BannerItem(String level, String message, String type, String packageName) {
             this.level = level;
             this.message = message;
             this.type = type;
+            this.packageName = packageName;
         }
 
         public String getLevel() { return level; }
         public String getMessage() { return message; }
         public String getType() { return type; }
+        public String getPackageName() { return packageName; }
     }
 
     /**

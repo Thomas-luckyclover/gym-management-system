@@ -421,7 +421,7 @@ public class CustomerDashboardDAO {
     // =========================================================
 
     public Object[] findPendingOrder(int customerId) throws SQLException {
-        String sql = "SELECT TOP 1 o.OrderId, o.PaymentDueAt "
+        String sql = "SELECT TOP 1 o.OrderId, o.PaymentDueAt, o.PackageNameSnapshot "
                 + "FROM Orders o "
                 + "WHERE o.HolderCustomerId = ? "
                 + "AND o.Status = 'Pending' "
@@ -437,7 +437,8 @@ public class CustomerDashboardDAO {
                     int orderId = rs.getInt("OrderId");
                     java.sql.Timestamp ts = rs.getTimestamp("PaymentDueAt");
                     LocalDateTime deadline = ts != null ? ts.toLocalDateTime() : null;
-                    return new Object[] { orderId, deadline };
+                    String packageName = rs.getString("PackageNameSnapshot");
+                    return new Object[] { orderId, deadline, packageName };
                 }
             }
         }

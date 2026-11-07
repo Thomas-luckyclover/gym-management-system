@@ -133,7 +133,14 @@
                                         <i
                                             class="fa-solid ${b.level eq 'danger' ? 'fa-circle-exclamation' : 'fa-triangle-exclamation'}"></i>
                                         <span>
-                                            <c:out value="${b.message}" />
+                                            <c:choose>
+                                                <c:when test="${b.type eq 'PENDING_ORDER'}">
+                                                    <c:out value="${b.packageName}" /> chưa được thanh toán
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <c:out value="${b.message}" />
+                                                </c:otherwise>
+                                            </c:choose>
                                         </span>
                                         <c:choose>
                                             <c:when test="${b.type eq 'EXPIRED'}">

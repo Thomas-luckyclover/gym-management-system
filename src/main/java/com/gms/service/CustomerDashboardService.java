@@ -513,9 +513,9 @@ public class CustomerDashboardService {
         // Banner 5 (vàng): đơn Pending chờ thanh toán (GBR-27)
         Object[] pendingOrder = dashboardDAO.findPendingOrder(customerId);
         if (pendingOrder != null) {
-            int orderId = (int) pendingOrder[0];
-            String message = "Đơn #" + orderId + " đang chờ thanh toán";
-            warningBanners.add(new BannerItem("warning", message, "PENDING_ORDER"));
+            String packageName = (String) pendingOrder[2];
+            String message = packageName + " chưa được thanh toán";
+            warningBanners.add(new BannerItem("warning", message, "PENDING_ORDER", packageName));
         }
 
         // Gộp: đỏ trước, vàng sau
