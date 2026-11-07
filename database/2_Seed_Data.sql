@@ -10,7 +10,7 @@
    CHỐT BUỔI: khối cuối file làm việc của JOB-02 (gói hết hạn) rồi JOB-04 (chốt buổi) cho mọi ngày TRƯỚC
             ngày chạy script → không còn buổi đã qua mà vẫn Scheduled; chỉ buổi từ hôm nay trở đi là "Sắp tới".
    SYSTEM TEST BF-05: khối trước khối chốt buổi ghi sẵn các việc Lễ tân, PT đã làm ngày 06/11/2026 (đơn DH-2026-0181…0185,
-            dời / chuyển / hủy buổi, bảo lưu Michael 07/11–06/12), nên nạp xong mở màn là thấy kết quả của từng case.
+            dời / chuyển / hủy buổi) và khách KH-2029 đang bảo lưu tính theo ngày nạp, nên nạp xong mở màn là thấy kết quả của từng case.
    MẬT KHẨU: mọi tài khoản = Gms@2026 (trừ tài khoản chưa đặt mật khẩu).
    DANH MỤC CASE + TÀI KHOẢN TEST: docs/database/SEED_CASES.md
    ============================================================================ */
@@ -5504,7 +5504,8 @@ SET IDENTITY_INSERT BodyMeasurements OFF;
 
 /* ============================================================================
    Dữ liệu chạy System Test BF-05 (SWP391_G5_KiemThuHeThong_BF05): các việc Lễ tân và PT đã làm
-   ngày Thứ Sáu 06/11/2026 (ST-BF05-01…05, 10, 11, 12, 16) và thông báo nhắc buổi đêm 19/10 (ST-BF05-09).
+   ngày Thứ Sáu 06/11/2026 (ST-BF05-01…05, 10, 11, 12), thông báo nhắc buổi đêm 19/10 (ST-BF05-09)
+   và khách đang bảo lưu theo ngày nạp (ST-BF05-16).
    Mã đơn DH-2026-0181…0185. Buổi đã qua được chốt ở khối cuối file.
    ============================================================================ */
 
@@ -5571,7 +5572,7 @@ INSERT INTO TimeSlots (TimeSlotId, PtEmployeeId, SlotDate, StartTime, EndTime, S
  (2289, 5, '2026-12-15', '13:00:00', '14:30:00', 'Booked', NULL, NULL, '2026-11-06 09:40:00'),
  (2290, 5, '2026-12-16', '13:00:00', '14:30:00', 'Booked', NULL, NULL, '2026-11-06 09:40:00');
 SET IDENTITY_INSERT TimeSlots OFF;
-UPDATE TimeSlots SET Status = 'Booked' WHERE TimeSlotId IN (1083, 1087, 1148, 1152, 1167, 1171, 1186, 1190, 1205, 1209, 1224, 1228, 1285, 1286, 1287, 1289, 1299, 1304, 1305, 1308, 1320, 1323, 1327, 1342, 1346, 1361, 1362, 1365, 1422, 1423, 1426, 1441, 1442, 1445, 1460, 1461, 1464, 1479, 1480, 1483, 1499, 1500, 1503, 1562, 1563, 1566, 1583, 1584, 1587, 1604, 1605, 1608, 1625, 1626, 1629, 1646, 1647, 1650, 1710, 1713, 1731, 1734, 1752, 1755, 1773, 1794, 1857, 1878, 1899);
+UPDATE TimeSlots SET Status = 'Booked' WHERE TimeSlotId IN (1083, 1087, 1144, 1148, 1152, 1163, 1167, 1171, 1182, 1186, 1190, 1201, 1205, 1209, 1220, 1224, 1228, 1281, 1285, 1286, 1287, 1289, 1299, 1300, 1304, 1305, 1308, 1319, 1320, 1323, 1327, 1338, 1342, 1346, 1357, 1361, 1362, 1365, 1418, 1422, 1423, 1426, 1437, 1441, 1442, 1445, 1456, 1460, 1461, 1464, 1475, 1479, 1480, 1483, 1495, 1499, 1500, 1503, 1558, 1562, 1563, 1566, 1579, 1583, 1584, 1587, 1600, 1604, 1605, 1608, 1621, 1625, 1626, 1629, 1642, 1646, 1647, 1650, 1710, 1713, 1731, 1734, 1752, 1755, 1773, 1794, 1857, 1878, 1899);
 
 SET IDENTITY_INSERT Sessions ON;
 INSERT INTO Sessions (SessionId, SubscriptionId, TimeSlotId, PtEmployeeId, Status, SessionValue, CommissionAmount, AttendanceMarkedAt, IsAutoClosed, MissedReason, CancelType, CancelReason, CancelledAt, CancelledByAccountId, RefundAgreed) VALUES
@@ -5620,26 +5621,26 @@ INSERT INTO Sessions (SessionId, SubscriptionId, TimeSlotId, PtEmployeeId, Statu
  (527, 175, 1625, 6, 'Scheduled', 628571, 408571, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (528, 175, 1646, 6, 'Scheduled', 628571, 408571, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (529, 176, 1083, 5, 'Scheduled', 419048, 293334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
- (530, 176, 1144, 5, 'Missed', 419048, 293334, '2026-11-06 13:00:00', 0, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
- (531, 176, 1163, 5, 'Missed', 419048, 293334, '2026-11-06 13:00:00', 0, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
- (532, 176, 1182, 5, 'Missed', 419048, 293334, '2026-11-06 13:00:00', 0, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
- (533, 176, 1201, 5, 'Missed', 419048, 293334, '2026-11-06 13:00:00', 0, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
- (534, 176, 1220, 5, 'Missed', 419048, 293334, '2026-11-06 13:00:00', 0, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
- (535, 176, 1281, 5, 'Missed', 419048, 293334, '2026-11-06 13:00:00', 0, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
- (536, 176, 1300, 5, 'Missed', 419048, 293334, '2026-11-06 13:00:00', 0, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
- (537, 176, 1319, 5, 'Missed', 419048, 293334, '2026-11-06 13:00:00', 0, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
- (538, 176, 1338, 5, 'Missed', 419048, 293334, '2026-11-06 13:00:00', 0, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
- (539, 176, 1357, 5, 'Missed', 419048, 293334, '2026-11-06 13:00:00', 0, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
- (540, 176, 1418, 5, 'Missed', 419048, 293334, '2026-11-06 13:00:00', 0, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
- (541, 176, 1437, 5, 'Missed', 419048, 293334, '2026-11-06 13:00:00', 0, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
- (542, 176, 1456, 5, 'Missed', 419048, 293334, '2026-11-06 13:00:00', 0, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
- (543, 176, 1475, 5, 'Missed', 419048, 293334, '2026-11-06 13:00:00', 0, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
- (544, 176, 1495, 5, 'Missed', 419048, 293334, '2026-11-06 13:00:00', 0, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
- (545, 176, 1558, 5, 'Missed', 419048, 293334, '2026-11-06 13:00:00', 0, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
- (546, 176, 1579, 5, 'Missed', 419048, 293334, '2026-11-06 13:00:00', 0, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
- (547, 176, 1600, 5, 'Missed', 419048, 293334, '2026-11-06 13:00:00', 0, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
- (548, 176, 1621, 5, 'Missed', 419048, 293334, '2026-11-06 13:00:00', 0, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
- (549, 176, 1642, 5, 'Missed', 419048, 293334, '2026-11-06 13:00:00', 0, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
+ (530, 176, 1144, 5, 'Scheduled', 419048, 293334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (531, 176, 1163, 5, 'Scheduled', 419048, 293334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (532, 176, 1182, 5, 'Scheduled', 419048, 293334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (533, 176, 1201, 5, 'Scheduled', 419048, 293334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (534, 176, 1220, 5, 'Scheduled', 419048, 293334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (535, 176, 1281, 5, 'Scheduled', 419048, 293334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (536, 176, 1300, 5, 'Scheduled', 419048, 293334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (537, 176, 1319, 5, 'Scheduled', 419048, 293334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (538, 176, 1338, 5, 'Scheduled', 419048, 293334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (539, 176, 1357, 5, 'Scheduled', 419048, 293334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (540, 176, 1418, 5, 'Scheduled', 419048, 293334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (541, 176, 1437, 5, 'Scheduled', 419048, 293334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (542, 176, 1456, 5, 'Scheduled', 419048, 293334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (543, 176, 1475, 5, 'Scheduled', 419048, 293334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (544, 176, 1495, 5, 'Scheduled', 419048, 293334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (545, 176, 1558, 5, 'Scheduled', 419048, 293334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (546, 176, 1579, 5, 'Scheduled', 419048, 293334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (547, 176, 1600, 5, 'Scheduled', 419048, 293334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (548, 176, 1621, 5, 'Scheduled', 419048, 293334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (549, 176, 1642, 5, 'Scheduled', 419048, 293334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (550, 177, 2268, 5, 'Scheduled', 382609, 267826, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (551, 177, 2269, 5, 'Scheduled', 382609, 267826, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (552, 177, 2270, 5, 'Scheduled', 382609, 267826, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
@@ -5693,13 +5694,14 @@ INSERT INTO CheckIns (CheckInId, SubscriptionId, VerifiedByEmployeeId, CheckedIn
  (817, 16, 3, '2026-11-06 12:20:00', 1);
 SET IDENTITY_INSERT CheckIns OFF;
 
--- ST-BF05-16: Lễ tân Tâm bảo lưu gói thành viên của Michael từ 07/11 đến 06/12/2026 (buổi PT trong kỳ đã chốt Vắng ở trên)
+-- ST-BF05-16: khách Võ Minh Tâm (KH-2029) đang bảo lưu gói thành viên (lập phiếu @Today − 4, 10:00). Kỳ bảo lưu tính theo NGÀY NẠP (@Today − 3 … @Today + 26,
+-- 30 ngày, đúng giới hạn P-02 = 1 tháng) nên nạp ngày nào khách cũng đang bảo lưu đúng hôm đó.
 SET IDENTITY_INSERT FreezeRecords ON;
 INSERT INTO FreezeRecords (FreezeRecordId, SubscriptionId, HandledByEmployeeId, StartDate, PlannedEndDate, ActualEndDate, Reason, CreatedAt) VALUES
- (3, 16, 3, '2026-11-07', '2026-12-06', NULL, N'Khách đi công tác nước ngoài', '2026-11-06 13:00:00');
+ (3, 64, 3, DATEADD(DAY, -3, @Today), DATEADD(DAY, 26, @Today), NULL, N'Khách về quê chăm người nhà', DATEADD(MINUTE, -5160, CAST(@Today AS DATETIME2(0))));
 SET IDENTITY_INSERT FreezeRecords OFF;
-UPDATE Subscriptions SET Status = 'Frozen', FreezeUsed = 1 WHERE SubscriptionId = 16;
-UPDATE Customers SET Status = 'Frozen' WHERE CustomerId = 11;
+UPDATE Subscriptions SET Status = 'Frozen', FreezeUsed = 1 WHERE SubscriptionId = 64;
+UPDATE Customers SET Status = 'Frozen' WHERE CustomerId = 229;
 
 -- ST-BF05-10: PT Sơn dời buổi 16/11 18:00 của Mai sang 17/11 11:00
 UPDATE Sessions SET TimeSlotId = 1299 WHERE SessionId = 441;
