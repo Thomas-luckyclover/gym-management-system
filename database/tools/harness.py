@@ -45,6 +45,8 @@ def connect():
     con.create_function('LEN', 1, tsql_len)
     con.create_function('DATEPART_', 2, datepart_)
     con.create_function('DAY', 1, lambda v: None if v is None else datepart_('DAY', v))
+    con.create_function('MONTH', 1, lambda v: None if v is None else datepart_('MONTH', v))
+    con.create_function('YEAR', 1, lambda v: None if v is None else datepart_('YEAR', v))
     con.execute('PRAGMA foreign_keys = ON')
     return con
 

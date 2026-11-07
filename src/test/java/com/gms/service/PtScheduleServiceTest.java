@@ -314,6 +314,28 @@ class PtScheduleServiceTest {
         assertEquals(List.of(reopened, earlier), slots);
     }
 
+    /**
+     * Mỗi khung chỉ còn một ô: buổi đã hủy trả khung về Free thì khung tương lai giữ "Còn trống",
+     * khung đã qua giữ "Đã hủy"; khung đã có buổi mới thì bỏ ô "Đã hủy".
+     */
+    @Test
+    void mergeWithNowKeepsOneItemPerTimeSlot() {
+        PtScheduleItem pastCancelled = withSlotId(session(TODAY.minusDays(1), "15:00", "16:30", "Cancelled"), 1);
+        PtScheduleItem pastFree = withSlotId(slot(TODAY.minusDays(1), "15:00", "16:30", "Free"), 1);
+        PtScheduleItem futureCancelled = withSlotId(session(TODAY.plusDays(1), "15:00", "16:30", "Cancelled"), 2);
+        PtScheduleItem futureFree = withSlotId(slot(TODAY.plusDays(1), "15:00", "16:30", "Free"), 2);
+        PtScheduleItem oldBooking = withSlotId(session(TODAY.plusDays(2), "15:00", "16:30", "Cancelled"), 3);
+        PtScheduleItem newBooking = withSlotId(session(TODAY.plusDays(2), "15:00", "16:30", "Scheduled"), 3);
+        PtScheduleItem otherFree = withSlotId(slot(TODAY.plusDays(3), "15:00", "16:30", "Free"), 4);
+
+        List<PtScheduleItem> merged = PtScheduleService.merge(
+                List.of(pastCancelled, futureCancelled, oldBooking, newBooking),
+                List.of(pastFree, futureFree, otherFree),
+                NOW);
+
+        assertEquals(List.of(pastCancelled, futureFree, newBooking, otherFree), merged);
+    }
+
     /** Buổi ngoài giờ P-19 hiện tại vẫn nằm trong trục, không có top âm. */
     @Test
     void fillWeekPlacesItemsInCorrectDayAndUsesExpandedAxis() {
@@ -362,6 +384,11 @@ class PtScheduleServiceTest {
     }
 
     /** Thêm thông tin buổi giống kết quả readSessionRow của DAO. */
+    private static PtScheduleItem withSlotId(PtScheduleItem item, int timeSlotId) {
+        item.setTimeSlotId(timeSlotId);
+        return item;
+    }
+
     private static PtScheduleItem session(LocalDate date, String start, String end, String status) {
         PtScheduleItem item = slot(date, start, end, null);
         item.setSessionId(100);

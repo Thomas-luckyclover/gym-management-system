@@ -7,6 +7,10 @@
             Dữ liệu "sống" (mã xác thực, khóa tạm 5 phút, đơn online còn hạn, slot đang giữ,
             ca sáng đang mở, gói ngày + buổi lẻ hôm nay) tính theo GIỜ CHẠY SCRIPT (@Now, @Today)
             → chạy lại file lúc nào cũng test được các luồng đó.
+   CHỐT BUỔI: khối cuối file làm việc của JOB-02 (gói hết hạn) rồi JOB-04 (chốt buổi) cho mọi ngày TRƯỚC
+            ngày chạy script → không còn buổi đã qua mà vẫn Scheduled; chỉ buổi từ hôm nay trở đi là "Sắp tới".
+   SYSTEM TEST BF-05: khối trước khối chốt buổi ghi sẵn các việc Lễ tân, PT đã làm ngày 06/11/2026 (đơn DH-2026-0181…0185,
+            dời / chuyển / hủy buổi) và khách KH-2029 đang bảo lưu tính theo ngày nạp, nên nạp xong mở màn là thấy kết quả của từng case.
    MẬT KHẨU: mọi tài khoản = Gms@2026 (trừ tài khoản chưa đặt mật khẩu).
    DANH MỤC CASE + TÀI KHOẢN TEST: docs/database/SEED_CASES.md
    ============================================================================ */
@@ -1278,7 +1282,7 @@ INSERT INTO Subscriptions (SubscriptionId, OrderId, CustomerId, SubscriptionType
  (79, 85, 240, 'DayPass', NULL, '2026-06-18', '2026-06-18', NULL, NULL, 0, NULL, 'Used'),
  (80, 86, 201, 'PTSingle', 13, '2026-09-21', '2026-10-21', '07:30:00', 23, 0, NULL, 'Active'), -- khách thường mua gói PT
  (81, 87, 203, 'PTSingle', 6, '2026-09-21', '2026-10-21', '06:00:00', 23, 0, NULL, 'Active'), -- khách thường mua gói PT
- (82, 88, 205, 'PTSingle', 5, '2026-09-28', '2026-11-28', '15:00:00', 45, 0, NULL, 'Active'), -- khách thường mua gói PT
+ (82, 88, 205, 'PTSingle', 5, '2026-09-28', '2026-11-04', '15:00:00', 45, 0, NULL, 'Active'), -- gói PT hết hạn 04/11 → buổi sau đó hủy PackageExpired khi nạp seed (JOB-02, CBR-55)
  (83, 89, 204, 'PTSingle', 14, '2026-09-14', '2026-10-14', '10:00:00', 23, 0, NULL, 'Active'), -- khách thường mua gói PT
  (84, 90, 206, 'PTSingle', 7, '2026-10-05', '2026-11-05', '19:00:00', 24, 0, NULL, 'Active'), -- khách thường mua gói PT
  (85, 91, 220, 'DayPass', NULL, '2026-09-01', '2026-09-01', NULL, NULL, 0, NULL, 'Used'),
@@ -4496,7 +4500,7 @@ INSERT INTO TimeSlots (TimeSlotId, PtEmployeeId, SlotDate, StartTime, EndTime, S
 SET IDENTITY_INSERT TimeSlots OFF;
 
 /* ============================================================================
-   Sessions — 484 dòng. Trước 05/10 đã có kết quả; từ 05/10 Scheduled.
+   Sessions — 484 dòng. Trước 05/10 đã có kết quả; từ 05/10 sinh Scheduled, buổi trước ngày nạp được chốt ở khối cuối file (JOB-02, JOB-04).
    ============================================================================ */
 SET IDENTITY_INSERT Sessions ON;
 INSERT INTO Sessions (SessionId, SubscriptionId, TimeSlotId, PtEmployeeId, Status, SessionValue, CommissionAmount, AttendanceMarkedAt, IsAutoClosed, MissedReason, CancelType, CancelReason, CancelledAt, CancelledByAccountId, RefundAgreed) VALUES
@@ -5443,7 +5447,7 @@ INSERT INTO SystemConfigs (SystemConfigId, ConfigKey, ConfigValue, Description, 
 SET IDENTITY_INSERT SystemConfigs OFF;
 
 /* ============================================================================
-   OperatingHourExceptions — 5 dòng.
+   OperatingHourExceptions — 6 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT OperatingHourExceptions ON;
 INSERT INTO OperatingHourExceptions (OperatingHourExceptionId, ApplyDate, OpenTime, CloseTime, IsClosedAllDay, Note, SetByEmployeeId, CreatedAt) VALUES
@@ -5451,7 +5455,8 @@ INSERT INTO OperatingHourExceptions (OperatingHourExceptionId, ApplyDate, OpenTi
  (2, '2026-09-18', NULL, NULL, 1, N'Sự cố điện, nghỉ cả ngày', 2, '2026-09-10 09:00:00'),
  (3, '2026-10-11', '07:00:00', '18:00:00', 0, N'Chủ nhật bảo trì hệ thống nước, mở muộn đóng sớm', 2, '2026-09-28 09:00:00'),
  (4, '2026-10-20', NULL, NULL, 1, N'Bảo trì điện toàn tòa nhà', 2, '2026-08-25 09:00:00'),
- (5, '2027-02-06', NULL, NULL, 1, N'Nghỉ Tết Nguyên đán', 2, '2026-09-30 09:00:00');
+ (5, '2027-02-06', NULL, NULL, 1, N'Nghỉ Tết Nguyên đán', 2, '2026-09-30 09:00:00'),
+ (6, '2026-11-04', '08:30:00', '22:00:00', 0, N'Bảo trì hệ thống điện buổi sáng, mở cửa từ 08:30', 2, '2026-09-28 09:00:00');
 SET IDENTITY_INSERT OperatingHourExceptions OFF;
 
 /* ============================================================================
@@ -5496,6 +5501,323 @@ INSERT INTO BodyMeasurements (BodyMeasurementId, CustomerId, MeasuredOn, WeightK
  (10, 1, '2026-10-02', 76.4, 172.0, 22.1, 41.8, 88.0, N'Đo InBody tại phòng', '2026-10-02 21:00:00'),
  (11, 1, '2026-10-23', 75.2, 172.0, 21.4, 42.5, 86.5, N'Đo InBody tại phòng', '2026-10-23 21:00:00');
 SET IDENTITY_INSERT BodyMeasurements OFF;
+
+/* ============================================================================
+   Dữ liệu chạy System Test BF-05 (SWP391_G5_KiemThuHeThong_BF05): các việc Lễ tân và PT đã làm
+   ngày Thứ Sáu 06/11/2026 (ST-BF05-01…05, 10, 11, 12), thông báo nhắc buổi đêm 19/10 (ST-BF05-09)
+   và khách đang bảo lưu theo ngày nạp (ST-BF05-16).
+   Mã đơn DH-2026-0181…0185. Buổi đã qua được chốt ở khối cuối file.
+   ============================================================================ */
+
+SET IDENTITY_INSERT Shifts ON;
+INSERT INTO Shifts (ShiftId, WorkDate, ShiftType, OpenedByEmployeeId, ClosedByEmployeeId, Status, OpenedAt, ClosedAt, ExpectedCash, CountedCash, VarianceReason) VALUES
+ (159, '2026-11-06', 'Morning', 3, 3, 'Closed', '2026-11-06 05:30:00', '2026-11-06 13:00:00', 39600000, 39600000, NULL);
+SET IDENTITY_INSERT Shifts OFF;
+
+SET IDENTITY_INSERT Orders ON;
+INSERT INTO Orders (OrderId, OrderCode, HolderCustomerId, PartnerCustomerId, PackageId, VoucherId, CreatedByEmployeeId, ShiftId, Channel, PackageNameSnapshot, PackageDescriptionSnapshot, PackageBenefitsSnapshot, UnitPriceSnapshot, DiscountAmount, VatRateSnapshot, VatAmount, Status, PaymentDueAt, CreatedAt, PaidAt, CancelType, CancelledAt, CancelReason) VALUES
+ (181, 'DH-2026-0181', 213, NULL, 8, NULL, 3, 159, 'Counter', N'Gói PT 1 Tháng', N'Gói PT theo kỳ hạn, tập T2–T6 một khung giờ cố định.', N'Huấn luyện viên riêng
+Giáo án và thực đơn cá nhân hóa', 8800000, 0, 10, 800000, 'Paid', NULL, '2026-11-06 08:10:00', '2026-11-06 08:12:00', NULL, NULL, NULL),
+ (182, 'DH-2026-0182', 207, 208, 11, NULL, 3, 159, 'Counter', N'Gói PT Couple 1 Tháng', N'Hai người tập chung một huấn luyện viên.', N'Chung hạn mức buổi cho 2 người
+Giáo án riêng cho từng người', 13200000, 0, 10, 1200000, 'Paid', NULL, '2026-11-06 08:40:00', '2026-11-06 08:42:00', NULL, NULL, NULL),
+ (183, 'DH-2026-0183', 11, NULL, 8, NULL, 3, 159, 'Counter', N'Gói PT 1 Tháng', N'Gói PT theo kỳ hạn, tập T2–T6 một khung giờ cố định.', N'Huấn luyện viên riêng
+Giáo án và thực đơn cá nhân hóa', 8800000, 0, 10, 800000, 'Paid', NULL, '2026-11-06 09:10:00', '2026-11-06 09:12:00', NULL, NULL, NULL),
+ (184, 'DH-2026-0184', 215, NULL, 8, NULL, 3, 159, 'Counter', N'Gói PT 1 Tháng', N'Gói PT theo kỳ hạn, tập T2–T6 một khung giờ cố định.', N'Huấn luyện viên riêng
+Giáo án và thực đơn cá nhân hóa', 8800000, 0, 10, 800000, 'Paid', NULL, '2026-11-06 09:40:00', '2026-11-06 09:42:00', NULL, NULL, NULL),
+ (185, 'DH-2026-0185', 219, NULL, 8, NULL, 3, 159, 'Counter', N'Gói PT 1 Tháng', N'Gói PT theo kỳ hạn, tập T2–T6 một khung giờ cố định.', N'Huấn luyện viên riêng
+Giáo án và thực đơn cá nhân hóa', 8800000, 0, 10, 800000, 'Paid', NULL, '2026-11-06 10:10:00', '2026-11-06 10:12:00', NULL, NULL, NULL);
+SET IDENTITY_INSERT Orders OFF;
+
+SET IDENTITY_INSERT Transactions ON;
+INSERT INTO Transactions (TransactionId, OrderId, Amount, PaymentMethod, GatewayReference, ReceivedByEmployeeId, Status, FailureReason, NeedsRefund, RefundedAt, RefundedByEmployeeId, RefundNote, CreatedAt, ExpiresAt, CompletedAt) VALUES
+ (181, 181, 8800000, 'Transfer', 'FT26110001', 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-11-06 08:12:00', NULL, '2026-11-06 08:12:00'),
+ (182, 182, 13200000, 'Cash', NULL, 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-11-06 08:42:00', NULL, '2026-11-06 08:42:00'),
+ (183, 183, 8800000, 'Cash', NULL, 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-11-06 09:12:00', NULL, '2026-11-06 09:12:00'),
+ (184, 184, 8800000, 'Cash', NULL, 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-11-06 09:42:00', NULL, '2026-11-06 09:42:00'),
+ (185, 185, 8800000, 'Cash', NULL, 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-11-06 10:12:00', NULL, '2026-11-06 10:12:00');
+SET IDENTITY_INSERT Transactions OFF;
+
+SET IDENTITY_INSERT Subscriptions ON;
+INSERT INTO Subscriptions (SubscriptionId, OrderId, CustomerId, SubscriptionType, PtEmployeeId, StartDate, EndDate, FixedStartTime, GeneratedSessionCount, FreezeUsed, MaxFreezesSnapshot, Status) VALUES
+ (174, 181, 213, 'PTSingle', 7, '2026-11-09', '2026-12-09', '10:00:00', 23, 0, NULL, 'Active'),
+ (175, 182, 207, 'PTCouple', 6, '2026-11-06', '2026-12-06', '16:00:00', 21, 0, NULL, 'Active'),
+ (176, 183, 11, 'PTSingle', 5, '2026-11-06', '2026-12-06', '20:00:00', 21, 0, NULL, 'Active'),
+ (177, 184, 215, 'PTSingle', 5, '2026-11-16', '2026-12-16', '13:00:00', 23, 0, NULL, 'Active'),
+ (178, 185, 219, 'PTSingle', 6, '2026-11-16', '2026-12-16', '17:30:00', 22, 0, NULL, 'Active');
+SET IDENTITY_INSERT Subscriptions OFF;
+
+SET IDENTITY_INSERT TimeSlots ON;
+INSERT INTO TimeSlots (TimeSlotId, PtEmployeeId, SlotDate, StartTime, EndTime, Status, HeldByOrderId, HoldExpiresAt, CreatedAt) VALUES
+ (2268, 5, '2026-11-16', '13:00:00', '14:30:00', 'Booked', NULL, NULL, '2026-11-06 09:40:00'),
+ (2269, 5, '2026-11-17', '13:00:00', '14:30:00', 'Booked', NULL, NULL, '2026-11-06 09:40:00'),
+ (2270, 5, '2026-11-18', '13:00:00', '14:30:00', 'Booked', NULL, NULL, '2026-11-06 09:40:00'),
+ (2271, 5, '2026-11-19', '13:00:00', '14:30:00', 'Booked', NULL, NULL, '2026-11-06 09:40:00'),
+ (2272, 5, '2026-11-20', '13:00:00', '14:30:00', 'Booked', NULL, NULL, '2026-11-06 09:40:00'),
+ (2273, 5, '2026-11-23', '13:00:00', '14:30:00', 'Booked', NULL, NULL, '2026-11-06 09:40:00'),
+ (2274, 5, '2026-11-24', '13:00:00', '14:30:00', 'Booked', NULL, NULL, '2026-11-06 09:40:00'),
+ (2275, 5, '2026-11-25', '13:00:00', '14:30:00', 'Booked', NULL, NULL, '2026-11-06 09:40:00'),
+ (2276, 5, '2026-11-26', '13:00:00', '14:30:00', 'Booked', NULL, NULL, '2026-11-06 09:40:00'),
+ (2277, 5, '2026-11-27', '13:00:00', '14:30:00', 'Booked', NULL, NULL, '2026-11-06 09:40:00'),
+ (2278, 5, '2026-11-30', '13:00:00', '14:30:00', 'Booked', NULL, NULL, '2026-11-06 09:40:00'),
+ (2279, 5, '2026-12-01', '13:00:00', '14:30:00', 'Booked', NULL, NULL, '2026-11-06 09:40:00'),
+ (2280, 5, '2026-12-02', '13:00:00', '14:30:00', 'Booked', NULL, NULL, '2026-11-06 09:40:00'),
+ (2281, 5, '2026-12-03', '13:00:00', '14:30:00', 'Booked', NULL, NULL, '2026-11-06 09:40:00'),
+ (2282, 5, '2026-12-04', '13:00:00', '14:30:00', 'Booked', NULL, NULL, '2026-11-06 09:40:00'),
+ (2283, 5, '2026-12-07', '13:00:00', '14:30:00', 'Booked', NULL, NULL, '2026-11-06 09:40:00'),
+ (2284, 5, '2026-12-08', '13:00:00', '14:30:00', 'Booked', NULL, NULL, '2026-11-06 09:40:00'),
+ (2285, 5, '2026-12-09', '13:00:00', '14:30:00', 'Booked', NULL, NULL, '2026-11-06 09:40:00'),
+ (2286, 5, '2026-12-10', '13:00:00', '14:30:00', 'Booked', NULL, NULL, '2026-11-06 09:40:00'),
+ (2287, 5, '2026-12-11', '13:00:00', '14:30:00', 'Booked', NULL, NULL, '2026-11-06 09:40:00'),
+ (2288, 5, '2026-12-14', '13:00:00', '14:30:00', 'Booked', NULL, NULL, '2026-11-06 09:40:00'),
+ (2289, 5, '2026-12-15', '13:00:00', '14:30:00', 'Booked', NULL, NULL, '2026-11-06 09:40:00'),
+ (2290, 5, '2026-12-16', '13:00:00', '14:30:00', 'Booked', NULL, NULL, '2026-11-06 09:40:00');
+SET IDENTITY_INSERT TimeSlots OFF;
+UPDATE TimeSlots SET Status = 'Booked' WHERE TimeSlotId IN (1083, 1087, 1144, 1148, 1152, 1163, 1167, 1171, 1182, 1186, 1190, 1201, 1205, 1209, 1220, 1224, 1228, 1281, 1285, 1286, 1287, 1289, 1299, 1300, 1304, 1305, 1308, 1319, 1320, 1323, 1327, 1338, 1342, 1346, 1357, 1361, 1362, 1365, 1418, 1422, 1423, 1426, 1437, 1441, 1442, 1445, 1456, 1460, 1461, 1464, 1475, 1479, 1480, 1483, 1495, 1499, 1500, 1503, 1558, 1562, 1563, 1566, 1579, 1583, 1584, 1587, 1600, 1604, 1605, 1608, 1621, 1625, 1626, 1629, 1642, 1646, 1647, 1650, 1710, 1713, 1731, 1734, 1752, 1755, 1773, 1794, 1857, 1878, 1899);
+
+SET IDENTITY_INSERT Sessions ON;
+INSERT INTO Sessions (SessionId, SubscriptionId, TimeSlotId, PtEmployeeId, Status, SessionValue, CommissionAmount, AttendanceMarkedAt, IsAutoClosed, MissedReason, CancelType, CancelReason, CancelledAt, CancelledByAccountId, RefundAgreed) VALUES
+ (485, 174, 1152, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (486, 174, 1171, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (487, 174, 1190, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (488, 174, 1209, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (489, 174, 1228, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (490, 174, 1289, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (491, 174, 1308, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (492, 174, 1327, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (493, 174, 1346, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (494, 174, 1365, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (495, 174, 1426, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (496, 174, 1445, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (497, 174, 1464, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (498, 174, 1483, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (499, 174, 1503, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (500, 174, 1566, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (501, 174, 1587, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (502, 174, 1608, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (503, 174, 1629, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (504, 174, 1650, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (505, 174, 1713, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (506, 174, 1734, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (507, 174, 1755, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (508, 175, 1087, 6, 'Scheduled', 628571, 408571, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (509, 175, 1148, 6, 'Scheduled', 628571, 408571, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (510, 175, 1167, 6, 'Scheduled', 628571, 408571, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (511, 175, 1186, 6, 'Scheduled', 628571, 408571, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (512, 175, 1205, 6, 'Scheduled', 628571, 408571, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (513, 175, 1224, 6, 'Scheduled', 628571, 408571, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (514, 175, 1285, 6, 'Scheduled', 628571, 408571, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (515, 175, 1304, 6, 'Scheduled', 628571, 408571, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (516, 175, 1323, 6, 'Scheduled', 628571, 408571, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (517, 175, 1342, 6, 'Scheduled', 628571, 408571, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (518, 175, 1361, 6, 'Scheduled', 628571, 408571, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (519, 175, 1422, 6, 'Scheduled', 628571, 408571, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (520, 175, 1441, 6, 'Scheduled', 628571, 408571, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (521, 175, 1460, 6, 'Scheduled', 628571, 408571, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (522, 175, 1479, 6, 'Scheduled', 628571, 408571, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (523, 175, 1499, 6, 'Scheduled', 628571, 408571, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (524, 175, 1562, 6, 'Scheduled', 628571, 408571, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (525, 175, 1583, 6, 'Scheduled', 628571, 408571, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (526, 175, 1604, 6, 'Scheduled', 628571, 408571, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (527, 175, 1625, 6, 'Scheduled', 628571, 408571, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (528, 175, 1646, 6, 'Scheduled', 628571, 408571, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (529, 176, 1083, 5, 'Scheduled', 419048, 293334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (530, 176, 1144, 5, 'Scheduled', 419048, 293334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (531, 176, 1163, 5, 'Scheduled', 419048, 293334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (532, 176, 1182, 5, 'Scheduled', 419048, 293334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (533, 176, 1201, 5, 'Scheduled', 419048, 293334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (534, 176, 1220, 5, 'Scheduled', 419048, 293334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (535, 176, 1281, 5, 'Scheduled', 419048, 293334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (536, 176, 1300, 5, 'Scheduled', 419048, 293334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (537, 176, 1319, 5, 'Scheduled', 419048, 293334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (538, 176, 1338, 5, 'Scheduled', 419048, 293334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (539, 176, 1357, 5, 'Scheduled', 419048, 293334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (540, 176, 1418, 5, 'Scheduled', 419048, 293334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (541, 176, 1437, 5, 'Scheduled', 419048, 293334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (542, 176, 1456, 5, 'Scheduled', 419048, 293334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (543, 176, 1475, 5, 'Scheduled', 419048, 293334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (544, 176, 1495, 5, 'Scheduled', 419048, 293334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (545, 176, 1558, 5, 'Scheduled', 419048, 293334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (546, 176, 1579, 5, 'Scheduled', 419048, 293334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (547, 176, 1600, 5, 'Scheduled', 419048, 293334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (548, 176, 1621, 5, 'Scheduled', 419048, 293334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (549, 176, 1642, 5, 'Scheduled', 419048, 293334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (550, 177, 2268, 5, 'Scheduled', 382609, 267826, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (551, 177, 2269, 5, 'Scheduled', 382609, 267826, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (552, 177, 2270, 5, 'Scheduled', 382609, 267826, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (553, 177, 2271, 5, 'Scheduled', 382609, 267826, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (554, 177, 2272, 5, 'Scheduled', 382609, 267826, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (555, 177, 2273, 5, 'Scheduled', 382609, 267826, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (556, 177, 2274, 5, 'Scheduled', 382609, 267826, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (557, 177, 2275, 5, 'Scheduled', 382609, 267826, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (558, 177, 2276, 5, 'Scheduled', 382609, 267826, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (559, 177, 2277, 5, 'Scheduled', 382609, 267826, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (560, 177, 2278, 5, 'Scheduled', 382609, 267826, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (561, 177, 2279, 5, 'Scheduled', 382609, 267826, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (562, 177, 2280, 5, 'Scheduled', 382609, 267826, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (563, 177, 2281, 5, 'Scheduled', 382609, 267826, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (564, 177, 2282, 5, 'Scheduled', 382609, 267826, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (565, 177, 2283, 5, 'Scheduled', 382609, 267826, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (566, 177, 2284, 5, 'Scheduled', 382609, 267826, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (567, 177, 2285, 5, 'Scheduled', 382609, 267826, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (568, 177, 2286, 5, 'Scheduled', 382609, 267826, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (569, 177, 2287, 5, 'Scheduled', 382609, 267826, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (570, 177, 2288, 5, 'Scheduled', 382609, 267826, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (571, 177, 2289, 5, 'Scheduled', 382609, 267826, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (572, 177, 2290, 5, 'Scheduled', 382609, 267826, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (573, 178, 1286, 6, 'Scheduled', 400000, 260000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (574, 178, 1305, 6, 'Scheduled', 400000, 260000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (575, 178, 1320, 6, 'Scheduled', 400000, 260000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (576, 178, 1362, 6, 'Scheduled', 400000, 260000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (577, 178, 1423, 6, 'Scheduled', 400000, 260000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (578, 178, 1442, 6, 'Scheduled', 400000, 260000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (579, 178, 1461, 6, 'Scheduled', 400000, 260000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (580, 178, 1480, 6, 'Scheduled', 400000, 260000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (581, 178, 1500, 6, 'Scheduled', 400000, 260000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (582, 178, 1563, 6, 'Scheduled', 400000, 260000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (583, 178, 1584, 6, 'Scheduled', 400000, 260000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (584, 178, 1605, 6, 'Scheduled', 400000, 260000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (585, 178, 1626, 6, 'Scheduled', 400000, 260000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (586, 178, 1647, 6, 'Scheduled', 400000, 260000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (587, 178, 1710, 6, 'Scheduled', 400000, 260000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (588, 178, 1731, 6, 'Scheduled', 400000, 260000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (589, 178, 1752, 6, 'Scheduled', 400000, 260000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (590, 178, 1773, 6, 'Scheduled', 400000, 260000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (591, 178, 1794, 6, 'Scheduled', 400000, 260000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (592, 178, 1857, 6, 'Scheduled', 400000, 260000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (593, 178, 1878, 6, 'Scheduled', 400000, 260000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (594, 178, 1899, 6, 'Scheduled', 400000, 260000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0);
+SET IDENTITY_INSERT Sessions OFF;
+
+SET IDENTITY_INSERT CheckIns ON;
+INSERT INTO CheckIns (CheckInId, SubscriptionId, VerifiedByEmployeeId, CheckedInAt, PhotoVerified) VALUES
+ (816, 39, 3, '2026-11-06 11:50:00', 1),
+ (817, 16, 3, '2026-11-06 12:20:00', 1);
+SET IDENTITY_INSERT CheckIns OFF;
+
+-- ST-BF05-16: khách Võ Minh Tâm (KH-2029) đang bảo lưu gói thành viên (lập phiếu @Today − 4, 10:00). Kỳ bảo lưu tính theo NGÀY NẠP (@Today − 3 … @Today + 26,
+-- 30 ngày, đúng giới hạn P-02 = 1 tháng) nên nạp ngày nào khách cũng đang bảo lưu đúng hôm đó.
+SET IDENTITY_INSERT FreezeRecords ON;
+INSERT INTO FreezeRecords (FreezeRecordId, SubscriptionId, HandledByEmployeeId, StartDate, PlannedEndDate, ActualEndDate, Reason, CreatedAt) VALUES
+ (3, 64, 3, DATEADD(DAY, -3, @Today), DATEADD(DAY, 26, @Today), NULL, N'Khách về quê chăm người nhà', DATEADD(MINUTE, -5160, CAST(@Today AS DATETIME2(0))));
+SET IDENTITY_INSERT FreezeRecords OFF;
+UPDATE Subscriptions SET Status = 'Frozen', FreezeUsed = 1 WHERE SubscriptionId = 64;
+UPDATE Customers SET Status = 'Frozen' WHERE CustomerId = 229;
+
+-- ST-BF05-10: PT Sơn dời buổi 16/11 18:00 của Mai sang 17/11 11:00
+UPDATE Sessions SET TimeSlotId = 1299 WHERE SessionId = 441;
+UPDATE TimeSlots SET Status = 'Free' WHERE TimeSlotId = 447;
+-- ST-BF05-11: PT Sơn chuyển buổi 16/11 07:00 của An cho PT David
+UPDATE Sessions SET TimeSlotId = 1287, PtEmployeeId = 7, CommissionAmount = 220000 WHERE SessionId = 380;
+UPDATE TimeSlots SET Status = 'Free' WHERE TimeSlotId = 386;
+-- ST-BF05-12: PT Sơn hủy buổi 17/11 18:00 của Mai
+UPDATE Sessions SET Status = 'Cancelled', CancelType = 'ByPt', CancelReason = N'PT bị ốm, đã hoàn tiền mặt cho khách', CancelledAt = '2026-11-06 14:20:00', CancelledByAccountId = 15, RefundAgreed = 1 WHERE SessionId = 442;
+UPDATE TimeSlots SET Status = 'Free' WHERE TimeSlotId = 448;
+
+SET IDENTITY_INSERT SessionMoveLogs ON;
+INSERT INTO SessionMoveLogs (SessionMoveLogId, SessionId, MoveType, OldTimeSlotId, NewTimeSlotId, OldPtEmployeeId, NewPtEmployeeId, RequestedByAccountId, Reason, MovedAt) VALUES
+ (10, 441, 'PtReschedule', 447, 1299, 5, 5, 15, N'PT bận họp buổi tối, dời sang buổi sáng', '2026-11-06 14:00:00'),
+ (11, 380, 'PtTransfer', 386, 1287, 5, 7, 15, NULL, '2026-11-06 14:10:00');
+SET IDENTITY_INSERT SessionMoveLogs OFF;
+
+SET IDENTITY_INSERT Notifications ON;
+INSERT INTO Notifications (NotificationId, SentByEmployeeId, Title, Content, Audience, ScheduledAt, SentAt, CreatedAt) VALUES
+ (10, NULL, N'Gói PT mới đã kích hoạt', N'Gói PT 1 Tháng với David Miller: 23 buổi, 09/11/2026 – 09/12/2026. Mã đơn DH-2026-0181.', 'Individual', NULL, '2026-11-06 08:12:00', '2026-11-06 08:12:00'),
+ (11, NULL, N'Bạn có khách gói PT mới', N'Huỳnh Thị Linh mua Gói PT 1 Tháng: 23 buổi, 09/11/2026 – 09/12/2026. Xem trên Lịch dạy.', 'Individual', NULL, '2026-11-06 08:12:00', '2026-11-06 08:12:00'),
+ (12, NULL, N'Gói PT mới đã kích hoạt', N'Gói PT Couple 1 Tháng với Nguyễn Thị Kiều Trang: 21 buổi, 06/11/2026 – 06/12/2026. Mã đơn DH-2026-0182.', 'Individual', NULL, '2026-11-06 08:42:00', '2026-11-06 08:42:00'),
+ (13, NULL, N'Bạn có khách gói PT mới', N'Lý Hữu Khoa mua Gói PT Couple 1 Tháng: 21 buổi, 06/11/2026 – 06/12/2026. Xem trên Lịch dạy.', 'Individual', NULL, '2026-11-06 08:42:00', '2026-11-06 08:42:00'),
+ (14, NULL, N'Gói PT mới đã kích hoạt', N'Gói PT 1 Tháng với Đinh Công Sơn: 21 buổi, 06/11/2026 – 06/12/2026. Mã đơn DH-2026-0183.', 'Individual', NULL, '2026-11-06 09:12:00', '2026-11-06 09:12:00'),
+ (15, NULL, N'Bạn có khách gói PT mới', N'Michael Johnson mua Gói PT 1 Tháng: 21 buổi, 06/11/2026 – 06/12/2026. Xem trên Lịch dạy.', 'Individual', NULL, '2026-11-06 09:12:00', '2026-11-06 09:12:00'),
+ (16, NULL, N'Gói PT mới đã kích hoạt', N'Gói PT 1 Tháng với Đinh Công Sơn: 23 buổi, 16/11/2026 – 16/12/2026. Mã đơn DH-2026-0184.', 'Individual', NULL, '2026-11-06 09:42:00', '2026-11-06 09:42:00'),
+ (17, NULL, N'Bạn có khách gói PT mới', N'Hồ Đức Sơn mua Gói PT 1 Tháng: 23 buổi, 16/11/2026 – 16/12/2026. Xem trên Lịch dạy.', 'Individual', NULL, '2026-11-06 09:42:00', '2026-11-06 09:42:00'),
+ (18, NULL, N'Gói PT mới đã kích hoạt', N'Gói PT 1 Tháng với Nguyễn Thị Kiều Trang: 22 buổi, 16/11/2026 – 16/12/2026. Mã đơn DH-2026-0185.', 'Individual', NULL, '2026-11-06 10:12:00', '2026-11-06 10:12:00'),
+ (19, NULL, N'Bạn có khách gói PT mới', N'Huỳnh Xuân Sơn mua Gói PT 1 Tháng: 22 buổi, 16/11/2026 – 16/12/2026. Xem trên Lịch dạy.', 'Individual', NULL, '2026-11-06 10:12:00', '2026-11-06 10:12:00'),
+ (20, NULL, N'PT dời buổi tập', N'Buổi PT 16/11/2026 18:00–19:30 được Đinh Công Sơn dời sang Thứ 3 17/11/2026 11:00–12:30. Ghi chú: PT bận họp buổi tối, dời sang buổi sáng', 'Individual', NULL, '2026-11-06 14:00:00', '2026-11-06 14:00:00'),
+ (21, NULL, N'Đổi PT dạy buổi tập', N'Buổi PT 16/11/2026 07:00–08:30 sẽ do David Miller dạy thay Đinh Công Sơn. Giờ tập giữ nguyên.', 'Individual', NULL, '2026-11-06 14:10:00', '2026-11-06 14:10:00'),
+ (22, NULL, N'Bạn nhận dạy thay 1 buổi', N'Đinh Công Sơn chuyển cho bạn buổi 16/11/2026 07:00–08:30 với khách Nguyễn Văn An.', 'Individual', NULL, '2026-11-06 14:10:00', '2026-11-06 14:10:00'),
+ (23, NULL, N'PT hủy buổi tập', N'Buổi PT 17/11/2026 18:00–19:30 đã bị Đinh Công Sơn hủy. Lý do: PT bị ốm, đã hoàn tiền mặt cho khách. Khoản hoàn tiền mặt thực hiện như bạn đã thỏa thuận với PT.', 'Individual', NULL, '2026-11-06 14:20:00', '2026-11-06 14:20:00'),
+ (24, NULL, N'Nhắc buổi PT ngày 21/10/2026', N'Ngày mai 21/10/2026 lúc 18:00 bạn có buổi PT với Đinh Công Sơn nhưng chưa có membership hoặc vé ngày hợp lệ. Hãy mua gói thành viên hoặc vé ngày trước giờ tập để buổi không bị tính vắng.', 'Individual', NULL, '2026-10-20 00:05:00', '2026-10-20 00:05:00');
+SET IDENTITY_INSERT Notifications OFF;
+SET IDENTITY_INSERT NotificationRecipients ON;
+INSERT INTO NotificationRecipients (NotificationRecipientId, NotificationId, AccountId, ReadAt) VALUES
+ (86, 10, 213, NULL),
+ (87, 11, 17, NULL),
+ (88, 12, 207, NULL),
+ (89, 12, 208, NULL),
+ (90, 13, 16, NULL),
+ (91, 14, 8, NULL),
+ (92, 15, 15, NULL),
+ (93, 16, 215, NULL),
+ (94, 17, 15, NULL),
+ (95, 18, 219, NULL),
+ (96, 19, 16, NULL),
+ (97, 20, 5, NULL),
+ (98, 21, 1, NULL),
+ (99, 22, 17, NULL),
+ (100, 23, 5, NULL),
+ (101, 24, 5, NULL);
+SET IDENTITY_INSERT NotificationRecipients OFF;
+
+
+/* ============================================================================
+   Chốt các buổi đã qua lúc nạp seed — như JOB-02 rồi JOB-04 đã chạy mỗi đêm tới @Today (xem seedgen.close_past_sql).
+   ============================================================================ */
+-- JOB-02 (1/4) nhật ký: số buổi PT bị hủy vì gói hết hạn
+INSERT INTO AuditLogs (AccountId, ActingRole, Action, EntityName, EntityId, FieldChanged, OldValue, NewValue, Reason, CreatedAt)
+SELECT NULL, NULL, N'JOB-02', N'Subscriptions', p.SubscriptionId, N'Sessions.Status', N'Scheduled', N'Cancelled',
+       CONCAT(CAST(COUNT(*) AS NVARCHAR(10)), N' buổi sau ngày hết hạn gói → PackageExpired (CBR-55)'), DATEADD(MINUTE, 5, CAST(DATEADD(DAY, 1, p.EndDate) AS DATETIME2(0)))
+FROM Subscriptions p JOIN Sessions s ON s.SubscriptionId = p.SubscriptionId JOIN TimeSlots t ON t.TimeSlotId = s.TimeSlotId
+WHERE p.SubscriptionType IN ('PTSingle', 'PTCouple') AND p.Status = 'Active' AND p.EndDate < @Today AND s.Status = 'Scheduled' AND t.SlotDate > p.EndDate
+GROUP BY p.SubscriptionId, p.EndDate;
+-- JOB-02 (2/4) gói PT hết hạn: khung của buổi sau EndDate → Free, buổi → Cancelled / PackageExpired
+UPDATE TimeSlots SET Status = 'Free'
+WHERE Status = 'Booked' AND EXISTS (SELECT 1 FROM Sessions s JOIN Subscriptions p ON p.SubscriptionId = s.SubscriptionId
+    WHERE s.TimeSlotId = TimeSlots.TimeSlotId AND s.Status = 'Scheduled' AND p.SubscriptionType IN ('PTSingle', 'PTCouple') AND p.Status = 'Active' AND p.EndDate < @Today AND TimeSlots.SlotDate > p.EndDate);
+UPDATE Sessions SET Status = 'Cancelled', CancelType = 'PackageExpired', CancelReason = N'Gói PT đã hết hạn',
+    CancelledAt = (SELECT DATEADD(MINUTE, 5, CAST(DATEADD(DAY, 1, p.EndDate) AS DATETIME2(0))) FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId)
+WHERE Status = 'Scheduled' AND EXISTS (SELECT 1 FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId
+    AND p.SubscriptionType IN ('PTSingle', 'PTCouple') AND p.Status = 'Active' AND p.EndDate < @Today AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) > p.EndDate);
+-- JOB-02 (3/4) khách không còn gói tập / vé ngày còn hiệu lực → Customers.Expired (CBR-03)
+INSERT INTO AuditLogs (AccountId, ActingRole, Action, EntityName, EntityId, FieldChanged, OldValue, NewValue, Reason, CreatedAt)
+SELECT NULL, NULL, N'JOB-02', N'Customers', Customers.CustomerId, N'Status', NULL, N'Expired',
+       N'Không còn gói tập / vé ngày còn hiệu lực (CBR-03)', (SELECT DATEADD(MINUTE, 5, CAST(DATEADD(DAY, 1, MAX(e.EndDate)) AS DATETIME2(0))) FROM Subscriptions e WHERE e.CustomerId = Customers.CustomerId AND e.SubscriptionType IN ('Membership', 'PTSingle', 'PTCouple') AND e.Status = 'Active' AND e.EndDate < @Today)
+FROM Customers WHERE Customers.Status NOT IN ('Inactive', 'Expired') AND EXISTS (SELECT 1 FROM Subscriptions e WHERE e.CustomerId = Customers.CustomerId AND e.SubscriptionType IN ('Membership', 'PTSingle', 'PTCouple') AND e.Status = 'Active' AND e.EndDate < @Today) AND NOT EXISTS (SELECT 1 FROM Subscriptions m WHERE m.CustomerId = Customers.CustomerId AND m.SubscriptionType = 'Membership' AND m.Status IN ('Active', 'Frozen') AND NOT (m.Status = 'Active' AND m.EndDate < @Today)) AND NOT EXISTS (SELECT 1 FROM Subscriptions d WHERE d.CustomerId = Customers.CustomerId AND d.SubscriptionType = 'DayPass' AND d.Status = 'Active' AND d.EndDate >= @Today);
+UPDATE Customers SET Status = 'Expired' WHERE Customers.Status NOT IN ('Inactive', 'Expired') AND EXISTS (SELECT 1 FROM Subscriptions e WHERE e.CustomerId = Customers.CustomerId AND e.SubscriptionType IN ('Membership', 'PTSingle', 'PTCouple') AND e.Status = 'Active' AND e.EndDate < @Today) AND NOT EXISTS (SELECT 1 FROM Subscriptions m WHERE m.CustomerId = Customers.CustomerId AND m.SubscriptionType = 'Membership' AND m.Status IN ('Active', 'Frozen') AND NOT (m.Status = 'Active' AND m.EndDate < @Today)) AND NOT EXISTS (SELECT 1 FROM Subscriptions d WHERE d.CustomerId = Customers.CustomerId AND d.SubscriptionType = 'DayPass' AND d.Status = 'Active' AND d.EndDate >= @Today);
+-- JOB-02 (4/4) gói → Expired
+INSERT INTO AuditLogs (AccountId, ActingRole, Action, EntityName, EntityId, FieldChanged, OldValue, NewValue, Reason, CreatedAt)
+SELECT NULL, NULL, N'JOB-02', N'Subscriptions', SubscriptionId, N'Status', N'Active', N'Expired',
+       CONCAT(N'Hết hạn ngày ', CONVERT(NVARCHAR(10), EndDate, 103)), DATEADD(MINUTE, 5, CAST(DATEADD(DAY, 1, EndDate) AS DATETIME2(0)))
+FROM Subscriptions WHERE SubscriptionType IN ('Membership', 'PTSingle', 'PTCouple') AND Status = 'Active' AND EndDate < @Today;
+UPDATE Subscriptions SET Status = 'Expired' WHERE SubscriptionType IN ('Membership', 'PTSingle', 'PTCouple') AND Status = 'Active' AND EndDate < @Today;
+-- JOB-04 B1 GymClosed: phòng nghỉ cả ngày / buổi ngoài giờ mở cửa
+INSERT INTO AuditLogs (AccountId, ActingRole, Action, EntityName, EntityId, FieldChanged, OldValue, NewValue, Reason, CreatedAt)
+SELECT NULL, NULL, N'JOB-04', N'Sessions', SessionId, N'Status', N'Scheduled', N'Cancelled', NULL, (SELECT DATEADD(MINUTE, 5, CAST(DATEADD(DAY, 1, t.SlotDate) AS DATETIME2(0))) FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId)
+FROM Sessions WHERE Sessions.Status = 'Scheduled' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) < @Today AND EXISTS (SELECT 1 FROM TimeSlots t LEFT JOIN OperatingHourExceptions ex ON ex.ApplyDate = t.SlotDate WHERE t.TimeSlotId = Sessions.TimeSlotId AND (ex.IsClosedAllDay = 1 OR t.StartTime < COALESCE(ex.OpenTime, (SELECT CAST(SUBSTRING(c.ConfigValue, 1, 5) AS TIME(0)) FROM SystemConfigs c WHERE c.ConfigKey = 'P-19')) OR t.EndTime > COALESCE(ex.CloseTime, (SELECT CAST(SUBSTRING(c.ConfigValue, 7, 5) AS TIME(0)) FROM SystemConfigs c WHERE c.ConfigKey = 'P-19'))));
+UPDATE Sessions SET Status = 'Cancelled', MissedReason = NULL, IsAutoClosed = 1, AttendanceMarkedAt = (SELECT DATEADD(MINUTE, 5, CAST(DATEADD(DAY, 1, t.SlotDate) AS DATETIME2(0))) FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId), CancelType = 'GymClosed', CommissionAmount = 0, CancelledAt = (SELECT DATEADD(MINUTE, 5, CAST(DATEADD(DAY, 1, t.SlotDate) AS DATETIME2(0))) FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId)
+WHERE Sessions.Status = 'Scheduled' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) < @Today AND EXISTS (SELECT 1 FROM TimeSlots t LEFT JOIN OperatingHourExceptions ex ON ex.ApplyDate = t.SlotDate WHERE t.TimeSlotId = Sessions.TimeSlotId AND (ex.IsClosedAllDay = 1 OR t.StartTime < COALESCE(ex.OpenTime, (SELECT CAST(SUBSTRING(c.ConfigValue, 1, 5) AS TIME(0)) FROM SystemConfigs c WHERE c.ConfigKey = 'P-19')) OR t.EndTime > COALESCE(ex.CloseTime, (SELECT CAST(SUBSTRING(c.ConfigValue, 7, 5) AS TIME(0)) FROM SystemConfigs c WHERE c.ConfigKey = 'P-19'))));
+-- JOB-04 B5 không ai vào gym được + có người bảo lưu
+INSERT INTO AuditLogs (AccountId, ActingRole, Action, EntityName, EntityId, FieldChanged, OldValue, NewValue, Reason, CreatedAt)
+SELECT NULL, NULL, N'JOB-04', N'Sessions', SessionId, N'Status', N'Scheduled', N'Missed', 'MembershipFrozen', (SELECT DATEADD(MINUTE, 5, CAST(DATEADD(DAY, 1, t.SlotDate) AS DATETIME2(0))) FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId)
+FROM Sessions WHERE Sessions.Status = 'Scheduled' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) < @Today AND (NOT ((EXISTS (SELECT 1 FROM Subscriptions g WHERE g.CustomerId = (SELECT p.CustomerId FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId) AND g.SubscriptionType = 'Membership' AND g.Status IN ('Active', 'Frozen', 'Expired') AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN g.StartDate AND g.EndDate) AND NOT EXISTS (SELECT 1 FROM Subscriptions g JOIN FreezeRecords f ON f.SubscriptionId = g.SubscriptionId WHERE g.CustomerId = (SELECT p.CustomerId FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId) AND g.SubscriptionType = 'Membership' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN f.StartDate AND COALESCE(f.ActualEndDate, f.PlannedEndDate))) OR EXISTS (SELECT 1 FROM Subscriptions g WHERE g.CustomerId = (SELECT p.CustomerId FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId) AND g.SubscriptionType = 'DayPass' AND g.Status IN ('Active', 'Used', 'Expired') AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN g.StartDate AND g.EndDate)) AND (NOT EXISTS (SELECT 1 FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId AND p.SubscriptionType = 'PTCouple') OR NOT ((EXISTS (SELECT 1 FROM Subscriptions g WHERE g.CustomerId = (SELECT o.PartnerCustomerId FROM Subscriptions p JOIN Orders o ON o.OrderId = p.OrderId WHERE p.SubscriptionId = Sessions.SubscriptionId AND p.SubscriptionType = 'PTCouple') AND g.SubscriptionType = 'Membership' AND g.Status IN ('Active', 'Frozen', 'Expired') AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN g.StartDate AND g.EndDate) AND NOT EXISTS (SELECT 1 FROM Subscriptions g JOIN FreezeRecords f ON f.SubscriptionId = g.SubscriptionId WHERE g.CustomerId = (SELECT o.PartnerCustomerId FROM Subscriptions p JOIN Orders o ON o.OrderId = p.OrderId WHERE p.SubscriptionId = Sessions.SubscriptionId AND p.SubscriptionType = 'PTCouple') AND g.SubscriptionType = 'Membership' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN f.StartDate AND COALESCE(f.ActualEndDate, f.PlannedEndDate))) OR EXISTS (SELECT 1 FROM Subscriptions g WHERE g.CustomerId = (SELECT o.PartnerCustomerId FROM Subscriptions p JOIN Orders o ON o.OrderId = p.OrderId WHERE p.SubscriptionId = Sessions.SubscriptionId AND p.SubscriptionType = 'PTCouple') AND g.SubscriptionType = 'DayPass' AND g.Status IN ('Active', 'Used', 'Expired') AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN g.StartDate AND g.EndDate)))) AND (EXISTS (SELECT 1 FROM Subscriptions g JOIN FreezeRecords f ON f.SubscriptionId = g.SubscriptionId WHERE g.CustomerId = (SELECT p.CustomerId FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId) AND g.SubscriptionType = 'Membership' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN f.StartDate AND COALESCE(f.ActualEndDate, f.PlannedEndDate)) OR (EXISTS (SELECT 1 FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId AND p.SubscriptionType = 'PTCouple') AND EXISTS (SELECT 1 FROM Subscriptions g JOIN FreezeRecords f ON f.SubscriptionId = g.SubscriptionId WHERE g.CustomerId = (SELECT o.PartnerCustomerId FROM Subscriptions p JOIN Orders o ON o.OrderId = p.OrderId WHERE p.SubscriptionId = Sessions.SubscriptionId AND p.SubscriptionType = 'PTCouple') AND g.SubscriptionType = 'Membership' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN f.StartDate AND COALESCE(f.ActualEndDate, f.PlannedEndDate))));
+UPDATE Sessions SET Status = 'Missed', MissedReason = 'MembershipFrozen', IsAutoClosed = 1, AttendanceMarkedAt = (SELECT DATEADD(MINUTE, 5, CAST(DATEADD(DAY, 1, t.SlotDate) AS DATETIME2(0))) FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId)
+WHERE Sessions.Status = 'Scheduled' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) < @Today AND (NOT ((EXISTS (SELECT 1 FROM Subscriptions g WHERE g.CustomerId = (SELECT p.CustomerId FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId) AND g.SubscriptionType = 'Membership' AND g.Status IN ('Active', 'Frozen', 'Expired') AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN g.StartDate AND g.EndDate) AND NOT EXISTS (SELECT 1 FROM Subscriptions g JOIN FreezeRecords f ON f.SubscriptionId = g.SubscriptionId WHERE g.CustomerId = (SELECT p.CustomerId FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId) AND g.SubscriptionType = 'Membership' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN f.StartDate AND COALESCE(f.ActualEndDate, f.PlannedEndDate))) OR EXISTS (SELECT 1 FROM Subscriptions g WHERE g.CustomerId = (SELECT p.CustomerId FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId) AND g.SubscriptionType = 'DayPass' AND g.Status IN ('Active', 'Used', 'Expired') AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN g.StartDate AND g.EndDate)) AND (NOT EXISTS (SELECT 1 FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId AND p.SubscriptionType = 'PTCouple') OR NOT ((EXISTS (SELECT 1 FROM Subscriptions g WHERE g.CustomerId = (SELECT o.PartnerCustomerId FROM Subscriptions p JOIN Orders o ON o.OrderId = p.OrderId WHERE p.SubscriptionId = Sessions.SubscriptionId AND p.SubscriptionType = 'PTCouple') AND g.SubscriptionType = 'Membership' AND g.Status IN ('Active', 'Frozen', 'Expired') AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN g.StartDate AND g.EndDate) AND NOT EXISTS (SELECT 1 FROM Subscriptions g JOIN FreezeRecords f ON f.SubscriptionId = g.SubscriptionId WHERE g.CustomerId = (SELECT o.PartnerCustomerId FROM Subscriptions p JOIN Orders o ON o.OrderId = p.OrderId WHERE p.SubscriptionId = Sessions.SubscriptionId AND p.SubscriptionType = 'PTCouple') AND g.SubscriptionType = 'Membership' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN f.StartDate AND COALESCE(f.ActualEndDate, f.PlannedEndDate))) OR EXISTS (SELECT 1 FROM Subscriptions g WHERE g.CustomerId = (SELECT o.PartnerCustomerId FROM Subscriptions p JOIN Orders o ON o.OrderId = p.OrderId WHERE p.SubscriptionId = Sessions.SubscriptionId AND p.SubscriptionType = 'PTCouple') AND g.SubscriptionType = 'DayPass' AND g.Status IN ('Active', 'Used', 'Expired') AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN g.StartDate AND g.EndDate)))) AND (EXISTS (SELECT 1 FROM Subscriptions g JOIN FreezeRecords f ON f.SubscriptionId = g.SubscriptionId WHERE g.CustomerId = (SELECT p.CustomerId FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId) AND g.SubscriptionType = 'Membership' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN f.StartDate AND COALESCE(f.ActualEndDate, f.PlannedEndDate)) OR (EXISTS (SELECT 1 FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId AND p.SubscriptionType = 'PTCouple') AND EXISTS (SELECT 1 FROM Subscriptions g JOIN FreezeRecords f ON f.SubscriptionId = g.SubscriptionId WHERE g.CustomerId = (SELECT o.PartnerCustomerId FROM Subscriptions p JOIN Orders o ON o.OrderId = p.OrderId WHERE p.SubscriptionId = Sessions.SubscriptionId AND p.SubscriptionType = 'PTCouple') AND g.SubscriptionType = 'Membership' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN f.StartDate AND COALESCE(f.ActualEndDate, f.PlannedEndDate))));
+-- JOB-04 B6 không ai vào gym được
+INSERT INTO AuditLogs (AccountId, ActingRole, Action, EntityName, EntityId, FieldChanged, OldValue, NewValue, Reason, CreatedAt)
+SELECT NULL, NULL, N'JOB-04', N'Sessions', SessionId, N'Status', N'Scheduled', N'Missed', 'NoMembership', (SELECT DATEADD(MINUTE, 5, CAST(DATEADD(DAY, 1, t.SlotDate) AS DATETIME2(0))) FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId)
+FROM Sessions WHERE Sessions.Status = 'Scheduled' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) < @Today AND (NOT ((EXISTS (SELECT 1 FROM Subscriptions g WHERE g.CustomerId = (SELECT p.CustomerId FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId) AND g.SubscriptionType = 'Membership' AND g.Status IN ('Active', 'Frozen', 'Expired') AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN g.StartDate AND g.EndDate) AND NOT EXISTS (SELECT 1 FROM Subscriptions g JOIN FreezeRecords f ON f.SubscriptionId = g.SubscriptionId WHERE g.CustomerId = (SELECT p.CustomerId FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId) AND g.SubscriptionType = 'Membership' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN f.StartDate AND COALESCE(f.ActualEndDate, f.PlannedEndDate))) OR EXISTS (SELECT 1 FROM Subscriptions g WHERE g.CustomerId = (SELECT p.CustomerId FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId) AND g.SubscriptionType = 'DayPass' AND g.Status IN ('Active', 'Used', 'Expired') AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN g.StartDate AND g.EndDate)) AND (NOT EXISTS (SELECT 1 FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId AND p.SubscriptionType = 'PTCouple') OR NOT ((EXISTS (SELECT 1 FROM Subscriptions g WHERE g.CustomerId = (SELECT o.PartnerCustomerId FROM Subscriptions p JOIN Orders o ON o.OrderId = p.OrderId WHERE p.SubscriptionId = Sessions.SubscriptionId AND p.SubscriptionType = 'PTCouple') AND g.SubscriptionType = 'Membership' AND g.Status IN ('Active', 'Frozen', 'Expired') AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN g.StartDate AND g.EndDate) AND NOT EXISTS (SELECT 1 FROM Subscriptions g JOIN FreezeRecords f ON f.SubscriptionId = g.SubscriptionId WHERE g.CustomerId = (SELECT o.PartnerCustomerId FROM Subscriptions p JOIN Orders o ON o.OrderId = p.OrderId WHERE p.SubscriptionId = Sessions.SubscriptionId AND p.SubscriptionType = 'PTCouple') AND g.SubscriptionType = 'Membership' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN f.StartDate AND COALESCE(f.ActualEndDate, f.PlannedEndDate))) OR EXISTS (SELECT 1 FROM Subscriptions g WHERE g.CustomerId = (SELECT o.PartnerCustomerId FROM Subscriptions p JOIN Orders o ON o.OrderId = p.OrderId WHERE p.SubscriptionId = Sessions.SubscriptionId AND p.SubscriptionType = 'PTCouple') AND g.SubscriptionType = 'DayPass' AND g.Status IN ('Active', 'Used', 'Expired') AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN g.StartDate AND g.EndDate))));
+UPDATE Sessions SET Status = 'Missed', MissedReason = 'NoMembership', IsAutoClosed = 1, AttendanceMarkedAt = (SELECT DATEADD(MINUTE, 5, CAST(DATEADD(DAY, 1, t.SlotDate) AS DATETIME2(0))) FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId)
+WHERE Sessions.Status = 'Scheduled' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) < @Today AND (NOT ((EXISTS (SELECT 1 FROM Subscriptions g WHERE g.CustomerId = (SELECT p.CustomerId FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId) AND g.SubscriptionType = 'Membership' AND g.Status IN ('Active', 'Frozen', 'Expired') AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN g.StartDate AND g.EndDate) AND NOT EXISTS (SELECT 1 FROM Subscriptions g JOIN FreezeRecords f ON f.SubscriptionId = g.SubscriptionId WHERE g.CustomerId = (SELECT p.CustomerId FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId) AND g.SubscriptionType = 'Membership' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN f.StartDate AND COALESCE(f.ActualEndDate, f.PlannedEndDate))) OR EXISTS (SELECT 1 FROM Subscriptions g WHERE g.CustomerId = (SELECT p.CustomerId FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId) AND g.SubscriptionType = 'DayPass' AND g.Status IN ('Active', 'Used', 'Expired') AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN g.StartDate AND g.EndDate)) AND (NOT EXISTS (SELECT 1 FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId AND p.SubscriptionType = 'PTCouple') OR NOT ((EXISTS (SELECT 1 FROM Subscriptions g WHERE g.CustomerId = (SELECT o.PartnerCustomerId FROM Subscriptions p JOIN Orders o ON o.OrderId = p.OrderId WHERE p.SubscriptionId = Sessions.SubscriptionId AND p.SubscriptionType = 'PTCouple') AND g.SubscriptionType = 'Membership' AND g.Status IN ('Active', 'Frozen', 'Expired') AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN g.StartDate AND g.EndDate) AND NOT EXISTS (SELECT 1 FROM Subscriptions g JOIN FreezeRecords f ON f.SubscriptionId = g.SubscriptionId WHERE g.CustomerId = (SELECT o.PartnerCustomerId FROM Subscriptions p JOIN Orders o ON o.OrderId = p.OrderId WHERE p.SubscriptionId = Sessions.SubscriptionId AND p.SubscriptionType = 'PTCouple') AND g.SubscriptionType = 'Membership' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN f.StartDate AND COALESCE(f.ActualEndDate, f.PlannedEndDate))) OR EXISTS (SELECT 1 FROM Subscriptions g WHERE g.CustomerId = (SELECT o.PartnerCustomerId FROM Subscriptions p JOIN Orders o ON o.OrderId = p.OrderId WHERE p.SubscriptionId = Sessions.SubscriptionId AND p.SubscriptionType = 'PTCouple') AND g.SubscriptionType = 'DayPass' AND g.Status IN ('Active', 'Used', 'Expired') AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN g.StartDate AND g.EndDate))));
+-- JOB-04 B7 có check-in trong ngày tập
+INSERT INTO AuditLogs (AccountId, ActingRole, Action, EntityName, EntityId, FieldChanged, OldValue, NewValue, Reason, CreatedAt)
+SELECT NULL, NULL, N'JOB-04', N'Sessions', SessionId, N'Status', N'Scheduled', N'CheckedIn', NULL, (SELECT DATEADD(MINUTE, 5, CAST(DATEADD(DAY, 1, t.SlotDate) AS DATETIME2(0))) FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId)
+FROM Sessions WHERE Sessions.Status = 'Scheduled' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) < @Today AND EXISTS (SELECT 1 FROM CheckIns ci JOIN Subscriptions g ON g.SubscriptionId = ci.SubscriptionId WHERE g.SubscriptionType IN ('Membership', 'DayPass') AND (g.CustomerId = (SELECT p.CustomerId FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId) OR g.CustomerId = (SELECT o.PartnerCustomerId FROM Subscriptions p JOIN Orders o ON o.OrderId = p.OrderId WHERE p.SubscriptionId = Sessions.SubscriptionId AND p.SubscriptionType = 'PTCouple')) AND CAST(ci.CheckedInAt AS DATE) = (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId));
+UPDATE Sessions SET Status = 'CheckedIn', MissedReason = NULL, IsAutoClosed = 1, AttendanceMarkedAt = (SELECT DATEADD(MINUTE, 5, CAST(DATEADD(DAY, 1, t.SlotDate) AS DATETIME2(0))) FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId)
+WHERE Sessions.Status = 'Scheduled' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) < @Today AND EXISTS (SELECT 1 FROM CheckIns ci JOIN Subscriptions g ON g.SubscriptionId = ci.SubscriptionId WHERE g.SubscriptionType IN ('Membership', 'DayPass') AND (g.CustomerId = (SELECT p.CustomerId FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId) OR g.CustomerId = (SELECT o.PartnerCustomerId FROM Subscriptions p JOIN Orders o ON o.OrderId = p.OrderId WHERE p.SubscriptionId = Sessions.SubscriptionId AND p.SubscriptionType = 'PTCouple')) AND CAST(ci.CheckedInAt AS DATE) = (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId));
+-- JOB-04 B8 có quyền vào gym nhưng không đến
+INSERT INTO AuditLogs (AccountId, ActingRole, Action, EntityName, EntityId, FieldChanged, OldValue, NewValue, Reason, CreatedAt)
+SELECT NULL, NULL, N'JOB-04', N'Sessions', SessionId, N'Status', N'Scheduled', N'Missed', 'NoCheckIn', (SELECT DATEADD(MINUTE, 5, CAST(DATEADD(DAY, 1, t.SlotDate) AS DATETIME2(0))) FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId)
+FROM Sessions WHERE Sessions.Status = 'Scheduled' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) < @Today AND 1 = 1;
+UPDATE Sessions SET Status = 'Missed', MissedReason = 'NoCheckIn', IsAutoClosed = 1, AttendanceMarkedAt = (SELECT DATEADD(MINUTE, 5, CAST(DATEADD(DAY, 1, t.SlotDate) AS DATETIME2(0))) FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId)
+WHERE Sessions.Status = 'Scheduled' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) < @Today AND 1 = 1;
 
 COMMIT TRANSACTION;
 GO

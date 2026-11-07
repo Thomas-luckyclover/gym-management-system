@@ -593,12 +593,114 @@ def render(now=None, header=''):
                 out.append(f' ({vals}){sep}{note}')
         out.append(f'SET IDENTITY_INSERT {t} OFF;')
         out.append('')
+    out += close_past_sql('@Today' if now is None else f"'{now.date():%Y-%m-%d}'")
     if now is None:
         out += ['COMMIT TRANSACTION;', 'GO', '', "PRINT N'>>> Nạp seed GMS v26 thành công.';",
                 'SELECT t.name AS TableName, SUM(p.rows) AS [Rows] FROM sys.tables t',
                 'JOIN sys.partitions p ON p.object_id = t.object_id AND p.index_id IN (0, 1)',
                 'GROUP BY t.name ORDER BY t.name;', 'GO', '']
     return '\n'.join(out)
+
+
+# ============================================================ chốt buổi đã qua lúc nạp seed
+# Lịch sử trong seed có ngày cố định: buổi từ FUTURE_FROM trở đi sinh ra Scheduled. Nạp seed vào ngày D thì mọi buổi
+# trước D lẽ ra đã được các job ban đêm xử lý. Khối SQL dưới (gắn cuối seed, tính theo @Today lúc nạp) làm đúng việc đó,
+# theo thứ tự chạy thật mỗi đêm:
+#   JOB-02  ExpirePackagesService / ExpirePackagesDAO  — gói Active quá EndDate → Expired; gói PT hủy PackageExpired buổi
+#           Scheduled SAU EndDate + trả khung về Free; khách không còn gói tập / vé ngày → Customers.Expired.
+#   JOB-04  AutoCloseSessionDAO.findDataForClosing + AutoCloseSessionService.evaluate — 5 lượt theo đúng thứ tự luật:
+#           GymClosed → MembershipFrozen → NoMembership → CheckedIn → NoCheckIn.
+# Thời điểm ghi = 00:05 đêm sau (ngày tập / ngày hết hạn), như các buổi lịch sử. Chạy lại vẫn an toàn (chỉ đụng Scheduled / Active).
+def close_past_sql(today):
+    T = today
+    SLOT = "(SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId)"
+    RUN = "(SELECT DATEADD(MINUTE, 5, CAST(DATEADD(DAY, 1, t.SlotDate) AS DATETIME2(0))) FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId)"
+    PAST = f"Sessions.Status = 'Scheduled' AND {SLOT} < {T}"
+    HOLDER = "(SELECT p.CustomerId FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId)"
+    PARTNER = ("(SELECT o.PartnerCustomerId FROM Subscriptions p JOIN Orders o ON o.OrderId = p.OrderId "
+               "WHERE p.SubscriptionId = Sessions.SubscriptionId AND p.SubscriptionType = 'PTCouple')")
+    COUPLE = "EXISTS (SELECT 1 FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId AND p.SubscriptionType = 'PTCouple')"
+
+    MEM_ST = "'Active', 'Frozen', 'Expired'"
+    DAY_ST = "'Active', 'Used', 'Expired'"
+
+    def has(cust, typ, statuses):
+        return (f"EXISTS (SELECT 1 FROM Subscriptions g WHERE g.CustomerId = {cust} AND g.SubscriptionType = '{typ}' "
+                f"AND g.Status IN ({statuses}) AND {SLOT} BETWEEN g.StartDate AND g.EndDate)")
+
+    def frozen(cust):
+        return (f"EXISTS (SELECT 1 FROM Subscriptions g JOIN FreezeRecords f ON f.SubscriptionId = g.SubscriptionId "
+                f"WHERE g.CustomerId = {cust} AND g.SubscriptionType = 'Membership' "
+                f"AND {SLOT} BETWEEN f.StartDate AND COALESCE(f.ActualEndDate, f.PlannedEndDate))")
+
+    def can_use(cust):   # CBR-117: (gói tập phủ ngày và không bảo lưu) hoặc vé ngày phủ ngày
+        return (f"(({has(cust, 'Membership', MEM_ST)} AND NOT {frozen(cust)}) "
+                f"OR {has(cust, 'DayPass', DAY_ST)})")
+
+    CLOSED = ("EXISTS (SELECT 1 FROM TimeSlots t LEFT JOIN OperatingHourExceptions ex ON ex.ApplyDate = t.SlotDate "
+              "WHERE t.TimeSlotId = Sessions.TimeSlotId AND (ex.IsClosedAllDay = 1 "
+              "OR t.StartTime < COALESCE(ex.OpenTime, (SELECT CAST(SUBSTRING(c.ConfigValue, 1, 5) AS TIME(0)) FROM SystemConfigs c WHERE c.ConfigKey = 'P-19')) "
+              "OR t.EndTime > COALESCE(ex.CloseTime, (SELECT CAST(SUBSTRING(c.ConfigValue, 7, 5) AS TIME(0)) FROM SystemConfigs c WHERE c.ConfigKey = 'P-19'))))")
+    NOONE = f"(NOT {can_use(HOLDER)} AND (NOT {COUPLE} OR NOT {can_use(PARTNER)}))"
+    FROZEN_ANY = f"({frozen(HOLDER)} OR ({COUPLE} AND {frozen(PARTNER)}))"
+    CHECKIN = ("EXISTS (SELECT 1 FROM CheckIns ci JOIN Subscriptions g ON g.SubscriptionId = ci.SubscriptionId "
+               f"WHERE g.SubscriptionType IN ('Membership', 'DayPass') AND (g.CustomerId = {HOLDER} OR g.CustomerId = {PARTNER}) "
+               f"AND CAST(ci.CheckedInAt AS DATE) = {SLOT})")
+    EXP = f"SubscriptionType IN ('Membership', 'PTSingle', 'PTCouple') AND Status = 'Active' AND EndDate < {T}"
+    PT_EXP = f"p.SubscriptionType IN ('PTSingle', 'PTCouple') AND p.Status = 'Active' AND p.EndDate < {T}"
+    RUN_END = "DATEADD(MINUTE, 5, CAST(DATEADD(DAY, 1, {d}) AS DATETIME2(0)))"
+    AUD = "INSERT INTO AuditLogs (AccountId, ActingRole, Action, EntityName, EntityId, FieldChanged, OldValue, NewValue, Reason, CreatedAt)"
+    CUST_EXP = (f"Customers.Status NOT IN ('Inactive', 'Expired') "
+                f"AND EXISTS (SELECT 1 FROM Subscriptions e WHERE e.CustomerId = Customers.CustomerId AND e.SubscriptionType IN ('Membership', 'PTSingle', 'PTCouple') AND e.Status = 'Active' AND e.EndDate < {T}) "
+                f"AND NOT EXISTS (SELECT 1 FROM Subscriptions m WHERE m.CustomerId = Customers.CustomerId AND m.SubscriptionType = 'Membership' "
+                f"AND m.Status IN ('Active', 'Frozen') AND NOT (m.Status = 'Active' AND m.EndDate < {T})) "
+                f"AND NOT EXISTS (SELECT 1 FROM Subscriptions d WHERE d.CustomerId = Customers.CustomerId AND d.SubscriptionType = 'DayPass' AND d.Status = 'Active' AND d.EndDate >= {T})")
+    CUST_RUN = (f"(SELECT {RUN_END.format(d='MAX(e.EndDate)')} FROM Subscriptions e WHERE e.CustomerId = Customers.CustomerId "
+                f"AND e.SubscriptionType IN ('Membership', 'PTSingle', 'PTCouple') AND e.Status = 'Active' AND e.EndDate < {T})")
+
+    out = ['/* ' + '=' * 76,
+           '   Chốt các buổi đã qua lúc nạp seed — như JOB-02 rồi JOB-04 đã chạy mỗi đêm tới @Today (xem seedgen.close_past_sql).',
+           '   ' + '=' * 76 + ' */',
+           '-- JOB-02 (1/4) nhật ký: số buổi PT bị hủy vì gói hết hạn',
+           f"{AUD}\nSELECT NULL, NULL, N'JOB-02', N'Subscriptions', p.SubscriptionId, N'Sessions.Status', N'Scheduled', N'Cancelled',\n"
+           f"       CONCAT(CAST(COUNT(*) AS NVARCHAR(10)), N' buổi sau ngày hết hạn gói → PackageExpired (CBR-55)'), {RUN_END.format(d='p.EndDate')}\n"
+           f"FROM Subscriptions p JOIN Sessions s ON s.SubscriptionId = p.SubscriptionId JOIN TimeSlots t ON t.TimeSlotId = s.TimeSlotId\n"
+           f"WHERE {PT_EXP} AND s.Status = 'Scheduled' AND t.SlotDate > p.EndDate\nGROUP BY p.SubscriptionId, p.EndDate;",
+           '-- JOB-02 (2/4) gói PT hết hạn: khung của buổi sau EndDate → Free, buổi → Cancelled / PackageExpired',
+           f"UPDATE TimeSlots SET Status = 'Free'\nWHERE Status = 'Booked' AND EXISTS (SELECT 1 FROM Sessions s JOIN Subscriptions p ON p.SubscriptionId = s.SubscriptionId\n"
+           f"    WHERE s.TimeSlotId = TimeSlots.TimeSlotId AND s.Status = 'Scheduled' AND {PT_EXP} AND TimeSlots.SlotDate > p.EndDate);",
+           f"UPDATE Sessions SET Status = 'Cancelled', CancelType = 'PackageExpired', CancelReason = N'Gói PT đã hết hạn',\n"
+           f"    CancelledAt = (SELECT {RUN_END.format(d='p.EndDate')} FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId)\n"
+           f"WHERE Status = 'Scheduled' AND EXISTS (SELECT 1 FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId\n"
+           f"    AND {PT_EXP} AND {SLOT} > p.EndDate);",
+           '-- JOB-02 (3/4) khách không còn gói tập / vé ngày còn hiệu lực → Customers.Expired (CBR-03)',
+           f"{AUD}\nSELECT NULL, NULL, N'JOB-02', N'Customers', Customers.CustomerId, N'Status', NULL, N'Expired',\n"
+           f"       N'Không còn gói tập / vé ngày còn hiệu lực (CBR-03)', {CUST_RUN}\nFROM Customers WHERE {CUST_EXP};",
+           f"UPDATE Customers SET Status = 'Expired' WHERE {CUST_EXP};",
+           '-- JOB-02 (4/4) gói → Expired',
+           f"{AUD}\nSELECT NULL, NULL, N'JOB-02', N'Subscriptions', SubscriptionId, N'Status', N'Active', N'Expired',\n"
+           f"       CONCAT(N'Hết hạn ngày ', CONVERT(NVARCHAR(10), EndDate, 103)), {RUN_END.format(d='EndDate')}\nFROM Subscriptions WHERE {EXP};",
+           f"UPDATE Subscriptions SET Status = 'Expired' WHERE {EXP};"]
+
+    passes = [
+        ('B1 GymClosed: phòng nghỉ cả ngày / buổi ngoài giờ mở cửa', CLOSED, 'Cancelled', None, 'GymClosed'),
+        ('B5 không ai vào gym được + có người bảo lưu', f"{NOONE} AND {FROZEN_ANY}", 'Missed', 'MembershipFrozen', None),
+        ('B6 không ai vào gym được', NOONE, 'Missed', 'NoMembership', None),
+        ('B7 có check-in trong ngày tập', CHECKIN, 'CheckedIn', None, None),
+        ('B8 có quyền vào gym nhưng không đến', '1 = 1', 'Missed', 'NoCheckIn', None),
+    ]
+    for label, cond, status, reason, cancel in passes:
+        where = f"{PAST} AND {cond}"
+        r = f"'{reason}'" if reason else 'NULL'
+        out.append(f'-- JOB-04 {label}')
+        out.append(f"{AUD}\nSELECT NULL, NULL, N'JOB-04', N'Sessions', SessionId, N'Status', N'Scheduled', N'{status}', {r}, {RUN}\n"
+                   f"FROM Sessions WHERE {where};")
+        sets = [f"Status = '{status}'", f"MissedReason = {r}", 'IsAutoClosed = 1', f'AttendanceMarkedAt = {RUN}']
+        if cancel:
+            sets += [f"CancelType = '{cancel}'", 'CommissionAmount = 0', f'CancelledAt = {RUN}']
+        out.append(f"UPDATE Sessions SET {', '.join(sets)}\nWHERE {where};")
+    out.append('')
+    return out
 
 
 PKG = {}

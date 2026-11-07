@@ -21,7 +21,7 @@
         <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
         <title>Lịch dạy · Super Gym</title>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/pt/header.css?v=20261106help">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/pt/schedule.css?v=20261106lane">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/pt/schedule.css?v=20261107shift">
 
         <%-- schedule.js chỉ nạp khi có lịch (week). --%>
         <c:if test="${not empty week}"><script src="${pageContext.request.contextPath}/js/pages/pt/schedule.js?v=20261106toast" defer></script></c:if>
@@ -119,8 +119,8 @@
                                                 <span><c:out value="${hour lt 10 ? '0' += hour : hour}" />:00</span>
                                             </c:forEach>
 
-                                            <b class="pt-plan-shift is-am">Ca sáng</b>
-                                            <b class="pt-plan-shift is-pm">Ca chiều</b>
+                                            <b class="pt-plan-shift is-am"><span>Ca sáng</span></b>
+                                            <b class="pt-plan-shift is-pm"><span>Ca chiều</span></b>
                                         </div>
 
                                         <%-- 7 CỘT NGÀY: mỗi PtScheduleDay → _schedule-day.jspf (biến day, dayLabel = "Thứ 2 03/11"). --%>
