@@ -292,6 +292,11 @@
                                                 class="fa-solid fa-clipboard-list"></i>
                                             Xem giáo án của tôi
                                         </a>
+                                        <a class="btn btn-outline btn-sm btn-block"
+                                           href="${pageContext.request.contextPath}/customer/meal-plans">
+                                            <i class="fa-solid fa-utensils" aria-hidden="true"></i>
+                                            Kế hoạch ăn uống
+                                        </a>
                                         <a class="btn btn-ghost btn-sm btn-block"
                                            href="${pageContext.request.contextPath}/customer/feedback">
                                             <i class="fa-solid fa-inbox"></i>
