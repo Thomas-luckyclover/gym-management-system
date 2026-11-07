@@ -1,7 +1,7 @@
 /**
  * Xác thực & tài khoản cá nhân — đăng nhập, đăng xuất, đăng ký, quên mật khẩu, cài đặt tài khoản (mọi vai trò).
  *
- * <p>Servlet dự kiến (nguồn: SRS 5.1 Screen List — bảng đầy đủ ở docs/project-structure.md):</p>
+ * <p>Servlet dự kiến (nguồn: SRS 5.1 Screen List):</p>
  * <pre>
  * LoginServlet                     /login                                               #1   Sign In                            TV1
  * LogoutServlet                    /logout                                              #-   Logout (POST)                      TV1

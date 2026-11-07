@@ -20,7 +20,7 @@ import java.time.LocalDate;
 
 /**
  * Controller nhân viên (PT và Lễ tân) nộp đơn xin nghỉ phép (màn #25, UC-14).
- * Một Servlet khai báo 2 URL theo tài liệu docs/project-structure.md.
+ * Một Servlet khai báo 2 URL.
  *
  * <p>GET  /pt/leave-requests + /receptionist/leave-requests — hiển thị form nộp đơn.
  * <p>POST /pt/leave-requests + /receptionist/leave-requests — tiếp nhận và xử lý đơn nộp.

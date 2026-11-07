@@ -15,7 +15,6 @@ db.password=DOI_THANH_MAT_KHAU_SA_CUA_BAN
 
 # ===== Email Gateway — SMTP Gmail (SRS API-03) =====
 # mail.app-password là "App Password" 16 ký tự tạo trong Google Account, KHÔNG phải mật khẩu Gmail
-# Hướng dẫn tạo: docs/integration-guide.md mục Email
 mail.smtp.host=smtp.gmail.com
 mail.smtp.port=587
 mail.username=supergym.g5@gmail.com
