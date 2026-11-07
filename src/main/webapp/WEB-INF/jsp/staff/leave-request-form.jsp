@@ -75,7 +75,6 @@
               <div class="panel-head leave-form-heading">
                 <div>
                   <h2>Tạo đơn nghỉ phép</h2>
-                  <p>Điền thông tin ngày, ca nghỉ và lý do để gửi Quản lý phê duyệt.</p>
                 </div>
                 <%-- HintBox có sẵn trong common.css/common.js: hover, focus, chạm và Escape. --%>
                 <div class="pt-info">
@@ -84,6 +83,9 @@
                     <span aria-hidden="true">i</span>
                   </button>
                   <div id="leaveFormHelp" class="pt-info-popover" role="tooltip">
+                    <p class="leave-help-note">Nghỉ một ngày: để trống Đến ngày.</p>
+                    <p class="leave-help-note">Nghỉ nhiều ngày: chọn Cả ngày, tối đa 31 ngày trong cùng năm.</p>
+                    <p class="leave-help-note">Ca sáng, ca chiều hoặc cả ngày đều tính 1 ngày nghỉ.</p>
                     <p class="leave-help-note">Gửi đơn trước <c:out value="${formView.submissionCutoffTime}" default="giờ chốt" /> ngày liền trước ngày nghỉ.</p>
                     <p class="leave-help-note">Nghỉ đột xuất hoặc quá hạn: liên hệ quản lý.</p>
                     <p class="leave-help-note">Đơn chỉ có hiệu lực sau khi được duyệt.</p>
@@ -126,7 +128,6 @@
                         <c:out value="${fieldErrors.shiftType}" />
                       </div>
                     </c:if>
-                    <span class="field-hint">Ca sáng, ca chiều hoặc cả ngày đều tính 1 ngày nghỉ.</span>
                   </div>
                 </div>
 
@@ -159,7 +160,6 @@
                   </div>
 
                 </div>
-                <p class="field-hint leave-date-hint">Để trống Đến ngày nếu nghỉ một ngày. Nhiều ngày chọn Cả ngày, tối đa 31 ngày trong cùng năm.</p>
                 <%-- PT: JS renderPlan/resetPlan cập nhật cảnh báo lịch ngay dưới ngày; lễ tân không có khối này. --%>
                 <c:if test="${not isReceptionist}">
                   <div id="leaveScheduleWarning" class="leave-schedule-warning" role="alert" ${empty fieldErrors.sessions ? 'hidden' : ''}>
