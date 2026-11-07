@@ -11,7 +11,7 @@
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Nghỉ phép · Super Gym</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css?v=20261018">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-requests.css?v=20261102-conflicts">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-requests.css?v=20261107-linked-history">
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css?v=20261018">
   <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
 </head>
@@ -228,11 +228,14 @@
                 <c:otherwise>
                   <div class="leave-history-list">
                     <c:forEach var="group" items="${formView.requestGroups}">
-                      <div class="leave-history-group">
+                      <div class="leave-history-group ${group.linked ? 'is-linked' : ''}">
                         <%-- group.linked = getter tự tính isLinked() · dto/LeaveRequestGroupView.java (group = LeaveRequestGroupView) --%>
                         <c:if test="${group.linked}">
                           <div class="leave-group-heading">
-                            <b>Đợt <c:out value="${group.code}" /></b>
+                            <div>
+                              <b>Cùng đợt nghỉ · <fmt:formatNumber value="${group.totalDays}" maxFractionDigits="1" /> ngày</b>
+                              <small class="leave-group-code">Mã đợt: <c:out value="${group.code}" /></small>
+                            </div>
                             <%-- getter tự tính: group.totalDays = getTotalDays(), group.approvedDays = getApprovedDays() · dto/LeaveRequestGroupView.java --%>
                             <span>Được duyệt <fmt:formatNumber value="${group.approvedDays}" maxFractionDigits="1" />/<fmt:formatNumber value="${group.totalDays}" maxFractionDigits="1" /> ngày</span>
                           </div>
