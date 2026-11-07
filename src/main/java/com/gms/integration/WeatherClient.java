@@ -46,6 +46,7 @@ public class WeatherClient {
                 + "&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,is_day,wind_speed_10m"
                 + "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max"
                 + "&timezone=Asia%2FHo_Chi_Minh&forecast_days=1";
+
         HttpRequest request = HttpRequest.newBuilder(URI.create(url))
                 .timeout(TIMEOUT)
                 .GET()
@@ -54,6 +55,9 @@ public class WeatherClient {
         try {
             // B2: chỉ tạo HttpClient khi thật sự gọi API; Service cache nên rất ít lần gửi GET.
             HttpClient httpClient = HttpClient.newBuilder().connectTimeout(TIMEOUT).build();
+            
+            // Gửi request và nhận response: Gọi API và nhận API trả về
+            // send là lệnh gửi rồi đứng chờ tới khi Open-Meteo trả lời (hoặc quá 8 giây). Gửi và nhận gói trong cùng một lời gọi.
             HttpResponse<String> response = httpClient.send(request,
                     HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
 
@@ -62,7 +66,9 @@ public class WeatherClient {
                 throw new WeatherUnavailableException(
                         "Open-Meteo trả HTTP " + response.statusCode() + ".", null);
             }
-            return response.body();
+            
+            // LẤY chuỗi JSON ra
+            return response.body(); // ← đây là JSON: "{\"current\":{\"temperature_2m\":29.4,…},\"daily\":{…}}"
         } catch (IOException exception) {
             throw new WeatherUnavailableException("Không gửi hoặc đọc được phản hồi từ Open-Meteo.", exception);
         } catch (UncheckedIOException exception) {

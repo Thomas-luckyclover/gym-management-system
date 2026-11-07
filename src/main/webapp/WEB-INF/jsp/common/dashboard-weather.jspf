@@ -14,17 +14,22 @@
                 <span>Tạm dừng hiệu ứng</span>
             </button>
             <div class="wx-gym comic-scene" aria-hidden="true" data-gym>
+                <%-- animation gym --%>
                 <%@ include file="/WEB-INF/jsp/common/dashboard-gym-art.jspf" %>
             </div>
         </div>
     </div>
 
+            
+     <%-- Nếu weather ko rỗng => in ra weather --%>       
     <c:if test="${not empty weather}">
         <div class="wx-card ${weather.stale ? 'wx-card--stale' : ''}" data-weather-type="${weatherType}" aria-label="Thời tiết hôm nay tại phòng gym">
             <div class="wx-card__fx comic-scene" aria-hidden="true">
                 <%@ include file="/WEB-INF/jsp/common/dashboard-street-art.jspf" %>
                 <canvas class="wx-card__canvas"></canvas>
             </div>
+                
+                
             <div class="wx-card__top">
                 <div>
                     <p class="wx-card__place">
@@ -113,3 +118,15 @@
 
 <script src="${pageContext.request.contextPath}/js/gym-floor.js?v=20261015a" defer></script>
 <script src="${pageContext.request.contextPath}/js/weather-card.js?v=20261015a" defer></script>
+
+<%--
+1. Giông   (mã thời tiết hiện tại HOẶC dự báo cả ngày là giông)        → storm
+2. Tuyết   (hiện tại hoặc cả ngày)                                    → snow
+3. Mưa     (ĐANG mưa  HOẶC  khả năng mưa trong ngày > 50%)            → rain
+4. Gió mạnh (gió hiện tại ≥ 35 km/h)                                  → wind
+5. Ban đêm                                                            → night
+6. Nóng    (cao nhất trong ngày ≥ 35°  HOẶC  cảm giác ≥ 39°)          → hot
+7. Nhiều mây (mã hiện tại là mây/sương)                               → cloudy
+8. Còn lại                                                               => sunny
+
+--%>

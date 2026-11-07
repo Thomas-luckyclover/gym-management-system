@@ -604,6 +604,7 @@
                                                                                                                                     </c:if>
                                                                                                                                 </ul>
                                                                                                                             </c:if>
+                                                                                                                                <%-- option.singleSession = getter tự tính isSingleSession() · dto/PackageOptionView.java (option = PackageOptionView) --%>
                                                                                                                                 <div
                                                                                                                                     class="package-card__actions${option.purchasableOnline or option.singleSession ? '' : ' package-card__actions--single'}">
                                                                                                                                     <c:choose>

@@ -48,6 +48,7 @@ public class HomePageView {
     }
 
     /** Số PT đang làm — JSP: ${home.ptCount} */
+    // GETTER TỰ TÍNH — không có field/setter "ptCount"; = số phần tử của pts; JSP: guest/home.jsp:70 …
     public int getPtCount() {
         return pts.size();
     }

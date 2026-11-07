@@ -769,8 +769,46 @@ function renderNotificationDetail(
         document.createElement("div");
     contentText.className =
         "notification-detail-content";
-    contentText.textContent =
+
+    const rawContent =
         item.content || "Không có nội dung chi tiết.";
+
+    // Tách riêng dòng Ghi chú / Lý do / Nghiệm thu để người dùng dễ đọc
+    const markers = ["Ghi chú:", "Lý do:", "Nghiệm thu:"];
+    let splitIndex = -1;
+    let splitMarker = "";
+
+    for (let i = 0; i < markers.length; i++) {
+        const m = markers[i];
+        const idx = rawContent.indexOf(m);
+        if (idx !== -1 && (splitIndex === -1 || idx < splitIndex)) {
+            splitIndex = idx;
+            splitMarker = m;
+        }
+    }
+
+    if (splitIndex !== -1) {
+        const mainText = rawContent.substring(0, splitIndex).trim();
+        const noteBody = rawContent.substring(splitIndex + splitMarker.length).trim();
+
+        const mainEl = document.createElement("div");
+        mainEl.className = "notification-detail-content-main";
+        mainEl.textContent = mainText;
+
+        const noteEl = document.createElement("div");
+        noteEl.className = "notification-detail-content-note";
+
+        const strongEl = document.createElement("strong");
+        strongEl.textContent = splitMarker;
+
+        const textSpan = document.createElement("span");
+        textSpan.textContent = " " + noteBody;
+
+        noteEl.append(strongEl, textSpan);
+        contentText.append(mainEl, noteEl);
+    } else {
+        contentText.textContent = rawContent;
+    }
 
     contentSection.append(
         contentLabel,

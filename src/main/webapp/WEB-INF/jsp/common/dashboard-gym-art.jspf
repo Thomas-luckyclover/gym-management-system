@@ -1,8 +1,19 @@
 <%@ page pageEncoding="UTF-8" %>
+<%--
+<div class="comic-photo comic-gym">
+    gym-plate.webp     ← TẤM NỀN: cả phòng gym (đã xóa các nhân vật đi)
+    gym-sign.webp      ← biển SUPER GYM
+    gym-runner.webp    ← người chạy máy
+    gym-lifter.webp    ← người nâng tạ
+    gym-pumpy.webp     ← linh vật Pumpy
+    gym-coach.webp …   ← mỗi nhân vật 1 ảnh riêng, nền trong suốt
+</div>
+--%>
 <%-- Phòng gym comic 3 màu (đen, kem, đỏ phẳng). Nguồn: tranh nhóm tạo bằng Gemini 15/10/2026, posterize bằng script.
      Motion comic: mỗi nhân vật là một lớp tách riêng; biển SUPER GYM tuột xích bên phải, treo nghiêng và lắc;
      Pumpy (đúng hình linh vật, vẽ lại nét mực) đứng cạnh quả tạ ấm trước tường đỏ, co người vui vẻ.
      Vị trí lớp và chuyển động 8 giây ở dashboard-comic.css. Hoàn toàn trang trí (khung chứa aria-hidden). --%>
+<%-- Ảnh .webp hay .jpg là dữ liệu đã nén, trình duyệt không vẽ thẳng được. Trước khi hiện, nó phải giải nén thành điểm ảnh. Bước đó gọi là decode (giải mã). Ảnh to như tấm nền 2400×837 thì giải mã mất chút thời gian. --%>
 <div class="comic-photo comic-gym">
     <img class="comic-photo__plate" src="${pageContext.request.contextPath}/images/comic/gym-plate.webp" alt="" width="2400" height="837" decoding="async">
     <img class="comic-p comic-p--sign comic-move--sign" src="${pageContext.request.contextPath}/images/comic/gym-sign.webp" alt="" decoding="async">

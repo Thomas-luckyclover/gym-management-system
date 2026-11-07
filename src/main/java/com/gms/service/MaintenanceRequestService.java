@@ -532,7 +532,7 @@ public class MaintenanceRequestService {
                         .append(deviceDetail)
                         .append(": Quản lý đã duyệt yêu cầu, chuyển sang trạng thái Đang xử lý.");
                 if (managerNote != null && !managerNote.isBlank()) {
-                    notifContent.append(" Ghi chú: ").append(managerNote.trim());
+                    notifContent.append("\n\nGhi chú: ").append(managerNote.trim());
                 }
 
                 notificationService.notifyEmployeeInTransaction(
@@ -685,7 +685,7 @@ public class MaintenanceRequestService {
                             .append(deviceDetail)
                             .append(": Quản lý đã duyệt yêu cầu, chuyển sang trạng thái Đang xử lý.");
                     if (managerNote != null && !managerNote.isBlank()) {
-                        notifContent.append(" Ghi chú: ").append(managerNote.trim());
+                        notifContent.append("\n\nGhi chú: ").append(managerNote.trim());
                     }
 
                     notificationService.notifyEmployeeInTransaction(
@@ -816,7 +816,7 @@ public class MaintenanceRequestService {
                         request.getReportedByEmployeeId(),
                         "Bảo trì · Bị từ chối",
                         request.getRequestCode() + " · " + rejectDeviceDetail
-                                + ": Quản lý đã từ chối yêu cầu. Lý do: " + rejectReason.trim()
+                                + ": Quản lý đã từ chối yêu cầu.\n\nLý do: " + rejectReason.trim()
                 );
 
                 connection.commit();
@@ -991,7 +991,7 @@ public class MaintenanceRequestService {
                             .append(closeDeviceDetail)
                             .append(": Yêu cầu đã được Lễ tân nghiệm thu và đóng.");
                     if (acceptanceNote != null && !acceptanceNote.isBlank()) {
-                        closeContent.append(" Nghiệm thu: ").append(acceptanceNote.trim());
+                        closeContent.append("\n\nNghiệm thu: ").append(acceptanceNote.trim());
                     }
 
                     notificationService.notifyEmployeeInTransaction(
@@ -1148,7 +1148,7 @@ public class MaintenanceRequestService {
                                 .append(closeDeviceDetail)
                                 .append(": Yêu cầu đã được Lễ tân nghiệm thu và đóng.");
                         if (acceptanceNote != null && !acceptanceNote.isBlank()) {
-                            closeContent.append(" Nghiệm thu: ").append(acceptanceNote.trim());
+                            closeContent.append("\n\nNghiệm thu: ").append(acceptanceNote.trim());
                         }
 
                         notificationService.notifyEmployeeInTransaction(

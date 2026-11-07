@@ -66,6 +66,7 @@
             <div><dt>Mở cửa mỗi ngày</dt><dd class="tabular"><c:out value="${home.openingHours}" /></dd></div>
           </c:if>
           <c:if test="${not empty home.pts}">
+            <%-- home.ptCount = getter tự tính getPtCount() · dto/HomePageView.java --%>
             <div><dt>Huấn luyện viên</dt><dd class="tabular"><c:out value="${home.ptCount}" /></dd></div>
           </c:if>
         </dl>

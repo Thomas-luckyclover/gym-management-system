@@ -213,9 +213,10 @@ subscription(o, d_(2026, 10, 16), note='gia hạn trước: bắt đầu ngay sa
 single_session(1, 5, d_(2026, 9, 26), (9, 0), 'Online', dt_(2026, 9, 24, 21, 0))
 o_rep = order(1, PKG['single'], now_(-10), 'Online', status='Cancelled', cancel=('ReplacedByNewOrder', now_(-2), None),
               note='bị thay bằng đơn mới (CBR-41, CBR-71)')
-slot(7, today_d(1), (15, 30), 'Free', check=False)
-o_held = order(1, PKG['single'], now_(-2), 'Online', status='Pending', note='đang giữ slot ngày mai 14:00 (CBR-53)')
-slot(7, today_d(1), (14, 0), 'Held', held_order=o_held, hold_exp=now_(18), check=False)
+slot(7, today_d(1), (15, 30), 'Free')
+o_held = order(1, PKG['single'], now_(-2), 'Online', status='Pending', note='đang giữ slot ngày mai 20:30 (CBR-53)')
+# Khung sống của PT 7 chỉ dùng giờ PT 7 KHÔNG BAO GIỜ có khung ngày cứng (15:30, 20:30) → chạy seed ngày nào cũng không chồng giờ
+slot(7, today_d(1), (20, 30), 'Held', held_order=o_held, hold_exp=now_(18))
 
 # ---- Bích (2): gói 1 tháng hết hạn đúng ngày mốc, đơn sai tiền chờ hoàn, buổi lẻ
 o = order(2, PKG['m1'], dt_(2026, 9, 3, 20, 20), 'Online', voucher=1, fail_first=True)
@@ -317,7 +318,7 @@ o = order(16, PKG['day'], today_dt(0, 8, 10), 'Counter')
 s16 = subscription(o, today_d(), note='gói ngày chưa check-in')
 o = order(16, PKG['single'], today_dt(0, 8, 15), 'Counter', note='bán buổi lẻ hôm nay tại quầy (CBR-54)')
 s16b = subscription(o, today_d(), pt=7)
-sl = slot(7, today_d(), (20, 0), 'Booked', check=False)
+sl = slot(7, today_d(), (20, 30), 'Booked')   # 20:30–22:00: PT 7 có chuỗi 19:00–20:30 ngày thường → không dùng 20:00
 session(s16b, sl, 7, 'Scheduled', 450000)
 order(15, PKG['m1'], today_dt(0, 9, 0), 'Counter', status='Pending', note='chưa thu tiền → chặn chốt ca (CBR-78)')
 o = order(10, PKG['day'], today_dt(0, 6, 40), 'Counter', status='Cancelled',
@@ -409,6 +410,13 @@ for pt, fixed, start, key in extra_pt:
         o = order(cid, PKG[key], datetime.combine(sale, time(10, 30)), 'Counter', method='Transfer')
         pt_package(o, pt, start, fixed, note='khách thường mua gói PT')
         break
+
+# ---- gói PT 82 (khách KH-2005, PT Sơn 15:00) hết hạn sớm ngày 04/11: lúc nạp seed, khối chốt cuối file (JOB-02)
+#      hủy PackageExpired các buổi từ 05/11 và trả khung 15:00 về trống (BF-05 A6, CBR-55)
+_s82 = get('Subscriptions', 82)
+assert _s82['CustomerId'] == 205 and _s82['SubscriptionType'] == 'PTSingle', 'gói 82 phải là gói PT của KH-2005'
+_s82['EndDate'] = d_(2026, 11, 4)
+_s82['_note'] = 'gói PT hết hạn 04/11 → buổi sau đó hủy PackageExpired khi nạp seed (JOB-02, CBR-55)'
 
 # ---- khách vãng lai mua gói ngày rải đều tháng 9 (báo cáo doanh thu có số liệu mỗi ngày)
 WALKIN = [c for i, c in enumerate(BULK) if i % 10 == 9]
@@ -945,7 +953,6 @@ CFG = [('P-01', '1', 'Số lần bảo lưu tối đa mỗi gói tập (lần)')
        ('P-04', '1D,1M,3M,9M,12M', 'Thời hạn gói tập: D = ngày, M = tháng'),
        ('P-05', '10', 'Tuổi tối thiểu dùng dịch vụ PT'),
        ('P-06', '90', 'Độ dài một buổi PT (phút)'),
-       ('P-08', '3', 'Số lượt đổi buổi mỗi tháng của gói PT (hạn mức gói = P-08 × số tháng)'),
        ('P-09', '20', 'Hạn thanh toán đơn online = thời gian giữ slot (phút)'),
        ('P-10', '10', 'Thuế VAT (%) đã nằm trong giá bán'),
        ('P-11', '70', 'Tỷ lệ hoa hồng mặc định cho PT mới (%)'),
@@ -958,18 +965,18 @@ CFG = [('P-01', '1', 'Số lần bảo lưu tối đa mỗi gói tập (lần)')
        ('P-18', '5', 'Thời gian khóa tạm (phút)'),
        ('P-19', '05:30-22:00', 'Giờ mở cửa mặc định hằng ngày'),
        ('P-21', '1M,2M,3M', 'Thời hạn gói PT (tháng)'),
-       ('P-22', '3', "Số khách tối thiểu để hiện điểm đánh giá trung bình của PT"),
        ('P-23', '14', 'Định mức phép năm demo (ngày/năm)')]
 for k, v, d in CFG:
     add('SystemConfigs', dict(ConfigKey=k, ConfigValue=v, Description=d,
-                             UpdatedAt=dt_(2026, 10, 6, 9) if k == 'P-22' else dt_(2026, 9, 1, 9),
+                             UpdatedAt=dt_(2026, 9, 1, 9),
                              UpdatedByEmployeeId=2), rid=int(k[2:]))
 
 OHE = [(d_(2026, 9, 2), None, None, 1, 'Nghỉ lễ Quốc khánh'),
        (d_(2026, 9, 18), None, None, 1, 'Sự cố điện, nghỉ cả ngày'),
        (d_(2026, 10, 11), time(7, 0), time(18, 0), 0, 'Chủ nhật bảo trì hệ thống nước, mở muộn đóng sớm'),
        (d_(2026, 10, 20), None, None, 1, 'Bảo trì điện toàn tòa nhà'),
-       (d_(2027, 2, 6), None, None, 1, 'Nghỉ Tết Nguyên đán')]
+       (d_(2027, 2, 6), None, None, 1, 'Nghỉ Tết Nguyên đán'),
+       (d_(2026, 11, 4), time(8, 30), time(22, 0), 0, 'Bảo trì hệ thống điện buổi sáng, mở cửa từ 08:30')]
 for d, o_, c_, closed, note in OHE:
     add('OperatingHourExceptions', dict(ApplyDate=d, OpenTime=o_, CloseTime=c_, IsClosedAllDay=closed, Note=note, SetByEmployeeId=2,
                                         CreatedAt=CLOSED.get(d, dt_(2026, 9, 28, 9, 0))))
@@ -1032,7 +1039,7 @@ SECTION.update({
     'Accounts': 'Mật khẩu chung Gms@2026 (TK tạo tại quầy cũng vậy: đóng vai mật khẩu tạm đã gửi email).',
     'Shifts': 'Đủ 2 ca mỗi ngày mở cửa 01/09–02/10 + ca hôm nay (sống).',
     'TimeSlots': 'Lịch PT: slot đã đặt + slot trống công bố dày 05/10–31/10 (có cuối tuần).',
-    'Sessions': 'Trước 05/10 đã có kết quả; từ 05/10 Scheduled.',
+    'Sessions': 'Trước 05/10 đã có kết quả; từ 05/10 sinh Scheduled, buổi trước ngày nạp được chốt ở khối cuối file (JOB-02, JOB-04).',
 })
 
 if __name__ == '__main__':

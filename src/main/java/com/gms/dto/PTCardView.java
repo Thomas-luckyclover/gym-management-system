@@ -55,38 +55,6 @@ public class PTCardView {
         return completedSessionCount;
     }
 
-    /**
-     * Chữ cái viết tắt hiện trong ô tròn avatar (luật 2.6: dùng chữ cái đầu tên, KHÔNG dùng ảnh thật).
-     * Lấy chữ đầu của 2 từ CUỐI trong họ tên — giống prototype index.html.
-     *
-     * Ví dụ: "Đinh Công Sơn"          → "CS"
-     *        "Nguyễn Thị Kiều Trang"  → "KT"
-     *        "David Miller"           → "DM"
-     *        "Sơn"   (chỉ 1 từ)       → "S"
-     *
-     * Trong JSP gọi: ${pt.initials}
-     */
-    public String getInitials() {
-        // B1: tên rỗng thì không có gì để lấy
-        if (fullName == null || fullName.trim().isEmpty()) {
-            return "";
-        }
-
-        // B2: tách họ tên thành các từ theo khoảng trắng (\\s+ = 1 hoặc nhiều khoảng trắng liền nhau)
-        String[] words = fullName.trim().split("\\s+");
-
-        // B3: chỉ có 1 từ → lấy 1 chữ
-        String lastWord = words[words.length - 1];
-        if (words.length == 1) {
-            return lastWord.substring(0, 1).toUpperCase();
-        }
-
-        // B4: từ 2 từ trở lên → chữ đầu của từ áp chót + chữ đầu của từ cuối
-        String secondLastWord = words[words.length - 2];
-        String initials = secondLastWord.substring(0, 1) + lastWord.substring(0, 1);
-        return initials.toUpperCase();
-    }
-
     @Override
     public String toString() {
         return "PtCardView{employeeId=" + employeeId + ", fullName=" + fullName

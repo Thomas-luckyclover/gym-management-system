@@ -251,10 +251,6 @@ public final class Messages {
     // EN: The position cannot be changed while unfinished work remains: %s.
     public static final String MSG89_POSITION_CHANGE_UNFINISHED = "Không thể đổi vị trí khi còn công việc chưa hoàn thành: %s.";
 
-    /** BR-73, P-08: gói PT đã dùng hết lượt đổi PT. */
-    // EN: This PT package has already used all %d swaps.
-    public static final String MSG90_SWAP_LIMIT_REACHED = "Gói PT này đã dùng hết %d lượt đổi.";
-
     /** BR-70, BR-76: buổi tập đã bắt đầu hoặc không còn ở trạng thái Scheduled. */
     // EN: This session has already started or is no longer scheduled, so it cannot be changed.
     public static final String MSG91_SESSION_CANNOT_CHANGE = "Buổi tập đã bắt đầu hoặc không còn ở trạng thái đã xếp lịch, nên không thể thay đổi.";
@@ -987,6 +983,23 @@ public final class Messages {
     /** CBR-123: bán / thu tiền khi ca đang mở là ca của NGÀY TRƯỚC → từ chối. %s = tên ca, ngày. */
     public static final String MSG324_SHIFT_PAST_DAY_NOT_CLOSED =
             "%s ngày %s chưa được chốt. Vui lòng chốt ca cũ và mở ca hôm nay trước khi bán.";
+
+    // MSG325, MSG327–MSG335 đã có trong SRS (VNPay, đổi ngày bắt đầu, thông báo đơn online) — chưa đưa vào file này.
+
+    // Toast (error) · thu tiền CHUYỂN KHOẢN tại quầy mà chưa tích "Đã nhận đủ" (CBR-77) — Bán gói PT kiểm cả ở server.
+    public static final String MSG326_TRANSFER_RECEIVED_REQUIRED =
+            "Vui lòng tick xác nhận đã nhận đủ tiền trong tài khoản trước khi hoàn tất.";
+
+    // UC-34 Dời buổi → "Giờ khác" (BR-64): PT tự chọn ngày + giờ chưa mở khung, hệ thống tạo khung rồi dời.
+    // In red, top of the dialog (+ toast) · thiếu ngày / giờ, hoặc giờ lệch mốc 15 phút.
+    public static final String MSG336_PT_NEW_SLOT_TIME_REQUIRED =
+            "Chọn ngày và giờ bắt đầu cho khung mới (mốc 15 phút: :00, :15, :30, :45).";
+    // In red, top of the dialog (+ toast) · ngày ngoài khoảng dời được. %s = từ ngày, %s = đến ngày, %d = 14.
+    public static final String MSG337_PT_NEW_SLOT_DATE_RANGE =
+            "Ngày mới phải từ %s đến %s (trong hạn gói và %d ngày tới).";
+    // In red, top of the dialog (+ toast) · giờ bắt đầu + thời lượng buổi (P-06) qua nửa đêm. %d = P-06.
+    public static final String MSG338_PT_NEW_SLOT_PAST_MIDNIGHT =
+            "Giờ bắt đầu quá muộn: buổi %d phút sẽ qua ngày hôm sau.";
 
     private Messages() {
     }

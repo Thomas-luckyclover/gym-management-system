@@ -7,6 +7,8 @@
             Dữ liệu "sống" (mã xác thực, khóa tạm 5 phút, đơn online còn hạn, slot đang giữ,
             ca sáng đang mở, gói ngày + buổi lẻ hôm nay) tính theo GIỜ CHẠY SCRIPT (@Now, @Today)
             → chạy lại file lúc nào cũng test được các luồng đó.
+   CHỐT BUỔI: khối cuối file làm việc của JOB-02 (gói hết hạn) rồi JOB-04 (chốt buổi) cho mọi ngày TRƯỚC
+            ngày chạy script → không còn buổi đã qua mà vẫn Scheduled; chỉ buổi từ hôm nay trở đi là "Sắp tới".
    MẬT KHẨU: mọi tài khoản = Gms@2026 (trừ tài khoản chưa đặt mật khẩu).
    DANH MỤC CASE + TÀI KHOẢN TEST: docs/database/SEED_CASES.md
    ============================================================================ */

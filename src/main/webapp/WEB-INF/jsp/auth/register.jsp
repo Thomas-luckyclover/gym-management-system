@@ -39,7 +39,7 @@
 
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/register.css?v=20261014b">
 
-    <script src="${pageContext.request.contextPath}/js/pages/auth/register.js?v=3" defer></script>
+    <script src="${pageContext.request.contextPath}/js/pages/auth/register.js?v=20261106blur" defer></script>
 </head>
 
 <body class="theme-guest-dark auth-dark auth-page-register">
@@ -94,9 +94,7 @@
 
                         <input type="tel" id="phone" name="phone" maxlength="10"
                             inputmode="numeric" autocomplete="tel" placeholder="0912345678"
-                            aria-describedby="phoneHint"
                             required value="<c:out value='${phone}' />">
-                        <span class="field-hint" id="phoneHint">Đã có hồ sơ tại quầy? Hệ thống tự tìm theo số này.</span>
 
                         <span class="field-error" id="phoneError"></span>
                     </label>
@@ -243,13 +241,7 @@
                             data-rule="dateOfBirth" required
                             value="<c:out value='${dateOfBirth}' />">
 
-                        <span class="field-hint">
-                            <i class="fa-solid fa-circle-info"></i>
-                            <span>
-                                Lưu ý: Thành viên dưới 10 tuổi không thể mua gói PT.
-                                Nếu đăng ký cho trẻ em, vui lòng liên hệ quầy.
-                            </span>
-                        </span>
+                        <span class="field-hint">Dưới 10 tuổi chưa mua được gói PT.</span>
 
                         <span class="field-error" id="dateOfBirthError" ${empty fieldErrors.dateOfBirth ? 'hidden' : '' }>
                             <c:out value="${fieldErrors.dateOfBirth}" />
@@ -344,12 +336,6 @@
                             class="otp-input" inputmode="numeric" maxlength="6"
                             placeholder="––––––" autocomplete="one-time-code"
                             required>
-
-                        <span class="field-hint">
-                            <i class="fa-solid fa-circle-info"></i>
-                            <span>Không nhận được mã? Kiểm tra hộp thư rác hoặc bấm
-                                Gửi lại mã.</span>
-                        </span>
 
                         <span class="field-error" id="otpCodeError" ${empty fieldErrors.code ? 'hidden' : '' }>
                             <c:out value="${fieldErrors.code}" />
@@ -525,12 +511,6 @@
                             class="otp-input" inputmode="numeric" maxlength="6"
                             placeholder="––––––" autocomplete="one-time-code"
                             required>
-
-                        <span class="field-hint">
-                            <i class="fa-solid fa-circle-info"></i>
-                            <span>Không nhận được mã? Kiểm tra hộp thư rác hoặc bấm
-                                Gửi lại mã.</span>
-                        </span>
 
                         <span class="field-error" id="claimOtpCodeError" ${empty fieldErrors.code ? 'hidden' : '' }>
                             <c:out value="${fieldErrors.code}" />

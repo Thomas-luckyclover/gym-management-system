@@ -4,6 +4,7 @@ import com.gms.dao.EquipmentItemDAO;
 import com.gms.dao.MaintenanceRequestDAO;
 import java.sql.Connection;
 import com.gms.dao.FacilityDAO;
+import com.gms.dao.MaintenanceRequestDAO;
 import com.gms.dto.ServiceResult;
 import com.gms.entity.EquipmentItem;
 import com.gms.entity.Facility;
@@ -151,7 +152,33 @@ public class FacilityServiceTest {
         assertEquals(EquipmentItem.Status.RETIRED, fakeEquipmentItemDAO.items.get(1).getStatus());
     }
 
+    @Test
+    @DisplayName("Không thanh lý được cá thể máy đang có yêu cầu bảo trì chưa hoàn thành")
+    void retireEquipmentItem_withActiveRequest_fails() {
+        fakeMaintenanceRequestDAO.hasActive = true;
+        EquipmentItem.Status before = fakeEquipmentItemDAO.items.get(1).getStatus();
+
+        ServiceResult<Void> result = facilityService.retireEquipmentItem(1);
+
+        assertFalse(result.isSuccess());
+        assertEquals(before, fakeEquipmentItemDAO.items.get(1).getStatus());
+    }
+
     // --- Fake DAO Classes ---
+    private static class FakeMaintenanceRequestDAO extends MaintenanceRequestDAO {
+        boolean hasActive = false;
+
+        @Override
+        public boolean hasActiveRequest(int equipmentItemId) {
+            return hasActive;
+        }
+
+        @Override
+        public boolean hasActiveRequest(Connection connection, int equipmentItemId) {
+            return hasActive;
+        }
+    }
+
     private static class FakeFacilityDAO extends FacilityDAO {
         final Map<Integer, Facility> facilities = new HashMap<>();
         int nextId = 100;
@@ -234,18 +261,6 @@ public class FacilityServiceTest {
                 i.setStatus(EquipmentItem.Status.RETIRED);
                 return true;
             }
-            return false;
-        }
-    }
-
-    private static class FakeMaintenanceRequestDAO extends MaintenanceRequestDAO {
-        @Override
-        public boolean hasActiveRequest(int equipmentItemId) {
-            return false;
-        }
-
-        @Override
-        public boolean hasActiveRequest(Connection connection, int equipmentItemId) {
             return false;
         }
     }

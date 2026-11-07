@@ -36,14 +36,14 @@ public class PtSessionView {
     private String statusBadgeClass;
     // ← status = Scheduled VÀ chưa tới giờ bắt đầu → hiện nút "Xử lý buổi" và chip "Tiếp theo"
     private boolean canOpenActions;
+    // ← "Khách không check-in" … (chỉ buổi Missed) → chữ nhỏ cạnh huy hiệu "Vắng"
+    private String missedReasonLabel;
 
     // ===== KHÔNG IN RA MÀN (dùng để tính) =====
     // ← Subscriptions.SubscriptionType → subscriptionTypeLabel
     private final Package.Type subscriptionType;
     // ← Sessions.MissedReason → missedReasonLabel
     private final Session.MissedReason missedReason;
-    // ← "Khách không check-in" … (JSP hiện chưa in)
-    private String missedReasonLabel;
 
     public PtSessionView(int sessionId, LocalDate slotDate, LocalTime startTime, LocalTime endTime,
             String customerName, String partnerName, Package.Type subscriptionType,

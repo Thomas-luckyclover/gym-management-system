@@ -142,6 +142,7 @@
                     </c:otherwise>
                   </c:choose>
                 </p>
+                <%-- detail.pastDate = getter tự tính isPastDate() · dto/ShiftDetailView.java --%>
                 <c:if test="${detail.pastDate}">
                   <div style="margin-top: 10px;">
                     <a href="${pageContext.request.contextPath}/receptionist/shift"
@@ -323,6 +324,7 @@
               </c:when>
               <c:otherwise>
                 <c:forEach var="item" items="${detail.transactionsPage.items}">
+                  <%-- item.cancelled = getter tự tính isCancelled() · dto/ShiftTransactionItem.java (item = ShiftTransactionItem) --%>
                   <div class="data-row ${item.cancelled ? 'is-void-row' : ''}">
                     <div class="row-main">
                       <div class="row-title">
@@ -335,9 +337,11 @@
 
                         <%-- Trạng thái đơn --%>
                         <c:choose>
+                          <%-- item.paid = getter tự tính isPaid() · dto/ShiftTransactionItem.java (item = ShiftTransactionItem) --%>
                           <c:when test="${item.paid}">
                             <span class="badge badge-ok">Đã thanh toán</span>
                           </c:when>
+                          <%-- item.pending = getter tự tính isPending() · dto/ShiftTransactionItem.java (item = ShiftTransactionItem) --%>
                           <c:when test="${item.pending}">
                             <span class="badge badge-warn">Chờ xác nhận</span>
                           </c:when>
@@ -351,6 +355,7 @@
                         <span><i class="fa-solid fa-clock"></i> <c:out value="${gms:formatDateTime(item.createdAt)}"/></span>
                         <span><i class="fa-solid fa-dumbbell"></i> <c:out value="${item.packageName}"/></span>
                         <c:choose>
+                          <%-- item.cash = getter tự tính isCash() · dto/ShiftTransactionItem.java (item = ShiftTransactionItem) --%>
                           <c:when test="${item.cash}">
                             <span class="badge badge-muted"><i class="fa-solid fa-money-bill-wave"></i> Tiền mặt</span>
                           </c:when>

@@ -6,8 +6,8 @@
  * ============================================================================================================
  *
  * FILE NÀY LÀM 2 VIỆC (vẽ "Lịch tập" là file khác: pt-sale-plan.js). Mọi LUẬT vẫn ở server (PtSaleService):
- *   1. Ô tìm khách có gợi ý — gõ ≥ 2 ký tự → chờ 200 ms → GET /receptionist/pt-sales/customers?q=…
- *      → PtSaleServlet.writeSuggestions trả JSON [{id, name, code, phone, ok, note}] → vẽ tối đa 8 dòng.
+ *   1. Ô tìm khách có gợi ý — gõ ≥ 1 ký tự → chờ 200 ms → GET /receptionist/pt-sales/customers?q=…
+ *      → PtSaleServlet.writeSuggestions trả JSON [{id, name, code, phone, ok, note}] → vẽ mọi dòng (danh sách tự cuộn).
  *      ↑ ↓ chọn, Enter mở, Esc đóng. Chọn 1 khách → mở lại trang với ?customer=<id> (hoặc partner=<id>).
  *   2. Form bước 1 tự gửi — đổi gói / PT / ngày → gửi form GET → server tính lại cả trang.
  *
@@ -23,10 +23,10 @@
  *   a[data-keep-plan]                link "Đổi khách", "Đổi người tập cùng", kết quả tìm      đi link nhưng giữ lịch
  *   [data-plan-sessions]             _pt-sale-actions.jspf: ô ẩn "sessions" của form Giữ lịch (pt-sale-plan.js điền)
  *
- * HÀM LẤY TỪ common.js (nạp trước file này): getJson(url, params) → Promise {success, data, message}.
+ * HÀM LẤY TỪ common.js (nạp trước file này): getJson(url, params) → Promise {success, data, message}; showToast(loại, chữ).
  *
  * BỐ CỤC: HÀM CHÍNH (chạy khi trang tải xong) → PHẦN 1 ô gợi ý (+ hàm phụ) → PHẦN 2 form tự gửi (+ hàm phụ)
- *         → PHẦN 3 khung "Đơn đang giữ chỗ" (gỡ dòng hết giờ).
+ *         → PHẦN 3 khung "Đơn đang giữ chỗ" (gỡ dòng hết giờ) → PHẦN 4 báo lỗi bằng toast (lỗi server, ô "Đã nhận đủ").
  * ============================================================================================================
  */
 
@@ -53,7 +53,53 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // 4. Khung "Đơn đang giữ chỗ": đơn nào đếm về 00:00 thì gỡ dòng đó (hết hạn rồi bấm "Tiếp tục thu tiền" chỉ ra MSG108).
     initHoldList(document.querySelector(".sale-holds"));
+
+    // 5. Server vừa từ chối Giữ lịch / Thu tiền → toast đỏ nói rõ là HỆ THỐNG chặn + lý do.
+    showServerErrorToast(document.querySelector("[data-server-error]"));
+
+    // 6. Form thu tiền: chưa tích "Đã nhận đủ" → toast, không gửi.
+    initPayConfirm(document.querySelector("[data-pay-form]"));
 });
+
+/* ==================== PHẦN 4 — BÁO LỖI BẰNG TOAST (06/11) ==================== */
+
+/**
+ * HÀM PHỤ — gọi ở bước 5 của HÀM CHÍNH. line = <p data-server-error> do JSP in khi có saleError (null → thôi).
+ * Toast đỏ ở lại tới khi bấm đóng (showToast loại "error"); dòng đỏ trong cột vẫn giữ để đọc lại.
+ * VD: "Hệ thống chưa giữ được lịch: Ca sáng ngày 05/11/2026 chưa được chốt. Vui lòng chốt ca cũ và mở ca hôm nay trước khi bán."
+ */
+function showServerErrorToast(line) {
+    if (!line) {
+        return;
+    }
+    const isPayStep = document.querySelector("[data-pay-form]") !== null;
+    const prefix = isPayStep ? "Hệ thống chưa ghi nhận thu tiền: " : "Hệ thống chưa giữ được lịch: ";
+    showToast("error", prefix + line.textContent.trim());
+}
+
+/**
+ * HÀM PHỤ — gọi ở bước 6 của HÀM CHÍNH. form = form thu tiền (chỉ có ở bước "Đang giữ").
+ * Chưa tích "Đã nhận đủ …" → chặn gửi, toast vàng nhắc + viền đỏ ô tích. Tích rồi → gửi bình thường.
+ */
+function initPayConfirm(form) {
+    if (!form) {
+        return;
+    }
+    const box = form.querySelector("[data-pay-confirm]");
+    form.addEventListener("submit", function (event) {
+        if (box && !box.checked) {
+            event.preventDefault();
+            box.closest("label").classList.add("is-invalid");
+            box.focus();
+            showToast("warning", "Đếm tiền / kiểm chuyển khoản xong thì tích ô \"Đã nhận đủ\" rồi mới bấm Xác nhận đã thu tiền.");
+        }
+    });
+    if (box) {
+        box.addEventListener("change", function () {
+            box.closest("label").classList.remove("is-invalid");
+        });
+    }
+}
 
 /* ==================== PHẦN 3 — KHUNG "ĐƠN ĐANG GIỮ CHỖ" ==================== */
 
@@ -95,11 +141,11 @@ function initSaleCombobox(box) {
     let timer = 0;
     let requestNo = 0;      // chỉ vẽ kết quả của lần gõ mới nhất
 
-    // Gõ chữ → chờ 200 ms (gõ tiếp thì hủy hẹn giờ cũ) → load. Dưới 2 ký tự → đóng danh sách.
+    // Gõ chữ → chờ 200 ms (gõ tiếp thì hủy hẹn giờ cũ) → load. Chưa gõ gì → đóng danh sách.
     input.addEventListener("input", function () {
         clearTimeout(timer);
         const query = input.value.trim();
-        if (query.length < 2) {
+        if (query.length === 0) {
             close();
             return;
         }
@@ -118,7 +164,7 @@ function initSaleCombobox(box) {
             highlight((active + step + rows.length) % rows.length);
         } else if (event.key === "Enter" && isOpen && active >= 0) {
             event.preventDefault();
-            choose(rows[active]);
+            choose(rows[active]); // Chọn 1 khách
         } else if (event.key === "Enter" && mode === "partner") {
             event.preventDefault();   // ô người tập cùng nằm trong form các bước: Enter không gửi form
         } else if (event.key === "Escape") {
@@ -128,7 +174,7 @@ function initSaleCombobox(box) {
 
     // Quay lại ô (focus) mà đã có gợi ý → mở lại. Bấm ra ngoài ô → đóng.
     input.addEventListener("focus", function () {
-        if (rows.length > 0 && input.value.trim().length >= 2) {
+        if (rows.length > 0 && input.value.trim().length >= 1) {
             open();
         }
     });
@@ -146,7 +192,9 @@ function initSaleCombobox(box) {
         }
     });
 
-    /** HÀM PHỤ — hỏi server rồi vẽ. requestNo: chỉ vẽ kết quả của lần gõ MỚI NHẤT (bỏ kết quả về muộn). */
+    /** HÀM PHỤ — hỏi server rồi vẽ. requestNo: chỉ vẽ kết quả của lần gõ MỚI NHẤT (bỏ kết quả về muộn). 
+     * Hàm getJson đợi kết quả server trả về
+     * */
     async function load(query) {
         const myNo = ++requestNo;
         box.classList.add("is-loading");
@@ -210,15 +258,15 @@ function initSaleCombobox(box) {
     }
 
     /** HÀM PHỤ — chọn 1 khách: URL hiện tại + customer (hoặc partner) = id, bỏ q / order, giữ lịch (withPlan) → tải trang. */
-    function choose(row) {
-        close();
-        input.value = row.name;
-        const url = new URL(window.location.href);
-        url.searchParams.set(mode === "customer" ? "customer" : "partner", String(row.id));
-        url.searchParams.delete("q");
-        url.searchParams.delete("order");
-        window.location.href = withPlan(url.toString());
-    }
+function choose(row) {
+    close();                                                     // (a) đóng danh sách gợi ý
+    input.value = row.name;                                      // (b) hiện tên khách trong ô cho lễ tân thấy
+    const url = new URL(window.location.href);                   // (c) lấy URL hiện tại
+    url.searchParams.set(mode === "customer" ? "customer" : "partner", String(row.id));   // (d)
+    url.searchParams.delete("q");                                // (e) bỏ chữ tìm
+    url.searchParams.delete("order");                            // (e) bỏ mã đơn (nếu có)
+    window.location.href = withPlan(url.toString());             // (f) gắn lịch rồi chuyển trang
+}
 
     function open() {
         list.hidden = false;
@@ -282,36 +330,39 @@ function initSaleAutoSubmit(form) {
     window.addEventListener("pageshow", function () { form.classList.remove("is-busy"); });
     form.addEventListener("change", function (event) {
         const field = event.target;
-        if (!field.matches("input[type=radio], input[type=date]")) {
+        if (!field.matches("input[type=radio], input[type=date]")) { // chỉ quan tâm type=radio gói + PT + ô ngày 
             return;
         }
         clearTimeout(dateTimer);
-        if (field.matches("[data-start-field]")) {
+        if (field.matches("[data-start-field]")) { // ← ô ngày bắt đầu
             // Ngày sai (trống, trước hôm nay, quá 30 ngày) → báo dưới ô, KHÔNG gửi, form không bị khóa.
-            const isValid = field.value !== "" && field.checkValidity();
+            const isValid = field.value !== "" && field.checkValidity(); //check min + max
             showStartError(field, !isValid);
             if (isValid) {
-                dateTimer = setTimeout(function () { submitSteps(form, true); }, SALE_DATE_DELAY);
+                dateTimer = setTimeout(function () { submitSteps(form, true); }, SALE_DATE_DELAY); // delay tải trang khi chọn ngày bắt đầu 700ms
             }
             return;
         }
-        // Đổi gói → giữ lịch mẫu (cùng PT, giờ vẫn đúng). Đổi PT → bỏ lịch mẫu (giờ của PT cũ không còn nghĩa).
+        // còn lại = radio gói hoặc radio PT, nếu ko == package thì == "pt"
         submitSteps(form, field.name === "package");
     });
 
 }
 
 /**
- * Gửi form các bước (server tính lại bước sau). Mờ form chỉ khi chắc chắn gửi được.
- * keepPattern = true (đổi ngày bắt đầu / đổi gói): gửi kèm t1..t5 đang có trên URL để KHÔNG mất lịch mẫu đã xếp.
- * Buổi sửa riêng (sessions) không gửi theo vì gắn với ngày cụ thể của kỳ cũ.
+submitSteps là hàm gửi form bước 1 (Gói & PT) lên server, có mang theo lịch mẫu khi cần. Ba trường hợp đổi gói, đổi PT, đổi ngày đều gọi hàm này. Nó làm 4 việc theo thứ tự:
  */
 function submitSteps(form, keepPattern) {
+    // 1. Kiểm form trước khi gửi
     if (!form.checkValidity()) {
         form.reportValidity();
         return;
     }
+    
+    // 2. Dọn ô ẩn cũ
     form.querySelectorAll("input[data-kept-pattern]").forEach(function (input) { input.remove(); });
+    
+    // 3. Mang theo lịch mẫu nếu cần, nghĩa là đã chọn 7:00 ngày 23456 thì đổi gói hay đổi ngày vx giữ cái này, còn đổi PT thì ko giữ
     if (keepPattern) {
         const current = new URL(window.location.href);
         for (let n = 1; n <= 5; n++) {
@@ -326,6 +377,8 @@ function submitSteps(form, keepPattern) {
             }
         }
     }
+    
+    // 4. Làm mờ form rồi gửi
     form.classList.add("is-busy");
     form.requestSubmit();
 }

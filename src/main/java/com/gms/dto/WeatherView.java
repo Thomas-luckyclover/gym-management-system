@@ -126,12 +126,8 @@ public class WeatherView {
         return mood;
     }
 
-    /** @return hậu tố CSS để JSP gắn class weather--{moodCss} */
-    public String getMoodCss() {
-        return mood.getCssName();
-    }
-
     /** CSS dùng cùng mood mà Service chọn; nắng nóng có bảng màu cam riêng. */
+    // GETTER TỰ TÍNH — không có field/setter "weatherType"; = mood.getCssName(); JSP: không dùng (chỉ Java/test)
     public String getWeatherType() {
         return mood.getCssName();
     }

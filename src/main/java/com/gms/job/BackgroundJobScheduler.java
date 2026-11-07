@@ -30,7 +30,22 @@ import java.util.concurrent.TimeUnit;
  *   runMinuteJob         chạy 1 job mỗi phút
  *
  * Thêm job: tạo class implements BackgroundJob rồi thêm vào DAILY_JOBS hoặc MINUTE_JOBS.
+ * BackgroundJobScheduler như 1 Listener lắng nghe vòng đời ứng dụng
  */
+
+// I. 
+// ServletContextListener chỉ nghe 2 sự kiện từ Tomcat: app khởi động thì Tomcat gọi contextInitialized; app dừng hoặc redeploy thì Tomcat gọi contextDestroed
+// Cả vòng đời ứng dụng, mỗi hàm chỉ được gọi 1 lần
+
+// II. 
+// BackgroundJob còn đóng vai 1 bộ hẹn giờ lo phân thời gian
+// Phần "Đến giờ thì chạy" dô ScheduledExecutorService của Java đảm nhận. Đây là luồng chạy ngầm mà Listener tạo ra lúc khởi động
+
+// III.
+// Tomcat start (sự kiện) => Listener.contextInitialized (do @WebListener) => Tạo bộ hẹn giờ cho executor. executor tự gọi runDailyJobs
+// Tomcat stop (sự kiện) => Listener.contextDestroyed => Tắt executor
+
+
 @WebListener
 public class BackgroundJobScheduler implements ServletContextListener {
 
@@ -42,7 +57,7 @@ public class BackgroundJobScheduler implements ServletContextListener {
     /** Job hằng ngày — THỨ TỰ TRONG LIST LÀ THỨ TỰ CHẠY, không đảo. */
     private static final List<BackgroundJob> DAILY_JOBS = List.of(
             new ResumeExpiredFreezesJob(),        // JOB-01: hết bảo lưu (khung TODO)
-            new ExpireMembershipPackagesJob(),    // JOB-02: gói hết hạn → Expired (khung TODO)
+            new ExpireMembershipPackagesJob(),    // JOB-02: gói tập / gói PT hết hạn → Expired (ExpirePackagesService)
             new ExpireUnusedDayPassesJob(),       // JOB-03: vé ngày không dùng → Expired (khung TODO)
             new AutoCloseUnmarkedSessionsJob(),   // JOB-04: chốt buổi PT đã qua ngày (AutoCloseSessionService)
             new RemindMissingGymAccessJob()       // JOB-08: chạy SAU các job hết hạn để xét quyền vào gym mới nhất
@@ -66,11 +81,11 @@ public class BackgroundJobScheduler implements ServletContextListener {
     @Override
     public void contextInitialized(ServletContextEvent event) {
         // B1: tạo 2 luồng riêng — job hằng ngày có thể ngủ chờ thử lại 5 phút, không được làm trễ job mỗi phút
-        dailyExecutor = Executors.newSingleThreadScheduledExecutor();
-        minuteExecutor = Executors.newScheduledThreadPool(MINUTE_JOBS.size());
+        dailyExecutor = Executors.newSingleThreadScheduledExecutor(); // JOB hàng ngày
+        minuteExecutor = Executors.newScheduledThreadPool(MINUTE_JOBS.size()); // Job mỗi phút
 
         // B2: lên lịch chuỗi job hằng ngày lúc 00:05
-        long initialDelaySeconds = calculateSecondsUntilNextDailyRun();
+        long initialDelaySeconds = calculateSecondsUntilNextDailyRun(); // Tính toán số giây còn lại đến lượt chạy tiếp theo
         long oneDaySeconds = TimeUnit.DAYS.toSeconds(1);
         dailyExecutor.scheduleAtFixedRate(this::runDailyJobs, initialDelaySeconds, oneDaySeconds, TimeUnit.SECONDS);
 

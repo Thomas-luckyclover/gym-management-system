@@ -124,7 +124,9 @@ public class ReportView implements Serializable {
         public String getFullLabel() { return fullLabel; }
         public long getAmount() { return amount; }
         public double getPercent() { return percent; }
+        // GETTER TỰ TÍNH — không có field/setter "labelVisible"; = trả thẳng field isLabelVisible; JSP: manager/dashboard.jsp:138
         public boolean isLabelVisible() { return isLabelVisible; }
+        // GETTER TỰ TÍNH — không có field/setter "last"; = trả thẳng field isLast; JSP: manager/dashboard.jsp:130
         public boolean isLast() { return isLast; }
         public void setPercent(double percent) { this.percent = percent; }
         public void setLabelVisible(boolean isLabelVisible) { this.isLabelVisible = isLabelVisible; }
@@ -148,8 +150,11 @@ public class ReportView implements Serializable {
 
     // ===== Chuỗi hiển thị sẵn cho thẻ tổng quan (VD 246300000 → "246,3 tr") =====
 
+    // GETTER TỰ TÍNH — không có field/setter "totalRevenueText"; = totalRevenue định dạng theo triệu; JSP: manager/dashboard.jsp:98
     public String getTotalRevenueText() { return formatMillionsText(totalRevenue); }
+    // GETTER TỰ TÍNH — không có field/setter "totalCommissionText"; = totalCommission định dạng theo triệu; JSP: manager/dashboard.jsp:102
     public String getTotalCommissionText() { return formatMillionsText(totalCommission); }
+    // GETTER TỰ TÍNH — không có field/setter "dayPassRevenueText"; = dayPassRevenue định dạng theo triệu; JSP: manager/dashboard.jsp:104
     public String getDayPassRevenueText() { return formatMillionsText(dayPassRevenue); }
 
     /** Đổi số đồng sang "x,y tr" (1 chữ số thập phân, dấu phẩy kiểu Việt). */
@@ -159,6 +164,7 @@ public class ReportView implements Serializable {
     }
 
     /** Không có gì để hiển thị trong khoảng ngày (không doanh thu, check-in, hoa hồng). */
+    // GETTER TỰ TÍNH — không có field/setter "emptyInRange"; = doanh thu 0, không check-in và không có dòng PT; JSP: manager/dashboard.jsp:110 …
     public boolean isEmptyInRange() {
         return totalRevenue == 0 && checkInCount == 0 && ptRows.isEmpty();
     }
@@ -181,6 +187,7 @@ public class ReportView implements Serializable {
     public List<PtRow> getPtRows() { return ptRows; }
     public List<Bucket> getBuckets() { return buckets; }
     public List<Tick> getTicks() { return ticks; }
+    // GETTER TỰ TÍNH — không có field/setter "monthlyChart"; = trả thẳng field isMonthlyChart; JSP: manager/dashboard.jsp:119
     public boolean isMonthlyChart() { return isMonthlyChart; }
 
     public void setTotalRevenue(long totalRevenue) { this.totalRevenue = totalRevenue; }

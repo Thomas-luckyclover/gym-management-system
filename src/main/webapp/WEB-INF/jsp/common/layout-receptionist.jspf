@@ -11,14 +11,23 @@
      MSG323 ca quá giờ chưa chốt — mọi màn lễ tân (CBR-123); MSG109 chưa mở ca — màn Bán hàng / Bán gói PT (CBR-105).
      Màn Ca làm việc đã có banner riêng nên không hiện ở đó. --%>
 <c:if test="${not empty shiftNotice and activeNav != 'shifts'}">
+  <%-- Cùng kiểu với toast chuẩn của common.js (.toast-warning): nền thẻ theo theme, vạch trái + icon màu cảnh báo ĐẬM.
+       Bản cũ hard-code #FFF4E5 (kem nhạt) → nhạt, lệch màu app, vi phạm quy tắc chỉ dùng token (06/11). --%>
   <style>
-    .shift-notice{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:1000;
-      display:flex;gap:12px;align-items:center;max-width:min(720px,calc(100vw - 32px));
-      padding:12px 16px;border-radius:12px;background:#FFF4E5;color:#7A4100;border:1px solid #F5B971;
-      box-shadow:0 6px 20px rgba(0,0,0,.12);font-size:14px;line-height:1.4}
-    .shift-notice a{flex:none;font-weight:600;color:#7A4100;text-decoration:underline;white-space:nowrap}
-    .shift-notice-close{flex:none;background:transparent;border:0;color:inherit;
+    .shift-notice{position:fixed;left:50%;bottom:var(--space-4);transform:translateX(-50%);z-index:var(--z-toast);
+      display:flex;gap:var(--space-3);align-items:center;max-width:min(720px,calc(100vw - var(--space-8)));
+      padding:var(--space-3) var(--space-4);border-radius:var(--radius-md);
+      background:var(--color-surface);color:var(--color-text);
+      border:var(--border-width) solid var(--color-warning-border);border-left:var(--border-width-accent) solid var(--color-warning);
+      box-shadow:var(--shadow-pop);font-size:var(--font-size-sm);font-weight:var(--font-weight-semibold);line-height:var(--line-height-snug)}
+    .shift-notice > i{flex:none;color:var(--color-warning);font-size:var(--font-size-lg)}
+    .shift-notice a{flex:none;padding:var(--space-1-5) var(--space-3);border-radius:var(--radius-sm);
+      background:var(--color-warning);color:var(--brand-ink);
+      font-weight:var(--font-weight-bold);text-decoration:none;white-space:nowrap}
+    .shift-notice a:hover{filter:brightness(1.08)}
+    .shift-notice-close{flex:none;background:transparent;border:0;color:var(--color-text-muted);
       padding:var(--space-2);font-size:var(--font-size-xl);line-height:1;cursor:pointer}
+    .shift-notice-close:hover{color:var(--color-text)}
   </style>
   <div class="shift-notice" role="status">
     <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>

@@ -23,7 +23,9 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * MÀN LỊCH DẠY — dựng lịch tuần (getWeek) và Công bố / gỡ khung rảnh (publish).
@@ -66,7 +68,7 @@ public class PtScheduleService {
                     hours[1]);
 
             // B5: gộp buổi + khung, xếp theo giờ → phân loại từng ô và xếp vào đúng ngày (fillWeek)
-            List<PtScheduleItem> allItems = merge(sessions, openSlots);
+            List<PtScheduleItem> allItems = merge(sessions, openSlots, now);
 
             fillWeek(
                     week,
@@ -247,6 +249,52 @@ public class PtScheduleService {
     }
 
     /**
+     * HÀM PHỤ (getWeek B5) — như merge(sessions, openSlots) nhưng mỗi khung giờ chỉ còn MỘT ô.
+     * Buổi bị hủy (PT hủy, gói hết hạn, phòng nghỉ…) trả khung về Free, nên cùng TimeSlotId có cả ô "Đã hủy"
+     * lẫn ô "Còn trống" (hoặc ô buổi mới của khách khác) → lịch vẽ 2 ô chồng nhau.
+     *   Khung đã có buổi khác chưa hủy          → bỏ ô "Đã hủy".
+     *   Khung còn trống, chưa tới giờ bắt đầu    → bỏ ô "Đã hủy", giữ ô "Còn trống" (PT còn mở cho khách khác).
+     *   Khung còn trống, đã qua giờ bắt đầu      → bỏ ô "Còn trống", giữ ô "Đã hủy" (để PT xem lại lịch sử).
+     * Ví dụ: 05/11 15:00 buổi của Hương hủy vì gói hết hạn, khung về Free → xem ngày 07/11 chỉ còn ô "Đã hủy";
+     *        16/11 15:00 cùng trường hợp → chỉ còn ô "Còn trống".
+     */
+    static List<PtScheduleItem> merge(List<PtScheduleItem> sessions, List<PtScheduleItem> openSlots, LocalDateTime now) {
+        Set<Integer> liveSlots = new HashSet<>();
+        Set<Integer> cancelledSlots = new HashSet<>();
+        for (PtScheduleItem session : sessions) {
+            if ("Cancelled".equals(session.getSessionStatus())) {
+                cancelledSlots.add(session.getTimeSlotId());
+            } else {
+                liveSlots.add(session.getTimeSlotId());
+            }
+        }
+
+        Set<Integer> futureOpen = new HashSet<>();
+        List<PtScheduleItem> keptSlots = new ArrayList<>();
+        for (PtScheduleItem slot : openSlots) {
+            boolean started = !LocalDateTime.of(slot.getSlotDate(), slot.getStartTime()).isAfter(now);
+            if (cancelledSlots.contains(slot.getTimeSlotId()) && started) {
+                continue;
+            }
+            if (!started) {
+                futureOpen.add(slot.getTimeSlotId());
+            }
+            keptSlots.add(slot);
+        }
+
+        List<PtScheduleItem> keptSessions = new ArrayList<>();
+        for (PtScheduleItem session : sessions) {
+            boolean cancelled = "Cancelled".equals(session.getSessionStatus());
+            int slotId = session.getTimeSlotId();
+            if (cancelled && (liveSlots.contains(slotId) || futureOpen.contains(slotId))) {
+                continue;
+            }
+            keptSessions.add(session);
+        }
+        return merge(keptSessions, keptSlots);
+    }
+
+    /**
      * HÀM PHỤ (getWeek B5) — nới trục giờ theo ô sớm/muộn nhất; mỗi ô: classify → tính vị trí → bỏ vào đúng ngày;
      * buổi có khách trùng ca nghỉ → thêm vào day.leaveBookings.
      */
@@ -276,6 +324,77 @@ public class PtScheduleService {
                     break;
                 }
             }
+        }
+
+        // Ô chồng giờ (VD buổi đã hủy 19:30 nằm cùng giờ khung mới 19:15) → chia làn RIÊNG cho cụm đó,
+        // các ô khác trong ngày vẫn rộng đủ cột.
+        for (PtScheduleDay day : week.getDays()) {
+            assignLanes(day.getItems());
+        }
+    }
+
+    /**
+     * HÀM PHỤ (fillWeek) — xếp làn cho các ô CHỒNG GIỜ trong 1 ngày, giống Google Calendar.
+     * Input: ô của 1 ngày. Output: mỗi ô có lane (làn thứ mấy) + laneCount (cụm có mấy làn) → JSP in --lane / --lanes.
+     *
+     * Ví dụ 1 ngày: 07:00–08:30 · 19:00–20:30 · 20:00–21:30
+     *   Cụm 1 = {07:00}            → 1 làn  → ô 07:00 rộng đủ cột
+     *   Cụm 2 = {19:00, 20:00}     → 2 làn  → 19:00 ở làn 0 (nửa trái), 20:00 ở làn 1 (nửa phải)
+     * Trước đây cột ngày là CSS grid tự thêm cột khi có ô chồng → MỌI ô trong ngày bị co (lỗi "1 cái co là tất cả co").
+     *
+     * B1: xếp ô theo giờ bắt đầu; cùng giờ thì ô đang chiếm giờ (khung trống / buổi Scheduled) đứng trước,
+     *     buổi đã hủy / vắng / check-in (chỉ để xem) dạt sang phải.
+     * B2: duyệt từng ô; ô bắt đầu khi cụm hiện tại đã kết thúc → chốt số làn cho cụm cũ, mở cụm mới.
+     * B3: đặt ô vào làn đầu tiên đã trống (làn kết thúc trước giờ bắt đầu ô); hết làn trống → mở làn mới.
+     * B4: chốt cụm cuối.
+     */
+    static void assignLanes(List<PtScheduleItem> items) {
+        // B1
+        List<PtScheduleItem> sorted = new ArrayList<>(items);
+        sorted.sort(Comparator.comparing(PtScheduleItem::getStartTime)
+                .thenComparing(item -> item.isBlocking() ? 0 : 1));
+
+        List<PtScheduleItem> cluster = new ArrayList<>();   // các ô của cụm đang xét
+        List<LocalTime> laneEnds = new ArrayList<>();       // giờ kết thúc ô cuối của từng làn trong cụm
+        LocalTime clusterEnd = null;                        // giờ kết thúc muộn nhất của cụm
+
+        for (PtScheduleItem item : sorted) {
+            // B2
+            boolean startsNewCluster = clusterEnd != null && !item.getStartTime().isBefore(clusterEnd);
+            if (startsNewCluster) {
+                closeCluster(cluster, laneEnds.size());
+                cluster.clear();
+                laneEnds.clear();
+                clusterEnd = null;
+            }
+
+            // B3
+            int lane = -1;
+            for (int i = 0; i < laneEnds.size(); i++) {
+                if (!laneEnds.get(i).isAfter(item.getStartTime())) {
+                    lane = i;
+                    break;
+                }
+            }
+            if (lane < 0) {
+                lane = laneEnds.size();
+                laneEnds.add(item.getEndTime());
+            } else {
+                laneEnds.set(lane, item.getEndTime());
+            }
+            item.setLane(lane);
+            cluster.add(item);
+            clusterEnd = clusterEnd == null || item.getEndTime().isAfter(clusterEnd) ? item.getEndTime() : clusterEnd;
+        }
+
+        // B4
+        closeCluster(cluster, laneEnds.size());
+    }
+
+    /** HÀM PHỤ (assignLanes) — ghi số làn của cụm vào mọi ô trong cụm (cụm rỗng thì thôi). */
+    private static void closeCluster(List<PtScheduleItem> cluster, int laneCount) {
+        for (PtScheduleItem item : cluster) {
+            item.setLaneCount(Math.max(1, laneCount));
         }
     }
 

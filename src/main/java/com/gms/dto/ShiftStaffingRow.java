@@ -38,6 +38,7 @@ public class ShiftStaffingRow {
         return minRequired;
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "belowMin"; = afterApproval < minRequired; JSP: manager/leave-request-review.jsp:258
     public boolean isBelowMin() {
         return afterApproval < minRequired;
     }

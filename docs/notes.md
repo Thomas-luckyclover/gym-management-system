@@ -104,7 +104,7 @@ UC-21 bản **đơn giản hóa** (SRS cập nhật sau). Bản 2 thay bản 1 (
 
 - **Đổi thứ tự 26/10 (góp ý của cô): tư vấn trước, chọn khách sau.** Lễ tân thường chưa biết tư vấn gói nào nên không bắt chọn khách trước. Bố cục kiểu máy POS: **trái** = Gói & PT → Lịch tập (chọn được khi chưa có khách, lịch chỉ xét lịch PT); **phải** "Đơn bán" = ô tìm khách (+ người tập cùng nếu gói đôi) ở trên cùng, chọn lúc nào cũng được. Chọn / đổi khách → URL đổi `customer` (`partner`) nhưng **giữ nguyên** gói, PT, ngày, lịch mẫu `t1..t5` và các buổi `sessions` (kể cả buổi sửa riêng); có khách thì lịch tính thêm giờ trùng buổi khác của khách. Nút Giữ lịch chỉ mở khi có ≥ 1 buổi **và** đủ khách (`data-customer-ready`); server vẫn chặn ở `firstProblem`. Thanh bước: 1 Gói & PT · 2 Lịch tập · 3 Khách · 4 Giữ chỗ & thu tiền.
 - **Luồng (bản 2, trước 26/10 — thứ tự cũ là Khách → Gói & PT → Lịch → Thu tiền):**
-  1. **Khách** — ô tìm kiểu Google: gõ ≥ 2 ký tự → `pt-sales.js` gọi `GET /receptionist/pt-sales/customers?q=` → `PtSaleService.search` → `PtSaleDAO.searchCustomers` (tối đa 8). Khớp **tên không dấu theo thứ tự từ** ("do mai" → "Đỗ Thị Mai"), **SĐT / SĐT giám hộ**, **mã KH**. Dùng collation `Latin1_General_CI_AI` (bản `Vietnamese_CI_AI` coi ă, ê, đ là chữ riêng → "van" không khớp "Văn"). Gợi ý ghi luôn "Gói tập tới …" hoặc lý do không bán được. Chọn → `?customer=<CustomerId>`. Tắt JS: Enter → `?q=` → danh sách link.
+  1. **Khách** — ô tìm kiểu Google: gõ ≥ 1 ký tự → `pt-sales.js` gọi `GET /receptionist/pt-sales/customers?q=` → `PtSaleService.search` → `PtSaleDAO.searchCustomers` (tối đa 8). Khớp **tên không dấu theo thứ tự từ** ("do mai" → "Đỗ Thị Mai"), **SĐT / SĐT giám hộ**, **mã KH**. Dùng collation `Latin1_General_CI_AI` (bản `Vietnamese_CI_AI` coi ă, ê, đ là chữ riêng → "van" không khớp "Văn"). Gợi ý ghi luôn "Gói tập tới …" hoặc lý do không bán được. Chọn → `?customer=<CustomerId>`. Tắt JS: Enter → `?q=` → danh sách link.
   2. **Gói & PT** — ô gói, ô PT, ngày bắt đầu (mặc định ngày mai, tối đa +30 ngày). Gói đôi: ô tìm người tập cùng (cùng API, bỏ chính người đứng tên). Đổi lựa chọn → JS tự gửi form GET; đổi gói/PT/ngày thì bỏ giờ đã chọn.
   3. **Lịch tập** (bản 3, 26/10 — thay bảng "8/9 tuần"): làm theo kiểu sự kiện lặp lại của Google Calendar / đặt PT định kỳ của Mindbody, Glofox.
      - **Lịch mẫu hằng tuần**: mỗi thứ T2–T6 chọn **Nghỉ** hoặc 1 giờ (1–5 buổi/tuần). Mẫu nhanh: T2·T4·T6, T3·T5, T2→T6, Bỏ hết. Dưới mỗi giờ: "Còn 4/9 buổi" + lý do gặp nhiều nhất viết ngắn ("Khách trùng giờ", "PT có khách"…); đủ mọi tuần thì không ghi; hết buổi → "Không còn buổi" và khóa. Rê chuột: danh sách ngày không xếp được kèm lý do đầy đủ.
@@ -691,3 +691,21 @@ Hướng dẫn dùng tokens/common hiện có: `docs/frontend-shared-usage.md`.
   - Số buổi ước tính (`EstimatedSessionCount`): áp dụng giới hạn 1–255 buổi (kiểu `TINYINT` trong DB); tự động gợi ý ~22 buổi/tháng khi chọn thời hạn.
   - Phân quyền thư viện bài tập: Checkbox `UnlocksExerciseLibrary` trên cả 2 biểu mẫu.
   - Giao diện: Chuẩn Arena Theme (.dock.theme-manager), sử dụng 100% biến từ `tokens.css`, hỗ trợ Live Preview thẻ gói tập theo thời gian thực và cảnh báo hợp đồng đang chạy.
+
+
+## 05/11/2026 — Bỏ hạn mức đổi buổi (P-08)
+
+- Lý do: khách không còn tự đổi buổi, việc dời buổi chuyển hết về PT (BR-64) nên không còn gì tính lượt đổi.
+- Đã bỏ: cột `Subscriptions.SwapsUsed`, `Subscriptions.MaxSwapsSnapshot`, ràng buộc `CK_Subscriptions_Swaps`, tham số `P-08`, `SystemConfigService.MAX_SWAP_COUNT`, `MSG90_SWAP_LIMIT_REACHED`, `Subscription.canSwap()` / `getRemainingSwaps()`.
+- Giữ nguyên: các giá trị `MoveType` trong `SessionMoveLogs` (lịch sử dời buổi).
+- Cần nạp lại database: `0_Reset_Database.sql` → `1_Init_Schema.sql` → `2_Seed_Data.sql`.
+- Cần sửa SRS: BR-73, P-08, DBR-61, MSG90, entity Subscription và các chỗ nhắc lượt đổi. Các ghi chú cũ phía trên giữ làm lịch sử.
+
+
+## 05/11/2026 — Bỏ tính năng điểm PT chưa dùng (P-22)
+
+- Lý do: `getRating` không được Servlet nào gọi, màn PT Dashboard không có khối điểm.
+- Đã bỏ: tham số `P-22`, `SystemConfigService.MIN_PT_RATING_CUSTOMERS`, `PtRatingView`, `PtDashboardDAO.findRatingForMonth`, truy vấn B3 trong `3_Queries.sql`.
+- Giữ nguyên: bảng `Feedbacks` và phần khách đánh giá PT.
+- Cần nạp lại database: `0_Reset_Database.sql` → `1_Init_Schema.sql` → `2_Seed_Data.sql`.
+- Cần sửa SRS: P-22, DBR-69 và các chỗ nhắc điểm PT.

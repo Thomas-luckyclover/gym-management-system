@@ -128,6 +128,7 @@ public class PackageFormInput {
     /**
      * Bóc tách danh sách dòng quyền lợi từ textarea.
      */
+    // GETTER TỰ TÍNH — không có field/setter "benefitLines"; = tách benefits theo từng dòng; JSP: không dùng (chỉ Java/test)
     public List<String> getBenefitLines() {
         List<String> lines = new ArrayList<>();
         if (benefits == null || benefits.isBlank()) {

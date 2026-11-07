@@ -193,6 +193,7 @@ public class AccountSettingsView {
      * Giữ nguyên dấu tiếng Việt (không chuyển Đ thành D).
      * Xử lý an toàn khi null, rỗng hoặc nhiều khoảng trắng (trả về "—").
      */
+    // GETTER TỰ TÍNH — không có field/setter "initials"; = chữ đầu họ + chữ đầu tên viết hoa, tên trống → "—"; JSP: auth/account/profile-admin.jspf:18 …
     public String getInitials() {
         if (fullName == null || fullName.isBlank()) {
             return "—";

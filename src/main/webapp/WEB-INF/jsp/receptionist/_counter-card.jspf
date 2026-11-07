@@ -12,6 +12,7 @@
 <%@ page pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="gms" uri="/WEB-INF/gms-functions.tld" %>
+<%-- card.continueAllowed = getter tự tính isContinueAllowed() · dto/CounterPackageCard.java (card = CounterPackageCard) --%>
 <label class="counter-card${card.continueAllowed ? '' : ' is-blocked'}"
        data-package-name="<c:out value='${card.packageName}' />"
        data-package-price="${card.price}"

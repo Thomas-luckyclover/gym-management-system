@@ -9,65 +9,40 @@ import java.time.LocalDate;
  */
 public class PtAttentionView {
     // ===== IN RA MÀN =====
-    // ← "closedDay" (buổi rơi ngày phòng nghỉ) | "frozen" (khách bảo lưu) | "membership" (thiếu gói gym) → màu khung + nút "Dời buổi" (closedDay)
+    // ← "closedDay" (buổi rơi lúc phòng đóng: nghỉ cả ngày / ngoài giờ) | "frozen" (khách bảo lưu) | "membership" (thiếu gói gym) → màu khung + nút "Dời buổi" (closedDay)
     private final String kind;
     // ← chỉ closedDay: buổi cần dời → link "Dời buổi" (/pt/schedule?handle=<id>)
     private final Integer sessionId;
     // ← ngày buổi gặp vấn đề → "buổi dd/MM", ngày của link Dời buổi
     private final LocalDate sessionDate;
-    // ← "Ngày phòng nghỉ — cần dời" | "Membership đang bảo lưu" | "Cần membership" → chữ đậm của khung
+    // ← "Ngày phòng nghỉ — cần dời" | "Ngoài giờ mở cửa — cần dời" | "Chưa rõ giờ mở cửa — cần kiểm tra" | "Membership đang bảo lưu" | "Cần membership" → chữ đậm của khung
     private final String attentionTitle;
     // ← câu giải thích (gói đôi: kèm tình trạng người kia) → dòng ghi chú (closedDay hoặc gói đôi)
     private final String attentionMessage;
+
+    // ← tên khách của việc → "· tên" (gói đôi)
+    private final String customerName;
 
     // ===== DÙNG ĐỂ GHÉP / SẮP XẾP =====
     // ← gói PT → mergeClientAttention gắn việc vào đúng khách; getAssignedPackages lấy thêm gói này
     private final int ptSubscriptionId;
 
-    // ===== KHÔNG IN RA MÀN (giữ để mở rộng) =====
-    private final int customerId;
-    private final String customerName;
-    private final LocalDate ptEndDate;
-    private final int scheduledSessionCount;
-    private final LocalDate membershipEndDate;
-    private final LocalDate freezeEndDate;
-    private final String ptSubscriptionTypeLabel;
-    private final String membershipStatusLabel;
-
-    public PtAttentionView(int customerId, int ptSubscriptionId, String customerName, LocalDate ptEndDate, int scheduledSessionCount,
-            LocalDate sessionDate, LocalDate membershipEndDate, LocalDate freezeEndDate,
-            String ptSubscriptionTypeLabel, String membershipStatusLabel,
-            String attentionTitle, String attentionMessage) {
-        this(customerId, ptSubscriptionId, customerName, ptEndDate, scheduledSessionCount,
-                sessionDate, membershipEndDate, freezeEndDate, ptSubscriptionTypeLabel,
-                membershipStatusLabel, attentionTitle, attentionMessage,
-                freezeEndDate == null ? "membership" : "frozen", null);
-    }
-
-    public PtAttentionView(int customerId, int ptSubscriptionId, String customerName, LocalDate ptEndDate,
-            int scheduledSessionCount, LocalDate sessionDate, LocalDate membershipEndDate,
-            LocalDate freezeEndDate, String ptSubscriptionTypeLabel, String membershipStatusLabel,
-            String attentionTitle, String attentionMessage, String kind, Integer sessionId) {
+    public PtAttentionView(
+            String kind,
+            Integer sessionId,
+            LocalDate sessionDate,
+            String attentionTitle,
+            String attentionMessage,
+            int ptSubscriptionId,
+            String customerName) {
         this.kind = kind;
         this.sessionId = sessionId;
-
-        this.customerId = customerId;
-        this.ptSubscriptionId = ptSubscriptionId;
-        this.customerName = customerName;
-        this.ptEndDate = ptEndDate;
-        this.scheduledSessionCount = scheduledSessionCount;
         this.sessionDate = sessionDate;
-        this.membershipEndDate = membershipEndDate;
-        this.freezeEndDate = freezeEndDate;
-
-        this.ptSubscriptionTypeLabel = ptSubscriptionTypeLabel;
-        this.membershipStatusLabel = membershipStatusLabel;
-
         this.attentionTitle = attentionTitle;
         this.attentionMessage = attentionMessage;
+        this.ptSubscriptionId = ptSubscriptionId;
+        this.customerName = customerName;
     }
-
-    public int getCustomerId() { return customerId; }
 
     public String getKind() { return kind; }
 
@@ -78,32 +53,8 @@ public class PtAttentionView {
         return customerName;
     }
 
-    public LocalDate getPtEndDate() {
-        return ptEndDate;
-    }
-
-    public int getScheduledSessionCount() {
-        return scheduledSessionCount;
-    }
-
     public LocalDate getSessionDate() {
         return sessionDate;
-    }
-
-    public LocalDate getMembershipEndDate() {
-        return membershipEndDate;
-    }
-
-    public LocalDate getFreezeEndDate() {
-        return freezeEndDate;
-    }
-
-    public String getPtSubscriptionTypeLabel() {
-        return ptSubscriptionTypeLabel;
-    }
-
-    public String getMembershipStatusLabel() {
-        return membershipStatusLabel;
     }
 
     public String getAttentionTitle() {

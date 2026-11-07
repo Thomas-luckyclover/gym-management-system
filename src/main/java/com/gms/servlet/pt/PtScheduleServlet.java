@@ -7,7 +7,6 @@ import com.gms.dto.JsonResponse;
 import com.gms.dto.PtHandleView;
 import com.gms.dto.PtScheduleWeek;
 import com.gms.dto.ServiceResult;
-import com.gms.service.PtDashboardService;
 import com.gms.service.PtScheduleService;
 import com.gms.service.PtSessionHandleService;
 import com.gms.util.DateTimeUtil;
@@ -37,7 +36,6 @@ public class PtScheduleServlet extends HttpServlet {
     private static final String PAGE_URL = "/pt/schedule";
 
     private final PtScheduleService scheduleService = new PtScheduleService();
-    private final PtDashboardService dashboardService = new PtDashboardService();
     private final PtSessionHandleService handleService = new PtSessionHandleService();
 
     // GET /pt/schedule: vẽ lịch tuần.
@@ -141,7 +139,7 @@ public class PtScheduleServlet extends HttpServlet {
 
     /**
      * HÀM PHỤ (showPage B4) — csrfToken (form Công bố + 3 form xử lý) · draftAccountId (khóa lưu nháp trong trình duyệt)
-     * · activeNav, pageTitle, pageHelp (_header.jspf) · ptEmployeeCode (thẻ tài khoản).
+     * · activeNav, pageTitle, pageHelp (_header.jspf).
      */
     private void setPageInfo(HttpServletRequest request, int accountId) {
         request.setAttribute("csrfToken", RequestUtil.getOrCreateCsrfToken(request.getSession(false)));
@@ -151,12 +149,25 @@ public class PtScheduleServlet extends HttpServlet {
         request.setAttribute("activeNav", "schedule");
 
         request.setAttribute("pageTitle", "Lịch dạy");
-        request.setAttribute("pageHelp", "Bấm vào chỗ trống trên lịch (hoặc nút Thêm khung) để thêm khung rảnh. "
-                + "Bấm vào khung Còn trống để đánh dấu gỡ. Khách chỉ thấy thay đổi sau khi bạn bấm Công bố.");
-        ServiceResult<String> employeeCode = dashboardService.getPtEmployeeCode(accountId);
-        if (employeeCode.isSuccess()) {
-            request.setAttribute("ptEmployeeCode", employeeCode.getData());
-        }
+        // Hướng dẫn nhiều dòng (\n → xuống dòng; CSS #pt-page-help white-space: pre-line). Giải thích đủ từng màu ô
+        // + chữ trạng thái trên ô, để PT mới không phải đoán "Đang giữ", "Chưa chốt" là gì.
+        request.setAttribute("pageHelp", String.join("\n",
+                "THÊM / GỠ KHUNG",
+                "• Bấm chỗ trống trên lịch (hoặc nút Thêm khung) → thêm khung nháp. Chỗ trùng khung khác sẽ báo đỏ, không thêm được.",
+                "• Bấm khung Còn trống → đánh dấu gỡ. Bấm lại để giữ.",
+                "• Khách chỉ thấy thay đổi sau khi bạn bấm Công bố.",
+                "",
+                "MÀU Ô",
+                "• Còn trống: khung đã công bố, chưa ai đặt.",
+                "• Có khách: đã có buổi. Bấm buổi sắp tới để Dời / Chuyển PT / Hủy.",
+                "• Đang giữ: một đơn mua gói PT đang giữ khung này chờ thanh toán. Trả tiền → Có khách; hết hạn / hủy đơn → Còn trống.",
+                "• Tạm khóa: khung trùng ca bạn xin nghỉ (chờ duyệt hoặc đã duyệt), khách không đặt được.",
+                "• Nháp mới: khung vừa thêm, chưa lưu. Chờ gỡ: khung sẽ gỡ khi Công bố.",
+                "",
+                "CHỮ TRÊN BUỔI",
+                "• Sắp tới / Đang diễn ra: buổi chưa xong.",
+                "• Chưa chốt: buổi đã hết giờ, hệ thống sẽ tự chốt check-in / vắng lúc 00:05 hôm sau.",
+                "• Đã check-in · Vắng · Đã hủy: kết quả cuối, chỉ xem."));
     }
 
     // POST /pt/schedule: 2 loại — form Xử lý buổi (có action) hoặc Công bố (fetch JSON, không có action).
@@ -236,13 +247,15 @@ public class PtScheduleServlet extends HttpServlet {
         }
 
         // B2: gọi đúng hàm theo action → ServiceResult<LocalDate> (ngày để quay lại lịch):
-        //     reschedule → PtSessionHandleService.reschedule (timeSlotId = khung mới, reason = ghi chú)
+        //     reschedule → PtSessionHandleService.reschedule (timeSlotId = khung mới, hoặc "new" + newSlotDate + newStartTime
+        //                  = PT tự chọn giờ, tạo khung mới rồi dời; reason = ghi chú)
         //     transfer   → PtSessionHandleService.transfer   (timeSlotId = khung của PT nhận)
         //     cancel     → PtSessionHandleService.cancel     (reason = lý do, refundAgreed = ô tích đã thỏa thuận hoàn tiền)
         String slotId = request.getParameter("timeSlotId");
         String reason = request.getParameter("reason");
         ServiceResult<LocalDate> result = switch (action) {
-            case "reschedule" -> handleService.reschedule(accountId, sessionId, slotId, reason, DateTimeUtil.now());
+            case "reschedule" -> handleService.reschedule(accountId, sessionId, slotId,
+                    request.getParameter("newSlotDate"), request.getParameter("newStartTime"), reason, DateTimeUtil.now());
             case "transfer" -> handleService.transfer(accountId, sessionId, slotId, DateTimeUtil.now());
             case "cancel" -> handleService.cancel(accountId, sessionId, reason,
                     request.getParameter("refundAgreed") != null, DateTimeUtil.now());
@@ -266,6 +279,10 @@ public class PtScheduleServlet extends HttpServlet {
         request.setAttribute("handleFormError", result.getMessage());
         request.setAttribute("handleAction", action);
         request.setAttribute("handleReason", reason);
+        // Giữ lại lựa chọn "Giờ khác" (ngày + giờ đã chọn) khi Dời buổi bị từ chối
+        request.setAttribute("handleSlotChoice", slotId);
+        request.setAttribute("handleNewDate", request.getParameter("newSlotDate"));
+        request.setAttribute("handleNewStart", request.getParameter("newStartTime"));
         try {
             showPage(
                     request,

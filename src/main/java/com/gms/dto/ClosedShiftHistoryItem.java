@@ -113,10 +113,6 @@ public class ClosedShiftHistoryItem {
         return variance;
     }
 
-    public long getCashVariance() {
-        return variance;
-    }
-
     public String getVarianceReason() {
         return varianceReason;
     }
@@ -127,17 +123,6 @@ public class ClosedShiftHistoryItem {
 
     public int getTotalInvoiceCount() {
         return totalInvoiceCount;
-    }
-
-    /** Tên tiếng Việt của ca làm việc. */
-    public String getShiftTypeLabel() {
-        if ("Morning".equalsIgnoreCase(shiftType)) {
-            return "Ca sáng";
-        }
-        if ("Afternoon".equalsIgnoreCase(shiftType)) {
-            return "Ca chiều";
-        }
-        return shiftType;
     }
 
     /** Kiểm tra xem ca có chênh lệch tiền mặt hay không. */

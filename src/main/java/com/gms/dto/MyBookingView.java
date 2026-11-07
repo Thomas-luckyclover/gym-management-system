@@ -77,6 +77,7 @@ public class MyBookingView {
     // ← groupByReason(watchList): gom theo lý do (SessionGroup) → _booking-groups.jspf
     private List<SessionGroup> watchGroups = new ArrayList<>();
 
+    // GETTER TỰ TÍNH — không có field/setter "noData"; = không có gói đang tập, gói đã kết thúc và buổi lẻ; JSP: customer/my-bookings.jsp:65
     public boolean isNoData() {
         return activePackages.isEmpty() && endedPackages.isEmpty() && singleSessionCount == 0;
     }

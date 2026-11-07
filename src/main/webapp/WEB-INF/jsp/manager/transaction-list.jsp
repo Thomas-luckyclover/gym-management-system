@@ -8,10 +8,10 @@
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Giao dịch toàn hệ thống · Super Gym</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css?v=20261106_v2">
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/transaction-list.css">
 
-  <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
+  <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js?v=20261106_v2" defer></script>
   <script src="${pageContext.request.contextPath}/js/pages/manager/transaction-list.js?v=20261031csrf" defer></script>
 </head>
 
@@ -333,6 +333,7 @@
             </div>
 
             <%-- Phân trang Tab 1 --%>
+            <%-- orderPage.totalPages = getter tự tính getTotalPages() · dto/PageResult.java --%>
             <c:if test="${orderPage.totalPages > 1}">
               <div class="trans-pagination">
                 <div>
@@ -340,6 +341,7 @@
                 </div>
 
                 <div class="pagination-controls">
+                  <%-- orderPage.hasPrevious = getter tự tính isHasPrevious() · dto/PageResult.java --%>
                   <c:if test="${orderPage.hasPrevious}">
                     <c:url var="prevUrl" value="/manager/transactions">
                       <c:param name="tab" value="orders" />
@@ -355,6 +357,7 @@
                     <a href="${prevUrl}" class="btn btn-ghost btn-sm">&larr; Trang trước</a>
                   </c:if>
 
+                  <%-- orderPage.hasNext = getter tự tính isHasNext() · dto/PageResult.java --%>
                   <c:if test="${orderPage.hasNext}">
                     <c:url var="nextUrl" value="/manager/transactions">
                       <c:param name="tab" value="orders" />
@@ -513,6 +516,7 @@
             </div>
 
             <%-- Phân trang Tab 2 --%>
+            <%-- getter tự tính: shiftPage.totalPages = getTotalPages(), shiftPage.hasPrevious = isHasPrevious(), shiftPage.hasNext = isHasNext() · dto/PageResult.java --%>
             <c:if test="${shiftPage.totalPages > 1}">
               <div class="trans-pagination">
                 <div>

@@ -92,6 +92,7 @@ public class LeaveRequestItemView {
         this.leaveGroup = leaveGroup;
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "canApprove"; = approvalReady, canAct và status PENDING; JSP: manager/leave-request-table.jspf:153 …
     public boolean isCanApprove() {
         return approvalReady && canAct && status == LeaveRequest.Status.PENDING;
     }

@@ -112,7 +112,7 @@
     right: 0;
 
     width:
-            min(410px, calc(100vw - 32px));
+            min(490px, calc(100vw - 32px));
 
     overflow: hidden;
 
@@ -633,6 +633,7 @@
             var(--font-weight-semibold);
     text-align: right;
     word-break: break-word;
+    flex: 1;
 }
 
 .notification-detail-content-box {
@@ -678,6 +679,24 @@
 
     white-space: pre-wrap;
     word-break: break-word;
+}
+
+.notification-detail-content-main {
+    line-height: var(--line-height-relaxed);
+}
+
+.notification-detail-content-note {
+    margin-top: var(--space-2-5);
+    padding-top: var(--space-2);
+    border-top: 1px dashed var(--color-border);
+    color: var(--color-text);
+    line-height: var(--line-height-relaxed);
+}
+
+.notification-detail-content-note strong {
+    color: var(--color-text-muted);
+    font-weight: var(--font-weight-bold);
+    margin-right: 4px;
 }
 
 .notification-detail-foot {

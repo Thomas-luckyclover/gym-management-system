@@ -16,6 +16,21 @@
  *   NHÓM 1. Dải 7 ngày        initPtDayTabs, selectPtDay, handlePtDayKey
  */
 
+
+/*
+ * initPtDayTabs (khi trang tải xong)
+  B1 tìm tab có aria-selected="true" (hôm nay) → selectPtDay
+  B2 dải ngày thêm class "is-ready" → CSS mới tô nền ngày đang chọn
+  B3 click 1 ngày        → selectPtDay(tab)
+  B4 phím ← → Home End   → handlePtDayKey → selectPtDay (chuẩn tab WAI-ARIA, xoay vòng)
+
+
+selectPtDay(tab)
+  mỗi tab: đúng tab chọn → aria-selected=true, tabindex=0, bảng .hidden = false
+           tab khác      → aria-selected=false, tabindex=-1, bảng .hidden = true
+  điện thoại (dải ngày cuộn ngang) → cuộn ô được chọn vào giữa
+ */
+
 document.addEventListener("DOMContentLoaded", function () {
     initPtDayTabs();
 });

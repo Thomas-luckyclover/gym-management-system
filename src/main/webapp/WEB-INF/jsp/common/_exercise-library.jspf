@@ -27,6 +27,7 @@
         </c:when>
 
         <%-- ===== 2. MÀN KHÓA (khách chưa có gói mở khóa còn hiệu lực) ===== --%>
+        <%-- library.open = getter tự tính isOpen() · dto/ExerciseLibraryView.java --%>
         <c:when test="${not library.open}">
             <section class="panel ex-locked" aria-labelledby="ex-locked-title">
                 <svg class="ex-locked__icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
@@ -79,6 +80,7 @@
                 </label>
                 <div class="ex-filters__actions">
                     <button type="submit" class="btn btn-primary">Lọc</button>
+                    <%-- library.filtered = getter tự tính isFiltered() · dto/ExerciseLibraryView.java --%>
                     <c:if test="${library.filtered}">
                         <a class="btn btn-ghost" href="${libBase}">Xóa lọc</a>
                     </c:if>
@@ -127,33 +129,52 @@
                             <li class="ex-card">
                                 <div class="ex-card__media">
                                     <c:choose>
+                                        
                                         <c:when test="${not empty ex.imageUrl}">
                                             <img src="<c:out value='${ex.imageUrl}' />" alt="Minh họa bài <c:out value='${ex.name}' />"
-                                                 loading="lazy" decoding="async" referrerpolicy="no-referrer">
+                                                 loading="lazy" decoding="async" referrerpolicy="no-referrer"
+                                                 onerror="this.replaceWith(Object.assign(document.createElement('span'),
+                                                          {className:'ex-card__noimg', textContent:'Chưa có hình minh họa'}))">
                                         </c:when>
-                                        <%-- wger không có ảnh → ảnh chụp chung của nhóm cơ (public domain, lưu trong dự án), ghi rõ là ảnh nhóm --%>
+                                                 
+                                           
+                                                 
+                                        <%-- wger không có ảnh → ảnh chụp chung của nhóm cơ (public domain, lưu trong dự án), ghi rõ là ảnh nhóm 
+                                        loading = lazy + decoding = asynce là thuộc tính HTML giúp tải nhanh và mượt hơn, tải ảnh về rồi ình duyệt còn phải giải mã (decode) file .jpg / .png thành điểm ảnh để vẽ, decoding = async cho phép giải mã song song, ko chặn cac ảnh đã xong, loading = lazy: Tải ảnh khi sắp cuộn đến
+                                        --%>
                                         <c:when test="${not empty ex.fallbackImage}">
                                             <img class="is-photo" src="${ctx}${ex.fallbackImage}" alt="" loading="lazy" decoding="async">
                                             <%-- fallbackExact: ảnh đúng tên động tác; không thì ảnh cùng nhóm cơ (ExerciseImagePool). --%>
                                             <span class="ex-card__badge"><c:choose><c:when test="${ex.fallbackExact}">Ảnh minh họa</c:when><c:otherwise>Ảnh minh họa nhóm <c:out value="${ex.categoryLabel}" /></c:otherwise></c:choose></span>
                                         </c:when>
+                                        
                                         <c:otherwise>
                                             <span class="ex-card__noimg">Chưa có hình minh họa</span>
                                         </c:otherwise>
                                     </c:choose>
                                 </div>
+                                        
+                                        
+                                        
+                                        
                                 <div class="ex-card__body">
                                     <h3><c:out value="${ex.name}" /></h3>
                                     <p class="ex-card__meta"><b><c:out value="${ex.categoryLabel}" /></b> · <c:out value="${ex.equipmentText}" /></p>
                                     <c:if test="${not empty ex.muscleText}">
                                         <p class="ex-card__muscles">Cơ chính: <c:out value="${ex.muscleText}" /></p>
                                     </c:if>
+
+
+
                                     <c:if test="${not empty ex.description}">
                                         <details class="ex-card__how">
                                             <summary>Cách tập</summary>
                                             <p lang="en"><c:out value="${ex.description}" /></p>
                                         </details>
                                     </c:if>
+
+
+
                                     <%-- Trang gốc của bài trên wger (route /exercise/{id}/view): video, nhiều ảnh, mô tả đầy đủ. Mở tab mới. --%>
                                     <a class="ex-card__source" href="https://wger.de/en/exercise/${ex.exerciseId}/view"
                                        target="_blank" rel="noopener noreferrer">Xem hướng dẫn đầy đủ trên wger ↗</a>

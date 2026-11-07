@@ -40,7 +40,7 @@
 
                                                 <details class="pt-plan-add">
                                                     <summary class="btn btn-outline"><i class="fa-solid fa-calendar-plus" aria-hidden="true"></i> Thêm khung</summary>
-                                                    <form id="pt-add-form" class="pt-plan-add-form">
+                                                    <form id="pt-add-form" class="pt-plan-add-form" novalidate>
 
                                                         <label>Ngày
                                                             <select name="date">
@@ -65,7 +65,7 @@
                                             <%-- Không ngày nào thêm được (tuần đã qua / phòng nghỉ) → chỉ xem. --%>
                                             <c:otherwise>
 
-                                                <p class="pt-plan-readonly">Tuần này chỉ xem: không còn ngày nào thêm được khung.</p>
+                                                <p class="pt-plan-readonly" title="Tuần này chỉ xem: không còn ngày nào thêm được khung."><i class="fa-solid fa-lock" aria-hidden="true"></i> Chỉ xem<span class="visually-hidden">: không còn ngày nào thêm được khung.</span></p>
                                             </c:otherwise>
                                         </c:choose>
 
