@@ -1,4 +1,13 @@
 /* BF-07: giao diện dùng chung cho Lễ tân/Quản lý. Chỉ class bf07-, không sửa style màn khác. */
+/* Nền trung tính chỉ áp dụng cho hai màn danh sách khi dùng giao diện sáng. */
+html:where(:not([data-theme="dark"])) body.dock.member-list-page::before {
+  background: var(--color-surface-muted);
+}
+
+html:where(:not([data-theme="dark"])) .member-list-page .topbar {
+  background: var(--zone-cobalt-700);
+}
+
 .bf07-page {
   width: 100%;
   max-width: var(--layout-content-width);

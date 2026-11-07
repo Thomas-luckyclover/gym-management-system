@@ -1,4 +1,11 @@
 /* Danh sách BF-05: mỗi thành phần có một khối style, không ghi đè từ CSS màn khác. */
+html:where(:not([data-theme="dark"])) body.dock.leave-list-page::before {
+  background: var(--color-surface-muted);
+}
+
+html:where(:not([data-theme="dark"])) .leave-list-page .topbar {
+  background: var(--zone-cobalt-700);
+}
 
 /* Hai đơn mở ngay dưới hàng cha; bảng giữ nguyên chiều rộng, không có khung bên cạnh. */
 .leave-list-page .leave-expanded-row[hidden] {

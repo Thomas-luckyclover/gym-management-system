@@ -27,7 +27,7 @@
         <script src="${pageContext.request.contextPath}/js/pages/receptionist/customer-list.js?v=20261031-fixed-page" defer>
         </script>
     </head>
-    <body class="dock <c:out value="${roleTheme}" />">
+    <body class="dock member-list-page <c:out value="${roleTheme}" />">
         <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
         <div class="app">
             <c:choose>
