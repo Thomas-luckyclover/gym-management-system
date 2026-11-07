@@ -23,7 +23,9 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * MÀN LỊCH DẠY — dựng lịch tuần (getWeek) và Công bố / gỡ khung rảnh (publish).
@@ -66,7 +68,7 @@ public class PtScheduleService {
                     hours[1]);
 
             // B5: gộp buổi + khung, xếp theo giờ → phân loại từng ô và xếp vào đúng ngày (fillWeek)
-            List<PtScheduleItem> allItems = merge(sessions, openSlots);
+            List<PtScheduleItem> allItems = merge(sessions, openSlots, now);
 
             fillWeek(
                     week,
@@ -244,6 +246,52 @@ public class PtScheduleService {
         items.addAll(openSlots);
         items.sort(Comparator.comparing(PtScheduleItem::getSlotDate).thenComparing(PtScheduleItem::getStartTime));
         return items;
+    }
+
+    /**
+     * HÀM PHỤ (getWeek B5) — như merge(sessions, openSlots) nhưng mỗi khung giờ chỉ còn MỘT ô.
+     * Buổi bị hủy (PT hủy, gói hết hạn, phòng nghỉ…) trả khung về Free, nên cùng TimeSlotId có cả ô "Đã hủy"
+     * lẫn ô "Còn trống" (hoặc ô buổi mới của khách khác) → lịch vẽ 2 ô chồng nhau.
+     *   Khung đã có buổi khác chưa hủy          → bỏ ô "Đã hủy".
+     *   Khung còn trống, chưa tới giờ bắt đầu    → bỏ ô "Đã hủy", giữ ô "Còn trống" (PT còn mở cho khách khác).
+     *   Khung còn trống, đã qua giờ bắt đầu      → bỏ ô "Còn trống", giữ ô "Đã hủy" (để PT xem lại lịch sử).
+     * Ví dụ: 05/11 15:00 buổi của Hương hủy vì gói hết hạn, khung về Free → xem ngày 07/11 chỉ còn ô "Đã hủy";
+     *        16/11 15:00 cùng trường hợp → chỉ còn ô "Còn trống".
+     */
+    static List<PtScheduleItem> merge(List<PtScheduleItem> sessions, List<PtScheduleItem> openSlots, LocalDateTime now) {
+        Set<Integer> liveSlots = new HashSet<>();
+        Set<Integer> cancelledSlots = new HashSet<>();
+        for (PtScheduleItem session : sessions) {
+            if ("Cancelled".equals(session.getSessionStatus())) {
+                cancelledSlots.add(session.getTimeSlotId());
+            } else {
+                liveSlots.add(session.getTimeSlotId());
+            }
+        }
+
+        Set<Integer> futureOpen = new HashSet<>();
+        List<PtScheduleItem> keptSlots = new ArrayList<>();
+        for (PtScheduleItem slot : openSlots) {
+            boolean started = !LocalDateTime.of(slot.getSlotDate(), slot.getStartTime()).isAfter(now);
+            if (cancelledSlots.contains(slot.getTimeSlotId()) && started) {
+                continue;
+            }
+            if (!started) {
+                futureOpen.add(slot.getTimeSlotId());
+            }
+            keptSlots.add(slot);
+        }
+
+        List<PtScheduleItem> keptSessions = new ArrayList<>();
+        for (PtScheduleItem session : sessions) {
+            boolean cancelled = "Cancelled".equals(session.getSessionStatus());
+            int slotId = session.getTimeSlotId();
+            if (cancelled && (liveSlots.contains(slotId) || futureOpen.contains(slotId))) {
+                continue;
+            }
+            keptSessions.add(session);
+        }
+        return merge(keptSessions, keptSlots);
     }
 
     /**

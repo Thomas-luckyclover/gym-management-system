@@ -72,6 +72,11 @@
   margin-inline-start: auto;
   justify-content: flex-end;
 }
+@media (min-width: 1101px) {
+  .pt-plan-toolbar { flex-wrap: nowrap; }
+  .pt-plan-period { flex-wrap: nowrap; flex: none; }
+  .pt-plan-actions { flex-wrap: nowrap; min-width: 0; }
+}
 
 /* Giữ thanh công cụ trên một hàng ở laptop; màn hẹp mới xuống hàng theo nhóm. */
 @media (min-width: 701px) {
@@ -262,9 +267,20 @@
 }
 
 .pt-plan-readonly {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 2px var(--space-2);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: 999px;
   color: var(--color-text-soft);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
+  line-height: 1.5;
+  white-space: nowrap;
+  cursor: help;
 }
+.pt-plan-readonly i { font-size: 0.75em; opacity: .8; }
 
 
 /* ==================== 2. THẺ KHUNG — màu theo loại ====================
@@ -609,7 +625,7 @@
   .pt-plan:not(.is-list) .pt-plan-scroll { overflow-x: auto; }
   .pt-plan:not(.is-list) .pt-plan-grid {
     display: grid;
-    grid-template-columns: var(--space-10) repeat(7, minmax(calc(var(--space-12) * 2), 1fr));
+    grid-template-columns: calc(var(--space-10) + var(--space-2)) repeat(7, minmax(calc(var(--space-12) * 2), 1fr));   /* +8px cho nhãn ca dọc */
     grid-template-rows: auto auto;
     grid-auto-flow: column;
     user-select: none;
@@ -1758,29 +1774,62 @@ html body.dock .pt-handle .pt-handle-head h2:focus,
 @media (min-width: 701px) {
   .pt-plan:not(.is-list) .pt-list-shift { display: none; }
 
-  /* Nhãn ca trên trục giờ: nằm ngoài lưới hàng giờ (position absolute), ở nửa sau của giờ đầu ca. */
+  /* Nhãn ca trên trục giờ (07/11/2026): một "ghi chú" mảnh ở mép trái cột giờ, dài đúng bằng ca.
+     Vạch màu 2px chạy suốt ca + chữ dọc nhỏ ở đầu ca; không chiếm chỗ, không đè lên số giờ (số giờ căn phải).
+       Ca sáng : từ đầu trục tới vạch 13:00   → top 0, cao --shift-split giờ
+       Ca chiều: từ vạch 13:00 tới cuối trục   → top --shift-split giờ, cao (--axis-hours − --shift-split) giờ */
   .pt-plan:not(.is-list) .pt-plan-axis { position: relative; }
   .pt-plan:not(.is-list) .pt-plan-shift {
+    --shift-ink: var(--color-warning-ink);
     position: absolute;
-    right: var(--space-1);
-    display: block;
-    padding: 0 var(--space-1);
-    border-radius: var(--arena-radius-chip);
-    font-size: var(--font-size-2xs);
+    left: var(--space-1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-1);
+    width: calc(var(--space-4) - 2px);
+    padding-top: var(--space-2);
+    color: var(--shift-ink);
+    font-size: 0.6875rem;
     font-weight: var(--font-weight-semibold);
-    line-height: 1.6;
-    text-align: right;
+    letter-spacing: 0.08em;
+    line-height: 1;
+    text-transform: uppercase;
     white-space: nowrap;
+    pointer-events: none;
+    animation: pt-shift-in 420ms cubic-bezier(.2, .7, .2, 1) both;
+  }
+  /* Chữ dọc ở đầu ca (đọc từ dưới lên), rồi vạch ca 2px chạy tới hết ca, đậm ở đầu rồi nhạt dần. */
+  .pt-plan:not(.is-list) .pt-plan-shift > span {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+  }
+  .pt-plan:not(.is-list) .pt-plan-shift::after {
+    content: "";
+    flex: 1;
+    width: 2px;
+    margin-bottom: var(--space-2);
+    border-radius: 2px;
+    background: linear-gradient(to bottom,
+        color-mix(in srgb, var(--shift-ink) 65%, transparent),
+        color-mix(in srgb, var(--shift-ink) 8%, transparent));
   }
   .pt-plan:not(.is-list) .pt-plan-shift.is-am {
-    top: calc(var(--pt-hour) * 0.5);
-    background: var(--color-warning-tint);
-    color: var(--color-warning-ink);
+    top: 0;
+    height: calc(var(--pt-hour) * var(--shift-split));
   }
   .pt-plan:not(.is-list) .pt-plan-shift.is-pm {
-    top: calc(var(--pt-hour) * (var(--shift-split) + 0.5));
-    background: color-mix(in srgb, var(--arena-accent) 18%, transparent);
-    color: var(--arena-accent-text);
+    --shift-ink: var(--arena-accent-text);
+    top: calc(var(--pt-hour) * var(--shift-split));
+    height: calc(var(--pt-hour) * (var(--axis-hours) - var(--shift-split)));
+    animation-delay: 80ms;
+  }
+  @keyframes pt-shift-in {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pt-plan:not(.is-list) .pt-plan-shift { animation: none; }
   }
 
   /* Nền ca chiều + vạch 13:00 trong từng cột ngày. Thẻ khung (.pt-slot, position: relative) nằm trên. */
