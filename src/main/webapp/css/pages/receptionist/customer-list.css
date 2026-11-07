@@ -1,14 +1,4 @@
 /* BF-07: giao diện dùng chung cho Lễ tân/Quản lý. Chỉ class bf07-, không sửa style màn khác. */
-/* Nền trung tính chỉ áp dụng cho hai màn danh sách khi dùng giao diện sáng. */
-html:where(:not([data-theme="dark"])) body.dock.member-list-page,
-html:where(:not([data-theme="dark"])) body.dock.member-list-page::before {
-  background: var(--color-surface-muted);
-}
-
-html:where(:not([data-theme="dark"])) .member-list-page .topbar {
-  background: var(--zone-cobalt-700);
-}
-
 .bf07-page {
   width: 100%;
   max-width: var(--layout-content-width);
@@ -53,14 +43,9 @@ html:where(:not([data-theme="dark"])) .member-list-page .topbar {
   align-items: center;
   gap: var(--space-2);
   padding: var(--space-3) var(--space-4);
-  color: var(--color-text);
-  font-weight: var(--font-weight-medium);
+  color: var(--color-text-soft);
   text-decoration: none;
   border-bottom: var(--border-width-thick) solid transparent;
-}
-
-.bf07-tab:hover {
-  background: var(--color-surface-hover);
 }
 
 .bf07-tab.is-active {
@@ -132,13 +117,13 @@ html:where(:not([data-theme="dark"])) .member-list-page .topbar {
   padding: var(--space-2) var(--space-3);
 }
 
-.member-list-page #main-content .bf07-delete-button {
+.bf07-delete-button {
   color: var(--color-danger-ink);
   border-color: var(--color-danger-border);
   background: var(--color-surface);
 }
 
-.member-list-page #main-content .bf07-delete-button:hover {
+.bf07-delete-button:hover {
   background: var(--color-danger-tint);
 }
 /* Bảng 5 cột: điện thoại/email cùng một ô; chữ dài xuống dòng, không cuộn ngang. */
@@ -173,9 +158,6 @@ html:where(:not([data-theme="dark"])) .member-list-page .topbar {
   background: var(--color-surface-muted);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
-  font-family: var(--font-body);
-  letter-spacing: var(--letter-spacing-normal);
-  text-transform: none;
 }
 
 .bf07-table tbody tr:hover {
@@ -183,23 +165,23 @@ html:where(:not([data-theme="dark"])) .member-list-page .topbar {
 }
 
 .bf07-profile-table th:nth-child(1) {
-  width: 24%;
+  width: 25%;
 }
 
 .bf07-profile-table th:nth-child(2) {
-  width: 22%;
+  width: 23%;
 }
 
 .bf07-profile-table th:nth-child(3) {
-  width: 14%;
+  width: 17%;
 }
 
 .bf07-profile-table th:nth-child(4) {
-  width: 18%;
+  width: 17%;
 }
 
 .bf07-profile-table th:nth-child(5) {
-  width: 22%;
+  width: 18%;
 }
 
 .bf07-request-table th:nth-child(1) {
@@ -274,24 +256,9 @@ html:where(:not([data-theme="dark"])) .member-list-page .topbar {
 }
 
 .bf07-row-actions .btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: var(--control-height-md);
-  font-size: var(--font-size-sm);
-  padding: var(--space-2) var(--space-3);
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.member-list-page #main-content .bf07-review-link {
-  background: var(--color-primary-tint);
-  border-color: var(--color-primary-border);
-  color: var(--color-text);
-}
-
-.member-list-page #main-content .bf07-review-link:hover {
-  background: var(--color-surface-hover);
+  min-height: var(--control-height-sm);
+  font-size: var(--font-size-xs);
+  padding: var(--space-1-5) var(--space-2);
 }
 
 .bf07-pagination {
@@ -584,10 +551,6 @@ html:where(:not([data-theme="dark"])) .member-list-page .topbar {
   justify-content: space-between;
   flex-wrap: wrap;
   gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  background: var(--color-surface);
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-lg);
 }
 
 .bf07-list-toolbar .bf07-tabs {
@@ -685,4 +648,9 @@ html:where(:not([data-theme="dark"])) .member-list-page .topbar {
   .bf07-profile-detail .bf07-detail-grid {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+/* Tabs nam tren nen xanh o che do sang, nen dung mau chu sang tu theme. */
+html:where(:not([data-theme="dark"])) .bf07-list-toolbar .bf07-tab:not(.is-active) {
+  color: var(--zone-silver);
 }

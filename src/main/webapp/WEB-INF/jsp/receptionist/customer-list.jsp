@@ -22,12 +22,12 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css">
 
         <%-- BF-07: hai vai trò dùng chung bố cục; token màu thay đổi theo theme. --%>
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/customer-list.css?v=20261107-readable-lists">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/customer-list.css?v=20261107-theme-text">
 
         <script src="${pageContext.request.contextPath}/js/pages/receptionist/customer-list.js?v=20261031-fixed-page" defer>
         </script>
     </head>
-    <body class="dock member-list-page <c:out value="${roleTheme}" />">
+    <body class="dock <c:out value="${roleTheme}" />">
         <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
         <div class="app">
             <c:choose>
@@ -244,7 +244,7 @@
                                                                         <c:param name="id" value="${profile.pendingRequestId}" />
                                                                     </c:url>
                                                                     <%-- Chỉ mở trang xét duyệt; không xóa hồ sơ khi bấm liên kết này. --%>
-                                                                    <a class="btn btn-outline bf07-review-link" href="${reviewUrl}">Xem yêu cầu</a>
+                                                                    <a class="btn btn-primary" href="${reviewUrl}">Xem yêu cầu</a>
                                                                 </c:if>
                                                             </div>
                                                         </td>
