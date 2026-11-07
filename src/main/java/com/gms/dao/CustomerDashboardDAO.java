@@ -410,6 +410,7 @@ public class CustomerDashboardDAO {
         String sql = "SELECT TOP 1 o.OrderId, o.PaymentDueAt, o.PackageNameSnapshot "
                 + "FROM Orders o "
                 + "WHERE o.HolderCustomerId = ? "
+                + "AND o.Channel = 'Online' "
                 + "AND o.Status = 'Pending' "
                 + "AND o.PaymentDueAt > ? "
                 + "ORDER BY o.PaymentDueAt";

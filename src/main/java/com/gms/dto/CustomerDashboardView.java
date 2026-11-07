@@ -404,21 +404,30 @@ public class CustomerDashboardView {
         /** Tên gói chốt trong đơn hàng, dùng khi JSP hiển thị banner chờ thanh toán. */
         private final String packageName;
 
+        /** Mã đơn để nút tiếp tục thanh toán mở đúng checkout. */
+        private final Integer orderId;
+
         public BannerItem(String level, String message, String type) {
             this(level, message, type, null);
         }
 
         public BannerItem(String level, String message, String type, String packageName) {
+            this(level, message, type, packageName, null);
+        }
+
+        public BannerItem(String level, String message, String type, String packageName, Integer orderId) {
             this.level = level;
             this.message = message;
             this.type = type;
             this.packageName = packageName;
+            this.orderId = orderId;
         }
 
         public String getLevel() { return level; }
         public String getMessage() { return message; }
         public String getType() { return type; }
         public String getPackageName() { return packageName; }
+        public Integer getOrderId() { return orderId; }
     }
 
     /**

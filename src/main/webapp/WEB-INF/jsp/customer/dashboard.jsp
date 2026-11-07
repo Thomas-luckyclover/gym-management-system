@@ -136,7 +136,7 @@
                                         <span>
                                             <c:choose>
                                                 <c:when test="${b.type eq 'PENDING_ORDER'}">
-                                                    <c:out value="${b.packageName}" /> chưa được thanh toán
+                                                    Bạn có đơn mua <c:out value="${b.packageName}" /> đang chờ thanh toán
                                                 </c:when>
                                                 <c:otherwise>
                                                     <c:out value="${b.message}" />
@@ -156,9 +156,11 @@
                                                     hạn</a>
                                                 </c:when>
                                                 <c:when test="${b.type eq 'PENDING_ORDER'}">
+                                                <c:url var="pendingCheckoutUrl" value="/customer/checkout">
+                                                    <c:param name="order" value="${b.orderId}" />
+                                                </c:url>
                                                 <a class="btn btn-primary btn-sm"
-                                                   href="${pageContext.request.contextPath}/customer/transactions">Thanh
-                                                    toán</a>
+                                                   href="<c:out value='${pendingCheckoutUrl}' />">Tiếp tục thanh toán</a>
                                                 </c:when>
                                             </c:choose>
                                     </div>
