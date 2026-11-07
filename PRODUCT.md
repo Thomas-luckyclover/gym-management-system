@@ -22,7 +22,7 @@ Cập nhật phạm vi ngày 14/10/2026: gồm khu công khai (homepage, giới 
 
 ## Product Purpose
 
-Số hóa toàn bộ vận hành của một phòng gym: bán gói (online qua VNPay, hoặc tại quầy bằng tiền mặt/chuyển khoản), check-in, đặt và quản lý buổi PT, bảo lưu gói, nghỉ phép, bảo trì, voucher, góp ý và báo cáo. Đặc tả chuẩn nằm ở `docs/SRS - G5.docx.md`, với 67 màn hình được liệt kê ở `docs/project-structure.md`.
+Số hóa toàn bộ vận hành của một phòng gym: bán gói (online qua VNPay, hoặc tại quầy bằng tiền mặt/chuyển khoản), check-in, đặt và quản lý buổi PT, bảo lưu gói, nghỉ phép, bảo trì, voucher, góp ý và báo cáo.
 
 Thành công nghĩa là mỗi vai trò làm xong việc của mình nhanh, không nhầm lẫn, và bản demo thuyết phục người chấm rằng đây là một sản phẩm vận hành được thật.
 
