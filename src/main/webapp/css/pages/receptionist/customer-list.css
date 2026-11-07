@@ -52,9 +52,14 @@ html:where(:not([data-theme="dark"])) .member-list-page .topbar {
   align-items: center;
   gap: var(--space-2);
   padding: var(--space-3) var(--space-4);
-  color: var(--color-text-soft);
+  color: var(--color-text);
+  font-weight: var(--font-weight-medium);
   text-decoration: none;
   border-bottom: var(--border-width-thick) solid transparent;
+}
+
+.bf07-tab:hover {
+  background: var(--color-surface-hover);
 }
 
 .bf07-tab.is-active {
@@ -560,6 +565,10 @@ html:where(:not([data-theme="dark"])) .member-list-page .topbar {
   justify-content: space-between;
   flex-wrap: wrap;
   gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
 }
 
 .bf07-list-toolbar .bf07-tabs {
