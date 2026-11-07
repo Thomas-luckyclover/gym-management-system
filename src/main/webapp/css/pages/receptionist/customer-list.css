@@ -172,6 +172,9 @@ html:where(:not([data-theme="dark"])) .member-list-page .topbar {
   background: var(--color-surface-muted);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
+  font-family: var(--font-body);
+  letter-spacing: var(--letter-spacing-normal);
+  text-transform: none;
 }
 
 .bf07-table tbody tr:hover {
@@ -270,9 +273,24 @@ html:where(:not([data-theme="dark"])) .member-list-page .topbar {
 }
 
 .bf07-row-actions .btn {
-  min-height: var(--control-height-sm);
-  font-size: var(--font-size-xs);
-  padding: var(--space-1-5) var(--space-2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--control-height-md);
+  font-size: var(--font-size-sm);
+  padding: var(--space-2) var(--space-3);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.bf07-review-link {
+  background: var(--color-primary-tint);
+  border-color: var(--color-primary-border);
+  color: var(--color-text);
+}
+
+.bf07-review-link:hover {
+  background: var(--color-surface-hover);
 }
 
 .bf07-pagination {

@@ -244,7 +244,7 @@
                                                                         <c:param name="id" value="${profile.pendingRequestId}" />
                                                                     </c:url>
                                                                     <%-- Chỉ mở trang xét duyệt; không xóa hồ sơ khi bấm liên kết này. --%>
-                                                                    <a class="btn btn-primary" href="${reviewUrl}">Xem yêu cầu</a>
+                                                                    <a class="btn btn-outline bf07-review-link" href="${reviewUrl}">Xem yêu cầu</a>
                                                                 </c:if>
                                                             </div>
                                                         </td>
