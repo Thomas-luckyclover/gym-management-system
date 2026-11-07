@@ -1,4 +1,4 @@
-﻿/* ============================================================================
+/* ============================================================================
    GMS — FILE: 2_Seed_Data.sql  ·  v26
    SINH TỰ ĐỘNG bởi database/tools/seeddata.py — muốn sửa dữ liệu thì sửa file .py rồi sinh lại.
    v26    : CheckedIn/Used, tự chốt JOB-04, đánh giá PT theo tháng, P-22 thay P-07.
@@ -7,6 +7,8 @@
             Dữ liệu "sống" (mã xác thực, khóa tạm 5 phút, đơn online còn hạn, slot đang giữ,
             ca sáng đang mở, gói ngày + buổi lẻ hôm nay) tính theo GIỜ CHẠY SCRIPT (@Now, @Today)
             → chạy lại file lúc nào cũng test được các luồng đó.
+   CHỐT BUỔI: khối cuối file làm việc của JOB-02 (gói hết hạn) rồi JOB-04 (chốt buổi) cho mọi ngày TRƯỚC
+            ngày chạy script → không còn buổi đã qua mà vẫn Scheduled; chỉ buổi từ hôm nay trở đi là "Sắp tới".
    MẬT KHẨU: mọi tài khoản = Gms@2026 (trừ tài khoản chưa đặt mật khẩu).
    DANH MỤC CASE + TÀI KHOẢN TEST: docs/database/SEED_CASES.md
    ============================================================================ */
@@ -25,7 +27,7 @@ DECLARE @Now   DATETIME2(0) = CAST(SYSDATETIME() AS DATETIME2(0));
 DECLARE @Today DATE         = CAST(@Now AS DATE);
 
 /* ============================================================================
-   Persons — 84 dòng. ID 1–32 dàn nhân vật chính; 101–113 test xác thực; 201–240 khách thường.
+   Persons — 88 dòng. ID 1–32 dàn nhân vật chính; 101–113 test xác thực; 201–240 khách thường.
    ============================================================================ */
 SET IDENTITY_INSERT Persons ON;
 INSERT INTO Persons (PersonId, FullName, DateOfBirth, Phone, Email, Avatar, IsReleased, CreatedAt) VALUES
@@ -112,7 +114,11 @@ INSERT INTO Persons (PersonId, FullName, DateOfBirth, Phone, Email, Avatar, IsRe
  (237, N'Dương Thanh Trung', '1994-02-19', '0857008769', 'trung.duong237@gmail.com', NULL, 0, '2026-08-26 10:54:00'),
  (238, N'Võ Hữu Bình', '1989-08-22', '0867008806', 'binh.vo238@gmail.com', NULL, 0, '2026-06-24 17:23:00'),
  (239, N'Bùi Ngọc Long', '1991-08-11', '0967008843', 'long.bui239@gmail.com', NULL, 0, '2026-08-17 16:11:00'),
- (240, N'Trần Gia Quang', '2005-06-09', '0907008880', 'quang.tran240@gmail.com', NULL, 0, '2026-06-18 08:22:00');
+ (240, N'Trần Gia Quang', '2005-06-09', '0907008880', 'quang.tran240@gmail.com', NULL, 0, '2026-06-18 08:22:00'),
+ (9006, N'Nguyễn Minh Sáu', '2000-02-12', '0909900006', 'it.cm06@example.com', NULL, 0, '2026-11-07 09:00:00'), -- IT-CM-06: dữ liệu test riêng, mật khẩu GmsTest2026!
+ (9007, N'Trần Minh Bảy', '2000-02-12', '0909900007', 'it.cm07@example.com', NULL, 0, '2026-11-07 09:00:00'), -- IT-CM-07: dữ liệu test riêng, mật khẩu GmsTest2026!
+ (9008, N'Lê Minh Tám', '2000-02-12', '0909900008', 'it.cm08@example.com', NULL, 0, '2026-11-07 09:00:00'), -- IT-CM-08: dữ liệu test riêng, mật khẩu GmsTest2026!
+ (9009, N'Phạm Minh Chín', '2000-02-12', '0909900009', 'it.cm09@example.com', NULL, 0, '2026-11-07 09:00:00'); -- IT-CM-09: dữ liệu test riêng, mật khẩu GmsTest2026!
 SET IDENTITY_INSERT Persons OFF;
 
 /* ============================================================================
@@ -138,7 +144,7 @@ INSERT INTO Employees (EmployeeId, PersonId, EmployeeCode, Position, HireDate, C
 SET IDENTITY_INSERT Employees OFF;
 
 /* ============================================================================
-   Customers — 74 dòng.
+   Customers — 78 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT Customers ON;
 INSERT INTO Customers (CustomerId, PersonId, CustomerCode, CheckInPhoto, CustomerType, GuardianName, GuardianRelationship, GuardianPhone, GuardianPhone2, Status, JoinedAt, DeletedAt) VALUES
@@ -215,11 +221,15 @@ INSERT INTO Customers (CustomerId, PersonId, CustomerCode, CheckInPhoto, Custome
  (237, 237, 'KH-2037', '/uploads/checkin/kh-2037.jpg', 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-08-26 10:59:00', NULL),
  (238, 238, 'KH-2038', '/uploads/checkin/kh-2038.jpg', 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-06-24 17:28:00', NULL),
  (239, 239, 'KH-2039', '/uploads/checkin/kh-2039.jpg', 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-08-17 16:16:00', NULL),
- (240, 240, 'KH-2040', '/uploads/checkin/kh-2040.jpg', 'Self', NULL, NULL, NULL, NULL, 'Expired', '2026-06-18 08:27:00', NULL);
+ (240, 240, 'KH-2040', '/uploads/checkin/kh-2040.jpg', 'Self', NULL, NULL, NULL, NULL, 'Expired', '2026-06-18 08:27:00', NULL),
+ (244, 9006, 'KH-9006', NULL, 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-11-07 09:00:00', NULL), -- IT-CM-06: dữ liệu test riêng, mật khẩu GmsTest2026!
+ (245, 9007, 'KH-9007', NULL, 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-11-07 09:00:00', NULL), -- IT-CM-07: dữ liệu test riêng, mật khẩu GmsTest2026!
+ (246, 9008, 'KH-9008', NULL, 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-11-07 09:00:00', NULL), -- IT-CM-08: dữ liệu test riêng, mật khẩu GmsTest2026!
+ (247, 9009, 'KH-9009', NULL, 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-11-07 09:00:00', NULL); -- IT-CM-09: dữ liệu test riêng, mật khẩu GmsTest2026!
 SET IDENTITY_INSERT Customers OFF;
 
 /* ============================================================================
-   Accounts — 68 dòng. Mật khẩu chung Gms@2026 (TK tạo tại quầy cũng vậy: đóng vai mật khẩu tạm đã gửi email).
+   Accounts — 72 dòng. Mật khẩu chung Gms@2026 (TK tạo tại quầy cũng vậy: đóng vai mật khẩu tạm đã gửi email).
    ============================================================================ */
 SET IDENTITY_INSERT Accounts ON;
 INSERT INTO Accounts (AccountId, PersonId, PasswordHash, Status, FailedLoginCount, LockedUntil, LastLoginAt, CreatedAt) VALUES
@@ -290,7 +300,11 @@ INSERT INTO Accounts (AccountId, PersonId, PasswordHash, Status, FailedLoginCoun
  (237, 237, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-09-22 10:54:00', '2026-08-26 11:02:00'),
  (238, 238, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-07-16 17:23:00', '2026-06-24 17:31:00'),
  (239, 239, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-09-03 16:11:00', '2026-08-17 16:19:00'),
- (240, 240, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-07-18 08:22:00', '2026-06-18 08:30:00');
+ (240, 240, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-07-18 08:22:00', '2026-06-18 08:30:00'),
+ (243, 9006, '$2a$12$ikGqV.UW38VSSAcys/LUl.Z3NTV1DYJ4mOmYpjcdBJoC82xUQ7jkm', 'Active', 0, NULL, NULL, '2026-11-07 09:00:00'), -- IT-CM-06: dữ liệu test riêng, mật khẩu GmsTest2026!
+ (244, 9007, '$2a$12$ikGqV.UW38VSSAcys/LUl.Z3NTV1DYJ4mOmYpjcdBJoC82xUQ7jkm', 'Active', 0, NULL, NULL, '2026-11-07 09:00:00'), -- IT-CM-07: dữ liệu test riêng, mật khẩu GmsTest2026!
+ (245, 9008, '$2a$12$ikGqV.UW38VSSAcys/LUl.Z3NTV1DYJ4mOmYpjcdBJoC82xUQ7jkm', 'Active', 0, NULL, NULL, '2026-11-07 09:00:00'), -- IT-CM-08: dữ liệu test riêng, mật khẩu GmsTest2026!
+ (246, 9009, '$2a$12$ikGqV.UW38VSSAcys/LUl.Z3NTV1DYJ4mOmYpjcdBJoC82xUQ7jkm', 'Active', 0, NULL, NULL, '2026-11-07 09:00:00'); -- IT-CM-09: dữ liệu test riêng, mật khẩu GmsTest2026!
 SET IDENTITY_INSERT Accounts OFF;
 
 /* ============================================================================
@@ -537,7 +551,7 @@ INSERT INTO Shifts (ShiftId, WorkDate, ShiftType, OpenedByEmployeeId, ClosedByEm
 SET IDENTITY_INSERT Shifts OFF;
 
 /* ============================================================================
-   Orders — 180 dòng.
+   Orders — 184 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT Orders ON;
 INSERT INTO Orders (OrderId, OrderCode, HolderCustomerId, PartnerCustomerId, PackageId, VoucherId, CreatedByEmployeeId, ShiftId, Channel, PackageNameSnapshot, PackageDescriptionSnapshot, PackageBenefitsSnapshot, UnitPriceSnapshot, DiscountAmount, VatRateSnapshot, VatAmount, Status, PaymentDueAt, CreatedAt, PaidAt, CancelType, CancelledAt, CancelReason) VALUES
@@ -551,7 +565,7 @@ Miễn phí nước uống
 Tặng 3 buổi đo InBody', 5490000, 549000, 10, 449182, 'Paid', '2026-09-20 20:30:00', '2026-09-20 20:10:00', '2026-09-20 20:12:00', NULL, NULL, NULL),
  (3, 'DH-2026-0003', 1, NULL, 13, NULL, NULL, NULL, 'Online', N'Buổi PT Lẻ', N'Một buổi tập cùng huấn luyện viên.', N'Không ràng buộc kỳ hạn', 450000, 0, 10, 40909, 'Paid', '2026-09-24 21:20:00', '2026-09-24 21:00:00', '2026-09-24 21:02:00', NULL, NULL, NULL),
  (4, 'DH-2026-0004', 1, NULL, 13, NULL, NULL, NULL, 'Online', N'Buổi PT Lẻ', N'Một buổi tập cùng huấn luyện viên.', N'Không ràng buộc kỳ hạn', 450000, 0, 10, 40909, 'Cancelled', DATEADD(MINUTE, 10, @Now), DATEADD(MINUTE, -10, @Now), NULL, 'ReplacedByNewOrder', DATEADD(MINUTE, -2, @Now), NULL), -- bị thay bằng đơn mới (CBR-41, CBR-71)
- (5, 'DH-2026-0005', 1, NULL, 13, NULL, NULL, NULL, 'Online', N'Buổi PT Lẻ', N'Một buổi tập cùng huấn luyện viên.', N'Không ràng buộc kỳ hạn', 450000, 0, 10, 40909, 'Pending', DATEADD(MINUTE, 18, @Now), DATEADD(MINUTE, -2, @Now), NULL, NULL, NULL, NULL), -- đang giữ slot ngày mai 14:00 (CBR-53)
+ (5, 'DH-2026-0005', 1, NULL, 13, NULL, NULL, NULL, 'Online', N'Buổi PT Lẻ', N'Một buổi tập cùng huấn luyện viên.', N'Không ràng buộc kỳ hạn', 450000, 0, 10, 40909, 'Pending', DATEADD(MINUTE, 18, @Now), DATEADD(MINUTE, -2, @Now), NULL, NULL, NULL, NULL), -- đang giữ slot ngày mai 20:30 (CBR-53)
  (6, 'DH-2026-0006', 2, NULL, 2, 1, NULL, NULL, 'Online', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
 Dùng đủ thiết bị khu cardio và khu tạ
 Miễn phí nước uống', 799000, 79900, 10, 65373, 'Paid', '2026-09-03 20:40:00', '2026-09-03 20:20:00', '2026-09-03 20:22:00', NULL, NULL, NULL),
@@ -1002,11 +1016,23 @@ Miễn phí nước uống', 799000, 0, 10, 72636, 'Paid', NULL, '2026-10-23 19:
  (179, 'DH-2026-0179', 6, NULL, 13, NULL, NULL, NULL, 'Online', N'Buổi PT Lẻ', N'Một buổi tập cùng huấn luyện viên.', N'Không ràng buộc kỳ hạn', 450000, 0, 10, 40909, 'Paid', '2026-10-24 22:20:00', '2026-10-24 22:00:00', '2026-10-24 22:02:00', NULL, NULL, NULL), -- Mai: buổi lẻ cuối tuần PT Long
  (180, 'DH-2026-0180', 19, NULL, 2, NULL, NULL, NULL, 'Online', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
 Dùng đủ thiết bị khu cardio và khu tạ
-Miễn phí nước uống', 799000, 0, 10, 72636, 'Cancelled', '2026-07-18 09:20:00', '2026-07-18 09:00:00', NULL, 'InvalidPayment', '2026-07-18 09:21:00', N'Số tiền chuyển không khớp số phải trả'); -- đã hoàn xong
+Miễn phí nước uống', 799000, 0, 10, 72636, 'Cancelled', '2026-07-18 09:20:00', '2026-07-18 09:00:00', NULL, 'InvalidPayment', '2026-07-18 09:21:00', N'Số tiền chuyển không khớp số phải trả'), -- đã hoàn xong
+ (181, 'DH-2026-9006', 244, NULL, 2, NULL, NULL, NULL, 'Online', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống', 799000, 0, 10, 72636, 'Paid', '2026-11-07 09:20:00', '2026-11-07 09:00:00', '2026-11-07 09:02:00', NULL, NULL, NULL), -- IT-CM-06: dữ liệu test riêng, mật khẩu GmsTest2026!
+ (182, 'DH-2026-9007', 245, NULL, 2, NULL, NULL, NULL, 'Online', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống', 799000, 0, 10, 72636, 'Paid', '2026-11-07 09:20:00', '2026-11-07 09:00:00', '2026-11-07 09:02:00', NULL, NULL, NULL), -- IT-CM-07: dữ liệu test riêng, mật khẩu GmsTest2026!
+ (183, 'DH-2026-9008', 246, NULL, 2, NULL, NULL, NULL, 'Online', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống', 799000, 0, 10, 72636, 'Paid', '2026-11-07 09:20:00', '2026-11-07 09:00:00', '2026-11-07 09:02:00', NULL, NULL, NULL), -- IT-CM-08: dữ liệu test riêng, mật khẩu GmsTest2026!
+ (184, 'DH-2026-9009', 247, NULL, 2, NULL, NULL, NULL, 'Online', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống', 799000, 0, 10, 72636, 'Paid', '2026-11-07 09:20:00', '2026-11-07 09:00:00', '2026-11-07 09:02:00', NULL, NULL, NULL); -- IT-CM-09: dữ liệu test riêng, mật khẩu GmsTest2026!
 SET IDENTITY_INSERT Orders OFF;
 
 /* ============================================================================
-   Transactions — 180 dòng.
+   Transactions — 184 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT Transactions ON;
 INSERT INTO Transactions (TransactionId, OrderId, Amount, PaymentMethod, GatewayReference, ReceivedByEmployeeId, Status, FailureReason, NeedsRefund, RefundedAt, RefundedByEmployeeId, RefundNote, CreatedAt, ExpiresAt, CompletedAt) VALUES
@@ -1189,187 +1215,195 @@ INSERT INTO Transactions (TransactionId, OrderId, Amount, PaymentMethod, Gateway
  (177, 177, 450000, 'OnlineGateway', 'VNP-00177-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-10-24 20:31:00', '2026-10-24 20:36:00', '2026-10-24 20:32:00'),
  (178, 178, 450000, 'OnlineGateway', 'VNP-00178-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-10-24 20:41:00', '2026-10-24 20:46:00', '2026-10-24 20:42:00'),
  (179, 179, 450000, 'OnlineGateway', 'VNP-00179-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-10-24 22:01:00', '2026-10-24 22:06:00', '2026-10-24 22:02:00'),
- (180, 180, 799000, 'OnlineGateway', 'VNP-00180-2', NULL, 'Success', NULL, 1, '2026-07-20 10:00:00', 2, N'Đã chuyển khoản hoàn cho khách', '2026-07-18 09:26:00', '2026-07-18 09:06:00', '2026-07-18 09:27:00');
+ (180, 180, 799000, 'OnlineGateway', 'VNP-00180-2', NULL, 'Success', NULL, 1, '2026-07-20 10:00:00', 2, N'Đã chuyển khoản hoàn cho khách', '2026-07-18 09:26:00', '2026-07-18 09:06:00', '2026-07-18 09:27:00'),
+ (181, 181, 799000, 'OnlineGateway', 'VNP-00181-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-11-07 09:01:00', '2026-11-07 09:06:00', '2026-11-07 09:02:00'),
+ (182, 182, 799000, 'OnlineGateway', 'VNP-00182-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-11-07 09:01:00', '2026-11-07 09:06:00', '2026-11-07 09:02:00'),
+ (183, 183, 799000, 'OnlineGateway', 'VNP-00183-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-11-07 09:01:00', '2026-11-07 09:06:00', '2026-11-07 09:02:00'),
+ (184, 184, 799000, 'OnlineGateway', 'VNP-00184-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-11-07 09:01:00', '2026-11-07 09:06:00', '2026-11-07 09:02:00');
 SET IDENTITY_INSERT Transactions OFF;
 
 /* ============================================================================
-   Subscriptions — 173 dòng.
+   Subscriptions — 177 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT Subscriptions ON;
-INSERT INTO Subscriptions (SubscriptionId, OrderId, CustomerId, SubscriptionType, PtEmployeeId, StartDate, EndDate, FixedStartTime, GeneratedSessionCount, SwapsUsed, MaxSwapsSnapshot, FreezeUsed, MaxFreezesSnapshot, Status) VALUES
- (1, 1, 1, 'Membership', NULL, '2026-07-06', '2026-10-15', NULL, NULL, 0, NULL, 1, 1, 'Active'), -- bảo lưu 03/08 → hủy sớm 12/08: hạn +9 ngày (DBR-51)
- (2, 2, 1, 'Membership', NULL, '2026-10-16', '2027-07-16', NULL, NULL, 0, NULL, 0, 1, 'Active'), -- gia hạn trước: bắt đầu ngay sau gói cũ (DBR-52)
- (3, 3, 1, 'SingleSession', 5, '2026-09-26', '2026-09-26', NULL, 1, 0, NULL, 0, NULL, 'Used'),
- (4, 6, 2, 'Membership', NULL, '2026-09-03', '2026-10-03', NULL, NULL, 0, NULL, 0, 1, 'Active'), -- hết hạn đúng 03/10/2026
- (5, 8, 2, 'SingleSession', 5, '2026-09-26', '2026-09-26', NULL, 1, 0, NULL, 0, NULL, 'Used'),
- (6, 9, 3, 'Membership', NULL, '2026-07-01', '2026-08-01', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
- (7, 10, 3, 'PTSingle', 5, '2026-07-06', '2026-08-06', '07:00:00', 24, 0, 3, 0, NULL, 'Expired'), -- gói PT đã hết; 03–05/08 Missed vì hết gói tập (CBR-64)
- (8, 11, 4, 'Membership', NULL, '2026-07-29', '2027-01-29', NULL, NULL, 0, NULL, 1, 1, 'Frozen'), -- đang bảo lưu, hết lượt bảo lưu (BR-24)
- (9, 12, 4, 'PTSingle', 7, '2026-09-07', '2026-11-07', '17:00:00', 45, 0, 6, 0, NULL, 'Active'),
- (10, 13, 6, 'Membership', NULL, '2026-09-04', '2026-10-04', NULL, NULL, 0, NULL, 0, 1, 'Active'), -- hết 04/10 trước gói PT → buổi sau đó gắn nhãn "Không có gói tập" (CBR-66)
- (11, 14, 6, 'PTSingle', 5, '2026-09-07', '2026-11-07', '18:00:00', 45, 1, 6, 0, NULL, 'Active'), -- swap 1/6 (gói 2 tháng × 3); 1 buổi chuyển PT → hoa hồng cho PT mới (BR-68)
- (12, 15, 7, 'Membership', NULL, '2026-08-20', '2026-11-20', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (13, 16, 8, 'Membership', NULL, '2026-08-20', '2026-09-20', NULL, NULL, 0, NULL, 0, 1, 'Expired'), -- hết 20/09 → Expired nhưng vẫn còn buổi couple (CBR-63, CBR-67)
- (14, 17, 7, 'PTCouple', 6, '2026-08-24', '2026-10-24', '19:30:00', 45, 0, 6, 0, NULL, 'Active'), -- couple: chung hạn mức; 02/09 nghỉ lễ khai báo trước → không sinh buổi
- (15, 18, 9, 'Membership', NULL, '2026-09-03', '2026-12-03', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (16, 19, 11, 'Membership', NULL, '2026-07-15', '2027-07-15', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (17, 20, 12, 'Membership', NULL, '2026-03-01', '2026-04-01', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
- (18, 21, 13, 'Membership', NULL, '2026-09-21', '2026-10-21', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (19, 24, 17, 'Membership', NULL, '2026-09-10', '2026-12-10', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (20, 25, 17, 'PTSingle', 7, '2026-09-14', '2026-10-14', '12:00:00', 23, 0, 3, 0, NULL, 'Active'), -- 18/09 nghỉ khai báo TRƯỚC khi bán → không sinh buổi
- (21, 26, 18, 'Membership', NULL, '2026-09-15', '2026-10-15', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (22, 27, 19, 'Membership', NULL, '2026-08-01', '2026-11-01', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (23, 28, 20, 'Membership', NULL, '2026-07-01', '2026-08-01', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
- (24, 29, 21, 'Membership', NULL, '2026-09-01', '2026-12-01', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (25, 30, 21, 'PTSingle', 5, '2026-09-14', '2026-10-14', '06:30:00', 23, 1, 3, 0, NULL, 'Active'),
- (26, 31, 103, 'Membership', NULL, '2026-09-01', '2026-12-01', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (27, 32, 5, 'DayPass', NULL, @Today, @Today, NULL, NULL, 0, NULL, 0, NULL, 'Used'), -- đã check-in → hết hiệu lực (BR-29)
- (28, 33, 16, 'DayPass', NULL, @Today, @Today, NULL, NULL, 0, NULL, 0, NULL, 'Active'), -- gói ngày chưa check-in
- (29, 34, 16, 'SingleSession', 7, @Today, @Today, NULL, 1, 0, NULL, 0, NULL, 'Active'),
- (30, 36, 10, 'DayPass', NULL, @Today, @Today, NULL, NULL, 0, NULL, 0, NULL, 'Cancelled'),
- (31, 37, 201, 'Membership', NULL, '2026-09-07', '2026-10-07', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (32, 38, 202, 'Membership', NULL, '2026-06-26', '2026-07-26', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
- (33, 39, 203, 'Membership', NULL, '2026-06-17', '2026-09-17', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
- (34, 40, 203, 'Membership', NULL, '2026-09-18', '2026-12-18', NULL, NULL, 0, NULL, 0, 1, 'Active'), -- gia hạn nối tiếp (DBR-52)
- (35, 41, 204, 'Membership', NULL, '2026-06-17', '2026-09-17', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
- (36, 42, 205, 'Membership', NULL, '2026-09-08', '2026-12-08', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (37, 43, 206, 'Membership', NULL, '2026-06-19', '2027-03-19', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (38, 44, 207, 'Membership', NULL, '2026-07-11', '2027-07-11', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (39, 45, 208, 'Membership', NULL, '2026-08-06', '2027-05-06', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (40, 46, 209, 'Membership', NULL, '2026-06-29', '2026-09-29', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
- (41, 47, 210, 'DayPass', NULL, '2026-09-15', '2026-09-15', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (42, 48, 210, 'DayPass', NULL, '2026-09-28', '2026-09-28', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (43, 49, 211, 'Membership', NULL, '2026-08-10', '2026-11-10', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (44, 50, 212, 'Membership', NULL, '2026-07-16', '2026-10-16', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (45, 51, 213, 'Membership', NULL, '2026-07-18', '2027-04-18', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (46, 52, 214, 'Membership', NULL, '2026-09-17', '2026-10-17', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (47, 53, 215, 'Membership', NULL, '2026-09-12', '2026-10-12', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (48, 54, 216, 'Membership', NULL, '2026-07-13', '2026-08-13', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
- (49, 55, 216, 'Membership', NULL, '2026-08-14', '2026-11-14', NULL, NULL, 0, NULL, 0, 1, 'Active'), -- gia hạn nối tiếp (DBR-52)
- (50, 56, 217, 'Membership', NULL, '2026-07-08', '2026-08-08', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
- (51, 57, 217, 'Membership', NULL, '2026-08-09', '2026-09-09', NULL, NULL, 0, NULL, 0, 1, 'Expired'), -- gia hạn nối tiếp (DBR-52)
- (52, 58, 218, 'Membership', NULL, '2026-06-02', '2026-07-02', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
- (53, 59, 219, 'Membership', NULL, '2026-06-04', '2027-03-04', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (54, 60, 220, 'DayPass', NULL, '2026-08-25', '2026-08-25', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (55, 61, 221, 'Membership', NULL, '2026-06-20', '2027-03-20', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (56, 62, 222, 'Membership', NULL, '2026-09-16', '2026-10-16', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (57, 63, 223, 'Membership', NULL, '2026-08-03', '2026-09-03', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
- (58, 64, 224, 'Membership', NULL, '2026-09-08', '2027-09-08', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (59, 65, 225, 'Membership', NULL, '2026-07-26', '2027-04-26', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (60, 66, 226, 'Membership', NULL, '2026-06-26', '2026-07-26', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
- (61, 67, 226, 'Membership', NULL, '2026-07-27', '2026-08-27', NULL, NULL, 0, NULL, 0, 1, 'Expired'), -- gia hạn nối tiếp (DBR-52)
- (62, 68, 227, 'Membership', NULL, '2026-06-28', '2026-07-28', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
- (63, 69, 228, 'Membership', NULL, '2026-09-15', '2026-10-15', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (64, 70, 229, 'Membership', NULL, '2026-08-20', '2027-05-20', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (65, 71, 230, 'DayPass', NULL, '2026-08-13', '2026-08-13', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (66, 72, 231, 'Membership', NULL, '2026-07-14', '2026-10-14', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (67, 73, 232, 'Membership', NULL, '2026-08-22', '2026-09-22', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
- (68, 74, 232, 'Membership', NULL, '2026-09-23', '2026-10-23', NULL, NULL, 0, NULL, 0, 1, 'Active'), -- gia hạn nối tiếp (DBR-52)
- (69, 75, 233, 'Membership', NULL, '2026-08-29', '2026-09-29', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
- (70, 76, 233, 'Membership', NULL, '2026-09-30', '2026-12-30', NULL, NULL, 0, NULL, 0, 1, 'Active'), -- gia hạn nối tiếp (DBR-52)
- (71, 77, 234, 'Membership', NULL, '2026-08-01', '2027-05-01', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (72, 78, 235, 'Membership', NULL, '2026-07-05', '2026-08-05', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
- (73, 79, 235, 'Membership', NULL, '2026-08-06', '2026-09-06', NULL, NULL, 0, NULL, 0, 1, 'Expired'), -- gia hạn nối tiếp (DBR-52)
- (74, 80, 236, 'Membership', NULL, '2026-06-02', '2027-06-02', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (75, 81, 237, 'Membership', NULL, '2026-08-26', '2026-11-26', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (76, 82, 238, 'Membership', NULL, '2026-06-24', '2027-06-24', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (77, 83, 239, 'Membership', NULL, '2026-08-17', '2026-09-17', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
- (78, 84, 239, 'Membership', NULL, '2026-09-18', '2026-10-18', NULL, NULL, 0, NULL, 0, 1, 'Active'), -- gia hạn nối tiếp (DBR-52)
- (79, 85, 240, 'DayPass', NULL, '2026-06-18', '2026-06-18', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (80, 86, 201, 'PTSingle', 13, '2026-09-21', '2026-10-21', '07:30:00', 23, 0, 3, 0, NULL, 'Active'), -- khách thường mua gói PT
- (81, 87, 203, 'PTSingle', 6, '2026-09-21', '2026-10-21', '06:00:00', 23, 0, 3, 0, NULL, 'Active'), -- khách thường mua gói PT
- (82, 88, 205, 'PTSingle', 5, '2026-09-28', '2026-11-28', '15:00:00', 45, 0, 6, 0, NULL, 'Active'), -- khách thường mua gói PT
- (83, 89, 204, 'PTSingle', 14, '2026-09-14', '2026-10-14', '10:00:00', 23, 0, 3, 0, NULL, 'Active'), -- khách thường mua gói PT
- (84, 90, 206, 'PTSingle', 7, '2026-10-05', '2026-11-05', '19:00:00', 24, 0, 3, 0, NULL, 'Active'), -- khách thường mua gói PT
- (85, 91, 220, 'DayPass', NULL, '2026-09-01', '2026-09-01', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (86, 92, 220, 'DayPass', NULL, '2026-09-03', '2026-09-03', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (87, 93, 210, 'DayPass', NULL, '2026-09-03', '2026-09-03', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (88, 94, 240, 'DayPass', NULL, '2026-09-04', '2026-09-04', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (89, 95, 230, 'DayPass', NULL, '2026-09-04', '2026-09-04', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (90, 96, 210, 'DayPass', NULL, '2026-09-05', '2026-09-05', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (91, 97, 220, 'DayPass', NULL, '2026-09-06', '2026-09-06', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (92, 98, 230, 'DayPass', NULL, '2026-09-06', '2026-09-06', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (93, 99, 210, 'DayPass', NULL, '2026-09-06', '2026-09-06', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (94, 100, 240, 'DayPass', NULL, '2026-09-07', '2026-09-07', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (95, 101, 230, 'DayPass', NULL, '2026-09-07', '2026-09-07', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (96, 102, 230, 'DayPass', NULL, '2026-09-08', '2026-09-08', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (97, 103, 240, 'DayPass', NULL, '2026-09-08', '2026-09-08', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (98, 104, 240, 'DayPass', NULL, '2026-09-09', '2026-09-09', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (99, 105, 230, 'DayPass', NULL, '2026-09-10', '2026-09-10', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (100, 106, 220, 'DayPass', NULL, '2026-09-11', '2026-09-11', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (101, 107, 230, 'DayPass', NULL, '2026-09-12', '2026-09-12', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (102, 108, 220, 'DayPass', NULL, '2026-09-12', '2026-09-12', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (103, 109, 230, 'DayPass', NULL, '2026-09-13', '2026-09-13', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (104, 110, 240, 'DayPass', NULL, '2026-09-13', '2026-09-13', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (105, 111, 220, 'DayPass', NULL, '2026-09-14', '2026-09-14', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (106, 112, 230, 'DayPass', NULL, '2026-09-15', '2026-09-15', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (107, 113, 240, 'DayPass', NULL, '2026-09-16', '2026-09-16', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (108, 114, 230, 'DayPass', NULL, '2026-09-16', '2026-09-16', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (109, 115, 230, 'DayPass', NULL, '2026-09-17', '2026-09-17', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (110, 116, 230, 'DayPass', NULL, '2026-09-19', '2026-09-19', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (111, 117, 220, 'DayPass', NULL, '2026-09-19', '2026-09-19', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (112, 118, 240, 'DayPass', NULL, '2026-09-20', '2026-09-20', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (113, 119, 220, 'DayPass', NULL, '2026-09-21', '2026-09-21', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (114, 120, 220, 'DayPass', NULL, '2026-09-22', '2026-09-22', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (115, 121, 210, 'DayPass', NULL, '2026-09-22', '2026-09-22', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (116, 122, 230, 'DayPass', NULL, '2026-09-23', '2026-09-23', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (117, 123, 210, 'DayPass', NULL, '2026-09-23', '2026-09-23', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (118, 124, 210, 'DayPass', NULL, '2026-09-24', '2026-09-24', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (119, 125, 240, 'DayPass', NULL, '2026-09-25', '2026-09-25', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (120, 126, 230, 'DayPass', NULL, '2026-09-25', '2026-09-25', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (121, 127, 220, 'DayPass', NULL, '2026-09-26', '2026-09-26', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (122, 128, 240, 'DayPass', NULL, '2026-09-27', '2026-09-27', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (123, 129, 240, 'DayPass', NULL, '2026-09-28', '2026-09-28', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (124, 130, 210, 'DayPass', NULL, '2026-09-29', '2026-09-29', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (125, 131, 230, 'DayPass', NULL, '2026-09-29', '2026-09-29', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (126, 132, 230, 'DayPass', NULL, '2026-09-30', '2026-09-30', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (127, 133, 230, 'DayPass', NULL, '2026-10-01', '2026-10-01', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (128, 134, 220, 'DayPass', NULL, '2026-10-01', '2026-10-01', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (129, 135, 210, 'DayPass', NULL, '2026-10-01', '2026-10-01', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (130, 136, 230, 'DayPass', NULL, '2026-10-02', '2026-10-02', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (131, 137, 220, 'DayPass', NULL, '2026-10-02', '2026-10-02', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (132, 138, 201, 'SingleSession', 6, '2026-09-23', '2026-09-23', NULL, 1, 0, NULL, 0, NULL, 'Used'),
- (133, 139, 203, 'SingleSession', 7, '2026-09-05', '2026-09-05', NULL, 1, 0, NULL, 0, NULL, 'Used'),
- (134, 140, 204, 'SingleSession', 13, '2026-09-12', '2026-09-12', NULL, 1, 0, NULL, 0, NULL, 'Used'),
- (135, 141, 205, 'SingleSession', 7, '2026-09-27', '2026-09-27', NULL, 1, 0, NULL, 0, NULL, 'Used'),
- (136, 142, 206, 'SingleSession', 6, '2026-09-14', '2026-09-14', NULL, 1, 0, NULL, 0, NULL, 'Used'),
- (137, 143, 207, 'SingleSession', 6, '2026-09-29', '2026-09-29', NULL, 1, 0, NULL, 0, NULL, 'Expired'),
- (138, 144, 208, 'SingleSession', 13, '2026-09-20', '2026-09-20', NULL, 1, 0, NULL, 0, NULL, 'Used'),
- (139, 145, 209, 'SingleSession', 7, '2026-09-17', '2026-09-17', NULL, 1, 0, NULL, 0, NULL, 'Used'),
- (140, 146, 211, 'SingleSession', 13, '2026-09-27', '2026-09-27', NULL, 1, 0, NULL, 0, NULL, 'Used'),
- (141, 147, 212, 'SingleSession', 13, '2026-09-21', '2026-09-21', NULL, 1, 0, NULL, 0, NULL, 'Used'),
- (142, 148, 213, 'SingleSession', 5, '2026-09-05', '2026-09-05', NULL, 1, 0, NULL, 0, NULL, 'Used'),
- (143, 149, 214, 'SingleSession', 5, '2026-09-30', '2026-09-30', NULL, 1, 0, NULL, 0, NULL, 'Expired'),
- (144, 150, 215, 'SingleSession', 6, '2026-09-23', '2026-09-23', NULL, 1, 0, NULL, 0, NULL, 'Used'),
- (145, 151, 216, 'SingleSession', 7, '2026-09-11', '2026-09-11', NULL, 1, 0, NULL, 0, NULL, 'Used'),
- (146, 152, 219, 'SingleSession', 5, '2026-09-24', '2026-09-24', NULL, 1, 0, NULL, 0, NULL, 'Used'),
- (147, 153, 221, 'SingleSession', 7, '2026-09-25', '2026-09-25', NULL, 1, 0, NULL, 0, NULL, 'Used'),
- (148, 154, 222, 'SingleSession', 5, '2026-09-29', '2026-09-29', NULL, 1, 0, NULL, 0, NULL, 'Used'),
- (149, 155, 224, 'SingleSession', 6, '2026-09-11', '2026-09-11', NULL, 1, 0, NULL, 0, NULL, 'Used'),
- (150, 156, 2, 'Membership', NULL, '2026-10-21', '2027-01-21', NULL, NULL, 0, NULL, 0, 1, 'Active'), -- gia hạn sau khi hết 03/10
- (151, 157, 3, 'Membership', NULL, '2026-10-21', '2027-01-21', NULL, NULL, 0, NULL, 0, 1, 'Active'), -- quay lại tập sau 3 tháng nghỉ
- (152, 158, 6, 'Membership', NULL, '2026-10-22', '2027-01-22', NULL, NULL, 0, NULL, 0, 1, 'Active'), -- Mai gia hạn: từ 22/10 các buổi PT hết "Cần chú ý"
- (153, 159, 8, 'Membership', NULL, '2026-10-22', '2027-01-22', NULL, NULL, 0, NULL, 0, 1, 'Active'), -- Hà gia hạn để mua tiếp gói đôi
- (154, 160, 1, 'PTSingle', 5, '2026-10-26', '2026-11-26', '07:00:00', 24, 0, 3, 0, NULL, 'Active'), -- An: PT Sơn 07:00, bắt đầu 26/10
- (155, 161, 3, 'PTSingle', 13, '2026-11-02', '2026-12-02', '11:00:00', 23, 0, 3, 0, NULL, 'Active'), -- Quân: PT Long 11:00, bắt đầu 02/11
- (156, 162, 7, 'PTCouple', 6, '2026-10-26', '2026-11-26', '19:30:00', 24, 0, 3, 0, NULL, 'Active'), -- Hưng & Hà mua tiếp gói đôi 1 tháng với PT Trang
- (157, 163, 6, 'PTSingle', 5, '2026-11-09', '2027-01-09', '18:00:00', 45, 0, 6, 0, NULL, 'Active'), -- Mai: gói PT 2 tháng nối tiếp gói cũ (hết 07/11), cùng giờ 18:00
- (158, 164, 201, 'Membership', NULL, '2026-10-21', '2027-01-21', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (159, 165, 202, 'Membership', NULL, '2026-10-22', '2026-11-22', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (160, 166, 204, 'Membership', NULL, '2026-10-23', '2027-01-23', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (161, 167, 209, 'Membership', NULL, '2026-10-21', '2026-11-21', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (162, 168, 212, 'Membership', NULL, '2026-10-22', '2027-01-22', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (163, 169, 214, 'Membership', NULL, '2026-10-23', '2026-11-23', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (164, 170, 215, 'Membership', NULL, '2026-10-21', '2027-01-21', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (165, 171, 217, 'Membership', NULL, '2026-10-22', '2026-11-22', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (166, 172, 218, 'Membership', NULL, '2026-10-23', '2027-01-23', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (167, 173, 222, 'Membership', NULL, '2026-10-21', '2026-11-21', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (168, 174, 223, 'Membership', NULL, '2026-10-22', '2027-01-22', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (169, 175, 226, 'Membership', NULL, '2026-10-23', '2026-11-23', NULL, NULL, 0, NULL, 0, 1, 'Active'),
- (170, 176, 1, 'SingleSession', 7, '2026-10-29', '2026-10-29', NULL, 1, 0, NULL, 0, NULL, 'Active'),
- (171, 177, 2, 'SingleSession', 6, '2026-10-27', '2026-10-27', NULL, 1, 0, NULL, 0, NULL, 'Active'),
- (172, 178, 2, 'SingleSession', 5, '2026-10-30', '2026-10-30', NULL, 1, 0, NULL, 0, NULL, 'Active'),
- (173, 179, 6, 'SingleSession', 13, '2026-10-31', '2026-10-31', NULL, 1, 0, NULL, 0, NULL, 'Active');
+INSERT INTO Subscriptions (SubscriptionId, OrderId, CustomerId, SubscriptionType, PtEmployeeId, StartDate, EndDate, FixedStartTime, GeneratedSessionCount, FreezeUsed, MaxFreezesSnapshot, Status) VALUES
+ (1, 1, 1, 'Membership', NULL, '2026-07-06', '2026-10-15', NULL, NULL, 1, 1, 'Active'), -- bảo lưu 03/08 → hủy sớm 12/08: hạn +9 ngày (DBR-51)
+ (2, 2, 1, 'Membership', NULL, '2026-10-16', '2027-07-16', NULL, NULL, 0, 1, 'Active'), -- gia hạn trước: bắt đầu ngay sau gói cũ (DBR-52)
+ (3, 3, 1, 'SingleSession', 5, '2026-09-26', '2026-09-26', NULL, 1, 0, NULL, 'Used'),
+ (4, 6, 2, 'Membership', NULL, '2026-09-03', '2026-10-03', NULL, NULL, 0, 1, 'Active'), -- hết hạn đúng 03/10/2026
+ (5, 8, 2, 'SingleSession', 5, '2026-09-26', '2026-09-26', NULL, 1, 0, NULL, 'Used'),
+ (6, 9, 3, 'Membership', NULL, '2026-07-01', '2026-08-01', NULL, NULL, 0, 1, 'Expired'),
+ (7, 10, 3, 'PTSingle', 5, '2026-07-06', '2026-08-06', '07:00:00', 24, 0, NULL, 'Expired'), -- gói PT đã hết; 03–05/08 Missed vì hết gói tập (CBR-64)
+ (8, 11, 4, 'Membership', NULL, '2026-07-29', '2027-01-29', NULL, NULL, 1, 1, 'Frozen'), -- đang bảo lưu, hết lượt bảo lưu (BR-24)
+ (9, 12, 4, 'PTSingle', 7, '2026-09-07', '2026-11-07', '17:00:00', 45, 0, NULL, 'Active'),
+ (10, 13, 6, 'Membership', NULL, '2026-09-04', '2026-10-04', NULL, NULL, 0, 1, 'Active'), -- hết 04/10 trước gói PT → buổi sau đó gắn nhãn "Không có gói tập" (CBR-66)
+ (11, 14, 6, 'PTSingle', 5, '2026-09-07', '2026-11-07', '18:00:00', 45, 0, NULL, 'Active'), -- swap 1/6 (gói 2 tháng × 3); 1 buổi chuyển PT → hoa hồng cho PT mới (BR-68)
+ (12, 15, 7, 'Membership', NULL, '2026-08-20', '2026-11-20', NULL, NULL, 0, 1, 'Active'),
+ (13, 16, 8, 'Membership', NULL, '2026-08-20', '2026-09-20', NULL, NULL, 0, 1, 'Expired'), -- hết 20/09 → Expired nhưng vẫn còn buổi couple (CBR-63, CBR-67)
+ (14, 17, 7, 'PTCouple', 6, '2026-08-24', '2026-10-24', '19:30:00', 45, 0, NULL, 'Active'), -- couple: chung hạn mức; 02/09 nghỉ lễ khai báo trước → không sinh buổi
+ (15, 18, 9, 'Membership', NULL, '2026-09-03', '2026-12-03', NULL, NULL, 0, 1, 'Active'),
+ (16, 19, 11, 'Membership', NULL, '2026-07-15', '2027-07-15', NULL, NULL, 0, 1, 'Active'),
+ (17, 20, 12, 'Membership', NULL, '2026-03-01', '2026-04-01', NULL, NULL, 0, 1, 'Expired'),
+ (18, 21, 13, 'Membership', NULL, '2026-09-21', '2026-10-21', NULL, NULL, 0, 1, 'Active'),
+ (19, 24, 17, 'Membership', NULL, '2026-09-10', '2026-12-10', NULL, NULL, 0, 1, 'Active'),
+ (20, 25, 17, 'PTSingle', 7, '2026-09-14', '2026-10-14', '12:00:00', 23, 0, NULL, 'Active'), -- 18/09 nghỉ khai báo TRƯỚC khi bán → không sinh buổi
+ (21, 26, 18, 'Membership', NULL, '2026-09-15', '2026-10-15', NULL, NULL, 0, 1, 'Active'),
+ (22, 27, 19, 'Membership', NULL, '2026-08-01', '2026-11-01', NULL, NULL, 0, 1, 'Active'),
+ (23, 28, 20, 'Membership', NULL, '2026-07-01', '2026-08-01', NULL, NULL, 0, 1, 'Expired'),
+ (24, 29, 21, 'Membership', NULL, '2026-09-01', '2026-12-01', NULL, NULL, 0, 1, 'Active'),
+ (25, 30, 21, 'PTSingle', 5, '2026-09-14', '2026-10-14', '06:30:00', 23, 0, NULL, 'Active'),
+ (26, 31, 103, 'Membership', NULL, '2026-09-01', '2026-12-01', NULL, NULL, 0, 1, 'Active'),
+ (27, 32, 5, 'DayPass', NULL, @Today, @Today, NULL, NULL, 0, NULL, 'Used'), -- đã check-in → hết hiệu lực (BR-29)
+ (28, 33, 16, 'DayPass', NULL, @Today, @Today, NULL, NULL, 0, NULL, 'Active'), -- gói ngày chưa check-in
+ (29, 34, 16, 'SingleSession', 7, @Today, @Today, NULL, 1, 0, NULL, 'Active'),
+ (30, 36, 10, 'DayPass', NULL, @Today, @Today, NULL, NULL, 0, NULL, 'Cancelled'),
+ (31, 37, 201, 'Membership', NULL, '2026-09-07', '2026-10-07', NULL, NULL, 0, 1, 'Active'),
+ (32, 38, 202, 'Membership', NULL, '2026-06-26', '2026-07-26', NULL, NULL, 0, 1, 'Expired'),
+ (33, 39, 203, 'Membership', NULL, '2026-06-17', '2026-09-17', NULL, NULL, 0, 1, 'Expired'),
+ (34, 40, 203, 'Membership', NULL, '2026-09-18', '2026-12-18', NULL, NULL, 0, 1, 'Active'), -- gia hạn nối tiếp (DBR-52)
+ (35, 41, 204, 'Membership', NULL, '2026-06-17', '2026-09-17', NULL, NULL, 0, 1, 'Expired'),
+ (36, 42, 205, 'Membership', NULL, '2026-09-08', '2026-12-08', NULL, NULL, 0, 1, 'Active'),
+ (37, 43, 206, 'Membership', NULL, '2026-06-19', '2027-03-19', NULL, NULL, 0, 1, 'Active'),
+ (38, 44, 207, 'Membership', NULL, '2026-07-11', '2027-07-11', NULL, NULL, 0, 1, 'Active'),
+ (39, 45, 208, 'Membership', NULL, '2026-08-06', '2027-05-06', NULL, NULL, 0, 1, 'Active'),
+ (40, 46, 209, 'Membership', NULL, '2026-06-29', '2026-09-29', NULL, NULL, 0, 1, 'Expired'),
+ (41, 47, 210, 'DayPass', NULL, '2026-09-15', '2026-09-15', NULL, NULL, 0, NULL, 'Used'),
+ (42, 48, 210, 'DayPass', NULL, '2026-09-28', '2026-09-28', NULL, NULL, 0, NULL, 'Used'),
+ (43, 49, 211, 'Membership', NULL, '2026-08-10', '2026-11-10', NULL, NULL, 0, 1, 'Active'),
+ (44, 50, 212, 'Membership', NULL, '2026-07-16', '2026-10-16', NULL, NULL, 0, 1, 'Active'),
+ (45, 51, 213, 'Membership', NULL, '2026-07-18', '2027-04-18', NULL, NULL, 0, 1, 'Active'),
+ (46, 52, 214, 'Membership', NULL, '2026-09-17', '2026-10-17', NULL, NULL, 0, 1, 'Active'),
+ (47, 53, 215, 'Membership', NULL, '2026-09-12', '2026-10-12', NULL, NULL, 0, 1, 'Active'),
+ (48, 54, 216, 'Membership', NULL, '2026-07-13', '2026-08-13', NULL, NULL, 0, 1, 'Expired'),
+ (49, 55, 216, 'Membership', NULL, '2026-08-14', '2026-11-14', NULL, NULL, 0, 1, 'Active'), -- gia hạn nối tiếp (DBR-52)
+ (50, 56, 217, 'Membership', NULL, '2026-07-08', '2026-08-08', NULL, NULL, 0, 1, 'Expired'),
+ (51, 57, 217, 'Membership', NULL, '2026-08-09', '2026-09-09', NULL, NULL, 0, 1, 'Expired'), -- gia hạn nối tiếp (DBR-52)
+ (52, 58, 218, 'Membership', NULL, '2026-06-02', '2026-07-02', NULL, NULL, 0, 1, 'Expired'),
+ (53, 59, 219, 'Membership', NULL, '2026-06-04', '2027-03-04', NULL, NULL, 0, 1, 'Active'),
+ (54, 60, 220, 'DayPass', NULL, '2026-08-25', '2026-08-25', NULL, NULL, 0, NULL, 'Used'),
+ (55, 61, 221, 'Membership', NULL, '2026-06-20', '2027-03-20', NULL, NULL, 0, 1, 'Active'),
+ (56, 62, 222, 'Membership', NULL, '2026-09-16', '2026-10-16', NULL, NULL, 0, 1, 'Active'),
+ (57, 63, 223, 'Membership', NULL, '2026-08-03', '2026-09-03', NULL, NULL, 0, 1, 'Expired'),
+ (58, 64, 224, 'Membership', NULL, '2026-09-08', '2027-09-08', NULL, NULL, 0, 1, 'Active'),
+ (59, 65, 225, 'Membership', NULL, '2026-07-26', '2027-04-26', NULL, NULL, 0, 1, 'Active'),
+ (60, 66, 226, 'Membership', NULL, '2026-06-26', '2026-07-26', NULL, NULL, 0, 1, 'Expired'),
+ (61, 67, 226, 'Membership', NULL, '2026-07-27', '2026-08-27', NULL, NULL, 0, 1, 'Expired'), -- gia hạn nối tiếp (DBR-52)
+ (62, 68, 227, 'Membership', NULL, '2026-06-28', '2026-07-28', NULL, NULL, 0, 1, 'Expired'),
+ (63, 69, 228, 'Membership', NULL, '2026-09-15', '2026-10-15', NULL, NULL, 0, 1, 'Active'),
+ (64, 70, 229, 'Membership', NULL, '2026-08-20', '2027-05-20', NULL, NULL, 0, 1, 'Active'),
+ (65, 71, 230, 'DayPass', NULL, '2026-08-13', '2026-08-13', NULL, NULL, 0, NULL, 'Used'),
+ (66, 72, 231, 'Membership', NULL, '2026-07-14', '2026-10-14', NULL, NULL, 0, 1, 'Active'),
+ (67, 73, 232, 'Membership', NULL, '2026-08-22', '2026-09-22', NULL, NULL, 0, 1, 'Expired'),
+ (68, 74, 232, 'Membership', NULL, '2026-09-23', '2026-10-23', NULL, NULL, 0, 1, 'Active'), -- gia hạn nối tiếp (DBR-52)
+ (69, 75, 233, 'Membership', NULL, '2026-08-29', '2026-09-29', NULL, NULL, 0, 1, 'Expired'),
+ (70, 76, 233, 'Membership', NULL, '2026-09-30', '2026-12-30', NULL, NULL, 0, 1, 'Active'), -- gia hạn nối tiếp (DBR-52)
+ (71, 77, 234, 'Membership', NULL, '2026-08-01', '2027-05-01', NULL, NULL, 0, 1, 'Active'),
+ (72, 78, 235, 'Membership', NULL, '2026-07-05', '2026-08-05', NULL, NULL, 0, 1, 'Expired'),
+ (73, 79, 235, 'Membership', NULL, '2026-08-06', '2026-09-06', NULL, NULL, 0, 1, 'Expired'), -- gia hạn nối tiếp (DBR-52)
+ (74, 80, 236, 'Membership', NULL, '2026-06-02', '2027-06-02', NULL, NULL, 0, 1, 'Active'),
+ (75, 81, 237, 'Membership', NULL, '2026-08-26', '2026-11-26', NULL, NULL, 0, 1, 'Active'),
+ (76, 82, 238, 'Membership', NULL, '2026-06-24', '2027-06-24', NULL, NULL, 0, 1, 'Active'),
+ (77, 83, 239, 'Membership', NULL, '2026-08-17', '2026-09-17', NULL, NULL, 0, 1, 'Expired'),
+ (78, 84, 239, 'Membership', NULL, '2026-09-18', '2026-10-18', NULL, NULL, 0, 1, 'Active'), -- gia hạn nối tiếp (DBR-52)
+ (79, 85, 240, 'DayPass', NULL, '2026-06-18', '2026-06-18', NULL, NULL, 0, NULL, 'Used'),
+ (80, 86, 201, 'PTSingle', 13, '2026-09-21', '2026-10-21', '07:30:00', 23, 0, NULL, 'Active'), -- khách thường mua gói PT
+ (81, 87, 203, 'PTSingle', 6, '2026-09-21', '2026-10-21', '06:00:00', 23, 0, NULL, 'Active'), -- khách thường mua gói PT
+ (82, 88, 205, 'PTSingle', 5, '2026-09-28', '2026-11-04', '15:00:00', 45, 0, NULL, 'Active'), -- gói PT hết hạn 04/11 → buổi sau đó hủy PackageExpired khi nạp seed (JOB-02, CBR-55)
+ (83, 89, 204, 'PTSingle', 14, '2026-09-14', '2026-10-14', '10:00:00', 23, 0, NULL, 'Active'), -- khách thường mua gói PT
+ (84, 90, 206, 'PTSingle', 7, '2026-10-05', '2026-11-05', '19:00:00', 24, 0, NULL, 'Active'), -- khách thường mua gói PT
+ (85, 91, 220, 'DayPass', NULL, '2026-09-01', '2026-09-01', NULL, NULL, 0, NULL, 'Used'),
+ (86, 92, 220, 'DayPass', NULL, '2026-09-03', '2026-09-03', NULL, NULL, 0, NULL, 'Used'),
+ (87, 93, 210, 'DayPass', NULL, '2026-09-03', '2026-09-03', NULL, NULL, 0, NULL, 'Used'),
+ (88, 94, 240, 'DayPass', NULL, '2026-09-04', '2026-09-04', NULL, NULL, 0, NULL, 'Used'),
+ (89, 95, 230, 'DayPass', NULL, '2026-09-04', '2026-09-04', NULL, NULL, 0, NULL, 'Used'),
+ (90, 96, 210, 'DayPass', NULL, '2026-09-05', '2026-09-05', NULL, NULL, 0, NULL, 'Used'),
+ (91, 97, 220, 'DayPass', NULL, '2026-09-06', '2026-09-06', NULL, NULL, 0, NULL, 'Used'),
+ (92, 98, 230, 'DayPass', NULL, '2026-09-06', '2026-09-06', NULL, NULL, 0, NULL, 'Used'),
+ (93, 99, 210, 'DayPass', NULL, '2026-09-06', '2026-09-06', NULL, NULL, 0, NULL, 'Used'),
+ (94, 100, 240, 'DayPass', NULL, '2026-09-07', '2026-09-07', NULL, NULL, 0, NULL, 'Used'),
+ (95, 101, 230, 'DayPass', NULL, '2026-09-07', '2026-09-07', NULL, NULL, 0, NULL, 'Used'),
+ (96, 102, 230, 'DayPass', NULL, '2026-09-08', '2026-09-08', NULL, NULL, 0, NULL, 'Used'),
+ (97, 103, 240, 'DayPass', NULL, '2026-09-08', '2026-09-08', NULL, NULL, 0, NULL, 'Used'),
+ (98, 104, 240, 'DayPass', NULL, '2026-09-09', '2026-09-09', NULL, NULL, 0, NULL, 'Used'),
+ (99, 105, 230, 'DayPass', NULL, '2026-09-10', '2026-09-10', NULL, NULL, 0, NULL, 'Used'),
+ (100, 106, 220, 'DayPass', NULL, '2026-09-11', '2026-09-11', NULL, NULL, 0, NULL, 'Used'),
+ (101, 107, 230, 'DayPass', NULL, '2026-09-12', '2026-09-12', NULL, NULL, 0, NULL, 'Used'),
+ (102, 108, 220, 'DayPass', NULL, '2026-09-12', '2026-09-12', NULL, NULL, 0, NULL, 'Used'),
+ (103, 109, 230, 'DayPass', NULL, '2026-09-13', '2026-09-13', NULL, NULL, 0, NULL, 'Used'),
+ (104, 110, 240, 'DayPass', NULL, '2026-09-13', '2026-09-13', NULL, NULL, 0, NULL, 'Used'),
+ (105, 111, 220, 'DayPass', NULL, '2026-09-14', '2026-09-14', NULL, NULL, 0, NULL, 'Used'),
+ (106, 112, 230, 'DayPass', NULL, '2026-09-15', '2026-09-15', NULL, NULL, 0, NULL, 'Used'),
+ (107, 113, 240, 'DayPass', NULL, '2026-09-16', '2026-09-16', NULL, NULL, 0, NULL, 'Used'),
+ (108, 114, 230, 'DayPass', NULL, '2026-09-16', '2026-09-16', NULL, NULL, 0, NULL, 'Used'),
+ (109, 115, 230, 'DayPass', NULL, '2026-09-17', '2026-09-17', NULL, NULL, 0, NULL, 'Used'),
+ (110, 116, 230, 'DayPass', NULL, '2026-09-19', '2026-09-19', NULL, NULL, 0, NULL, 'Used'),
+ (111, 117, 220, 'DayPass', NULL, '2026-09-19', '2026-09-19', NULL, NULL, 0, NULL, 'Used'),
+ (112, 118, 240, 'DayPass', NULL, '2026-09-20', '2026-09-20', NULL, NULL, 0, NULL, 'Used'),
+ (113, 119, 220, 'DayPass', NULL, '2026-09-21', '2026-09-21', NULL, NULL, 0, NULL, 'Used'),
+ (114, 120, 220, 'DayPass', NULL, '2026-09-22', '2026-09-22', NULL, NULL, 0, NULL, 'Used'),
+ (115, 121, 210, 'DayPass', NULL, '2026-09-22', '2026-09-22', NULL, NULL, 0, NULL, 'Used'),
+ (116, 122, 230, 'DayPass', NULL, '2026-09-23', '2026-09-23', NULL, NULL, 0, NULL, 'Used'),
+ (117, 123, 210, 'DayPass', NULL, '2026-09-23', '2026-09-23', NULL, NULL, 0, NULL, 'Used'),
+ (118, 124, 210, 'DayPass', NULL, '2026-09-24', '2026-09-24', NULL, NULL, 0, NULL, 'Used'),
+ (119, 125, 240, 'DayPass', NULL, '2026-09-25', '2026-09-25', NULL, NULL, 0, NULL, 'Used'),
+ (120, 126, 230, 'DayPass', NULL, '2026-09-25', '2026-09-25', NULL, NULL, 0, NULL, 'Used'),
+ (121, 127, 220, 'DayPass', NULL, '2026-09-26', '2026-09-26', NULL, NULL, 0, NULL, 'Used'),
+ (122, 128, 240, 'DayPass', NULL, '2026-09-27', '2026-09-27', NULL, NULL, 0, NULL, 'Used'),
+ (123, 129, 240, 'DayPass', NULL, '2026-09-28', '2026-09-28', NULL, NULL, 0, NULL, 'Used'),
+ (124, 130, 210, 'DayPass', NULL, '2026-09-29', '2026-09-29', NULL, NULL, 0, NULL, 'Used'),
+ (125, 131, 230, 'DayPass', NULL, '2026-09-29', '2026-09-29', NULL, NULL, 0, NULL, 'Used'),
+ (126, 132, 230, 'DayPass', NULL, '2026-09-30', '2026-09-30', NULL, NULL, 0, NULL, 'Used'),
+ (127, 133, 230, 'DayPass', NULL, '2026-10-01', '2026-10-01', NULL, NULL, 0, NULL, 'Used'),
+ (128, 134, 220, 'DayPass', NULL, '2026-10-01', '2026-10-01', NULL, NULL, 0, NULL, 'Used'),
+ (129, 135, 210, 'DayPass', NULL, '2026-10-01', '2026-10-01', NULL, NULL, 0, NULL, 'Used'),
+ (130, 136, 230, 'DayPass', NULL, '2026-10-02', '2026-10-02', NULL, NULL, 0, NULL, 'Used'),
+ (131, 137, 220, 'DayPass', NULL, '2026-10-02', '2026-10-02', NULL, NULL, 0, NULL, 'Used'),
+ (132, 138, 201, 'SingleSession', 6, '2026-09-23', '2026-09-23', NULL, 1, 0, NULL, 'Used'),
+ (133, 139, 203, 'SingleSession', 7, '2026-09-05', '2026-09-05', NULL, 1, 0, NULL, 'Used'),
+ (134, 140, 204, 'SingleSession', 13, '2026-09-12', '2026-09-12', NULL, 1, 0, NULL, 'Used'),
+ (135, 141, 205, 'SingleSession', 7, '2026-09-27', '2026-09-27', NULL, 1, 0, NULL, 'Used'),
+ (136, 142, 206, 'SingleSession', 6, '2026-09-14', '2026-09-14', NULL, 1, 0, NULL, 'Used'),
+ (137, 143, 207, 'SingleSession', 6, '2026-09-29', '2026-09-29', NULL, 1, 0, NULL, 'Expired'),
+ (138, 144, 208, 'SingleSession', 13, '2026-09-20', '2026-09-20', NULL, 1, 0, NULL, 'Used'),
+ (139, 145, 209, 'SingleSession', 7, '2026-09-17', '2026-09-17', NULL, 1, 0, NULL, 'Used'),
+ (140, 146, 211, 'SingleSession', 13, '2026-09-27', '2026-09-27', NULL, 1, 0, NULL, 'Used'),
+ (141, 147, 212, 'SingleSession', 13, '2026-09-21', '2026-09-21', NULL, 1, 0, NULL, 'Used'),
+ (142, 148, 213, 'SingleSession', 5, '2026-09-05', '2026-09-05', NULL, 1, 0, NULL, 'Used'),
+ (143, 149, 214, 'SingleSession', 5, '2026-09-30', '2026-09-30', NULL, 1, 0, NULL, 'Expired'),
+ (144, 150, 215, 'SingleSession', 6, '2026-09-23', '2026-09-23', NULL, 1, 0, NULL, 'Used'),
+ (145, 151, 216, 'SingleSession', 7, '2026-09-11', '2026-09-11', NULL, 1, 0, NULL, 'Used'),
+ (146, 152, 219, 'SingleSession', 5, '2026-09-24', '2026-09-24', NULL, 1, 0, NULL, 'Used'),
+ (147, 153, 221, 'SingleSession', 7, '2026-09-25', '2026-09-25', NULL, 1, 0, NULL, 'Used'),
+ (148, 154, 222, 'SingleSession', 5, '2026-09-29', '2026-09-29', NULL, 1, 0, NULL, 'Used'),
+ (149, 155, 224, 'SingleSession', 6, '2026-09-11', '2026-09-11', NULL, 1, 0, NULL, 'Used'),
+ (150, 156, 2, 'Membership', NULL, '2026-10-21', '2027-01-21', NULL, NULL, 0, 1, 'Active'), -- gia hạn sau khi hết 03/10
+ (151, 157, 3, 'Membership', NULL, '2026-10-21', '2027-01-21', NULL, NULL, 0, 1, 'Active'), -- quay lại tập sau 3 tháng nghỉ
+ (152, 158, 6, 'Membership', NULL, '2026-10-22', '2027-01-22', NULL, NULL, 0, 1, 'Active'), -- Mai gia hạn: từ 22/10 các buổi PT hết "Cần chú ý"
+ (153, 159, 8, 'Membership', NULL, '2026-10-22', '2027-01-22', NULL, NULL, 0, 1, 'Active'), -- Hà gia hạn để mua tiếp gói đôi
+ (154, 160, 1, 'PTSingle', 5, '2026-10-26', '2026-11-26', '07:00:00', 24, 0, NULL, 'Active'), -- An: PT Sơn 07:00, bắt đầu 26/10
+ (155, 161, 3, 'PTSingle', 13, '2026-11-02', '2026-12-02', '11:00:00', 23, 0, NULL, 'Active'), -- Quân: PT Long 11:00, bắt đầu 02/11
+ (156, 162, 7, 'PTCouple', 6, '2026-10-26', '2026-11-26', '19:30:00', 24, 0, NULL, 'Active'), -- Hưng & Hà mua tiếp gói đôi 1 tháng với PT Trang
+ (157, 163, 6, 'PTSingle', 5, '2026-11-09', '2027-01-09', '18:00:00', 45, 0, NULL, 'Active'), -- Mai: gói PT 2 tháng nối tiếp gói cũ (hết 07/11), cùng giờ 18:00
+ (158, 164, 201, 'Membership', NULL, '2026-10-21', '2027-01-21', NULL, NULL, 0, 1, 'Active'),
+ (159, 165, 202, 'Membership', NULL, '2026-10-22', '2026-11-22', NULL, NULL, 0, 1, 'Active'),
+ (160, 166, 204, 'Membership', NULL, '2026-10-23', '2027-01-23', NULL, NULL, 0, 1, 'Active'),
+ (161, 167, 209, 'Membership', NULL, '2026-10-21', '2026-11-21', NULL, NULL, 0, 1, 'Active'),
+ (162, 168, 212, 'Membership', NULL, '2026-10-22', '2027-01-22', NULL, NULL, 0, 1, 'Active'),
+ (163, 169, 214, 'Membership', NULL, '2026-10-23', '2026-11-23', NULL, NULL, 0, 1, 'Active'),
+ (164, 170, 215, 'Membership', NULL, '2026-10-21', '2027-01-21', NULL, NULL, 0, 1, 'Active'),
+ (165, 171, 217, 'Membership', NULL, '2026-10-22', '2026-11-22', NULL, NULL, 0, 1, 'Active'),
+ (166, 172, 218, 'Membership', NULL, '2026-10-23', '2027-01-23', NULL, NULL, 0, 1, 'Active'),
+ (167, 173, 222, 'Membership', NULL, '2026-10-21', '2026-11-21', NULL, NULL, 0, 1, 'Active'),
+ (168, 174, 223, 'Membership', NULL, '2026-10-22', '2027-01-22', NULL, NULL, 0, 1, 'Active'),
+ (169, 175, 226, 'Membership', NULL, '2026-10-23', '2026-11-23', NULL, NULL, 0, 1, 'Active'),
+ (170, 176, 1, 'SingleSession', 7, '2026-10-29', '2026-10-29', NULL, 1, 0, NULL, 'Active'),
+ (171, 177, 2, 'SingleSession', 6, '2026-10-27', '2026-10-27', NULL, 1, 0, NULL, 'Active'),
+ (172, 178, 2, 'SingleSession', 5, '2026-10-30', '2026-10-30', NULL, 1, 0, NULL, 'Active'),
+ (173, 179, 6, 'SingleSession', 13, '2026-10-31', '2026-10-31', NULL, 1, 0, NULL, 'Active'),
+ (174, 181, 244, 'Membership', NULL, '2026-11-07', '2026-12-07', NULL, NULL, 0, 1, 'Active'), -- IT-CM-06: dữ liệu test riêng, mật khẩu GmsTest2026!
+ (175, 182, 245, 'Membership', NULL, '2026-11-07', '2026-12-07', NULL, NULL, 0, 1, 'Active'), -- IT-CM-07: dữ liệu test riêng, mật khẩu GmsTest2026!
+ (176, 183, 246, 'Membership', NULL, '2026-11-07', '2026-12-07', NULL, NULL, 0, 1, 'Active'), -- IT-CM-08: dữ liệu test riêng, mật khẩu GmsTest2026!
+ (177, 184, 247, 'Membership', NULL, '2026-11-07', '2026-12-07', NULL, NULL, 0, 1, 'Active'); -- IT-CM-09: dữ liệu test riêng, mật khẩu GmsTest2026!
 SET IDENTITY_INSERT Subscriptions OFF;
 
 /* ============================================================================
@@ -2223,7 +2257,7 @@ SET IDENTITY_INSERT TimeSlots ON;
 INSERT INTO TimeSlots (TimeSlotId, PtEmployeeId, SlotDate, StartTime, EndTime, Status, HeldByOrderId, HoldExpiresAt, CreatedAt) VALUES
  (1, 5, '2026-09-26', '09:00:00', '10:30:00', 'Booked', NULL, NULL, '2026-09-21 21:00:00'),
  (2, 7, DATEADD(DAY, 1, @Today), '15:30:00', '17:00:00', 'Free', NULL, NULL, DATEADD(MINUTE, -4320, @Now)),
- (3, 7, DATEADD(DAY, 1, @Today), '14:00:00', '15:30:00', 'Held', 5, DATEADD(MINUTE, 18, @Now), DATEADD(MINUTE, -4320, @Now)),
+ (3, 7, DATEADD(DAY, 1, @Today), '20:30:00', '22:00:00', 'Held', 5, DATEADD(MINUTE, 18, @Now), DATEADD(MINUTE, -4320, @Now)),
  (4, 5, '2026-09-26', '10:30:00', '12:00:00', 'Booked', NULL, NULL, '2026-09-22 19:00:00'),
  (5, 5, '2026-07-06', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-06-26 21:00:00'),
  (6, 5, '2026-07-07', '07:00:00', '08:30:00', 'Free', NULL, NULL, '2026-06-27 21:00:00'),
@@ -2434,7 +2468,7 @@ INSERT INTO TimeSlots (TimeSlotId, PtEmployeeId, SlotDate, StartTime, EndTime, S
  (211, 5, '2026-10-12', '06:30:00', '08:00:00', 'Booked', NULL, NULL, '2026-10-02 21:00:00'),
  (212, 5, '2026-10-13', '06:30:00', '08:00:00', 'Booked', NULL, NULL, '2026-10-03 21:00:00'),
  (213, 5, '2026-10-14', '06:30:00', '08:00:00', 'Booked', NULL, NULL, '2026-10-04 21:00:00'),
- (214, 7, @Today, '20:00:00', '21:30:00', 'Booked', NULL, NULL, DATEADD(MINUTE, -4320, @Now)),
+ (214, 7, @Today, '20:30:00', '22:00:00', 'Booked', NULL, NULL, DATEADD(MINUTE, -4320, @Now)),
  (215, 13, '2026-09-21', '07:30:00', '09:00:00', 'Booked', NULL, NULL, '2026-09-11 21:00:00'),
  (216, 13, '2026-09-22', '07:30:00', '09:00:00', 'Booked', NULL, NULL, '2026-09-12 21:00:00'),
  (217, 13, '2026-09-23', '07:30:00', '09:00:00', 'Booked', NULL, NULL, '2026-09-13 21:00:00'),
@@ -2593,7 +2627,7 @@ INSERT INTO TimeSlots (TimeSlotId, PtEmployeeId, SlotDate, StartTime, EndTime, S
  (370, 6, '2026-09-11', '10:00:00', '11:30:00', 'Booked', NULL, NULL, '2026-09-08 09:00:00'),
  (371, 5, '2026-10-26', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-10-16 21:00:00'),
  (372, 5, '2026-10-27', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-10-17 21:00:00'),
- (373, 5, '2026-10-28', '07:00:00', '08:30:00', 'Free', NULL, NULL, '2026-10-18 21:00:00'), -- buổi 367 đã dời sang khung 964 (SessionMoveLogs 5) trước khi PT nộp đơn nghỉ 9 (CBR-83)
+ (373, 5, '2026-10-28', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-10-18 21:00:00'),
  (374, 5, '2026-10-29', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-10-19 21:00:00'),
  (375, 5, '2026-10-30', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-10-20 21:00:00'),
  (376, 5, '2026-11-02', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-10-23 21:00:00'),
@@ -3186,7 +3220,7 @@ INSERT INTO TimeSlots (TimeSlotId, PtEmployeeId, SlotDate, StartTime, EndTime, S
  (961, 13, '2026-10-30', '19:00:00', '20:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
  (962, 14, '2026-10-30', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
  (963, 14, '2026-10-30', '15:00:00', '16:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
- (964, 5, '2026-10-31', '08:00:00', '09:30:00', 'Booked', NULL, NULL, '2026-10-01 21:00:00'), -- nhận buổi 367 dời từ 28/10 07:00
+ (964, 5, '2026-10-31', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
  (965, 5, '2026-10-31', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
  (966, 5, '2026-10-31', '11:00:00', '12:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
  (967, 5, '2026-10-31', '15:00:00', '16:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
@@ -4496,7 +4530,7 @@ INSERT INTO TimeSlots (TimeSlotId, PtEmployeeId, SlotDate, StartTime, EndTime, S
 SET IDENTITY_INSERT TimeSlots OFF;
 
 /* ============================================================================
-   Sessions — 484 dòng. Trước 05/10 đã có kết quả; từ 05/10 Scheduled.
+   Sessions — 484 dòng. Trước 05/10 đã có kết quả; từ 05/10 sinh Scheduled, buổi trước ngày nạp được chốt ở khối cuối file (JOB-02, JOB-04).
    ============================================================================ */
 SET IDENTITY_INSERT Sessions ON;
 INSERT INTO Sessions (SessionId, SubscriptionId, TimeSlotId, PtEmployeeId, Status, SessionValue, CommissionAmount, AttendanceMarkedAt, IsAutoClosed, MissedReason, CancelType, CancelReason, CancelledAt, CancelledByAccountId, RefundAgreed) VALUES
@@ -4866,7 +4900,7 @@ INSERT INTO Sessions (SessionId, SubscriptionId, TimeSlotId, PtEmployeeId, Statu
  (364, 149, 370, 6, 'CheckedIn', 450000, 292500, '2026-09-12 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
  (365, 154, 371, 5, 'Scheduled', 366667, 256667, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (366, 154, 372, 5, 'Scheduled', 366667, 256667, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
- (367, 154, 964, 5, 'Scheduled', 366667, 256667, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (367, 154, 373, 5, 'Scheduled', 366667, 256667, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (368, 154, 374, 5, 'Scheduled', 366667, 256667, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (369, 154, 375, 5, 'Scheduled', 366667, 256667, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (370, 154, 376, 5, 'Scheduled', 366667, 256667, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
@@ -4988,7 +5022,7 @@ INSERT INTO Sessions (SessionId, SubscriptionId, TimeSlotId, PtEmployeeId, Statu
 SET IDENTITY_INSERT Sessions OFF;
 
 /* ============================================================================
-   SessionMoveLogs — 9 dòng, gồm 4 buổi Long chuyển trước khi gửi đơn nghỉ.
+   SessionMoveLogs — 8 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT SessionMoveLogs ON;
 INSERT INTO SessionMoveLogs (SessionMoveLogId, SessionId, MoveType, OldTimeSlotId, NewTimeSlotId, OldPtEmployeeId, NewPtEmployeeId, RequestedByAccountId, Reason, MovedAt) VALUES
@@ -4996,50 +5030,42 @@ INSERT INTO SessionMoveLogs (SessionMoveLogId, SessionId, MoveType, OldTimeSlotI
  (2, 88, 'PtTransfer', 91, 92, 5, 13, 15, N'PT Sơn ốm, khách chọn PT Long', '2026-09-27 20:15:00'),
  (3, 133, 'PtReschedule', 137, 138, 6, 6, 16, N'PT bận họp chuyên môn', '2026-09-13 20:15:00'),
  (4, 193, 'PtOnBehalfSwap', 198, 199, 5, 5, 15, N'Khách gọi điện nhờ PT dời buổi', '2026-09-22 20:15:00'),
- (5, 367, 'PtReschedule', 373, 964, 5, 5, 15, N'Dời buổi sáng 28/10 sang 31/10 để nộp đơn nghỉ ca sáng', '2026-10-25 19:30:00'),
- (6, 394, 'PtTransfer', 400, 1143, 13, 5, 22, N'Chuyển buổi cho PT Sơn trước khi gửi đơn nghỉ 09–12/11', '2026-11-03 19:00:00'),
- (7, 395, 'PtTransfer', 401, 1162, 13, 5, 22, N'Chuyển buổi cho PT Sơn trước khi gửi đơn nghỉ 09–12/11', '2026-11-03 19:00:00'),
- (8, 396, 'PtTransfer', 402, 1181, 13, 5, 22, N'Chuyển buổi cho PT Sơn trước khi gửi đơn nghỉ 09–12/11', '2026-11-03 19:00:00'),
- (9, 397, 'PtTransfer', 403, 1200, 13, 5, 22, N'Chuyển buổi cho PT Sơn trước khi gửi đơn nghỉ 09–12/11', '2026-11-03 19:00:00');
+ (5, 394, 'PtTransfer', 400, 1143, 13, 5, 22, N'Chuyển buổi cho PT Sơn trước khi gửi đơn nghỉ 09–12/11', '2026-11-03 19:00:00'),
+ (6, 395, 'PtTransfer', 401, 1162, 13, 5, 22, N'Chuyển buổi cho PT Sơn trước khi gửi đơn nghỉ 09–12/11', '2026-11-03 19:00:00'),
+ (7, 396, 'PtTransfer', 402, 1181, 13, 5, 22, N'Chuyển buổi cho PT Sơn trước khi gửi đơn nghỉ 09–12/11', '2026-11-03 19:00:00'),
+ (8, 397, 'PtTransfer', 403, 1200, 13, 5, 22, N'Chuyển buổi cho PT Sơn trước khi gửi đơn nghỉ 09–12/11', '2026-11-03 19:00:00');
 SET IDENTITY_INSERT SessionMoveLogs OFF;
 
 /* ============================================================================
-   BF-05 — 21 đơn, mốc thuyết trình thứ Sáu 06/11/2026.
-   #8, #13: duyệt muộn, #9: nghỉ hôm nay, #10: nghỉ ngày mai.
-   #16–17: cùng đợt, Long còn 2 ngày phép sau đơn lịch sử #20.
-   #18–19: cùng đợt đã xử lý riêng, #21 giữ quỹ cho phần phép năm #18.
-   Đơn PT đã gửi không trùng lịch Scheduled, đơn mới không dùng Sick.
+   LeaveRequests — 21 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT LeaveRequests ON;
 INSERT INTO LeaveRequests (LeaveRequestId, EmployeeId, ReviewedByEmployeeId, AssignedToEmployeeId, LeaveType, FromDate, ToDate, ShiftType, Days, Reason, Status, RejectReason, SubmittedAt, ReviewedAt, ReminderSentAt, LeaveGroupId) VALUES
- (1, 5, 2, 2, 'Annual', '2026-10-28', '2026-10-28', 'Morning', 0.5, N'Về quê có việc gia đình', 'Approved', NULL, '2026-10-26 09:00:00', '2026-10-27 15:30:00', NULL, NULL),
+ (1, 5, 2, 2, 'Annual', '2026-10-18', '2026-10-18', 'Morning', 0.5, N'Về quê có việc gia đình', 'Approved', NULL, '2026-10-16 09:00:00', '2026-10-17 15:30:00', NULL, NULL),
  (2, 4, 2, 2, 'Sick', '2026-10-29', '2026-10-29', 'Afternoon', 0.5, N'Nghỉ khám sức khỏe ca chiều', 'Rejected', N'Ca chiều thiếu lễ tân trực quầy, vui lòng đổi ca khác', '2026-10-28 08:30:00', '2026-10-28 16:00:00', NULL, NULL),
- (3, 6, NULL, 2, 'Annual', '2026-11-04', '2026-11-04', 'Morning', 1.0, N'Tham gia hội thảo chuyên môn fitness buổi sáng', 'Pending', NULL, '2026-11-01 08:30:00', NULL, NULL, NULL),
- (4, 3, NULL, 2, 'Annual', '2026-11-09', '2026-11-10', 'FullDay', 2.0, N'Nghỉ phép thường niên cùng gia đình 2 ngày', 'Pending', NULL, '2026-11-02 09:15:00', NULL, NULL, NULL),
- (5, 7, NULL, 2, 'Unpaid', '2026-11-10', '2026-11-10', 'Morning', 1.0, N'Xin nghỉ không lương ca sáng để giải quyết việc cá nhân', 'Pending', NULL, '2026-11-03 10:00:00', NULL, NULL, NULL),
- (6, 9, NULL, NULL, 'Unpaid', '2026-11-11', '2026-11-11', 'Afternoon', 1.0, N'Xin nghỉ giải quyết thủ tục giấy tờ hành chính cá nhân', 'Pending', NULL, '2026-11-03 11:30:00', NULL, NULL, NULL),
- (7, 5, NULL, 2, 'Annual', '2026-11-15', '2026-11-15', 'FullDay', 1.0, N'Xin nghỉ theo kế hoạch để giải quyết việc gia đình', 'Pending', NULL, '2026-11-03 13:45:00', NULL, NULL, NULL),
- (8, 9, NULL, NULL, 'Annual', '2026-11-05', '2026-11-05', 'Morning', 1.0, N'Cần duyệt muộn: ngày nghỉ hôm qua nhưng Manager chưa kịp duyệt.', 'Pending', NULL, '2026-11-04 08:00:00', NULL, NULL, NULL),
- (9, 14, NULL, NULL, 'Annual', '2026-11-06', '2026-11-06', 'Morning', 1.0, N'Xin nghỉ ca sáng ngày 06/11 để đưa người thân đi khám.', 'Pending', NULL, '2026-11-05 14:00:00', NULL, NULL, NULL),
- (10, 5, NULL, NULL, 'Unpaid', '2026-11-07', '2026-11-07', 'Morning', 1.0, N'Sắp đến ngày nghỉ: xin nghỉ ngày mai để giải quyết việc cá nhân.', 'Pending', NULL, '2026-11-05 15:30:00', NULL, NULL, NULL),
- (11, 14, 2, NULL, 'Annual', '2026-11-02', '2026-11-02', 'Morning', 1.0, N'Đơn đã duyệt: nghỉ giải quyết thủ tục cá nhân.', 'Approved', NULL, '2026-10-30 08:00:00', '2026-10-31 08:00:00', NULL, NULL),
- (12, 5, 2, NULL, 'Unpaid', '2026-11-03', '2026-11-03', 'Afternoon', 1.0, N'Đơn từ chối: xin nghỉ để tham gia lớp học cá nhân.', 'Rejected', N'Chưa bố trí được người thay ca, vui lòng chọn ngày khác.', '2026-11-01 08:30:00', '2026-11-01 09:00:00', NULL, NULL),
- (13, 6, NULL, NULL, 'Unpaid', '2026-11-03', '2026-11-03', 'Morning', 1.0, N'Ca nghỉ đã qua nhưng đơn vẫn đang chờ quản lý xác nhận để duyệt muộn.', 'Pending', NULL, '2026-11-02 08:00:00', NULL, NULL, NULL),
- (14, 9, NULL, NULL, 'Annual', '2026-11-16', '2026-11-18', 'FullDay', 3.0, N'Nghỉ nhiều ngày: về quê dự việc gia đình trong ba ngày.', 'Pending', NULL, '2026-11-04 08:40:00', NULL, NULL, NULL),
- (15, 14, NULL, NULL, 'Unpaid', '2026-11-18', '2026-12-02', 'FullDay', 15.0, N'Chủ động xin nghỉ không lương 15 ngày, không sử dụng quỹ phép năm.', 'Pending', NULL, '2026-11-04 08:50:00', NULL, NULL, NULL),
- (16, 13, NULL, NULL, 'Annual', '2026-11-09', '2026-11-10', 'FullDay', 2.0, N'Đợt nghỉ 4 ngày Lý Hoàng Long: phần 1 Phép năm 2 ngày.', 'Pending', NULL, '2026-11-05 09:00:00', NULL, NULL, '33333333-0524-4620-8000-000000000003'),
- (17, 13, NULL, NULL, 'Unpaid', '2026-11-11', '2026-11-12', 'FullDay', 2.0, N'Đợt nghỉ 4 ngày Lý Hoàng Long: phần 2 Không lương 2 ngày.', 'Pending', NULL, '2026-11-05 09:00:00', NULL, NULL, '33333333-0524-4620-8000-000000000003'),
- (18, 3, 2, NULL, 'Annual', '2026-11-23', '2026-11-25', 'FullDay', 3.0, N'Phần phép năm đã được duyệt trong đợt 5 ngày.', 'Approved', NULL, '2026-11-04 09:00:00', '2026-11-04 10:00:00', NULL, '44444444-0524-4620-8000-000000000004'),
- (19, 3, 2, NULL, 'Unpaid', '2026-11-26', '2026-11-27', 'FullDay', 2.0, N'Phần không lương bị từ chối trong cùng đợt.', 'Rejected', N'Chưa bố trí được nhân sự cho phần không lương.', '2026-11-04 09:00:00', '2026-11-04 10:00:00', NULL, '44444444-0524-4620-8000-000000000004'),
- (20, 13, 2, NULL, 'Annual', '2026-08-16', '2026-08-27', 'FullDay', 12.0, N'Nghỉ phép năm đã được duyệt, còn 2 ngày phép để gửi đợt nghỉ tháng 11.', 'Approved', NULL, '2026-08-15 09:00:00', '2026-08-15 10:00:00', NULL, NULL),
- (21, 3, 2, NULL, 'Annual', '2026-08-01', '2026-08-09', 'FullDay', 9.0, N'Nghỉ phép năm đã được duyệt trong tháng 8.', 'Approved', NULL, '2026-07-30 09:00:00', '2026-07-31 10:00:00', NULL, NULL);
+ (3, 6, NULL, 2, 'Annual', '2026-11-04', '2026-11-04', 'Morning', 1, N'Tham gia hội thảo chuyên môn fitness buổi sáng', 'Pending', NULL, '2026-11-01 08:30:00', NULL, NULL, NULL),
+ (4, 3, NULL, 2, 'Annual', '2026-11-09', '2026-11-10', 'FullDay', 2, N'Nghỉ phép thường niên cùng gia đình 2 ngày', 'Pending', NULL, '2026-11-02 09:15:00', NULL, NULL, NULL),
+ (5, 7, NULL, 2, 'Unpaid', '2026-11-10', '2026-11-10', 'Morning', 1, N'Xin nghỉ không lương ca sáng để giải quyết việc cá nhân', 'Pending', NULL, '2026-11-03 10:00:00', NULL, NULL, NULL),
+ (6, 9, NULL, NULL, 'Unpaid', '2026-11-11', '2026-11-11', 'Afternoon', 1, N'Xin nghỉ giải quyết thủ tục giấy tờ hành chính cá nhân', 'Pending', NULL, '2026-11-03 11:30:00', NULL, NULL, NULL),
+ (7, 5, NULL, 2, 'Annual', '2026-11-15', '2026-11-15', 'FullDay', 1, N'Xin nghỉ theo kế hoạch để giải quyết việc gia đình', 'Pending', NULL, '2026-11-03 13:45:00', NULL, NULL, NULL),
+ (8, 9, NULL, NULL, 'Annual', '2026-11-05', '2026-11-05', 'Morning', 1, N'Cần duyệt muộn: ngày nghỉ hôm qua nhưng Manager chưa kịp duyệt.', 'Pending', NULL, '2026-11-04 08:00:00', NULL, NULL, NULL),
+ (9, 14, NULL, NULL, 'Annual', '2026-11-06', '2026-11-06', 'Morning', 1, N'Xin nghỉ ca sáng ngày 06/11 để đưa người thân đi khám.', 'Pending', NULL, '2026-11-05 14:00:00', NULL, NULL, NULL),
+ (10, 5, NULL, NULL, 'Unpaid', '2026-11-07', '2026-11-07', 'Morning', 1, N'Sắp đến ngày nghỉ: xin nghỉ ngày mai để giải quyết việc cá nhân.', 'Pending', NULL, '2026-11-05 15:30:00', NULL, NULL, NULL),
+ (11, 14, 2, NULL, 'Annual', '2026-11-02', '2026-11-02', 'Morning', 1, N'Đơn đã duyệt: nghỉ giải quyết thủ tục cá nhân.', 'Approved', NULL, '2026-10-30 08:00:00', '2026-10-31 08:00:00', NULL, NULL),
+ (12, 5, 2, NULL, 'Unpaid', '2026-11-03', '2026-11-03', 'Afternoon', 1, N'Đơn từ chối: xin nghỉ để tham gia lớp học cá nhân.', 'Rejected', N'Chưa bố trí được người thay ca, vui lòng chọn ngày khác.', '2026-11-01 08:30:00', '2026-11-01 09:00:00', NULL, NULL),
+ (13, 6, NULL, NULL, 'Unpaid', '2026-11-03', '2026-11-03', 'Morning', 1, N'Ca nghỉ đã qua nhưng đơn vẫn đang chờ quản lý xác nhận để duyệt muộn.', 'Pending', NULL, '2026-11-02 08:00:00', NULL, NULL, NULL),
+ (14, 9, NULL, NULL, 'Annual', '2026-11-16', '2026-11-18', 'FullDay', 3, N'Nghỉ nhiều ngày: về quê dự việc gia đình trong ba ngày.', 'Pending', NULL, '2026-11-04 08:40:00', NULL, NULL, NULL),
+ (15, 14, NULL, NULL, 'Unpaid', '2026-11-18', '2026-12-02', 'FullDay', 15, N'Chủ động xin nghỉ không lương 15 ngày, không sử dụng quỹ phép năm.', 'Pending', NULL, '2026-11-04 08:50:00', NULL, NULL, NULL),
+ (16, 13, NULL, NULL, 'Annual', '2026-11-09', '2026-11-10', 'FullDay', 2, N'Đợt nghỉ 4 ngày Lý Hoàng Long: phần 1 Phép năm 2 ngày.', 'Pending', NULL, '2026-11-04 09:00:00', NULL, NULL, '33333333-0524-4620-8000-000000000003'),
+ (17, 13, NULL, NULL, 'Unpaid', '2026-11-11', '2026-11-12', 'FullDay', 2, N'Đợt nghỉ 4 ngày Lý Hoàng Long: phần 2 Không lương 2 ngày.', 'Pending', NULL, '2026-11-04 09:00:00', NULL, NULL, '33333333-0524-4620-8000-000000000003'),
+ (18, 3, 2, NULL, 'Annual', '2026-11-23', '2026-11-25', 'FullDay', 3, N'Phần phép năm đã được duyệt trong đợt 5 ngày.', 'Approved', NULL, '2026-11-04 09:00:00', '2026-11-04 10:00:00', NULL, '44444444-0524-4620-8000-000000000004'),
+ (19, 3, 2, NULL, 'Unpaid', '2026-11-26', '2026-11-27', 'FullDay', 2, N'Phần không lương bị từ chối trong cùng đợt.', 'Rejected', N'Chưa bố trí được nhân sự cho phần không lương.', '2026-11-04 09:00:00', '2026-11-04 10:00:00', NULL, '44444444-0524-4620-8000-000000000004'),
+ (20, 13, 2, NULL, 'Annual', '2026-08-16', '2026-08-27', 'FullDay', 12, N'Nghỉ phép năm đã được duyệt, còn 2 ngày phép để gửi đợt nghỉ tháng 11.', 'Approved', NULL, '2026-08-15 09:00:00', '2026-08-15 10:00:00', NULL, NULL),
+ (21, 3, 2, NULL, 'Annual', '2026-08-01', '2026-08-09', 'FullDay', 9, N'Nghỉ phép năm đã được duyệt trong tháng 8.', 'Approved', NULL, '2026-07-30 09:00:00', '2026-07-31 10:00:00', NULL, NULL);
 SET IDENTITY_INSERT LeaveRequests OFF;
 
-INSERT INTO LeaveRequestTransfers (LeaveRequestId, FromEmployeeId, ToEmployeeId, Note, CreatedAt) VALUES
- (5, 1, 2, N'Chuyển Quản lý Việt duyệt đơn phép bộ phận PT', '2026-10-20 10:15:00');
-
 /* ============================================================================
-   Facilities — 10 dòng danh mục máy.
+   Facilities — 10 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT Facilities ON;
 INSERT INTO Facilities (FacilityId, FacilityName, Category, Location, ImageUrl, UnitLabel, IsActive) VALUES
@@ -5056,7 +5082,7 @@ INSERT INTO Facilities (FacilityId, FacilityName, Category, Location, ImageUrl, 
 SET IDENTITY_INSERT Facilities OFF;
 
 /* ============================================================================
-   EquipmentItems — 134 cá thể máy vật lý.
+   EquipmentItems — 134 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT EquipmentItems ON;
 INSERT INTO EquipmentItems (EquipmentItemId, FacilityId, ItemCode, ItemLabel, PlacementNote, Status) VALUES
@@ -5077,60 +5103,60 @@ INSERT INTO EquipmentItems (EquipmentItemId, FacilityId, ItemCode, ItemLabel, Pl
  (15, 3, 'MS-001', N'Số 1', N'Góc trong', 'Available'),
  (16, 3, 'MS-002', N'Số 2', N'Góc trong', 'UnderMaintenance'),
  (17, 3, 'MS-003', N'Số 3', N'Góc trong', 'Available'),
- (18, 4, 'DB-001', N'2 kg', N'Giá tạ tầng 1', 'Available'),
- (19, 4, 'DB-002', N'4 kg', N'Giá tạ tầng 1', 'Available'),
- (20, 4, 'DB-003', N'6 kg', N'Giá tạ tầng 1', 'Available'),
- (21, 4, 'DB-004', N'8 kg', N'Giá tạ tầng 1', 'Available'),
- (22, 4, 'DB-005', N'10 kg', N'Giá tạ tầng 1', 'Available'),
- (23, 4, 'DB-006', N'12 kg', N'Giá tạ tầng 1', 'Available'),
- (24, 4, 'DB-007', N'14 kg', N'Giá tạ tầng 1', 'Available'),
- (25, 4, 'DB-008', N'16 kg', N'Giá tạ tầng 1', 'Available'),
- (26, 4, 'DB-009', N'18 kg', N'Giá tạ tầng 1', 'Available'),
- (27, 4, 'DB-010', N'20 kg', N'Giá tạ tầng 1', 'Available'),
- (28, 4, 'DB-011', N'22 kg', N'Giá tạ tầng 2', 'Available'),
- (29, 4, 'DB-012', N'24 kg', N'Giá tạ tầng 2', 'Available'),
- (30, 4, 'DB-013', N'26 kg', N'Giá tạ tầng 2', 'Available'),
- (31, 4, 'DB-014', N'28 kg', N'Giá tạ tầng 2', 'Available'),
- (32, 4, 'DB-015', N'30 kg', N'Giá tạ tầng 2', 'Available'),
- (33, 4, 'DB-016', N'32 kg', N'Giá tạ tầng 2', 'Available'),
- (34, 4, 'DB-017', N'34 kg', N'Giá tạ tầng 2', 'Available'),
- (35, 4, 'DB-018', N'36 kg', N'Giá tạ tầng 2', 'Available'),
- (36, 4, 'DB-019', N'38 kg', N'Giá tạ tầng 2', 'Available'),
- (37, 4, 'DB-020', N'40 kg', N'Giá tạ tầng 2', 'Available'),
+ (18, 4, 'DB-001', '2 kg', N'Giá tạ tầng 1', 'Available'),
+ (19, 4, 'DB-002', '4 kg', N'Giá tạ tầng 1', 'Available'),
+ (20, 4, 'DB-003', '6 kg', N'Giá tạ tầng 1', 'Available'),
+ (21, 4, 'DB-004', '8 kg', N'Giá tạ tầng 1', 'Available'),
+ (22, 4, 'DB-005', '10 kg', N'Giá tạ tầng 1', 'Available'),
+ (23, 4, 'DB-006', '12 kg', N'Giá tạ tầng 1', 'Available'),
+ (24, 4, 'DB-007', '14 kg', N'Giá tạ tầng 1', 'Available'),
+ (25, 4, 'DB-008', '16 kg', N'Giá tạ tầng 1', 'Available'),
+ (26, 4, 'DB-009', '18 kg', N'Giá tạ tầng 1', 'Available'),
+ (27, 4, 'DB-010', '20 kg', N'Giá tạ tầng 1', 'Available'),
+ (28, 4, 'DB-011', '22 kg', N'Giá tạ tầng 2', 'Available'),
+ (29, 4, 'DB-012', '24 kg', N'Giá tạ tầng 2', 'Available'),
+ (30, 4, 'DB-013', '26 kg', N'Giá tạ tầng 2', 'Available'),
+ (31, 4, 'DB-014', '28 kg', N'Giá tạ tầng 2', 'Available'),
+ (32, 4, 'DB-015', '30 kg', N'Giá tạ tầng 2', 'Available'),
+ (33, 4, 'DB-016', '32 kg', N'Giá tạ tầng 2', 'Available'),
+ (34, 4, 'DB-017', '34 kg', N'Giá tạ tầng 2', 'Available'),
+ (35, 4, 'DB-018', '36 kg', N'Giá tạ tầng 2', 'Available'),
+ (36, 4, 'DB-019', '38 kg', N'Giá tạ tầng 2', 'Available'),
+ (37, 4, 'DB-020', '40 kg', N'Giá tạ tầng 2', 'Available'),
  (38, 5, 'CP-001', N'Số 1', N'Dãy máy ngực', 'UnderMaintenance'),
  (39, 5, 'CP-002', N'Số 2', N'Dãy máy ngực', 'UnderMaintenance'),
  (40, 6, 'SP-001', N'Số 1', N'Dãy máy vai', 'Available'),
  (41, 6, 'SP-002', N'Số 2', N'Dãy máy vai', 'Available'),
- (42, 7, 'LK-001', N'Tủ 1', N'Khu nam', 'Available'),
- (43, 7, 'LK-002', N'Tủ 2', N'Khu nam', 'Available'),
- (44, 7, 'LK-003', N'Tủ 3', N'Khu nam', 'Available'),
- (45, 7, 'LK-004', N'Tủ 4', N'Khu nam', 'Available'),
- (46, 7, 'LK-005', N'Tủ 5', N'Khu nam', 'Available'),
- (47, 7, 'LK-006', N'Tủ 6', N'Khu nam', 'Available'),
- (48, 7, 'LK-007', N'Tủ 7', N'Khu nam', 'Available'),
- (49, 7, 'LK-008', N'Tủ 8', N'Khu nam', 'Available'),
- (50, 7, 'LK-009', N'Tủ 9', N'Khu nam', 'Available'),
- (51, 7, 'LK-010', N'Tủ 10', N'Khu nam', 'Available'),
- (52, 7, 'LK-011', N'Tủ 11', N'Khu nam', 'Available'),
- (53, 7, 'LK-012', N'Tủ 12', N'Khu nam', 'UnderMaintenance'),
- (54, 7, 'LK-013', N'Tủ 13', N'Khu nam', 'Available'),
- (55, 7, 'LK-014', N'Tủ 14', N'Khu nam', 'Available'),
- (56, 7, 'LK-015', N'Tủ 15', N'Khu nam', 'Available'),
- (57, 7, 'LK-016', N'Tủ 16', N'Khu nam', 'Available'),
- (58, 7, 'LK-017', N'Tủ 17', N'Khu nam', 'Available'),
- (59, 7, 'LK-018', N'Tủ 18', N'Khu nam', 'Available'),
- (60, 7, 'LK-019', N'Tủ 19', N'Khu nam', 'Available'),
- (61, 7, 'LK-020', N'Tủ 20', N'Khu nam', 'Available'),
- (62, 7, 'LK-021', N'Tủ 21', N'Khu nam', 'Available'),
- (63, 7, 'LK-022', N'Tủ 22', N'Khu nam', 'Available'),
- (64, 7, 'LK-023', N'Tủ 23', N'Khu nam', 'Available'),
- (65, 7, 'LK-024', N'Tủ 24', N'Khu nam', 'Available'),
- (66, 7, 'LK-025', N'Tủ 25', N'Khu nam', 'Available'),
- (67, 7, 'LK-026', N'Tủ 26', N'Khu nam', 'Available'),
- (68, 7, 'LK-027', N'Tủ 27', N'Khu nam', 'Available'),
- (69, 7, 'LK-028', N'Tủ 28', N'Khu nam', 'Available'),
- (70, 7, 'LK-029', N'Tủ 29', N'Khu nam', 'Available'),
- (71, 7, 'LK-030', N'Tủ 30', N'Khu nam', 'Available'),
+ (42, 7, 'LK-001', N'Tủ 1', 'Khu nam', 'Available'),
+ (43, 7, 'LK-002', N'Tủ 2', 'Khu nam', 'Available'),
+ (44, 7, 'LK-003', N'Tủ 3', 'Khu nam', 'Available'),
+ (45, 7, 'LK-004', N'Tủ 4', 'Khu nam', 'Available'),
+ (46, 7, 'LK-005', N'Tủ 5', 'Khu nam', 'Available'),
+ (47, 7, 'LK-006', N'Tủ 6', 'Khu nam', 'Available'),
+ (48, 7, 'LK-007', N'Tủ 7', 'Khu nam', 'Available'),
+ (49, 7, 'LK-008', N'Tủ 8', 'Khu nam', 'Available'),
+ (50, 7, 'LK-009', N'Tủ 9', 'Khu nam', 'Available'),
+ (51, 7, 'LK-010', N'Tủ 10', 'Khu nam', 'Available'),
+ (52, 7, 'LK-011', N'Tủ 11', 'Khu nam', 'Available'),
+ (53, 7, 'LK-012', N'Tủ 12', 'Khu nam', 'UnderMaintenance'),
+ (54, 7, 'LK-013', N'Tủ 13', 'Khu nam', 'Available'),
+ (55, 7, 'LK-014', N'Tủ 14', 'Khu nam', 'Available'),
+ (56, 7, 'LK-015', N'Tủ 15', 'Khu nam', 'Available'),
+ (57, 7, 'LK-016', N'Tủ 16', 'Khu nam', 'Available'),
+ (58, 7, 'LK-017', N'Tủ 17', 'Khu nam', 'Available'),
+ (59, 7, 'LK-018', N'Tủ 18', 'Khu nam', 'Available'),
+ (60, 7, 'LK-019', N'Tủ 19', 'Khu nam', 'Available'),
+ (61, 7, 'LK-020', N'Tủ 20', 'Khu nam', 'Available'),
+ (62, 7, 'LK-021', N'Tủ 21', 'Khu nam', 'Available'),
+ (63, 7, 'LK-022', N'Tủ 22', 'Khu nam', 'Available'),
+ (64, 7, 'LK-023', N'Tủ 23', 'Khu nam', 'Available'),
+ (65, 7, 'LK-024', N'Tủ 24', 'Khu nam', 'Available'),
+ (66, 7, 'LK-025', N'Tủ 25', 'Khu nam', 'Available'),
+ (67, 7, 'LK-026', N'Tủ 26', 'Khu nam', 'Available'),
+ (68, 7, 'LK-027', N'Tủ 27', 'Khu nam', 'Available'),
+ (69, 7, 'LK-028', N'Tủ 28', 'Khu nam', 'Available'),
+ (70, 7, 'LK-029', N'Tủ 29', 'Khu nam', 'Available'),
+ (71, 7, 'LK-030', N'Tủ 30', 'Khu nam', 'Available'),
  (72, 7, 'LK-031', N'Tủ 31', N'Khu nữ', 'Available'),
  (73, 7, 'LK-032', N'Tủ 32', N'Khu nữ', 'Available'),
  (74, 7, 'LK-033', N'Tủ 33', N'Khu nữ', 'Available'),
@@ -5197,16 +5223,16 @@ INSERT INTO EquipmentItems (EquipmentItemId, FacilityId, ItemCode, ItemLabel, Pl
 SET IDENTITY_INSERT EquipmentItems OFF;
 
 /* ============================================================================
-   MaintenanceRequests — 10 dòng gắn đích danh EquipmentItemId.
+   MaintenanceRequests — 12 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT MaintenanceRequests ON;
 INSERT INTO MaintenanceRequests (MaintenanceRequestId, RequestCode, EquipmentItemId, ReportedByEmployeeId, ReviewedByEmployeeId, ClosedByEmployeeId, Priority, IncidentType, AffectedItemsNote, WarningTagPlaced, Description, Status, SetUnderMaintenance, RejectReason, ManagerNote, AcceptanceNote, ReportedAt, ReviewedAt, ClosedAt) VALUES
- (1, 'BT-0001', 38, 3, 2, NULL, 'Urgent', 'StrangeNoise', NULL, 1, N'Máy ép ngực kêu to khi đẩy, nghi hỏng bạc đạn', 'InProgress', 1, NULL, N'Đã liên hệ hãng bảo hành Technogym', NULL, '2026-09-20 09:00:00', '2026-09-20 11:00:00', NULL),
+ (1, 'BT-0001', 38, 3, 2, NULL, 'Urgent', 'StrangeNoise', NULL, 1, N'Máy ép ngực kêu to khi đẩy, nghi hỏng bạc đạn', 'InProgress', 1, NULL, N'Đã liên hệ hãng bảo hành Technogym', NULL, '2026-09-20 09:00:00', '2026-09-20 11:00:00', NULL), -- thiết bị chuyển Under maintenance (CBR-101)
  (2, 'BT-0002', 3, 4, 2, 3, 'Normal', 'NotWorking', NULL, 1, N'Máy chạy số 3 bị giật khi tăng tốc', 'Closed', 1, NULL, NULL, N'Đã thay dây curoa, chạy thử 30 phút ổn định', '2026-09-10 08:00:00', '2026-09-10 10:00:00', '2026-09-14 16:00:00'),
  (3, 'BT-0003', 27, 3, 2, NULL, 'Low', 'BrokenOrWorn', N'Quả 20 kg', 0, N'Tạ đơn 20kg bị lỏng ốc siết, nguy cơ rơi đĩa tạ khi tập', 'Rejected', NULL, N'Đã chuyển bộ phận bảo dưỡng vặn chặt ốc, không cần thay mới', NULL, NULL, '2026-09-12 14:00:00', '2026-09-12 17:30:00', NULL),
  (4, 'BT-0004', 10, 3, NULL, NULL, 'Normal', 'NotWorking', NULL, 1, N'Xe đạp số 2 kẹt bàn đạp, không xoay được', 'Open', NULL, NULL, NULL, NULL, '2026-10-02 08:30:00', NULL, NULL),
  (5, 'BT-0005', 53, 4, NULL, NULL, 'Low', 'BrokenOrWorn', NULL, 0, N'Tủ khóa số 12 hỏng chốt, không khóa được', 'Open', NULL, NULL, NULL, NULL, '2026-10-01 20:00:00', NULL, NULL),
- (6, 'BT-0006', 103, 9, 2, NULL, 'Normal', 'SafetyHazard', NULL, 1, N'Dây cáp máy kéo bị sờn ở đầu nối', 'InProgress', 0, NULL, N'Đang chờ thợ thay cáp mới', NULL, '2026-09-29 19:00:00', '2026-09-30 09:00:00', NULL),
+ (6, 'BT-0006', 103, 9, 2, NULL, 'Normal', 'SafetyHazard', NULL, 1, N'Dây cáp máy kéo bị sờn ở đầu nối', 'InProgress', 0, NULL, N'Đang chờ thợ thay cáp mới', NULL, '2026-09-29 19:00:00', '2026-09-30 09:00:00', NULL), -- duyệt nhưng KHÔNG chuyển Under maintenance (CBR-101 bỏ tick)
  (7, 'BT-0007', 108, 11, 2, 11, 'Low', 'BrokenOrWorn', NULL, 0, N'Thảm yoga số 4 bị rách góc', 'Closed', 0, NULL, NULL, N'Đã thay thảm mới', '2026-09-05 18:00:00', '2026-09-06 09:00:00', '2026-09-08 15:00:00'),
  (8, 'BT-0008', 5, 3, NULL, NULL, 'Normal', 'StrangeNoise', NULL, 1, N'Băng tải máy chạy số 5 phát tiếng rít chói tai khi chạy ở tốc độ cao', 'Open', NULL, NULL, NULL, NULL, '2026-10-03 09:15:00', NULL, NULL),
  (9, 'BT-0009', 16, 4, NULL, NULL, 'Urgent', 'BrokenOrWorn', NULL, 1, N'Ròng rọc giàn tạ số 2 bị nứt và kẹt dây cáp khi nâng tạ nặng', 'Open', NULL, NULL, NULL, NULL, '2026-10-03 14:00:00', NULL, NULL),
@@ -5417,7 +5443,7 @@ INSERT INTO NotificationRecipients (NotificationRecipientId, NotificationId, Acc
 SET IDENTITY_INSERT NotificationRecipients OFF;
 
 /* ============================================================================
-   SystemConfigs — 21 dòng.
+   SystemConfigs — 19 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT SystemConfigs ON;
 INSERT INTO SystemConfigs (SystemConfigId, ConfigKey, ConfigValue, Description, UpdatedAt, UpdatedByEmployeeId) VALUES
@@ -5427,7 +5453,6 @@ INSERT INTO SystemConfigs (SystemConfigId, ConfigKey, ConfigValue, Description, 
  (4, 'P-04', '1D,1M,3M,9M,12M', N'Thời hạn gói tập: D = ngày, M = tháng', '2026-09-01 09:00:00', 2),
  (5, 'P-05', '10', N'Tuổi tối thiểu dùng dịch vụ PT', '2026-09-01 09:00:00', 2),
  (6, 'P-06', '90', N'Độ dài một buổi PT (phút)', '2026-09-01 09:00:00', 2),
- (8, 'P-08', '3', N'Số lượt đổi buổi mỗi tháng của gói PT (hạn mức gói = P-08 × số tháng)', '2026-09-01 09:00:00', 2),
  (9, 'P-09', '20', N'Hạn thanh toán đơn online = thời gian giữ slot (phút)', '2026-09-01 09:00:00', 2),
  (10, 'P-10', '10', N'Thuế VAT (%) đã nằm trong giá bán', '2026-09-01 09:00:00', 2),
  (11, 'P-11', '70', N'Tỷ lệ hoa hồng mặc định cho PT mới (%)', '2026-09-01 09:00:00', 2),
@@ -5440,12 +5465,11 @@ INSERT INTO SystemConfigs (SystemConfigId, ConfigKey, ConfigValue, Description, 
  (18, 'P-18', '5', N'Thời gian khóa tạm (phút)', '2026-09-01 09:00:00', 2),
  (19, 'P-19', '05:30-22:00', N'Giờ mở cửa mặc định hằng ngày', '2026-09-01 09:00:00', 2),
  (21, 'P-21', '1M,2M,3M', N'Thời hạn gói PT (tháng)', '2026-09-01 09:00:00', 2),
- (22, 'P-22', '3', N'Số khách tối thiểu để hiện điểm đánh giá trung bình của PT', '2026-10-06 09:00:00', 2),
  (23, 'P-23', '14', N'Định mức phép năm demo (ngày/năm)', '2026-09-01 09:00:00', 2);
 SET IDENTITY_INSERT SystemConfigs OFF;
 
 /* ============================================================================
-   OperatingHourExceptions — 5 dòng.
+   OperatingHourExceptions — 6 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT OperatingHourExceptions ON;
 INSERT INTO OperatingHourExceptions (OperatingHourExceptionId, ApplyDate, OpenTime, CloseTime, IsClosedAllDay, Note, SetByEmployeeId, CreatedAt) VALUES
@@ -5453,7 +5477,8 @@ INSERT INTO OperatingHourExceptions (OperatingHourExceptionId, ApplyDate, OpenTi
  (2, '2026-09-18', NULL, NULL, 1, N'Sự cố điện, nghỉ cả ngày', 2, '2026-09-10 09:00:00'),
  (3, '2026-10-11', '07:00:00', '18:00:00', 0, N'Chủ nhật bảo trì hệ thống nước, mở muộn đóng sớm', 2, '2026-09-28 09:00:00'),
  (4, '2026-10-20', NULL, NULL, 1, N'Bảo trì điện toàn tòa nhà', 2, '2026-08-25 09:00:00'),
- (5, '2027-02-06', NULL, NULL, 1, N'Nghỉ Tết Nguyên đán', 2, '2026-09-30 09:00:00');
+ (5, '2027-02-06', NULL, NULL, 1, N'Nghỉ Tết Nguyên đán', 2, '2026-09-30 09:00:00'),
+ (6, '2026-11-04', '08:30:00', '22:00:00', 0, N'Bảo trì hệ thống điện buổi sáng, mở cửa từ 08:30', 2, '2026-09-28 09:00:00');
 SET IDENTITY_INSERT OperatingHourExceptions OFF;
 
 /* ============================================================================
@@ -5499,51 +5524,66 @@ INSERT INTO BodyMeasurements (BodyMeasurementId, CustomerId, MeasuredOn, WeightK
  (11, 1, '2026-10-23', 75.2, 172.0, 21.4, 42.5, 86.5, N'Đo InBody tại phòng', '2026-10-23 21:00:00');
 SET IDENTITY_INSERT BodyMeasurements OFF;
 
--- IT-CM-06..09: dedicated fixtures, GmsTest2026!, membership 07/11..07/12/2026.
-SET IDENTITY_INSERT Persons ON;
-INSERT INTO Persons (PersonId, FullName, DateOfBirth, Phone, Email, Avatar, IsReleased, CreatedAt) VALUES (9006, N'Nguyễn Minh Sáu', '2000-02-12', '0909900006', 'it.cm06@example.com', NULL, 0, '2026-11-07 09:00:00');
-INSERT INTO Persons (PersonId, FullName, DateOfBirth, Phone, Email, Avatar, IsReleased, CreatedAt) VALUES (9007, N'Trần Minh Bảy', '2000-02-12', '0909900007', 'it.cm07@example.com', NULL, 0, '2026-11-07 09:00:00');
-INSERT INTO Persons (PersonId, FullName, DateOfBirth, Phone, Email, Avatar, IsReleased, CreatedAt) VALUES (9008, N'Lê Minh Tám', '2000-02-12', '0909900008', 'it.cm08@example.com', NULL, 0, '2026-11-07 09:00:00');
-INSERT INTO Persons (PersonId, FullName, DateOfBirth, Phone, Email, Avatar, IsReleased, CreatedAt) VALUES (9009, N'Phạm Minh Chín', '2000-02-12', '0909900009', 'it.cm09@example.com', NULL, 0, '2026-11-07 09:00:00');
-SET IDENTITY_INSERT Persons OFF;
-SET IDENTITY_INSERT Customers ON;
-INSERT INTO Customers (CustomerId, PersonId, CustomerCode, CheckInPhoto, CustomerType, GuardianName, GuardianRelationship, GuardianPhone, GuardianPhone2, Status, JoinedAt, DeletedAt) VALUES (244, 9006, 'KH-9006', NULL, 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-11-07 09:00:00', NULL);
-INSERT INTO Customers (CustomerId, PersonId, CustomerCode, CheckInPhoto, CustomerType, GuardianName, GuardianRelationship, GuardianPhone, GuardianPhone2, Status, JoinedAt, DeletedAt) VALUES (245, 9007, 'KH-9007', NULL, 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-11-07 09:00:00', NULL);
-INSERT INTO Customers (CustomerId, PersonId, CustomerCode, CheckInPhoto, CustomerType, GuardianName, GuardianRelationship, GuardianPhone, GuardianPhone2, Status, JoinedAt, DeletedAt) VALUES (246, 9008, 'KH-9008', NULL, 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-11-07 09:00:00', NULL);
-INSERT INTO Customers (CustomerId, PersonId, CustomerCode, CheckInPhoto, CustomerType, GuardianName, GuardianRelationship, GuardianPhone, GuardianPhone2, Status, JoinedAt, DeletedAt) VALUES (247, 9009, 'KH-9009', NULL, 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-11-07 09:00:00', NULL);
-SET IDENTITY_INSERT Customers OFF;
-SET IDENTITY_INSERT Accounts ON;
-INSERT INTO Accounts (AccountId, PersonId, PasswordHash, Status, FailedLoginCount, LockedUntil, LastLoginAt, CreatedAt) VALUES (243, 9006, '$2a$12$ikGqV.UW38VSSAcys/LUl.Z3NTV1DYJ4mOmYpjcdBJoC82xUQ7jkm', 'Active', 0, NULL, NULL, '2026-11-07 09:00:00');
-INSERT INTO Accounts (AccountId, PersonId, PasswordHash, Status, FailedLoginCount, LockedUntil, LastLoginAt, CreatedAt) VALUES (244, 9007, '$2a$12$ikGqV.UW38VSSAcys/LUl.Z3NTV1DYJ4mOmYpjcdBJoC82xUQ7jkm', 'Active', 0, NULL, NULL, '2026-11-07 09:00:00');
-INSERT INTO Accounts (AccountId, PersonId, PasswordHash, Status, FailedLoginCount, LockedUntil, LastLoginAt, CreatedAt) VALUES (245, 9008, '$2a$12$ikGqV.UW38VSSAcys/LUl.Z3NTV1DYJ4mOmYpjcdBJoC82xUQ7jkm', 'Active', 0, NULL, NULL, '2026-11-07 09:00:00');
-INSERT INTO Accounts (AccountId, PersonId, PasswordHash, Status, FailedLoginCount, LockedUntil, LastLoginAt, CreatedAt) VALUES (246, 9009, '$2a$12$ikGqV.UW38VSSAcys/LUl.Z3NTV1DYJ4mOmYpjcdBJoC82xUQ7jkm', 'Active', 0, NULL, NULL, '2026-11-07 09:00:00');
-SET IDENTITY_INSERT Accounts OFF;
-SET IDENTITY_INSERT Orders ON;
-INSERT INTO Orders (OrderId, OrderCode, HolderCustomerId, PartnerCustomerId, PackageId, VoucherId, CreatedByEmployeeId, ShiftId, Channel, PackageNameSnapshot, PackageDescriptionSnapshot, PackageBenefitsSnapshot, UnitPriceSnapshot, DiscountAmount, VatRateSnapshot, VatAmount, Status, PaymentDueAt, CreatedAt, PaidAt, CancelType, CancelledAt, CancelReason) VALUES (181, 'DH-2026-9006', 244, NULL, 2, NULL, NULL, NULL, 'Online', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
-Dùng đủ thiết bị khu cardio và khu tạ
-Miễn phí nước uống', 799000, 0, 10, 72636, 'Paid', '2026-11-07 09:20:00', '2026-11-07 09:00:00', '2026-11-07 09:02:00', NULL, NULL, NULL);
-INSERT INTO Orders (OrderId, OrderCode, HolderCustomerId, PartnerCustomerId, PackageId, VoucherId, CreatedByEmployeeId, ShiftId, Channel, PackageNameSnapshot, PackageDescriptionSnapshot, PackageBenefitsSnapshot, UnitPriceSnapshot, DiscountAmount, VatRateSnapshot, VatAmount, Status, PaymentDueAt, CreatedAt, PaidAt, CancelType, CancelledAt, CancelReason) VALUES (182, 'DH-2026-9007', 245, NULL, 2, NULL, NULL, NULL, 'Online', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
-Dùng đủ thiết bị khu cardio và khu tạ
-Miễn phí nước uống', 799000, 0, 10, 72636, 'Paid', '2026-11-07 09:20:00', '2026-11-07 09:00:00', '2026-11-07 09:02:00', NULL, NULL, NULL);
-INSERT INTO Orders (OrderId, OrderCode, HolderCustomerId, PartnerCustomerId, PackageId, VoucherId, CreatedByEmployeeId, ShiftId, Channel, PackageNameSnapshot, PackageDescriptionSnapshot, PackageBenefitsSnapshot, UnitPriceSnapshot, DiscountAmount, VatRateSnapshot, VatAmount, Status, PaymentDueAt, CreatedAt, PaidAt, CancelType, CancelledAt, CancelReason) VALUES (183, 'DH-2026-9008', 246, NULL, 2, NULL, NULL, NULL, 'Online', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
-Dùng đủ thiết bị khu cardio và khu tạ
-Miễn phí nước uống', 799000, 0, 10, 72636, 'Paid', '2026-11-07 09:20:00', '2026-11-07 09:00:00', '2026-11-07 09:02:00', NULL, NULL, NULL);
-INSERT INTO Orders (OrderId, OrderCode, HolderCustomerId, PartnerCustomerId, PackageId, VoucherId, CreatedByEmployeeId, ShiftId, Channel, PackageNameSnapshot, PackageDescriptionSnapshot, PackageBenefitsSnapshot, UnitPriceSnapshot, DiscountAmount, VatRateSnapshot, VatAmount, Status, PaymentDueAt, CreatedAt, PaidAt, CancelType, CancelledAt, CancelReason) VALUES (184, 'DH-2026-9009', 247, NULL, 2, NULL, NULL, NULL, 'Online', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
-Dùng đủ thiết bị khu cardio và khu tạ
-Miễn phí nước uống', 799000, 0, 10, 72636, 'Paid', '2026-11-07 09:20:00', '2026-11-07 09:00:00', '2026-11-07 09:02:00', NULL, NULL, NULL);
-SET IDENTITY_INSERT Orders OFF;
-SET IDENTITY_INSERT Transactions ON;
-INSERT INTO Transactions (TransactionId, OrderId, Amount, PaymentMethod, GatewayReference, ReceivedByEmployeeId, Status, FailureReason, NeedsRefund, RefundedAt, RefundedByEmployeeId, RefundNote, CreatedAt, ExpiresAt, CompletedAt) VALUES (181, 181, 799000, 'OnlineGateway', 'VNP-00181-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-11-07 09:01:00', '2026-11-07 09:06:00', '2026-11-07 09:02:00');
-INSERT INTO Transactions (TransactionId, OrderId, Amount, PaymentMethod, GatewayReference, ReceivedByEmployeeId, Status, FailureReason, NeedsRefund, RefundedAt, RefundedByEmployeeId, RefundNote, CreatedAt, ExpiresAt, CompletedAt) VALUES (182, 182, 799000, 'OnlineGateway', 'VNP-00182-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-11-07 09:01:00', '2026-11-07 09:06:00', '2026-11-07 09:02:00');
-INSERT INTO Transactions (TransactionId, OrderId, Amount, PaymentMethod, GatewayReference, ReceivedByEmployeeId, Status, FailureReason, NeedsRefund, RefundedAt, RefundedByEmployeeId, RefundNote, CreatedAt, ExpiresAt, CompletedAt) VALUES (183, 183, 799000, 'OnlineGateway', 'VNP-00183-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-11-07 09:01:00', '2026-11-07 09:06:00', '2026-11-07 09:02:00');
-INSERT INTO Transactions (TransactionId, OrderId, Amount, PaymentMethod, GatewayReference, ReceivedByEmployeeId, Status, FailureReason, NeedsRefund, RefundedAt, RefundedByEmployeeId, RefundNote, CreatedAt, ExpiresAt, CompletedAt) VALUES (184, 184, 799000, 'OnlineGateway', 'VNP-00184-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-11-07 09:01:00', '2026-11-07 09:06:00', '2026-11-07 09:02:00');
-SET IDENTITY_INSERT Transactions OFF;
-SET IDENTITY_INSERT Subscriptions ON;
-INSERT INTO Subscriptions (SubscriptionId, OrderId, CustomerId, SubscriptionType, PtEmployeeId, StartDate, EndDate, FixedStartTime, GeneratedSessionCount, SwapsUsed, MaxSwapsSnapshot, FreezeUsed, MaxFreezesSnapshot, Status) VALUES (174, 181, 244, 'Membership', NULL, '2026-11-07', '2026-12-07', NULL, NULL, 0, NULL, 0, 1, 'Active');
-INSERT INTO Subscriptions (SubscriptionId, OrderId, CustomerId, SubscriptionType, PtEmployeeId, StartDate, EndDate, FixedStartTime, GeneratedSessionCount, SwapsUsed, MaxSwapsSnapshot, FreezeUsed, MaxFreezesSnapshot, Status) VALUES (175, 182, 245, 'Membership', NULL, '2026-11-07', '2026-12-07', NULL, NULL, 0, NULL, 0, 1, 'Active');
-INSERT INTO Subscriptions (SubscriptionId, OrderId, CustomerId, SubscriptionType, PtEmployeeId, StartDate, EndDate, FixedStartTime, GeneratedSessionCount, SwapsUsed, MaxSwapsSnapshot, FreezeUsed, MaxFreezesSnapshot, Status) VALUES (176, 183, 246, 'Membership', NULL, '2026-11-07', '2026-12-07', NULL, NULL, 0, NULL, 0, 1, 'Active');
-INSERT INTO Subscriptions (SubscriptionId, OrderId, CustomerId, SubscriptionType, PtEmployeeId, StartDate, EndDate, FixedStartTime, GeneratedSessionCount, SwapsUsed, MaxSwapsSnapshot, FreezeUsed, MaxFreezesSnapshot, Status) VALUES (177, 184, 247, 'Membership', NULL, '2026-11-07', '2026-12-07', NULL, NULL, 0, NULL, 0, 1, 'Active');
-SET IDENTITY_INSERT Subscriptions OFF;
+/* ============================================================================
+   Chốt các buổi đã qua lúc nạp seed — như JOB-02 rồi JOB-04 đã chạy mỗi đêm tới @Today (xem seedgen.close_past_sql).
+   ============================================================================ */
+-- JOB-02 (1/4) nhật ký: số buổi PT bị hủy vì gói hết hạn
+INSERT INTO AuditLogs (AccountId, ActingRole, Action, EntityName, EntityId, FieldChanged, OldValue, NewValue, Reason, CreatedAt)
+SELECT NULL, NULL, N'JOB-02', N'Subscriptions', p.SubscriptionId, N'Sessions.Status', N'Scheduled', N'Cancelled',
+       CONCAT(CAST(COUNT(*) AS NVARCHAR(10)), N' buổi sau ngày hết hạn gói → PackageExpired (CBR-55)'), DATEADD(MINUTE, 5, CAST(DATEADD(DAY, 1, p.EndDate) AS DATETIME2(0)))
+FROM Subscriptions p JOIN Sessions s ON s.SubscriptionId = p.SubscriptionId JOIN TimeSlots t ON t.TimeSlotId = s.TimeSlotId
+WHERE p.SubscriptionType IN ('PTSingle', 'PTCouple') AND p.Status = 'Active' AND p.EndDate < @Today AND s.Status = 'Scheduled' AND t.SlotDate > p.EndDate
+GROUP BY p.SubscriptionId, p.EndDate;
+-- JOB-02 (2/4) gói PT hết hạn: khung của buổi sau EndDate → Free, buổi → Cancelled / PackageExpired
+UPDATE TimeSlots SET Status = 'Free'
+WHERE Status = 'Booked' AND EXISTS (SELECT 1 FROM Sessions s JOIN Subscriptions p ON p.SubscriptionId = s.SubscriptionId
+    WHERE s.TimeSlotId = TimeSlots.TimeSlotId AND s.Status = 'Scheduled' AND p.SubscriptionType IN ('PTSingle', 'PTCouple') AND p.Status = 'Active' AND p.EndDate < @Today AND TimeSlots.SlotDate > p.EndDate);
+UPDATE Sessions SET Status = 'Cancelled', CancelType = 'PackageExpired', CancelReason = N'Gói PT đã hết hạn',
+    CancelledAt = (SELECT DATEADD(MINUTE, 5, CAST(DATEADD(DAY, 1, p.EndDate) AS DATETIME2(0))) FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId)
+WHERE Status = 'Scheduled' AND EXISTS (SELECT 1 FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId
+    AND p.SubscriptionType IN ('PTSingle', 'PTCouple') AND p.Status = 'Active' AND p.EndDate < @Today AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) > p.EndDate);
+-- JOB-02 (3/4) khách không còn gói tập / vé ngày còn hiệu lực → Customers.Expired (CBR-03)
+INSERT INTO AuditLogs (AccountId, ActingRole, Action, EntityName, EntityId, FieldChanged, OldValue, NewValue, Reason, CreatedAt)
+SELECT NULL, NULL, N'JOB-02', N'Customers', Customers.CustomerId, N'Status', NULL, N'Expired',
+       N'Không còn gói tập / vé ngày còn hiệu lực (CBR-03)', (SELECT DATEADD(MINUTE, 5, CAST(DATEADD(DAY, 1, MAX(e.EndDate)) AS DATETIME2(0))) FROM Subscriptions e WHERE e.CustomerId = Customers.CustomerId AND e.SubscriptionType IN ('Membership', 'PTSingle', 'PTCouple') AND e.Status = 'Active' AND e.EndDate < @Today)
+FROM Customers WHERE Customers.Status NOT IN ('Inactive', 'Expired') AND EXISTS (SELECT 1 FROM Subscriptions e WHERE e.CustomerId = Customers.CustomerId AND e.SubscriptionType IN ('Membership', 'PTSingle', 'PTCouple') AND e.Status = 'Active' AND e.EndDate < @Today) AND NOT EXISTS (SELECT 1 FROM Subscriptions m WHERE m.CustomerId = Customers.CustomerId AND m.SubscriptionType = 'Membership' AND m.Status IN ('Active', 'Frozen') AND NOT (m.Status = 'Active' AND m.EndDate < @Today)) AND NOT EXISTS (SELECT 1 FROM Subscriptions d WHERE d.CustomerId = Customers.CustomerId AND d.SubscriptionType = 'DayPass' AND d.Status = 'Active' AND d.EndDate >= @Today);
+UPDATE Customers SET Status = 'Expired' WHERE Customers.Status NOT IN ('Inactive', 'Expired') AND EXISTS (SELECT 1 FROM Subscriptions e WHERE e.CustomerId = Customers.CustomerId AND e.SubscriptionType IN ('Membership', 'PTSingle', 'PTCouple') AND e.Status = 'Active' AND e.EndDate < @Today) AND NOT EXISTS (SELECT 1 FROM Subscriptions m WHERE m.CustomerId = Customers.CustomerId AND m.SubscriptionType = 'Membership' AND m.Status IN ('Active', 'Frozen') AND NOT (m.Status = 'Active' AND m.EndDate < @Today)) AND NOT EXISTS (SELECT 1 FROM Subscriptions d WHERE d.CustomerId = Customers.CustomerId AND d.SubscriptionType = 'DayPass' AND d.Status = 'Active' AND d.EndDate >= @Today);
+-- JOB-02 (4/4) gói → Expired
+INSERT INTO AuditLogs (AccountId, ActingRole, Action, EntityName, EntityId, FieldChanged, OldValue, NewValue, Reason, CreatedAt)
+SELECT NULL, NULL, N'JOB-02', N'Subscriptions', SubscriptionId, N'Status', N'Active', N'Expired',
+       CONCAT(N'Hết hạn ngày ', CONVERT(NVARCHAR(10), EndDate, 103)), DATEADD(MINUTE, 5, CAST(DATEADD(DAY, 1, EndDate) AS DATETIME2(0)))
+FROM Subscriptions WHERE SubscriptionType IN ('Membership', 'PTSingle', 'PTCouple') AND Status = 'Active' AND EndDate < @Today;
+UPDATE Subscriptions SET Status = 'Expired' WHERE SubscriptionType IN ('Membership', 'PTSingle', 'PTCouple') AND Status = 'Active' AND EndDate < @Today;
+-- JOB-04 B1 GymClosed: phòng nghỉ cả ngày / buổi ngoài giờ mở cửa
+INSERT INTO AuditLogs (AccountId, ActingRole, Action, EntityName, EntityId, FieldChanged, OldValue, NewValue, Reason, CreatedAt)
+SELECT NULL, NULL, N'JOB-04', N'Sessions', SessionId, N'Status', N'Scheduled', N'Cancelled', NULL, (SELECT DATEADD(MINUTE, 5, CAST(DATEADD(DAY, 1, t.SlotDate) AS DATETIME2(0))) FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId)
+FROM Sessions WHERE Sessions.Status = 'Scheduled' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) < @Today AND EXISTS (SELECT 1 FROM TimeSlots t LEFT JOIN OperatingHourExceptions ex ON ex.ApplyDate = t.SlotDate WHERE t.TimeSlotId = Sessions.TimeSlotId AND (ex.IsClosedAllDay = 1 OR t.StartTime < COALESCE(ex.OpenTime, (SELECT CAST(SUBSTRING(c.ConfigValue, 1, 5) AS TIME(0)) FROM SystemConfigs c WHERE c.ConfigKey = 'P-19')) OR t.EndTime > COALESCE(ex.CloseTime, (SELECT CAST(SUBSTRING(c.ConfigValue, 7, 5) AS TIME(0)) FROM SystemConfigs c WHERE c.ConfigKey = 'P-19'))));
+UPDATE Sessions SET Status = 'Cancelled', MissedReason = NULL, IsAutoClosed = 1, AttendanceMarkedAt = (SELECT DATEADD(MINUTE, 5, CAST(DATEADD(DAY, 1, t.SlotDate) AS DATETIME2(0))) FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId), CancelType = 'GymClosed', CommissionAmount = 0, CancelledAt = (SELECT DATEADD(MINUTE, 5, CAST(DATEADD(DAY, 1, t.SlotDate) AS DATETIME2(0))) FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId)
+WHERE Sessions.Status = 'Scheduled' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) < @Today AND EXISTS (SELECT 1 FROM TimeSlots t LEFT JOIN OperatingHourExceptions ex ON ex.ApplyDate = t.SlotDate WHERE t.TimeSlotId = Sessions.TimeSlotId AND (ex.IsClosedAllDay = 1 OR t.StartTime < COALESCE(ex.OpenTime, (SELECT CAST(SUBSTRING(c.ConfigValue, 1, 5) AS TIME(0)) FROM SystemConfigs c WHERE c.ConfigKey = 'P-19')) OR t.EndTime > COALESCE(ex.CloseTime, (SELECT CAST(SUBSTRING(c.ConfigValue, 7, 5) AS TIME(0)) FROM SystemConfigs c WHERE c.ConfigKey = 'P-19'))));
+-- JOB-04 B5 không ai vào gym được + có người bảo lưu
+INSERT INTO AuditLogs (AccountId, ActingRole, Action, EntityName, EntityId, FieldChanged, OldValue, NewValue, Reason, CreatedAt)
+SELECT NULL, NULL, N'JOB-04', N'Sessions', SessionId, N'Status', N'Scheduled', N'Missed', 'MembershipFrozen', (SELECT DATEADD(MINUTE, 5, CAST(DATEADD(DAY, 1, t.SlotDate) AS DATETIME2(0))) FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId)
+FROM Sessions WHERE Sessions.Status = 'Scheduled' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) < @Today AND (NOT ((EXISTS (SELECT 1 FROM Subscriptions g WHERE g.CustomerId = (SELECT p.CustomerId FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId) AND g.SubscriptionType = 'Membership' AND g.Status IN ('Active', 'Frozen', 'Expired') AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN g.StartDate AND g.EndDate) AND NOT EXISTS (SELECT 1 FROM Subscriptions g JOIN FreezeRecords f ON f.SubscriptionId = g.SubscriptionId WHERE g.CustomerId = (SELECT p.CustomerId FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId) AND g.SubscriptionType = 'Membership' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN f.StartDate AND COALESCE(f.ActualEndDate, f.PlannedEndDate))) OR EXISTS (SELECT 1 FROM Subscriptions g WHERE g.CustomerId = (SELECT p.CustomerId FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId) AND g.SubscriptionType = 'DayPass' AND g.Status IN ('Active', 'Used', 'Expired') AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN g.StartDate AND g.EndDate)) AND (NOT EXISTS (SELECT 1 FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId AND p.SubscriptionType = 'PTCouple') OR NOT ((EXISTS (SELECT 1 FROM Subscriptions g WHERE g.CustomerId = (SELECT o.PartnerCustomerId FROM Subscriptions p JOIN Orders o ON o.OrderId = p.OrderId WHERE p.SubscriptionId = Sessions.SubscriptionId AND p.SubscriptionType = 'PTCouple') AND g.SubscriptionType = 'Membership' AND g.Status IN ('Active', 'Frozen', 'Expired') AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN g.StartDate AND g.EndDate) AND NOT EXISTS (SELECT 1 FROM Subscriptions g JOIN FreezeRecords f ON f.SubscriptionId = g.SubscriptionId WHERE g.CustomerId = (SELECT o.PartnerCustomerId FROM Subscriptions p JOIN Orders o ON o.OrderId = p.OrderId WHERE p.SubscriptionId = Sessions.SubscriptionId AND p.SubscriptionType = 'PTCouple') AND g.SubscriptionType = 'Membership' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN f.StartDate AND COALESCE(f.ActualEndDate, f.PlannedEndDate))) OR EXISTS (SELECT 1 FROM Subscriptions g WHERE g.CustomerId = (SELECT o.PartnerCustomerId FROM Subscriptions p JOIN Orders o ON o.OrderId = p.OrderId WHERE p.SubscriptionId = Sessions.SubscriptionId AND p.SubscriptionType = 'PTCouple') AND g.SubscriptionType = 'DayPass' AND g.Status IN ('Active', 'Used', 'Expired') AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN g.StartDate AND g.EndDate)))) AND (EXISTS (SELECT 1 FROM Subscriptions g JOIN FreezeRecords f ON f.SubscriptionId = g.SubscriptionId WHERE g.CustomerId = (SELECT p.CustomerId FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId) AND g.SubscriptionType = 'Membership' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN f.StartDate AND COALESCE(f.ActualEndDate, f.PlannedEndDate)) OR (EXISTS (SELECT 1 FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId AND p.SubscriptionType = 'PTCouple') AND EXISTS (SELECT 1 FROM Subscriptions g JOIN FreezeRecords f ON f.SubscriptionId = g.SubscriptionId WHERE g.CustomerId = (SELECT o.PartnerCustomerId FROM Subscriptions p JOIN Orders o ON o.OrderId = p.OrderId WHERE p.SubscriptionId = Sessions.SubscriptionId AND p.SubscriptionType = 'PTCouple') AND g.SubscriptionType = 'Membership' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN f.StartDate AND COALESCE(f.ActualEndDate, f.PlannedEndDate))));
+UPDATE Sessions SET Status = 'Missed', MissedReason = 'MembershipFrozen', IsAutoClosed = 1, AttendanceMarkedAt = (SELECT DATEADD(MINUTE, 5, CAST(DATEADD(DAY, 1, t.SlotDate) AS DATETIME2(0))) FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId)
+WHERE Sessions.Status = 'Scheduled' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) < @Today AND (NOT ((EXISTS (SELECT 1 FROM Subscriptions g WHERE g.CustomerId = (SELECT p.CustomerId FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId) AND g.SubscriptionType = 'Membership' AND g.Status IN ('Active', 'Frozen', 'Expired') AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN g.StartDate AND g.EndDate) AND NOT EXISTS (SELECT 1 FROM Subscriptions g JOIN FreezeRecords f ON f.SubscriptionId = g.SubscriptionId WHERE g.CustomerId = (SELECT p.CustomerId FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId) AND g.SubscriptionType = 'Membership' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN f.StartDate AND COALESCE(f.ActualEndDate, f.PlannedEndDate))) OR EXISTS (SELECT 1 FROM Subscriptions g WHERE g.CustomerId = (SELECT p.CustomerId FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId) AND g.SubscriptionType = 'DayPass' AND g.Status IN ('Active', 'Used', 'Expired') AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN g.StartDate AND g.EndDate)) AND (NOT EXISTS (SELECT 1 FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId AND p.SubscriptionType = 'PTCouple') OR NOT ((EXISTS (SELECT 1 FROM Subscriptions g WHERE g.CustomerId = (SELECT o.PartnerCustomerId FROM Subscriptions p JOIN Orders o ON o.OrderId = p.OrderId WHERE p.SubscriptionId = Sessions.SubscriptionId AND p.SubscriptionType = 'PTCouple') AND g.SubscriptionType = 'Membership' AND g.Status IN ('Active', 'Frozen', 'Expired') AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN g.StartDate AND g.EndDate) AND NOT EXISTS (SELECT 1 FROM Subscriptions g JOIN FreezeRecords f ON f.SubscriptionId = g.SubscriptionId WHERE g.CustomerId = (SELECT o.PartnerCustomerId FROM Subscriptions p JOIN Orders o ON o.OrderId = p.OrderId WHERE p.SubscriptionId = Sessions.SubscriptionId AND p.SubscriptionType = 'PTCouple') AND g.SubscriptionType = 'Membership' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN f.StartDate AND COALESCE(f.ActualEndDate, f.PlannedEndDate))) OR EXISTS (SELECT 1 FROM Subscriptions g WHERE g.CustomerId = (SELECT o.PartnerCustomerId FROM Subscriptions p JOIN Orders o ON o.OrderId = p.OrderId WHERE p.SubscriptionId = Sessions.SubscriptionId AND p.SubscriptionType = 'PTCouple') AND g.SubscriptionType = 'DayPass' AND g.Status IN ('Active', 'Used', 'Expired') AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN g.StartDate AND g.EndDate)))) AND (EXISTS (SELECT 1 FROM Subscriptions g JOIN FreezeRecords f ON f.SubscriptionId = g.SubscriptionId WHERE g.CustomerId = (SELECT p.CustomerId FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId) AND g.SubscriptionType = 'Membership' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN f.StartDate AND COALESCE(f.ActualEndDate, f.PlannedEndDate)) OR (EXISTS (SELECT 1 FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId AND p.SubscriptionType = 'PTCouple') AND EXISTS (SELECT 1 FROM Subscriptions g JOIN FreezeRecords f ON f.SubscriptionId = g.SubscriptionId WHERE g.CustomerId = (SELECT o.PartnerCustomerId FROM Subscriptions p JOIN Orders o ON o.OrderId = p.OrderId WHERE p.SubscriptionId = Sessions.SubscriptionId AND p.SubscriptionType = 'PTCouple') AND g.SubscriptionType = 'Membership' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN f.StartDate AND COALESCE(f.ActualEndDate, f.PlannedEndDate))));
+-- JOB-04 B6 không ai vào gym được
+INSERT INTO AuditLogs (AccountId, ActingRole, Action, EntityName, EntityId, FieldChanged, OldValue, NewValue, Reason, CreatedAt)
+SELECT NULL, NULL, N'JOB-04', N'Sessions', SessionId, N'Status', N'Scheduled', N'Missed', 'NoMembership', (SELECT DATEADD(MINUTE, 5, CAST(DATEADD(DAY, 1, t.SlotDate) AS DATETIME2(0))) FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId)
+FROM Sessions WHERE Sessions.Status = 'Scheduled' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) < @Today AND (NOT ((EXISTS (SELECT 1 FROM Subscriptions g WHERE g.CustomerId = (SELECT p.CustomerId FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId) AND g.SubscriptionType = 'Membership' AND g.Status IN ('Active', 'Frozen', 'Expired') AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN g.StartDate AND g.EndDate) AND NOT EXISTS (SELECT 1 FROM Subscriptions g JOIN FreezeRecords f ON f.SubscriptionId = g.SubscriptionId WHERE g.CustomerId = (SELECT p.CustomerId FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId) AND g.SubscriptionType = 'Membership' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN f.StartDate AND COALESCE(f.ActualEndDate, f.PlannedEndDate))) OR EXISTS (SELECT 1 FROM Subscriptions g WHERE g.CustomerId = (SELECT p.CustomerId FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId) AND g.SubscriptionType = 'DayPass' AND g.Status IN ('Active', 'Used', 'Expired') AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN g.StartDate AND g.EndDate)) AND (NOT EXISTS (SELECT 1 FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId AND p.SubscriptionType = 'PTCouple') OR NOT ((EXISTS (SELECT 1 FROM Subscriptions g WHERE g.CustomerId = (SELECT o.PartnerCustomerId FROM Subscriptions p JOIN Orders o ON o.OrderId = p.OrderId WHERE p.SubscriptionId = Sessions.SubscriptionId AND p.SubscriptionType = 'PTCouple') AND g.SubscriptionType = 'Membership' AND g.Status IN ('Active', 'Frozen', 'Expired') AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN g.StartDate AND g.EndDate) AND NOT EXISTS (SELECT 1 FROM Subscriptions g JOIN FreezeRecords f ON f.SubscriptionId = g.SubscriptionId WHERE g.CustomerId = (SELECT o.PartnerCustomerId FROM Subscriptions p JOIN Orders o ON o.OrderId = p.OrderId WHERE p.SubscriptionId = Sessions.SubscriptionId AND p.SubscriptionType = 'PTCouple') AND g.SubscriptionType = 'Membership' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN f.StartDate AND COALESCE(f.ActualEndDate, f.PlannedEndDate))) OR EXISTS (SELECT 1 FROM Subscriptions g WHERE g.CustomerId = (SELECT o.PartnerCustomerId FROM Subscriptions p JOIN Orders o ON o.OrderId = p.OrderId WHERE p.SubscriptionId = Sessions.SubscriptionId AND p.SubscriptionType = 'PTCouple') AND g.SubscriptionType = 'DayPass' AND g.Status IN ('Active', 'Used', 'Expired') AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN g.StartDate AND g.EndDate))));
+UPDATE Sessions SET Status = 'Missed', MissedReason = 'NoMembership', IsAutoClosed = 1, AttendanceMarkedAt = (SELECT DATEADD(MINUTE, 5, CAST(DATEADD(DAY, 1, t.SlotDate) AS DATETIME2(0))) FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId)
+WHERE Sessions.Status = 'Scheduled' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) < @Today AND (NOT ((EXISTS (SELECT 1 FROM Subscriptions g WHERE g.CustomerId = (SELECT p.CustomerId FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId) AND g.SubscriptionType = 'Membership' AND g.Status IN ('Active', 'Frozen', 'Expired') AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN g.StartDate AND g.EndDate) AND NOT EXISTS (SELECT 1 FROM Subscriptions g JOIN FreezeRecords f ON f.SubscriptionId = g.SubscriptionId WHERE g.CustomerId = (SELECT p.CustomerId FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId) AND g.SubscriptionType = 'Membership' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN f.StartDate AND COALESCE(f.ActualEndDate, f.PlannedEndDate))) OR EXISTS (SELECT 1 FROM Subscriptions g WHERE g.CustomerId = (SELECT p.CustomerId FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId) AND g.SubscriptionType = 'DayPass' AND g.Status IN ('Active', 'Used', 'Expired') AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN g.StartDate AND g.EndDate)) AND (NOT EXISTS (SELECT 1 FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId AND p.SubscriptionType = 'PTCouple') OR NOT ((EXISTS (SELECT 1 FROM Subscriptions g WHERE g.CustomerId = (SELECT o.PartnerCustomerId FROM Subscriptions p JOIN Orders o ON o.OrderId = p.OrderId WHERE p.SubscriptionId = Sessions.SubscriptionId AND p.SubscriptionType = 'PTCouple') AND g.SubscriptionType = 'Membership' AND g.Status IN ('Active', 'Frozen', 'Expired') AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN g.StartDate AND g.EndDate) AND NOT EXISTS (SELECT 1 FROM Subscriptions g JOIN FreezeRecords f ON f.SubscriptionId = g.SubscriptionId WHERE g.CustomerId = (SELECT o.PartnerCustomerId FROM Subscriptions p JOIN Orders o ON o.OrderId = p.OrderId WHERE p.SubscriptionId = Sessions.SubscriptionId AND p.SubscriptionType = 'PTCouple') AND g.SubscriptionType = 'Membership' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN f.StartDate AND COALESCE(f.ActualEndDate, f.PlannedEndDate))) OR EXISTS (SELECT 1 FROM Subscriptions g WHERE g.CustomerId = (SELECT o.PartnerCustomerId FROM Subscriptions p JOIN Orders o ON o.OrderId = p.OrderId WHERE p.SubscriptionId = Sessions.SubscriptionId AND p.SubscriptionType = 'PTCouple') AND g.SubscriptionType = 'DayPass' AND g.Status IN ('Active', 'Used', 'Expired') AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) BETWEEN g.StartDate AND g.EndDate))));
+-- JOB-04 B7 có check-in trong ngày tập
+INSERT INTO AuditLogs (AccountId, ActingRole, Action, EntityName, EntityId, FieldChanged, OldValue, NewValue, Reason, CreatedAt)
+SELECT NULL, NULL, N'JOB-04', N'Sessions', SessionId, N'Status', N'Scheduled', N'CheckedIn', NULL, (SELECT DATEADD(MINUTE, 5, CAST(DATEADD(DAY, 1, t.SlotDate) AS DATETIME2(0))) FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId)
+FROM Sessions WHERE Sessions.Status = 'Scheduled' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) < @Today AND EXISTS (SELECT 1 FROM CheckIns ci JOIN Subscriptions g ON g.SubscriptionId = ci.SubscriptionId WHERE g.SubscriptionType IN ('Membership', 'DayPass') AND (g.CustomerId = (SELECT p.CustomerId FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId) OR g.CustomerId = (SELECT o.PartnerCustomerId FROM Subscriptions p JOIN Orders o ON o.OrderId = p.OrderId WHERE p.SubscriptionId = Sessions.SubscriptionId AND p.SubscriptionType = 'PTCouple')) AND CAST(ci.CheckedInAt AS DATE) = (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId));
+UPDATE Sessions SET Status = 'CheckedIn', MissedReason = NULL, IsAutoClosed = 1, AttendanceMarkedAt = (SELECT DATEADD(MINUTE, 5, CAST(DATEADD(DAY, 1, t.SlotDate) AS DATETIME2(0))) FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId)
+WHERE Sessions.Status = 'Scheduled' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) < @Today AND EXISTS (SELECT 1 FROM CheckIns ci JOIN Subscriptions g ON g.SubscriptionId = ci.SubscriptionId WHERE g.SubscriptionType IN ('Membership', 'DayPass') AND (g.CustomerId = (SELECT p.CustomerId FROM Subscriptions p WHERE p.SubscriptionId = Sessions.SubscriptionId) OR g.CustomerId = (SELECT o.PartnerCustomerId FROM Subscriptions p JOIN Orders o ON o.OrderId = p.OrderId WHERE p.SubscriptionId = Sessions.SubscriptionId AND p.SubscriptionType = 'PTCouple')) AND CAST(ci.CheckedInAt AS DATE) = (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId));
+-- JOB-04 B8 có quyền vào gym nhưng không đến
+INSERT INTO AuditLogs (AccountId, ActingRole, Action, EntityName, EntityId, FieldChanged, OldValue, NewValue, Reason, CreatedAt)
+SELECT NULL, NULL, N'JOB-04', N'Sessions', SessionId, N'Status', N'Scheduled', N'Missed', 'NoCheckIn', (SELECT DATEADD(MINUTE, 5, CAST(DATEADD(DAY, 1, t.SlotDate) AS DATETIME2(0))) FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId)
+FROM Sessions WHERE Sessions.Status = 'Scheduled' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) < @Today AND 1 = 1;
+UPDATE Sessions SET Status = 'Missed', MissedReason = 'NoCheckIn', IsAutoClosed = 1, AttendanceMarkedAt = (SELECT DATEADD(MINUTE, 5, CAST(DATEADD(DAY, 1, t.SlotDate) AS DATETIME2(0))) FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId)
+WHERE Sessions.Status = 'Scheduled' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) < @Today AND 1 = 1;
 
 COMMIT TRANSACTION;
 GO
