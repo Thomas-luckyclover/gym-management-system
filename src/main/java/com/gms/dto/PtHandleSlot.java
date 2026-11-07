@@ -5,7 +5,7 @@ import java.time.LocalTime;
 
 /**
  * DTO 1 KHUNG TRỐNG có thể nhận buổi — DAO TẠO: PtSessionHandleDAO (findMySlots / findTransferSlots / findSlotById, câu SLOT_SQL).
- * Service lọc bằng whyNotAllowed; JSP đọc: _handle-dialog.jspf (biến slot).
+ * Service lọc bằng whyNotAllowed; JSP đọc: _schedule-handle-reschedule.jspf / _schedule-handle-transfer.jspf (biến slot).
  */
 public class PtHandleSlot {
     public PtHandleSlot(int timeSlotId, int ptEmployeeId, String ptName, int commissionRate, LocalDate slotDate,

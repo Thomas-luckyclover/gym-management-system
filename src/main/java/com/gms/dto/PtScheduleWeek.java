@@ -7,7 +7,7 @@ import java.util.List;
 
 /**
  * DTO 1 TUẦN của màn Lịch dạy — Service TẠO: PtScheduleService.getWeek (buildEmptyWeek → fillWeek).
- * Servlet: PtScheduleServlet.loadWeek → request "week" → schedule.jsp + _schedule-toolbar / _schedule-day / _schedule-pending.
+ * Servlet: PtScheduleServlet.loadWeek → request "week" → schedule.jsp + _schedule-toolbar / _schedule-grid / _schedule-day / _schedule-slot / _schedule-pending.
  * Hàm tính sẵn: getShiftSplitHour() = 13 (mốc chia Ca sáng / Ca chiều trên trục giờ).
  */
 public class PtScheduleWeek {
@@ -52,7 +52,7 @@ public class PtScheduleWeek {
     public int getAxisEndHour() { return axisEndHour; }
     public void setAxisEndHour(int axisEndHour) { this.axisEndHour = axisEndHour; }
 
-    // GETTER TỰ TÍNH — không có field/setter "shiftSplitHour"; = giờ của AppConstants.AFTERNOON_SHIFT_START; JSP: pt/schedule.jsp:111 …
+    // GETTER TỰ TÍNH — không có field/setter "shiftSplitHour"; = giờ của AppConstants.AFTERNOON_SHIFT_START; JSP: pt/_schedule-grid.jspf:15 …
     public int getShiftSplitHour() { return AppConstants.AFTERNOON_SHIFT_START.getHour(); }
 
     public int getSessionMinutes() { return sessionMinutes; }

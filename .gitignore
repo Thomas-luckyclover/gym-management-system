@@ -41,3 +41,9 @@ src/main/webapp/uploads/checkin/
 /output/iteration-logs/
 
 outputs/
+
+# ===== Công cụ AI / skill cá nhân và file backup của draw.io =====
+.Codex/
+.agents/
+skills-lock.json
+*.bkp

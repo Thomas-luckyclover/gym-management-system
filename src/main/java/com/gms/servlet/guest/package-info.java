@@ -1,7 +1,7 @@
 /**
  * Trang công khai cho khách chưa đăng nhập (Guest): trang chủ, blog. Không qua Filter phân quyền.
  *
- * <p>Servlet dự kiến (nguồn: SRS 5.1 Screen List — bảng đầy đủ ở docs/project-structure.md):</p>
+ * <p>Servlet dự kiến (nguồn: SRS 5.1 Screen List):</p>
  * <pre>
  * HomeServlet                      "" (trang gốc)                                       #5   Home                               TV2
  * BlogListServlet                  /blog                                                #6   Blog List                          TV2

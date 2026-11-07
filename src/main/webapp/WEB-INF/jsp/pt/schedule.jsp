@@ -89,55 +89,13 @@
                                         <c:out value="${not empty handleFormError ? handleFormError : handleError}" /></p>
                                 </c:if>
 
-                                <%-- CHÚ THÍCH MÀU: free · booked · held · locked · draft (nháp JS) · removing (đã tích gỡ). --%>
-                                <div class="pt-plan-legend" aria-label="Màu trạng thái">
-                                    <%-- title = giải thích khi rê chuột (bản đầy đủ nằm trong nút "i" cạnh tiêu đề). --%>
-                                    <span data-kind="free" title="Khung đã công bố, chưa ai đặt. Bấm để đánh dấu gỡ.">Còn trống</span>
-                                    <span data-kind="booked" title="Đã có buổi với khách. Bấm buổi sắp tới để Dời / Chuyển PT / Hủy.">Có khách</span>
-                                    <span data-kind="held" title="Một đơn mua gói PT đang giữ khung này chờ thanh toán. Trả tiền → Có khách; hết hạn / hủy đơn → Còn trống.">Đang giữ</span>
-                                    <span data-kind="locked" title="Khung trùng ca bạn xin nghỉ (chờ duyệt hoặc đã duyệt). Khách không đặt được.">Tạm khóa</span>
-                                    <span data-kind="draft" title="Khung vừa thêm, chưa lưu. Bấm Công bố để khách thấy, bấm × để bỏ.">Nháp mới</span>
-                                    <span data-kind="removing" title="Khung trống bạn đã đánh dấu gỡ. Bấm Công bố để gỡ thật.">Chờ gỡ</span>
-                                </div>
-                                <div class="pt-list-columns" aria-hidden="true">
-                                    <span>Giờ tập</span><span>Buổi / khung giờ</span><span>Trạng thái</span><span>Thao tác</span>
-                                </div>
+                                <%-- CHÚ THÍCH MÀU + tiêu đề cột kiểu Danh sách. --%>
+                                <%@ include file="/WEB-INF/jsp/pt/_schedule-legend.jspf" %>
 
                                 <p class="visually-hidden" id="pt-plan-status" role="status"></p>
 
-                                <div class="pt-plan-scroll">
-
-                                    <%-- LƯỚI TUẦN: --axis-hours = số hàng giờ · --shift-split = vị trí vạch chia Ca sáng / Ca chiều (13:00). --%>
-                                    <%-- week.shiftSplitHour = getter tự tính getShiftSplitHour() · dto/PtScheduleWeek.java --%>
-                                    <div class="pt-plan-grid" style="--axis-hours: ${week.axisEndHour - week.axisStartHour}; --shift-split: ${week.shiftSplitHour - week.axisStartHour}">
-
-                                        <div class="pt-plan-axis-head" aria-hidden="true"></div>
-
-                                        <%-- TRỤC GIỜ: week.axisStartHour → week.axisEndHour − 1. --%>
-                                        <div class="pt-plan-axis" aria-hidden="true">
-                                            <c:forEach var="hour" begin="${week.axisStartHour}" end="${week.axisEndHour - 1}">
-                                                <span><c:out value="${hour lt 10 ? '0' += hour : hour}" />:00</span>
-                                            </c:forEach>
-
-                                            <b class="pt-plan-shift is-am"><span>Ca sáng</span></b>
-                                            <b class="pt-plan-shift is-pm"><span>Ca chiều</span></b>
-                                        </div>
-
-                                        <%-- 7 CỘT NGÀY: mỗi PtScheduleDay → _schedule-day.jspf (biến day, dayLabel = "Thứ 2 03/11"). --%>
-                                        <c:forEach var="day" items="${week.days}">
-                                            <c:set var="dayLabel" value="${day.dayName} ${fn:substring(gms:formatDate(day.date), 0, 5)}" />
-
-                                            <%@ include file="/WEB-INF/jsp/pt/_schedule-day.jspf" %>
-
-                                        </c:forEach>
-                                    </div>
-                                </div>
-
-                                <%-- Ô "bóng" schedule.js dùng khi rê chuột / kéo để thêm khung. --%>
-                                <div class="pt-ghost" id="pt-ghost" aria-hidden="true" hidden>
-                                    <span class="pt-slot-time"></span>
-                                    <span class="pt-ghost-hint"></span>
-                                </div>
+                                <%-- LƯỚI TUẦN: trục giờ + 7 cột ngày + ô bóng khi kéo. --%>
+                                <%@ include file="/WEB-INF/jsp/pt/_schedule-grid.jspf" %>
                             </section>
 
                             <%-- THANH "THAY ĐỔI CHỜ LƯU" + nút Công bố (form pt-publish-form). --%>
@@ -148,7 +106,7 @@
 
                             <%-- HỘP XỬ LÝ BUỔI (chỉ khi có handle). --%>
                             <c:if test="${not empty handle}">
-                                <%@ include file="/WEB-INF/jsp/pt/_handle-dialog.jspf" %>
+                                <%@ include file="/WEB-INF/jsp/pt/_schedule-handle.jspf" %>
                             </c:if>
                         </main>
                     </c:otherwise>

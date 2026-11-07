@@ -2,13 +2,13 @@ package com.gms.dto;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * DTO HỘP "XỬ LÝ BUỔI" — DAO TẠO: PtSessionHandleDAO.findSession (buổi + gói + khách + PT);
  * Service ĐIỀN: PtSessionHandleService.getHandleForm (dayLabel, khung dời được, PT nhận thay được).
- * Servlet: PtScheduleServlet.loadHandle → request "handle" → _handle-dialog.jspf.
+ * Servlet: PtScheduleServlet.loadHandle → request "handle" → _schedule-handle.jspf (+ 3 file tab).
+ * Giống màn Bán gói PT: phần đầu hộp + phần dùng để kiểm nằm ở đây, mỗi tab có dữ liệu riêng là 1 khối:
+ *   move = PtHandleMoveBlock (tab Dời buổi) · transfer = PtHandleTransferBlock (tab Chuyển PT).
  * Hàm tính sẵn: isCouple() → chip "Gói đôi".
  */
 public class PtHandleView {
@@ -55,19 +55,11 @@ public class PtHandleView {
     // ← Subscriptions.EndDate → chip "Hạn gói đến dd/MM/yyyy"
     private LocalDate termEnd;
 
-    // ===== IN RA MÀN — tab Dời buổi =====
-    // ← findMoveDays → groupByDay: khung trống của chính PT, đã lọc whyNotAllowed → các ngày + giờ để chọn
-    private List<PtHandleDay> moveDays = new ArrayList<>();
-    // ← số khung dời được → "N khung" trên nút chọn, "N khung hợp lệ tới …"
-    private int moveSlotCount;
-    // ← min(hôm nay + 13 ngày, hạn gói) → "tới dd/MM" · max của ô ngày "Giờ khác"
-    private LocalDate moveUntil;
-    // ← max(hôm nay, ngày bắt đầu gói) → min của ô ngày "Giờ khác" (PT tự chọn giờ, hệ thống tạo khung mới)
-    private LocalDate moveFrom;
-
-    // ===== IN RA MÀN — tab Chuyển PT =====
-    // ← PtSessionHandleDAO.findTransferSlots (PT khác trống ĐÚNG giờ này), đã lọc → "N PT trống" + danh sách PT
-    private List<PtHandleSlot> transferSlots = new ArrayList<>();
+    // ===== IN RA MÀN — 2 tab có dữ liệu riêng (mỗi tab 1 khối, 1 file jspf) =====
+    // ← khối Dời buổi → _schedule-handle-reschedule.jspf (handle.move.xxx)
+    private final PtHandleMoveBlock move = new PtHandleMoveBlock();
+    // ← khối Chuyển PT → _schedule-handle-transfer.jspf (handle.transfer.slots)
+    private final PtHandleTransferBlock transfer = new PtHandleTransferBlock();
 
     // ===== DÙNG ĐỂ KIỂM / GHI (không in) =====
     // ← Sessions.Status → whySessionLocked (chỉ Scheduled chưa bắt đầu mới xử lý)
@@ -94,13 +86,10 @@ public class PtHandleView {
     // ← Subscriptions.StartDate → khung dời phải trong hạn gói
     private LocalDate termStart;
 
-    // GETTER TỰ TÍNH — không có field/setter "couple"; = partnerCustomerId khác null; JSP: pt/_handle-dialog.jspf:28
+    // GETTER TỰ TÍNH — không có field/setter "couple"; = partnerCustomerId khác null; JSP: pt/_schedule-handle.jspf:31
     public boolean isCouple() {
         return partnerCustomerId != null;
     }
-
-    public LocalDate getMoveFrom() { return moveFrom; }
-    public void setMoveFrom(LocalDate moveFrom) { this.moveFrom = moveFrom; }
 
     public int getSessionId() { return sessionId; }
     public void setSessionId(int sessionId) { this.sessionId = sessionId; }
@@ -159,15 +148,6 @@ public class PtHandleView {
     public String getDayLabel() { return dayLabel; }
     public void setDayLabel(String dayLabel) { this.dayLabel = dayLabel; }
 
-    public List<PtHandleDay> getMoveDays() { return moveDays; }
-    public void setMoveDays(List<PtHandleDay> moveDays) { this.moveDays = moveDays; }
-
-    public int getMoveSlotCount() { return moveSlotCount; }
-    public void setMoveSlotCount(int moveSlotCount) { this.moveSlotCount = moveSlotCount; }
-
-    public LocalDate getMoveUntil() { return moveUntil; }
-    public void setMoveUntil(LocalDate moveUntil) { this.moveUntil = moveUntil; }
-
-    public List<PtHandleSlot> getTransferSlots() { return transferSlots; }
-    public void setTransferSlots(List<PtHandleSlot> transferSlots) { this.transferSlots = transferSlots; }
+    public PtHandleMoveBlock getMove() { return move; }
+    public PtHandleTransferBlock getTransfer() { return transfer; }
 }

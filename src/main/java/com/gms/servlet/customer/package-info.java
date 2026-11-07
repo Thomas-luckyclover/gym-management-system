@@ -1,7 +1,7 @@
 /**
  * Khu vực Hội viên — URL /customer/*, được CustomerAreaFilter bảo vệ.
  *
- * <p>Servlet dự kiến (nguồn: SRS 5.1 Screen List — bảng đầy đủ ở docs/project-structure.md):</p>
+ * <p>Servlet dự kiến (nguồn: SRS 5.1 Screen List):</p>
  * <pre>
  * CustomerDashboardServlet         /customer/dashboard                                  #48  Customer Dashboard                 TV5
  * PackageSelectionServlet          /customer/packages                                   #35  Package Selection                  TV1
