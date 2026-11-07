@@ -44,7 +44,7 @@
  *   .pt-draft                      thẻ nháp JS vừa tạo (từ template)              Công bố / Bỏ / lưu tạm
  *   #pt-publish-form, #pt-publish, #pt-clear, #pt-publish-error   _schedule-pending.jspf thanh Chờ công bố
  *   #pt-plan-status                schedule.jsp <p role="status"> ẩn              báo cho trình đọc màn hình
- *   #pt-handle                     _handle-dialog.jspf <dialog>                   initPtHandleDialog
+ *   #pt-handle                     _schedule-handle.jspf <dialog>                initPtHandleDialog
  *
  * HÀM LẤY TỪ common.js (nạp trước): showToast(loại, chữ) — toast góc màn; postData(url, URLSearchParams) — gửi POST AJAX, trả {success, message} (dùng ở publishPtChanges);
  *   setButtonLoading(nút, true) — khóa nút đang gửi; formatDate("2026-11-12") → "12/11/2026".
@@ -467,7 +467,7 @@ function showPtStatus(text, isError) {
 
 
 // ================================================================================================================
-// NHÓM 8. HỘP XỬ LÝ BUỔI — dữ liệu và form do server in sẵn (_handle-dialog.jspf), JS không gửi gì
+// NHÓM 8. HỘP XỬ LÝ BUỔI — dữ liệu và form do server in sẵn (_schedule-handle*.jspf), JS không gửi gì
 // ================================================================================================================
 
 /**

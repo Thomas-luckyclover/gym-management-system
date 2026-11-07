@@ -80,7 +80,7 @@ public class PtSessionHandleService {
                     transferSlots.add(slot);
                 }
             }
-            session.setTransferSlots(transferSlots);
+            session.getTransfer().setSlots(transferSlots);
 
             return ServiceResult.ok(session);
 
@@ -107,14 +107,14 @@ public class PtSessionHandleService {
 
     /**
      * HÀM PHỤ (getHandleForm B4) — khoảng tìm = từ max(hôm nay, đầu gói) tới min(hôm nay + 13, hạn gói)
-     * → PtSessionHandleDAO.findMySlots → lọc → moveDays (groupByDay) + moveSlotCount + moveUntil.
+     * → PtSessionHandleDAO.findMySlots → lọc → handle.move: days (groupByDay) + slotCount + from + until.
      */
     private void findMoveDays(Connection connection, PtHandleView session, int ptId, LocalDateTime now)
             throws SQLException {
         LocalDate from = max(now.toLocalDate(), session.getTermStart());
         LocalDate to = min(now.toLocalDate().plusDays(MOVE_SEARCH_DAYS - 1), session.getTermEnd());
-        session.setMoveFrom(from);
-        session.setMoveUntil(to);
+        session.getMove().setFrom(from);
+        session.getMove().setUntil(to);
         if (from.isAfter(to)) {
             return;
         }
@@ -125,8 +125,8 @@ public class PtSessionHandleService {
                 valid.add(slot);
             }
         }
-        session.setMoveDays(groupByDay(valid));
-        session.setMoveSlotCount(valid.size());
+        session.getMove().setDays(groupByDay(valid));
+        session.getMove().setSlotCount(valid.size());
     }
 
     /**

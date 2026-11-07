@@ -1,8 +1,11 @@
 <%@ page pageEncoding="UTF-8" %>
 <%--
-  1 CỘT NGÀY của Lịch dạy — include trong vòng lặp week.days của schedule.jsp (biến day = PtScheduleDay, dayLabel).
-  Dữ liệu: PtScheduleService.buildEmptyWeek (ngày, giờ, nghỉ phép) + fillWeek / classify (các ô item).
---%>
+====================================================================================================
+ _schedule-day.jspf — 1 CỘT NGÀY của Lịch dạy
+ Nhúng vào: _schedule-grid.jspf, trong vòng lặp week.days (biến day = PtScheduleDay, dayLabel).
+ Dữ liệu: PtScheduleService.buildEmptyWeek (ngày, giờ, nghỉ phép) + fillWeek / classify (các ô item).
+ Gồm: đầu cột (tên ngày, Hôm nay / Phòng nghỉ, nghỉ phép) · vùng thả khung · từng ô → _schedule-slot.jspf.
+==================================================================================================== --%>
 
                                             <%-- Class: is-today (day.today) · is-past (day.past) · is-closed (day.closedAllDay). --%>
                                             <section class="pt-day ${day.today ? 'is-today' : ''} ${day.past ? 'is-past' : ''} ${day.closedAllDay ? 'is-closed' : ''}" aria-label="${dayLabel}">
@@ -61,76 +64,8 @@
 
                                                     <c:forEach var="item" items="${day.items}">
 
-                                                        <c:set var="timeText" value="${gms:formatTime(item.startTime)} – ${gms:formatTime(item.endTime)}" />
-
-                                                        <article class="pt-slot is-${item.kind} ${item.past ? 'is-past' : ''} ${item.canHandle ? 'is-handleable' : ''} ${item.laneCount gt 1 ? 'is-narrow' : ''}"
-                                                                 <%-- item.booked = getter tự tính isBooked() · dto/PtScheduleItem.java (item = PtScheduleItem) --%>
-                                                                 <c:if test="${item.booked}">id="session-${item.sessionId}"</c:if>
-                                                                 data-status="<c:out value='${item.sessionStatus}' />"
-                                                                 style="--start: ${item.startMinute}; --length: ${item.lengthMinutes}; --lane: ${item.lane}; --lanes: ${item.laneCount}"
-                                                                 <%-- getter tự tính: item.startOfDay = getStartOfDay(), item.endOfDay = getEndOfDay(), item.blocking = isBlocking() · dto/PtScheduleItem.java (item = PtScheduleItem) --%>
-                                                                 <c:if test="${item.blocking}">data-start="${item.startOfDay}" data-end="${item.endOfDay}"</c:if>
-                                                                 title="${fn:escapeXml(timeText)}${item.booked ? ' · ' : ''}${fn:escapeXml(item.customerNames)} · ${fn:escapeXml(item.statusLabel)}">
-                                                            <c:choose>
-
-                                                                <%-- Ô KHUNG TRỐNG gỡ được: ô tích name="removeSlotId" value=timeSlotId thuộc form pt-publish-form → gửi khi Công bố. --%>
-                                                                <c:when test="${item.canRemove}">
-                                                                    <label class="pt-slot-body pt-slot-toggle">
-                                                                        <input type="checkbox" class="pt-remove" name="removeSlotId" value="${item.timeSlotId}" form="pt-publish-form"
-                                                                               aria-label="Gỡ khung ${timeText}, ${dayLabel}">
-                                                                        <span class="pt-slot-time"><c:out value="${timeText}" /></span>
-                                                                        <span class="pt-slot-info"><strong>Khung rảnh</strong></span>
-                                                                        <span class="pt-slot-state"><c:out value="${item.statusLabel}" /></span>
-                                                                        <span class="pt-slot-flag">Chờ gỡ</span>
-                                                                        <span class="pt-slot-hint" aria-hidden="true">
-                                                                            <span class="when-off">Gỡ khung</span>
-                                                                            <span class="when-on">Giữ lại</span>
-                                                                        </span>
-                                                                    </label>
-                                                                </c:when>
-
-                                                                <%--
-                                                                  Ô BUỔI SẮP TỚI: link GET ?date=&view=&handle=<sessionId> → mở hộp Xử lý buổi.
-                                                                  Hiện: tên khách (item.customerNames) · item.packageName · "Buổi n/N" · item.statusLabel.
-                                                                --%>
-                                                                <c:when test="${item.canHandle}">
-                                                                    <c:url var="handleUrl" value="/pt/schedule"><c:param name="date" value="${day.date}" /><c:param name="view" value="${view}" /><c:param name="handle" value="${item.sessionId}" /></c:url>
-                                                                    <a class="pt-slot-body pt-slot-link" href="${handleUrl}" aria-label="Xử lý buổi ${timeText}, ${dayLabel}, ${fn:escapeXml(item.customerNames)}">
-                                                                        <span class="pt-slot-time"><c:out value="${timeText}" /></span>
-                                                                        <span class="pt-slot-info">
-                                                                            <strong class="pt-slot-person"><c:out value="${item.customerNames}" /></strong>
-                                                                            <span class="pt-slot-package"><c:out value="${item.packageName}" /> · Buổi <c:out value="${item.sessionNo}" />/<c:out value="${item.totalSessions}" /></span>
-                                                                        </span>
-                                                                        <span class="pt-slot-state"><c:out value="${item.statusLabel}" /></span>
-                                                                        <span class="pt-slot-hint" aria-hidden="true">Bấm để xử lý</span>
-                                                                    </a>
-                                                                </c:when>
-
-                                                                <%-- Ô CHỈ XEM: buổi đã diễn ra / đã có kết quả · khung đang giữ (Đơn chờ thanh toán) · khung nghỉ phép · khung đã qua giờ. --%>
-                                                                <c:otherwise>
-                                                                    <div class="pt-slot-body">
-                                                                        <span class="pt-slot-time"><c:out value="${timeText}" /></span>
-                                                                        <span class="pt-slot-info">
-                                                                            <c:choose>
-                                                                                <c:when test="${item.booked}">
-                                                                                    <strong class="pt-slot-person"><c:out value="${item.customerNames}" /></strong>
-                                                                                    <span class="pt-slot-package"><c:out value="${item.packageName}" /> · Buổi <c:out value="${item.sessionNo}" />/<c:out value="${item.totalSessions}" /></span>
-                                                                                </c:when>
-                                                                                <c:when test="${item.kind eq 'held'}"><strong>Đơn chờ thanh toán</strong></c:when>
-                                                                                <c:when test="${item.kind eq 'locked'}"><strong>Nghỉ phép</strong></c:when>
-                                                                                <c:otherwise><strong>Khung rảnh</strong></c:otherwise>
-                                                                            </c:choose>
-                                                                        </span>
-                                                                        <span class="pt-slot-state">
-                                                                            <c:choose>
-                                                                                <c:when test="${item.kind eq 'held'}">Đang giữ</c:when>
-                                                                                <c:otherwise><c:out value="${item.statusLabel}" /></c:otherwise>
-                                                                            </c:choose>
-                                                                        </span>
-                                                                    </div>
-                                                                </c:otherwise>
-                                                            </c:choose>
-                                                        </article>
+                                                        <%-- 1 Ô (khung trống gỡ được / buổi sắp tới / chỉ xem) → _schedule-slot.jspf. --%>
+                                                        <%@ include file="/WEB-INF/jsp/pt/_schedule-slot.jspf" %>
                                                     </c:forEach>
 
                                                     <%-- Ngày không có ô nào → "Phòng nghỉ cả ngày" / "Chưa có khung". --%>

@@ -6,7 +6,7 @@ import java.util.List;
 
 /**
  * DTO 1 NGÀY trong tab "Dời buổi" — Service TẠO: PtSessionHandleService.groupByDay.
- * JSP đọc: _handle-dialog.jspf (biến moveDay).
+ * JSP đọc: _schedule-handle-reschedule.jspf (biến moveDay, từ handle.move.days).
  */
 public class PtHandleDay {
     // ===== IN RA MÀN =====

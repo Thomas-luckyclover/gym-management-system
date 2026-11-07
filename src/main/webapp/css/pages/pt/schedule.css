@@ -1012,7 +1012,7 @@ html body.dock.pt-plan-page .pt-plan-pending .pt-pending-error { color: var(--ar
 
 
 /* ==================== 10. XỬ LÝ BUỔI (bước 11) ====================
-   Thẻ buổi còn xử lý được là link ?handle= → hộp _handle-dialog.jspf.
+   Thẻ buổi còn xử lý được là link ?handle= → hộp _schedule-handle.jspf.
    Đổi phương án KHÔNG cần JS: radio trong .pt-handle-options + :has() hiện đúng 1 form.
 
    Hộp theo hệ Arena (DESIGN.md mục Arena):
