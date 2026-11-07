@@ -362,6 +362,9 @@ public class CustomerDashboardView {
         private final Integer freezeUsed;
         private final Integer maxFreezes;
 
+        /** Bộ chọn/đổi ngày bắt đầu (nếu gói còn đổi được). */
+        private StartDatePicker startPicker;
+
         public SubscriptionRow(
                 int subscriptionId,
                 String subscriptionType,
@@ -420,6 +423,8 @@ public class CustomerDashboardView {
         public String getPtName() { return ptName; }
         public Integer getFreezeUsed() { return freezeUsed; }
         public Integer getMaxFreezes() { return maxFreezes; }
+        public StartDatePicker getStartPicker() { return startPicker; }
+        public void setStartPicker(StartDatePicker startPicker) { this.startPicker = startPicker; }
 
         /**
          * Quyền lợi lúc bán tách thành từng dòng (lưu một chuỗi, mỗi dòng một quyền lợi, DBR-15).

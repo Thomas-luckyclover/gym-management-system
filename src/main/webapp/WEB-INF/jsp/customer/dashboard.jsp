@@ -46,8 +46,8 @@
         <link rel="stylesheet"
               href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap">
         <link rel="stylesheet"
-              href="${pageContext.request.contextPath}/css/pages/customer/start-date-picker.css?v=4">
-        <script src="${pageContext.request.contextPath}/js/pages/customer/start-date-picker.js?v=1" defer></script>
+              href="${pageContext.request.contextPath}/css/pages/customer/start-date-picker.css?v=20261107_v2">
+        <script src="${pageContext.request.contextPath}/js/pages/customer/start-date-picker.js?v=20261107_v2" defer></script>
     </head>
 
     <body class="dock theme-pt customer-dashboard-page customer-weather-page weather-${weatherType}">
@@ -203,8 +203,8 @@
                                     <div class="panel-head"><h2>Gói tập của bạn</h2></div>
                                     <div class="customer-package-grid">
                                         <c:forEach var="subscription" items="${dashboard.visibleSubscriptions}">
-                                            <c:set var="picker" value="${not subscription.ptPackage and subscription.subscriptionId == dashboard.activeMembership.subscriptionId ? dashboard.startPicker : null}" />
-                                            <article class="customer-package-card" <c:if test="${picker.editable}">data-sdp data-sdp-url="/customer/subscription/start-date" data-sdp-sub="${picker.subscriptionId}" data-sdp-csrf="<c:out value='${csrfToken}' />"</c:if>>
+                                            <c:set var="picker" value="${subscription.startPicker != null ? subscription.startPicker : (not empty dashboard.activeMembership and subscription.subscriptionId == dashboard.activeMembership.subscriptionId ? dashboard.startPicker : null)}" />
+                                            <article class="customer-package-card" <c:if test="${picker != null and picker.editable}">data-sdp data-sdp-url="/customer/subscription/start-date" data-sdp-sub="${picker.subscriptionId}" data-sdp-csrf="<c:out value='${csrfToken}' />"</c:if>>
                                                 <small><c:out value="${subscription.ptPackage ? 'Gói tập cùng PT' : 'Gói tập gym'}" /> · <c:out value="${subscription.statusLabel}" /></small>
                                                 <h3><c:out value="${subscription.packageName}" /></h3>
                                                 <p>Hết hạn <strong data-sdp-end><c:out value="${gms:formatDate(subscription.endDate)}" /></strong></p>
@@ -213,7 +213,10 @@
                                                         <b class="customer-package-balance">Đã hết hạn</b>
                                                     </c:when>
                                                     <c:when test="${subscription.pending}">
-                                                        <b class="customer-package-balance">Bắt đầu ${gms:formatDate(subscription.startDate)}</b>
+                                                        <b class="customer-package-balance">Chờ kích hoạt</b>
+                                                        <c:if test="${picker == null or not picker.editable}">
+                                                            <div class="customer-package-start">Bắt đầu <strong><c:out value="${gms:formatDate(subscription.startDate)}" /></strong></div>
+                                                        </c:if>
                                                     </c:when>
                                                     <c:when test="${subscription.ptPackage}">
                                                         <b class="customer-package-balance">Còn ${subscription.remainingSessions == null ? 0 : subscription.remainingSessions}/${subscription.totalSessions == null ? 0 : subscription.totalSessions} buổi</b>
@@ -222,7 +225,7 @@
                                                         <b class="customer-package-balance">Còn ${subscription.daysRemaining} ngày</b>
                                                     </c:otherwise>
                                                 </c:choose>
-                                                <c:if test="${picker.editable}">
+                                                <c:if test="${picker != null and picker.editable}">
                                                     <div class="customer-package-start">Bắt đầu <strong data-sdp-start><c:out value="${gms:formatDate(subscription.startDate)}" /></strong></div>
                                                     <button type="button" class="sdp-btn" data-sdp-toggle aria-expanded="false">Đổi ngày bắt đầu</button>
                                                     <%@ include file="/WEB-INF/jsp/customer/_start-date-picker.jspf" %>

@@ -177,13 +177,17 @@ public class CustomerDashboardService {
             view.setScheduleDays(buildScheduleDays(now.toLocalDate(), weekSessions));
             view.setTrainers(groupTrainerPackages(dashboardDAO.findTrainers(customerId), subscriptions));
 
-            // Thẻ Gói tập: hiện ô "Đổi ngày" nếu gói còn đổi được. Lỗi ở đây chỉ ẩn ô, không hỏng Dashboard.
-            SubscriptionRow activeMembership = view.getActiveMembership();
-            if (activeMembership != null && "Membership".equals(activeMembership.getSubscriptionType())) {
-                ServiceResult<StartDatePicker> picker
-                        = startDateService.getPicker(accountId, activeMembership.getSubscriptionId());
-                if (picker.isSuccess()) {
-                    view.setStartPicker(picker.getData());
+            // Thẻ Gói tập: hiện ô "Đổi ngày" cho mọi gói Membership còn đổi được (kể cả gói đang dùng hoặc gói mới mua/nối tiếp).
+            for (SubscriptionRow sub : visibleSubscriptions) {
+                if (!sub.isPtPackage() && "Membership".equals(sub.getSubscriptionType())) {
+                    ServiceResult<StartDatePicker> picker
+                            = startDateService.getPicker(accountId, sub.getSubscriptionId());
+                    if (picker.isSuccess() && picker.getData() != null) {
+                        sub.setStartPicker(picker.getData());
+                        if (view.getStartPicker() == null && picker.getData().isEditable()) {
+                            view.setStartPicker(picker.getData());
+                        }
+                    }
                 }
             }
 
