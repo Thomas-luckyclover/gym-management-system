@@ -1,5 +1,6 @@
 /* BF-07: giao diện dùng chung cho Lễ tân/Quản lý. Chỉ class bf07-, không sửa style màn khác. */
 /* Nền trung tính chỉ áp dụng cho hai màn danh sách khi dùng giao diện sáng. */
+html:where(:not([data-theme="dark"])) body.dock.member-list-page,
 html:where(:not([data-theme="dark"])) body.dock.member-list-page::before {
   background: var(--color-surface-muted);
 }
@@ -131,13 +132,13 @@ html:where(:not([data-theme="dark"])) .member-list-page .topbar {
   padding: var(--space-2) var(--space-3);
 }
 
-.bf07-delete-button {
+.member-list-page #main-content .bf07-delete-button {
   color: var(--color-danger-ink);
   border-color: var(--color-danger-border);
   background: var(--color-surface);
 }
 
-.bf07-delete-button:hover {
+.member-list-page #main-content .bf07-delete-button:hover {
   background: var(--color-danger-tint);
 }
 /* Bảng 5 cột: điện thoại/email cùng một ô; chữ dài xuống dòng, không cuộn ngang. */
@@ -182,23 +183,23 @@ html:where(:not([data-theme="dark"])) .member-list-page .topbar {
 }
 
 .bf07-profile-table th:nth-child(1) {
-  width: 25%;
+  width: 24%;
 }
 
 .bf07-profile-table th:nth-child(2) {
-  width: 23%;
+  width: 22%;
 }
 
 .bf07-profile-table th:nth-child(3) {
-  width: 17%;
+  width: 14%;
 }
 
 .bf07-profile-table th:nth-child(4) {
-  width: 17%;
+  width: 18%;
 }
 
 .bf07-profile-table th:nth-child(5) {
-  width: 18%;
+  width: 22%;
 }
 
 .bf07-request-table th:nth-child(1) {
@@ -283,13 +284,13 @@ html:where(:not([data-theme="dark"])) .member-list-page .topbar {
   flex-shrink: 0;
 }
 
-.bf07-review-link {
+.member-list-page #main-content .bf07-review-link {
   background: var(--color-primary-tint);
   border-color: var(--color-primary-border);
   color: var(--color-text);
 }
 
-.bf07-review-link:hover {
+.member-list-page #main-content .bf07-review-link:hover {
   background: var(--color-surface-hover);
 }
 
