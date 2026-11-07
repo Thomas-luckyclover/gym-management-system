@@ -39,3 +39,5 @@ src/main/webapp/uploads/checkin/
 /output/ai-log-filled.md
 /output/conversation-export/
 /output/iteration-logs/
+
+outputs/
