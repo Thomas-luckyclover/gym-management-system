@@ -411,6 +411,13 @@ for pt, fixed, start, key in extra_pt:
         pt_package(o, pt, start, fixed, note='khách thường mua gói PT')
         break
 
+# ---- gói PT 82 (khách KH-2005, PT Sơn 15:00) hết hạn sớm ngày 04/11: lúc nạp seed, khối chốt cuối file (JOB-02)
+#      hủy PackageExpired các buổi từ 05/11 và trả khung 15:00 về trống (BF-05 A6, CBR-55)
+_s82 = get('Subscriptions', 82)
+assert _s82['CustomerId'] == 205 and _s82['SubscriptionType'] == 'PTSingle', 'gói 82 phải là gói PT của KH-2005'
+_s82['EndDate'] = d_(2026, 11, 4)
+_s82['_note'] = 'gói PT hết hạn 04/11 → buổi sau đó hủy PackageExpired khi nạp seed (JOB-02, CBR-55)'
+
 # ---- khách vãng lai mua gói ngày rải đều tháng 9 (báo cáo doanh thu có số liệu mỗi ngày)
 WALKIN = [c for i, c in enumerate(BULK) if i % 10 == 9]
 day = d_(2026, 9, 1)
@@ -968,7 +975,8 @@ OHE = [(d_(2026, 9, 2), None, None, 1, 'Nghỉ lễ Quốc khánh'),
        (d_(2026, 9, 18), None, None, 1, 'Sự cố điện, nghỉ cả ngày'),
        (d_(2026, 10, 11), time(7, 0), time(18, 0), 0, 'Chủ nhật bảo trì hệ thống nước, mở muộn đóng sớm'),
        (d_(2026, 10, 20), None, None, 1, 'Bảo trì điện toàn tòa nhà'),
-       (d_(2027, 2, 6), None, None, 1, 'Nghỉ Tết Nguyên đán')]
+       (d_(2027, 2, 6), None, None, 1, 'Nghỉ Tết Nguyên đán'),
+       (d_(2026, 11, 4), time(8, 30), time(22, 0), 0, 'Bảo trì hệ thống điện buổi sáng, mở cửa từ 08:30')]
 for d, o_, c_, closed, note in OHE:
     add('OperatingHourExceptions', dict(ApplyDate=d, OpenTime=o_, CloseTime=c_, IsClosedAllDay=closed, Note=note, SetByEmployeeId=2,
                                         CreatedAt=CLOSED.get(d, dt_(2026, 9, 28, 9, 0))))
@@ -1006,7 +1014,7 @@ SECTION.update({
     'Accounts': 'Mật khẩu chung Gms@2026 (TK tạo tại quầy cũng vậy: đóng vai mật khẩu tạm đã gửi email).',
     'Shifts': 'Đủ 2 ca mỗi ngày mở cửa 01/09–02/10 + ca hôm nay (sống).',
     'TimeSlots': 'Lịch PT: slot đã đặt + slot trống công bố dày 05/10–31/10 (có cuối tuần).',
-    'Sessions': 'Trước 05/10 đã có kết quả; từ 05/10 Scheduled.',
+    'Sessions': 'Trước 05/10 đã có kết quả; từ 05/10 sinh Scheduled, buổi trước ngày nạp được chốt ở khối cuối file (JOB-02, JOB-04).',
 })
 
 if __name__ == '__main__':

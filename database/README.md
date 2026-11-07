@@ -6,7 +6,7 @@ Chạy đúng thứ tự trên SQL Server (SSMS hoặc sqlcmd):
 |---|---|
 | `0_Reset_Database.sql` | Xóa sạch DB `GMS` (tắt Tomcat trước) |
 | `1_Init_Schema.sql` | 32 bảng (thêm BodyMeasurements 25/10, Exercises + cột Packages.UnlocksExerciseLibrary 27/10), khóa, CHECK, filtered index, khớp rule v25 |
-| `2_Seed_Data.sql` | Seed đủ case. Lịch sử quanh mốc 03/10/2026; dữ liệu "sống" tính theo giờ chạy. Mật khẩu `Gms@2026` |
+| `2_Seed_Data.sql` | Seed đủ case. Lịch sử quanh mốc 03/10/2026; dữ liệu "sống" tính theo giờ chạy; khối cuối file chốt mọi buổi trước ngày chạy (như JOB-02, JOB-04 đã chạy mỗi đêm). Mật khẩu `Gms@2026` |
 | `tools/` | Generator seed + bộ kiểm thử (xem `tools/README.md`) |
 
 - Tài khoản test + danh mục case: `docs/database/SEED_CASES.md`
