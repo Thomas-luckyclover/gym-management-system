@@ -5499,6 +5499,52 @@ INSERT INTO BodyMeasurements (BodyMeasurementId, CustomerId, MeasuredOn, WeightK
  (11, 1, '2026-10-23', 75.2, 172.0, 21.4, 42.5, 86.5, N'Đo InBody tại phòng', '2026-10-23 21:00:00');
 SET IDENTITY_INSERT BodyMeasurements OFF;
 
+-- IT-CM-06..09: dedicated fixtures, GmsTest2026!, membership 07/11..07/12/2026.
+SET IDENTITY_INSERT Persons ON;
+INSERT INTO Persons (PersonId, FullName, DateOfBirth, Phone, Email, Avatar, IsReleased, CreatedAt) VALUES (9006, N'Nguyễn Minh Sáu', '2000-02-12', '0909900006', 'it.cm06@example.com', NULL, 0, '2026-11-07 09:00:00');
+INSERT INTO Persons (PersonId, FullName, DateOfBirth, Phone, Email, Avatar, IsReleased, CreatedAt) VALUES (9007, N'Trần Minh Bảy', '2000-02-12', '0909900007', 'it.cm07@example.com', NULL, 0, '2026-11-07 09:00:00');
+INSERT INTO Persons (PersonId, FullName, DateOfBirth, Phone, Email, Avatar, IsReleased, CreatedAt) VALUES (9008, N'Lê Minh Tám', '2000-02-12', '0909900008', 'it.cm08@example.com', NULL, 0, '2026-11-07 09:00:00');
+INSERT INTO Persons (PersonId, FullName, DateOfBirth, Phone, Email, Avatar, IsReleased, CreatedAt) VALUES (9009, N'Phạm Minh Chín', '2000-02-12', '0909900009', 'it.cm09@example.com', NULL, 0, '2026-11-07 09:00:00');
+SET IDENTITY_INSERT Persons OFF;
+SET IDENTITY_INSERT Customers ON;
+INSERT INTO Customers (CustomerId, PersonId, CustomerCode, CheckInPhoto, CustomerType, GuardianName, GuardianRelationship, GuardianPhone, GuardianPhone2, Status, JoinedAt, DeletedAt) VALUES (244, 9006, 'KH-9006', NULL, 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-11-07 09:00:00', NULL);
+INSERT INTO Customers (CustomerId, PersonId, CustomerCode, CheckInPhoto, CustomerType, GuardianName, GuardianRelationship, GuardianPhone, GuardianPhone2, Status, JoinedAt, DeletedAt) VALUES (245, 9007, 'KH-9007', NULL, 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-11-07 09:00:00', NULL);
+INSERT INTO Customers (CustomerId, PersonId, CustomerCode, CheckInPhoto, CustomerType, GuardianName, GuardianRelationship, GuardianPhone, GuardianPhone2, Status, JoinedAt, DeletedAt) VALUES (246, 9008, 'KH-9008', NULL, 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-11-07 09:00:00', NULL);
+INSERT INTO Customers (CustomerId, PersonId, CustomerCode, CheckInPhoto, CustomerType, GuardianName, GuardianRelationship, GuardianPhone, GuardianPhone2, Status, JoinedAt, DeletedAt) VALUES (247, 9009, 'KH-9009', NULL, 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-11-07 09:00:00', NULL);
+SET IDENTITY_INSERT Customers OFF;
+SET IDENTITY_INSERT Accounts ON;
+INSERT INTO Accounts (AccountId, PersonId, PasswordHash, Status, FailedLoginCount, LockedUntil, LastLoginAt, CreatedAt) VALUES (243, 9006, '$2a$12$ikGqV.UW38VSSAcys/LUl.Z3NTV1DYJ4mOmYpjcdBJoC82xUQ7jkm', 'Active', 0, NULL, NULL, '2026-11-07 09:00:00');
+INSERT INTO Accounts (AccountId, PersonId, PasswordHash, Status, FailedLoginCount, LockedUntil, LastLoginAt, CreatedAt) VALUES (244, 9007, '$2a$12$ikGqV.UW38VSSAcys/LUl.Z3NTV1DYJ4mOmYpjcdBJoC82xUQ7jkm', 'Active', 0, NULL, NULL, '2026-11-07 09:00:00');
+INSERT INTO Accounts (AccountId, PersonId, PasswordHash, Status, FailedLoginCount, LockedUntil, LastLoginAt, CreatedAt) VALUES (245, 9008, '$2a$12$ikGqV.UW38VSSAcys/LUl.Z3NTV1DYJ4mOmYpjcdBJoC82xUQ7jkm', 'Active', 0, NULL, NULL, '2026-11-07 09:00:00');
+INSERT INTO Accounts (AccountId, PersonId, PasswordHash, Status, FailedLoginCount, LockedUntil, LastLoginAt, CreatedAt) VALUES (246, 9009, '$2a$12$ikGqV.UW38VSSAcys/LUl.Z3NTV1DYJ4mOmYpjcdBJoC82xUQ7jkm', 'Active', 0, NULL, NULL, '2026-11-07 09:00:00');
+SET IDENTITY_INSERT Accounts OFF;
+SET IDENTITY_INSERT Orders ON;
+INSERT INTO Orders (OrderId, OrderCode, HolderCustomerId, PartnerCustomerId, PackageId, VoucherId, CreatedByEmployeeId, ShiftId, Channel, PackageNameSnapshot, PackageDescriptionSnapshot, PackageBenefitsSnapshot, UnitPriceSnapshot, DiscountAmount, VatRateSnapshot, VatAmount, Status, PaymentDueAt, CreatedAt, PaidAt, CancelType, CancelledAt, CancelReason) VALUES (181, 'DH-2026-9006', 244, NULL, 2, NULL, NULL, NULL, 'Online', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống', 799000, 0, 10, 72636, 'Paid', '2026-11-07 09:20:00', '2026-11-07 09:00:00', '2026-11-07 09:02:00', NULL, NULL, NULL);
+INSERT INTO Orders (OrderId, OrderCode, HolderCustomerId, PartnerCustomerId, PackageId, VoucherId, CreatedByEmployeeId, ShiftId, Channel, PackageNameSnapshot, PackageDescriptionSnapshot, PackageBenefitsSnapshot, UnitPriceSnapshot, DiscountAmount, VatRateSnapshot, VatAmount, Status, PaymentDueAt, CreatedAt, PaidAt, CancelType, CancelledAt, CancelReason) VALUES (182, 'DH-2026-9007', 245, NULL, 2, NULL, NULL, NULL, 'Online', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống', 799000, 0, 10, 72636, 'Paid', '2026-11-07 09:20:00', '2026-11-07 09:00:00', '2026-11-07 09:02:00', NULL, NULL, NULL);
+INSERT INTO Orders (OrderId, OrderCode, HolderCustomerId, PartnerCustomerId, PackageId, VoucherId, CreatedByEmployeeId, ShiftId, Channel, PackageNameSnapshot, PackageDescriptionSnapshot, PackageBenefitsSnapshot, UnitPriceSnapshot, DiscountAmount, VatRateSnapshot, VatAmount, Status, PaymentDueAt, CreatedAt, PaidAt, CancelType, CancelledAt, CancelReason) VALUES (183, 'DH-2026-9008', 246, NULL, 2, NULL, NULL, NULL, 'Online', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống', 799000, 0, 10, 72636, 'Paid', '2026-11-07 09:20:00', '2026-11-07 09:00:00', '2026-11-07 09:02:00', NULL, NULL, NULL);
+INSERT INTO Orders (OrderId, OrderCode, HolderCustomerId, PartnerCustomerId, PackageId, VoucherId, CreatedByEmployeeId, ShiftId, Channel, PackageNameSnapshot, PackageDescriptionSnapshot, PackageBenefitsSnapshot, UnitPriceSnapshot, DiscountAmount, VatRateSnapshot, VatAmount, Status, PaymentDueAt, CreatedAt, PaidAt, CancelType, CancelledAt, CancelReason) VALUES (184, 'DH-2026-9009', 247, NULL, 2, NULL, NULL, NULL, 'Online', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống', 799000, 0, 10, 72636, 'Paid', '2026-11-07 09:20:00', '2026-11-07 09:00:00', '2026-11-07 09:02:00', NULL, NULL, NULL);
+SET IDENTITY_INSERT Orders OFF;
+SET IDENTITY_INSERT Transactions ON;
+INSERT INTO Transactions (TransactionId, OrderId, Amount, PaymentMethod, GatewayReference, ReceivedByEmployeeId, Status, FailureReason, NeedsRefund, RefundedAt, RefundedByEmployeeId, RefundNote, CreatedAt, ExpiresAt, CompletedAt) VALUES (181, 181, 799000, 'OnlineGateway', 'VNP-00181-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-11-07 09:01:00', '2026-11-07 09:06:00', '2026-11-07 09:02:00');
+INSERT INTO Transactions (TransactionId, OrderId, Amount, PaymentMethod, GatewayReference, ReceivedByEmployeeId, Status, FailureReason, NeedsRefund, RefundedAt, RefundedByEmployeeId, RefundNote, CreatedAt, ExpiresAt, CompletedAt) VALUES (182, 182, 799000, 'OnlineGateway', 'VNP-00182-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-11-07 09:01:00', '2026-11-07 09:06:00', '2026-11-07 09:02:00');
+INSERT INTO Transactions (TransactionId, OrderId, Amount, PaymentMethod, GatewayReference, ReceivedByEmployeeId, Status, FailureReason, NeedsRefund, RefundedAt, RefundedByEmployeeId, RefundNote, CreatedAt, ExpiresAt, CompletedAt) VALUES (183, 183, 799000, 'OnlineGateway', 'VNP-00183-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-11-07 09:01:00', '2026-11-07 09:06:00', '2026-11-07 09:02:00');
+INSERT INTO Transactions (TransactionId, OrderId, Amount, PaymentMethod, GatewayReference, ReceivedByEmployeeId, Status, FailureReason, NeedsRefund, RefundedAt, RefundedByEmployeeId, RefundNote, CreatedAt, ExpiresAt, CompletedAt) VALUES (184, 184, 799000, 'OnlineGateway', 'VNP-00184-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-11-07 09:01:00', '2026-11-07 09:06:00', '2026-11-07 09:02:00');
+SET IDENTITY_INSERT Transactions OFF;
+SET IDENTITY_INSERT Subscriptions ON;
+INSERT INTO Subscriptions (SubscriptionId, OrderId, CustomerId, SubscriptionType, PtEmployeeId, StartDate, EndDate, FixedStartTime, GeneratedSessionCount, SwapsUsed, MaxSwapsSnapshot, FreezeUsed, MaxFreezesSnapshot, Status) VALUES (174, 181, 244, 'Membership', NULL, '2026-11-07', '2026-12-07', NULL, NULL, 0, NULL, 0, 1, 'Active');
+INSERT INTO Subscriptions (SubscriptionId, OrderId, CustomerId, SubscriptionType, PtEmployeeId, StartDate, EndDate, FixedStartTime, GeneratedSessionCount, SwapsUsed, MaxSwapsSnapshot, FreezeUsed, MaxFreezesSnapshot, Status) VALUES (175, 182, 245, 'Membership', NULL, '2026-11-07', '2026-12-07', NULL, NULL, 0, NULL, 0, 1, 'Active');
+INSERT INTO Subscriptions (SubscriptionId, OrderId, CustomerId, SubscriptionType, PtEmployeeId, StartDate, EndDate, FixedStartTime, GeneratedSessionCount, SwapsUsed, MaxSwapsSnapshot, FreezeUsed, MaxFreezesSnapshot, Status) VALUES (176, 183, 246, 'Membership', NULL, '2026-11-07', '2026-12-07', NULL, NULL, 0, NULL, 0, 1, 'Active');
+INSERT INTO Subscriptions (SubscriptionId, OrderId, CustomerId, SubscriptionType, PtEmployeeId, StartDate, EndDate, FixedStartTime, GeneratedSessionCount, SwapsUsed, MaxSwapsSnapshot, FreezeUsed, MaxFreezesSnapshot, Status) VALUES (177, 184, 247, 'Membership', NULL, '2026-11-07', '2026-12-07', NULL, NULL, 0, NULL, 0, 1, 'Active');
+SET IDENTITY_INSERT Subscriptions OFF;
+
 COMMIT TRANSACTION;
 GO
 

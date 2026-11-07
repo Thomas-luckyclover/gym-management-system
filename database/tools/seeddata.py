@@ -1001,6 +1001,31 @@ o = order(19, PKG['m1'], dt_(2026, 7, 18, 9, 0), 'Online', status='Cancelled',
           cancel=('InvalidPayment', dt_(2026, 7, 18, 9, 21), 'Số tiền chuyển không khớp số phải trả'),
           refund=('done', dt_(2026, 7, 20, 10, 0), 2, 'Đã chuyển khoản hoàn cho khách'), note='đã hoàn xong')
 
+
+# ============================================================ 17. HỒ SƠ TEST XÓA HỘI VIÊN
+# Mỗi case dùng một hồ sơ riêng; bắt đầu chưa có yêu cầu xóa.
+CM_TEST_PASSWORD_HASH = '$2a$12$ikGqV.UW38VSSAcys/LUl.Z3NTV1DYJ4mOmYpjcdBJoC82xUQ7jkm'
+CM_TEST_CUSTOMERS = [
+    ('06', 'Nguyễn Minh Sáu', 244, 243),
+    ('07', 'Trần Minh Bảy', 245, 244),
+    ('08', 'Lê Minh Tám', 246, 245),
+    ('09', 'Phạm Minh Chín', 247, 246),
+]
+for case_no, full_name, customer_id, account_id in CM_TEST_CUSTOMERS:
+    person_id = 9000 + int(case_no)
+    fixture_note = f'IT-CM-{case_no}: dữ liệu test riêng, mật khẩu GmsTest2026!'
+    G.person(person_id, full_name, d_(2000, 2, 12), f'09099000{case_no}',
+           f'it.cm{case_no}@example.com', dt_(2026, 11, 7, 9, 0), note=fixture_note)
+    G.customer(customer_id, person_id, f'KH-90{case_no}', dt_(2026, 11, 7, 9, 0),
+             status='Active', note=fixture_note)
+    G.account(account_id, person_id, dt_(2026, 11, 7, 9, 0),
+            pw=CM_TEST_PASSWORD_HASH, note=fixture_note)
+    order_id = G.order(customer_id, PKG['m1'], dt_(2026, 11, 7, 9, 0), 'Online',
+                     note=fixture_note)
+    # Giữ mã đơn test tách biệt với đơn của các kịch bản seed cũ.
+    get('Orders', order_id)['OrderCode'] = f'DH-2026-90{case_no}'
+    G.subscription(order_id, d_(2026, 11, 7), end=d_(2026, 12, 7), note=fixture_note)
+
 # ============================================================ 16. SECTION NOTES
 SECTION.update({
     'Persons': 'ID 1–32 dàn nhân vật chính; 101–113 test xác thực; 201–240 khách thường.',
