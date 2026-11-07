@@ -11,10 +11,10 @@
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Quản lý đơn nghỉ phép · Super Gym</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-request-list.css?v=20261027-local-dropdown">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-request-list.css?v=20261107-readable-lists">
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
   <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
-  <script src="${pageContext.request.contextPath}/js/pages/manager/leave-request-list.js?v=20261027-local-dropdown" defer></script>
+  <script src="${pageContext.request.contextPath}/js/pages/manager/leave-request-list.js?v=20261107-selection-count" defer></script>
 </head>
 
 <body class="dock theme-manager leave-list-page">
@@ -153,7 +153,7 @@
                 <input type="hidden" name="csrfToken" value="<c:out value='${csrfToken}' />">
                 <input type="hidden" name="action" value="approveMany"> <%-- Here many  --%>
                 <input type="hidden" name="returnUrl" value="<c:out value='${listReturnUrl}' />">
-                <span id="leave-selection-count" aria-live="polite" hidden>Đã chọn 0 đơn</span>
+                <span id="leave-selection-count" aria-live="polite">Đã chọn 0 đơn</span>
                 <button id="leave-approve-selected" type="submit" class="btn btn-sm btn-primary" disabled
                         data-confirm-title="Duyệt các đơn đã chọn" data-confirm-text="Duyệt"
                         data-confirm-message="Duyệt các đơn đã chọn?">Duyệt đã chọn</button>

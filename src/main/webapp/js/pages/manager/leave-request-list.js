@@ -123,7 +123,6 @@ document.addEventListener("DOMContentLoaded", function () {
         selectAll.checked = count > 0 && count === choices.length;
         selectAll.indeterminate = count > 0 && count < choices.length;
         document.getElementById("leave-selection-count").textContent = "Đã chọn " + count + " đơn";
-        document.getElementById("leave-selection-count").hidden = count === 0;
         selectedButton.dataset.confirmMessage = "Duyệt " + count + " đơn đã chọn? Hệ thống kiểm tra lại từng đơn.";
     }
 
