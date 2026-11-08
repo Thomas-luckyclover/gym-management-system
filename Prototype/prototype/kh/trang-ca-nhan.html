@@ -150,13 +150,24 @@
 
         <aside class="col-side">
           <div class="side-card">
-            <span class="section-label">Gói tập</span>
+            <span class="section-label">Gói tập đang dùng</span>
             <h3>Gói 6 Tháng</h3>
             <div class="kpi-bar" style="margin-block:var(--space-3)"><i style="width:69%"></i></div>
             <div class="side-row"><span>Bắt đầu</span><b>15/05/2026</b></div>
             <div class="side-row"><span>Hết hạn</span><b>14/11/2026</b></div>
             <div class="side-row"><span>Còn lại</span><b>55 ngày</b></div>
             <button class="btn btn-ghost btn-sm btn-block" type="button" disabled title="Gói đã bắt đầu từ 15/05/2026 nên không đổi được ngày bắt đầu" style="margin-top:var(--space-3)">Đổi ngày bắt đầu</button>
+          </div>
+
+          <div class="side-card" id="pendingPkgCard" style="border:1px solid var(--primary,#6c4e31);background:#faf8f5">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span class="section-label" style="color:var(--primary,#6c4e31);margin:0">Gói kế tiếp</span>
+              <span class="badge badge-warn" style="font-size:11px">Chờ kích hoạt</span>
+            </div>
+            <h3 style="margin-top:6px">Gói 12 Tháng</h3>
+            <div class="side-row" style="margin-top:var(--space-2)"><span>Bắt đầu</span><b id="pendingStartText" class="tabular">25/09/2026</b></div>
+            <div class="side-row"><span>Hết hạn dự kiến</span><b id="pendingEndText" class="tabular">24/09/2027</b></div>
+            <button class="btn btn-outline btn-sm btn-block" type="button" id="btnChangePendingStart" style="margin-top:var(--space-3)"><i class="fa-solid fa-calendar-days"></i> Đổi ngày bắt đầu</button>
           </div>
 
           <div class="side-card">
@@ -182,5 +193,35 @@
 
 <script src="../app.js"></script>
 <script src="customer.js"></script>
+<script>
+document.getElementById('btnChangePendingStart')?.addEventListener('click', () => {
+  openConfirmModal({
+    title: 'Đổi ngày bắt đầu gói tập (CBR-119)',
+    body: `
+      <p><b>Gói 12 Tháng</b> · Cho phép hẹn ngày bắt đầu trong 7 ngày tới.</p>
+      <label class="field">
+        <span class="field-label">Chọn ngày bắt đầu mới *</span>
+        <input type="date" id="newStartDateInput" value="2026-09-25" min="2026-09-20" max="2026-09-27" class="input">
+        <span class="field-hint"><i class="fa-solid fa-circle-info"></i> Từ 20/09/2026 đến 27/09/2026 (7 ngày kể từ hôm nay).</span>
+      </label>
+      <p class="muted" style="font-size:12px;margin-top:8px">Lưu ý: Bạn chỉ có thể đổi ngày bắt đầu khi gói chưa kích hoạt.</p>
+    `,
+    confirmLabel: 'Lưu ngày bắt đầu',
+    onConfirm() {
+      const input = document.getElementById('newStartDateInput');
+      if (!input || !input.value) return false;
+      const [y, m, d] = input.value.split('-');
+      const startStr = `${d}/${m}/${y}`;
+      const endYear = parseInt(y, 10) + 1;
+      const endDay = String(parseInt(d, 10) - 1).padStart(2, '0');
+      const endStr = `${endDay}/${m}/${endYear}`;
+      
+      document.getElementById('pendingStartText').textContent = startStr;
+      document.getElementById('pendingEndText').textContent = endStr;
+      showToast('success', 'Đã đổi ngày bắt đầu thành công: ' + startStr);
+    }
+  });
+});
+</script>
 </body>
 </html>
