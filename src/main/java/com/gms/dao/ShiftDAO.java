@@ -5,6 +5,7 @@ import com.gms.dto.ClosedShiftHistoryItem;
 import com.gms.dto.ShiftMetrics;
 import com.gms.dto.ShiftTransactionItem;
 import com.gms.entity.Shift;
+import com.gms.service.ShiftService;
 import com.gms.util.DBContext;
 import com.gms.util.DateTimeUtil;
 
@@ -181,43 +182,11 @@ public class ShiftDAO {
     }
 
     /**
-     * Tự động chọn ca phù hợp nhất để hiển thị khi Lễ tân mở trang:
-     * 1. Ca ngày cũ quên chưa chốt -> 2. Ca đang Open hôm nay -> 3. Ca chiều nếu Ca sáng đã chốt -> 4. Xét theo mốc 13:00.
+     * @deprecated Business logic chọn ca đã được chuyển sang {@link ShiftService#findCurrentOrActiveShift(LocalDate)}.
+     * Giữ lại phương thức này để các module khác (CounterSaleService, PtSaleService) tiếp tục hoạt động mà không cần sửa file ngoài ca làm việc.
      */
     public Shift findCurrentOrActiveShift(LocalDate today) throws SQLException {
-        Shift unclosedPast = findUnclosedPastShift(today);
-        if (unclosedPast != null) {
-            return unclosedPast;
-        }
-
-        List<Shift> shifts = findTodayShifts(today);
-        if (shifts.isEmpty()) {
-            return null;
-        }
-
-        Shift morning = null;
-        Shift afternoon = null;
-        for (Shift s : shifts) {
-            if (s.isOpen()) {
-                return s;
-            }
-            if (s.getShiftType() == Shift.ShiftType.MORNING) {
-                morning = s;
-            } else {
-                afternoon = s;
-            }
-        }
-
-        if (afternoon != null && (afternoon.isClosed() || (morning != null && morning.isClosed()))) {
-            return afternoon;
-        }
-
-        boolean isAfternoonTime = !LocalDateTime.now(DateTimeUtil.GYM_ZONE)
-                .toLocalTime().isBefore(AppConstants.AFTERNOON_SHIFT_START);
-        if (isAfternoonTime && afternoon != null) {
-            return afternoon;
-        }
-        return morning != null ? morning : shifts.get(0);
+        return new ShiftService(this, null, null, null, null).findCurrentOrActiveShift(today);
     }
 
     /**

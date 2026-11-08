@@ -165,6 +165,6 @@ public class ShiftDetailView {
 
     public boolean isPastDate() {
         return shift != null && shift.getWorkDate() != null
-                && shift.getWorkDate().isBefore(com.gms.util.DateTimeUtil.today());
+                && !shift.getWorkDate().equals(com.gms.util.DateTimeUtil.today());
     }
 }

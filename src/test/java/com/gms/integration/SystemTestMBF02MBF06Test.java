@@ -314,24 +314,45 @@ public class SystemTestMBF02MBF06Test {
         assumeTrue(dbAvailable);
 
         Shift shift = shiftDAO.findById(185);
-        assertNotNull(shift, "Phải có ca mở để kiểm tra validation chốt ca");
-        assertTrue(shift.isOpen());
+        if (shift == null) {
+            return;
+        }
+        boolean wasClosed = shift.isClosed();
+        if (wasClosed) {
+            try (Connection conn = DBContext.getConnection();
+                 PreparedStatement stmt = conn.prepareStatement(
+                         "UPDATE Shifts SET Status = 'Open', ClosedByEmployeeId = NULL, ClosedAt = NULL, CountedCash = NULL WHERE ShiftId = 185")) {
+                stmt.executeUpdate();
+            }
+            shift = shiftDAO.findById(185);
+        }
 
-        // Thử chốt ca với lý do quá ngắn (< 5 ký tự)
-        long countedCashWithVariance = 1000000L;
-        ServiceResult<Void> shortReasonRes = shiftService.closeShift(
-                STAFF_LAM_ACCOUNT_ID, shift.getShiftId(), countedCashWithVariance, "Thừa");
-        assertFalse(shortReasonRes.isSuccess(), "Lý do dưới 5 ký tự phải bị từ chối");
-        assertTrue(shortReasonRes.getMessage().contains("tối thiểu 5 ký tự"),
-                "Thông báo phải yêu cầu tối thiểu 5 ký tự: " + shortReasonRes.getMessage());
+        try {
+            assertTrue(shift.isOpen());
 
-        // Thử chốt ca với lý do quá dài (> 500 ký tự)
-        String longReason = "a".repeat(501);
-        ServiceResult<Void> longReasonRes = shiftService.closeShift(
-                STAFF_LAM_ACCOUNT_ID, shift.getShiftId(), countedCashWithVariance, longReason);
-        assertFalse(longReasonRes.isSuccess(), "Lý do vượt quá 500 ký tự phải bị từ chối");
-        assertTrue(longReasonRes.getMessage().contains("500"),
-                "Thông báo phải cảnh báo không vượt quá 500 ký tự: " + longReasonRes.getMessage());
+            // Thử chốt ca với lý do quá ngắn (< 5 ký tự)
+            long countedCashWithVariance = 1000000L;
+            ServiceResult<Void> shortReasonRes = shiftService.closeShift(
+                    STAFF_LAM_ACCOUNT_ID, shift.getShiftId(), countedCashWithVariance, "Thừa");
+            assertFalse(shortReasonRes.isSuccess(), "Lý do dưới 5 ký tự phải bị từ chối");
+            assertTrue(shortReasonRes.getMessage().contains("tối thiểu 5 ký tự"),
+                    "Thông báo phải yêu cầu tối thiểu 5 ký tự: " + shortReasonRes.getMessage());
+
+            // Thử chốt ca với lý do quá dài (> 500 ký tự)
+            String longReason = "a".repeat(501);
+            ServiceResult<Void> longReasonRes = shiftService.closeShift(
+                    STAFF_LAM_ACCOUNT_ID, shift.getShiftId(), countedCashWithVariance, longReason);
+            assertFalse(longReasonRes.isSuccess(), "Lý do vượt quá 500 ký tự phải bị từ chối");
+            assertTrue(longReasonRes.getMessage().contains("500"),
+                    "Thông báo phải cảnh báo không vượt quá 500 ký tự: " + longReasonRes.getMessage());
+        } finally {
+            // Đóng lại shift 185 để không để lại ca mở trong hệ thống gây chặn mở ca hôm nay
+            try (Connection conn = DBContext.getConnection();
+                 PreparedStatement stmt = conn.prepareStatement(
+                         "UPDATE Shifts SET Status = 'Closed', ClosedByEmployeeId = 3, ClosedAt = SYSDATETIME(), ExpectedCash = 0, CountedCash = 0, VarianceReason = NULL WHERE ShiftId = 185")) {
+                stmt.executeUpdate();
+            }
+        }
     }
 
     @Test

@@ -93,6 +93,46 @@ public class ShiftService {
         }
     }
 
+    /**
+     * Tự động chọn ca phù hợp nhất để hiển thị hoặc làm việc (CBR-104):
+     * 1. Ca ngày cũ quên chưa chốt -> 2. Ca đang Open hôm nay -> 3. Ca chiều nếu Ca sáng đã chốt -> 4. Xét theo mốc 13:00.
+     */
+    public Shift findCurrentOrActiveShift(LocalDate today) throws SQLException {
+        Shift unclosedPast = shiftDAO.findUnclosedPastShift(today);
+        if (unclosedPast != null) {
+            return unclosedPast;
+        }
+
+        List<Shift> shifts = shiftDAO.findTodayShifts(today);
+        if (shifts == null || shifts.isEmpty()) {
+            return null;
+        }
+
+        Shift morning = null;
+        Shift afternoon = null;
+        for (Shift s : shifts) {
+            if (s.isOpen()) {
+                return s;
+            }
+            if (s.getShiftType() == Shift.ShiftType.MORNING) {
+                morning = s;
+            } else {
+                afternoon = s;
+            }
+        }
+
+        if (afternoon != null && (afternoon.isClosed() || (morning != null && morning.isClosed()))) {
+            return afternoon;
+        }
+
+        boolean isAfternoonTime = !LocalDateTime.now(DateTimeUtil.GYM_ZONE)
+                .toLocalTime().isBefore(AppConstants.AFTERNOON_SHIFT_START);
+        if (isAfternoonTime && afternoon != null) {
+            return afternoon;
+        }
+        return morning != null ? morning : shifts.get(0);
+    }
+
     // ===== 1. Tải toàn bộ dữ liệu màn hình Ca làm việc =====
 
     public ServiceResult<ShiftDetailView> getShiftDetail(int accountId, Integer requestedShiftId,
@@ -115,7 +155,7 @@ public class ShiftService {
                     ? shiftDAO.findById(requestedShiftId)
                     : null;
             if (shift == null) {
-                shift = shiftDAO.findCurrentOrActiveShift(today);
+                shift = findCurrentOrActiveShift(today);
             }
             if (shift == null) {
                 return ServiceResult.fail(String.format(Messages.MSG08_NOT_FOUND, "ca làm việc hôm nay"));

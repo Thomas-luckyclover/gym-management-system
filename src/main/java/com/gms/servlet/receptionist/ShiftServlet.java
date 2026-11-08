@@ -174,7 +174,13 @@ public class ShiftServlet extends HttpServlet {
         }
 
         ServiceResult<Void> result = shiftService.closeShift(accountId, shiftId, countedCash, varianceReason);
-        finishAction(request, response, shiftId, result, Messages.MSG274_SHIFT_CLOSED);
+        if (result.isSuccess()) {
+            RequestUtil.setFlashToast(request, "success", Messages.MSG274_SHIFT_CLOSED);
+            redirectToShift(request, response, 0);
+        } else {
+            RequestUtil.setFlashToast(request, "error", result.getMessage());
+            redirectToShift(request, response, shiftId);
+        }
     }
 
     /**
