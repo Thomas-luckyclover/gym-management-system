@@ -2,6 +2,7 @@ package com.gms.dao;
 
 import com.gms.constant.Role;
 import com.gms.dto.PTCardView;
+import com.gms.entity.Account;
 import com.gms.entity.Employee;
 import com.gms.util.DBContext;
 import java.sql.Connection;
@@ -56,7 +57,7 @@ public class EmployeeDAO {
      *   5 | Đinh Công Sơn         | Strength & Conditioning  | 8 năm
      *   6 | Nguyễn Thị Kiều Trang | Giảm mỡ · Thể hình nữ    | 6 năm
      *   7 | David Miller          | Tăng cơ · Powerlifting   | 9 năm
-     *   (EmployeeId 8 Hồ Văn Nam đã Resigned → không có trong danh sách)
+     *   (EmployeeId 8 Hồ Văn Nam đã Resigned, 14 Phan Thanh Tú bị khóa tài khoản → không có trong danh sách)
      *
      * Chỉ lấy họ tên, chuyên môn, kinh nghiệm — KHÔNG lấy SĐT/email vì trang chủ là trang công khai.
      *
@@ -64,12 +65,14 @@ public class EmployeeDAO {
      * @throws SQLException lỗi kết nối hoặc lỗi câu SQL
      */
     public List<PTCardView> findWorkingPts() throws SQLException {
-        // B1: câu SQL nối 2 bảng
+        // B1: câu SQL nối 3 bảng
         //   - Employees  : lọc PT đang làm, lấy chuyên môn + kinh nghiệm
         //   - Persons    : lấy họ tên (Employees không có cột họ tên)
+        //   - Accounts   : chỉ PT có tài khoản đang hoạt động — giống màn Bán gói PT (PT bị Admin khóa thì ẩn)
         String sql = "SELECT e.EmployeeId, p.FullName, e.Specialty, e.YearsOfExperience "
                 + "FROM Employees e "
                 + "JOIN Persons p ON p.PersonId = e.PersonId "
+                + "JOIN Accounts a ON a.PersonId = e.PersonId AND a.Status = ? "
                 + "WHERE e.Position = ? AND e.Status = ? "
                 + "ORDER BY e.EmployeeId";
 
@@ -79,9 +82,10 @@ public class EmployeeDAO {
         try (Connection connection = DBContext.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
 
-            // B3: điền 2 dấu ? — lấy giá trị từ enum, không gõ tay chuỗi "PT", "Working"
-            statement.setString(1, Role.PT.getDbValue());
-            statement.setString(2, Employee.Status.WORKING.getDbValue());
+            // B3: điền 3 dấu ? — lấy giá trị từ enum, không gõ tay chuỗi "Active", "PT", "Working"
+            statement.setString(1, Account.Status.ACTIVE.getDbValue());
+            statement.setString(2, Role.PT.getDbValue());
+            statement.setString(3, Employee.Status.WORKING.getDbValue());
 
             // B4: mỗi dòng kết quả → 1 thẻ PT
             try (ResultSet resultSet = statement.executeQuery()) {
