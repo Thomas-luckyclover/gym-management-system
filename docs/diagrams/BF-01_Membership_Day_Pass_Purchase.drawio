@@ -1,0 +1,1683 @@
+<mxfile host="Electron" pages="5">
+  <diagram id="BF-01-0" name="BF-01 overview">
+    <mxGraphModel dx="2787" dy="2193" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1905" pageHeight="2190" background="#FFFFFF" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="BF-01-0-pool2" parent="1" style="swimlane;html=1;horizontal=1;startSize=30;fontFamily=Helvetica;fontSize=14;fontStyle=1;fillColor=none;strokeColor=#000000;strokeWidth=1.4;collapsible=0;" value="Gym Management System" vertex="1">
+          <mxGeometry height="1884" width="1825" x="40" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-lane3" parent="BF-01-0-pool2" style="swimlane;html=1;startSize=34;fontFamily=Helvetica;fontSize=13;fontStyle=1;fillColor=#FFFFFF;swimlaneFillColor=#FFFFFF;strokeColor=#000000;collapsible=0;" value="Customer" vertex="1">
+          <mxGeometry height="1854" width="295" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-n11" parent="BF-01-0-lane3" style="rhombus;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;" value="" vertex="1">
+          <mxGeometry height="50" width="50" x="125" y="1155" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-n15" parent="BF-01-0-lane3" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" value="5. See the package on the&lt;br&gt;dashboard&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;UC-41&lt;/font&gt;&lt;/i&gt;" vertex="1">
+          <mxGeometry height="80" width="170" x="65" y="1020" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-n18" parent="BF-01-0-lane3" style="rhombus;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;" value="" vertex="1">
+          <mxGeometry height="50" width="50" x="125" y="1395" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-n20" parent="BF-01-0-lane3" style="rhombus;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;" value="" vertex="1">
+          <mxGeometry height="50" width="50" x="125" y="195" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-n28" parent="BF-01-0-lane3" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" value="A1. Pay through VNPay&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;UC-22&lt;/font&gt;&lt;/i&gt;" vertex="1">
+          <mxGeometry height="80" width="170" x="65" y="420" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-n41" parent="BF-01-0-lane3" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" value="A1. Choose package, start&lt;br&gt;date and voucher&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;UC-22, UC-23&lt;/font&gt;&lt;/i&gt;" vertex="1">
+          <mxGeometry height="80" width="170" x="65" y="300" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-n51" parent="BF-01-0-lane3" style="ellipse;html=1;shape=startState;fillColor=#000000;strokeColor=#000000;" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="135" y="85" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-lane4" parent="BF-01-0-pool2" style="swimlane;html=1;startSize=34;fontFamily=Helvetica;fontSize=13;fontStyle=1;fillColor=#FFFFFF;swimlaneFillColor=#FFFFFF;strokeColor=#000000;collapsible=0;" value="Receptionist" vertex="1">
+          <mxGeometry height="1854" width="510" x="295" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-n16" parent="BF-01-0-lane4" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" value="3. Collect cash or confirm&lt;br&gt;the transfer&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;UC-20&lt;/font&gt;&lt;/i&gt;" vertex="1">
+          <mxGeometry height="80" width="170" x="60" y="660" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-n22" parent="BF-01-0-lane4" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" value="1. Find or create the&lt;br&gt;customer profile&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;UC-20&lt;/font&gt;&lt;/i&gt;" vertex="1">
+          <mxGeometry height="80" width="170" x="60" y="300" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-n29" parent="BF-01-0-lane4" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" value="2. Choose package, start&lt;br&gt;date and voucher&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;UC-20, UC-23&lt;/font&gt;&lt;/i&gt;" vertex="1">
+          <mxGeometry height="80" width="170" x="60" y="540" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-n30" parent="BF-01-0-lane4" style="shape=mxgraph.sysml.callBehAct;align=center;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" value="A3. Gym Check-in&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;BF-02&lt;/font&gt;&lt;/i&gt;" vertex="1">
+          <mxGeometry height="80" width="170" x="280" y="1500" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-n38" parent="BF-01-0-lane4" style="ellipse;html=1;shape=endState;fillColor=#000000;strokeColor=#000000;" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="350" y="1645" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-n42" parent="BF-01-0-lane4" style="rhombus;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;" value="" vertex="1">
+          <mxGeometry height="50" width="50" x="120" y="1395" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-n48" parent="BF-01-0-lane4" style="shape=mxgraph.sysml.callBehAct;align=center;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" value="6. Gym Check-in&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;BF-02&lt;/font&gt;&lt;/i&gt;" vertex="1">
+          <mxGeometry height="80" width="170" x="60" y="1260" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-lane5" parent="BF-01-0-pool2" style="swimlane;html=1;startSize=34;fontFamily=Helvetica;fontSize=13;fontStyle=1;fillColor=#FFFFFF;swimlaneFillColor=#FFFFFF;strokeColor=#000000;collapsible=0;" value="VNPay" vertex="1">
+          <mxGeometry height="1854" width="295" x="805" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-n34" parent="BF-01-0-lane5" style="shape=mxgraph.sysml.sendSigAct;align=center;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" value="A1. Send the payment&lt;br&gt;result&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;UC-PAY&lt;/font&gt;&lt;/i&gt;" vertex="1">
+          <mxGeometry height="56" width="170" x="60" y="552" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-lane6" parent="BF-01-0-pool2" style="swimlane;html=1;startSize=34;fontFamily=Helvetica;fontSize=13;fontStyle=1;fillColor=#FFFFFF;swimlaneFillColor=#FFFFFF;strokeColor=#000000;collapsible=0;" value="System" vertex="1">
+          <mxGeometry height="1854" width="725" x="1100" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-n7" parent="BF-01-0-lane6" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" value="&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;«system»&lt;/font&gt;&lt;br&gt;4. Mark order Paid,&lt;br&gt;activate the package" vertex="1">
+          <mxGeometry height="80" width="170" x="275" y="900" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-n8" parent="BF-01-0-lane6" style="ellipse;html=1;shape=endState;fillColor=#000000;strokeColor=#000000;" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="565" y="1165" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-n10" parent="BF-01-0-lane6" style="shape=mxgraph.sysml.accEvent;align=center;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" value="Payment result received" vertex="1">
+          <mxGeometry height="56" width="170" x="275" y="672" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-n13" parent="BF-01-0-lane6" style="rhombus;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;" value="" vertex="1">
+          <mxGeometry height="50" width="50" x="555" y="795" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-n17" parent="BF-01-0-lane6" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" value="&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;«system»&lt;/font&gt;&lt;br&gt;7. Expire the membership&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;JOB-02&lt;/font&gt;&lt;/i&gt;" vertex="1">
+          <mxGeometry height="80" width="170" x="275" y="1620" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-n23" parent="BF-01-0-lane6" style="shape=mxgraph.sysml.callBehAct;align=center;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" value="E2. Payment Reconciliation &amp;amp; Refund&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;BF-01d&lt;/font&gt;&lt;/i&gt;" vertex="1">
+          <mxGeometry height="80" width="170" x="65" y="900" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-n24" parent="BF-01-0-lane6" style="shape=mxgraph.sysml.timeEvent;strokeWidth=1.5;verticalLabelPosition=bottom;verticalAlign=top;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" value="" vertex="1">
+          <mxGeometry height="40" width="30" x="565" y="920" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-n26" parent="BF-01-0-lane6" style="ellipse;html=1;shape=endState;fillColor=#000000;strokeColor=#000000;" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="135" y="1045" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-n31" parent="BF-01-0-lane6" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" value="&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;«system»&lt;/font&gt;&lt;br&gt;E1. Cancel the overdue&lt;br&gt;order&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;JOB-05&lt;/font&gt;&lt;/i&gt;" vertex="1">
+          <mxGeometry height="80" width="170" x="495" y="1020" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-n32" parent="BF-01-0-lane6" style="shape=mxgraph.sysml.timeEvent;strokeWidth=1.5;verticalLabelPosition=bottom;verticalAlign=top;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" value="" vertex="1">
+          <mxGeometry height="40" width="30" x="345" y="1520" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-n35" parent="BF-01-0-lane6" style="shape=mxgraph.sysml.sendSigAct;align=center;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" value="Email the temporary&lt;br&gt;password&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;new Self profile&lt;/font&gt;&lt;/i&gt;" vertex="1">
+          <mxGeometry height="56" width="170" x="275" y="432" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-n36" parent="BF-01-0-lane6" style="rhombus;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;" value="" vertex="1">
+          <mxGeometry height="50" width="50" x="335" y="795" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-n40" parent="BF-01-0-lane6" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" value="&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;«system»&lt;/font&gt;&lt;br&gt;A3. Expire the unused day&lt;br&gt;pass&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;JOB-03&lt;/font&gt;&lt;/i&gt;" vertex="1">
+          <mxGeometry height="80" width="170" x="495" y="1620" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-n44" parent="BF-01-0-lane6" style="ellipse;html=1;shape=endState;fillColor=#000000;strokeColor=#000000;" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="345" y="1765" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-n46" parent="BF-01-0-lane6" style="ellipse;html=1;shape=endState;fillColor=#000000;strokeColor=#000000;" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="565" y="1765" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-n49" parent="BF-01-0-lane6" style="shape=mxgraph.sysml.timeEvent;strokeWidth=1.5;verticalLabelPosition=bottom;verticalAlign=top;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" value="" vertex="1">
+          <mxGeometry height="40" width="30" x="565" y="1520" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-nl9" parent="1" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=center;verticalAlign=top;spacing=0;" value="Order cancelled" vertex="1">
+          <mxGeometry height="18" width="81.7" x="1679.2" y="1299" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-nl12" parent="1" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=right;verticalAlign=top;spacing=0;" value="Day pass?" vertex="1">
+          <mxGeometry height="18" width="56" x="126" y="1249" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-nl14" parent="1" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=right;verticalAlign=top;spacing=0;" value="Before the deadline?" vertex="1">
+          <mxGeometry height="18" width="105.6" x="1606.4" y="889" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-nl19" parent="1" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=right;verticalAlign=top;spacing=0;" value="Used on its day?" vertex="1">
+          <mxGeometry height="18" width="86" x="96" y="1489" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-nl21" parent="1" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=right;verticalAlign=top;spacing=0;" value="Where to buy?" vertex="1">
+          <mxGeometry height="18" width="75.6" x="106.4" y="289" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-nl25" parent="1" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=top;spacing=0;" value="Payment deadline&lt;br&gt;passed" vertex="1">
+          <mxGeometry height="32" width="92.1" x="1741" y="1026" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-nl27" parent="1" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=center;verticalAlign=top;spacing=0;" value="Refund needed (BF-05)" vertex="1">
+          <mxGeometry height="18" width="119.7" x="1230.2" y="1179" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-nl33" parent="1" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=top;spacing=0;" value="After the end date" vertex="1">
+          <mxGeometry height="18" width="91.6" x="1521" y="1633" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-nl37" parent="1" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=right;verticalAlign=top;spacing=0;" value="Payment result?" vertex="1">
+          <mxGeometry height="18" width="83.5" x="1408.5" y="889" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-nl39" parent="1" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=center;verticalAlign=top;spacing=0;" value="Day pass used" vertex="1">
+          <mxGeometry height="18" width="76.8" x="661.6" y="1779" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-nl43" parent="1" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=top;spacing=0;" value="Package still valid?" vertex="1">
+          <mxGeometry height="18" width="97.6" x="488" y="1489" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-nl45" parent="1" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=center;verticalAlign=top;spacing=0;" value="Package expired" vertex="1">
+          <mxGeometry height="18" width="86" x="1457" y="1899" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-nl47" parent="1" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=center;verticalAlign=top;spacing=0;" value="Day pass expired" vertex="1">
+          <mxGeometry height="18" width="89" x="1675.5" y="1899" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-nl50" parent="1" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=top;spacing=0;" value="End of the day" vertex="1">
+          <mxGeometry height="18" width="75" x="1741" y="1633" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-nl52" parent="1" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=top;spacing=0;" value="Customer wants a gym&lt;br&gt;package" vertex="1">
+          <mxGeometry height="32" width="116.5" x="211" y="186" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-e53" edge="1" parent="1" source="BF-01-0-n51" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="BF-01-0-n20">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-0-e54" edge="1" parent="1" source="BF-01-0-n20" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.5;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="BF-01-0-n22">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="370" y="320" />
+              <mxPoint x="370" y="440" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-0-el55" parent="1" style="text;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=0;align=left;verticalAlign=middle;labelBackgroundColor=#FFFFFF;spacing=0;spacingLeft=3;" value="[At the counter]" vertex="1">
+          <mxGeometry height="15" width="80.7" x="223" y="323" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-e56" edge="1" parent="1" source="BF-01-0-n22" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.5;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="BF-01-0-n35">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1390" y="440" />
+              <mxPoint x="1390" y="560" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-0-e57" edge="1" parent="1" source="BF-01-0-n35" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="BF-01-0-n29">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1500" y="620" />
+              <mxPoint x="480" y="620" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-0-e58" edge="1" parent="1" source="BF-01-0-n29" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="BF-01-0-n16">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-0-e59" edge="1" parent="1" source="BF-01-0-n16" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="BF-01-0-n7">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="480" y="980" />
+              <mxPoint x="1500" y="980" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-0-e60" edge="1" parent="1" source="BF-01-0-n20" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=6;strokeColor=#000000;strokeWidth=1.3;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="BF-01-0-n41">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-0-el61" parent="1" style="text;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=0;align=left;verticalAlign=middle;labelBackgroundColor=#FFFFFF;spacing=0;spacingLeft=3;" value="[Online] A1" vertex="1">
+          <mxGeometry height="15" width="59.9" x="195" y="351" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-e62" edge="1" parent="1" source="BF-01-0-n41" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=6;strokeColor=#000000;strokeWidth=1.3;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="BF-01-0-n28">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-0-e63" edge="1" parent="1" source="BF-01-0-n28" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=6;strokeColor=#000000;strokeWidth=1.3;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="BF-01-0-n34">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="880" y="560" />
+              <mxPoint x="880" y="680" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-0-e64" edge="1" parent="1" source="BF-01-0-n34" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=6;strokeColor=#000000;strokeWidth=1.3;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="BF-01-0-n10">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1390" y="680" />
+              <mxPoint x="1390" y="800" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-0-e65" edge="1" parent="1" source="BF-01-0-n10" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=6;strokeColor=#000000;strokeWidth=1.3;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="BF-01-0-n36">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-0-e66" edge="1" parent="1" source="BF-01-0-n36" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=6;strokeColor=#000000;strokeWidth=1.3;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="BF-01-0-n7">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-0-el67" parent="1" style="text;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=0;align=left;verticalAlign=middle;labelBackgroundColor=#FFFFFF;spacing=0;spacingLeft=3;" value="[Paid]" vertex="1">
+          <mxGeometry height="15" width="34.2" x="1505" y="951" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-e68" edge="1" parent="1" source="BF-01-0-n36" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=6;strokeColor=#000000;strokeWidth=1.3;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="BF-01-0-n13">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-0-el69" parent="1" style="text;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=0;align=left;verticalAlign=middle;labelBackgroundColor=#FFFFFF;spacing=0;spacingLeft=3;" value="[Failed or expired] A2" vertex="1">
+          <mxGeometry height="15" width="110" x="1533" y="923" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-e70" edge="1" parent="1" source="BF-01-0-n13" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=6;strokeColor=#000000;strokeWidth=1.3;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="BF-01-0-n28">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1720" y="500" />
+              <mxPoint x="190" y="500" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-0-el71" parent="1" style="text;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=0;align=left;verticalAlign=middle;labelBackgroundColor=#FFFFFF;spacing=0;spacingLeft=3;" value="[Yes, pay again]" vertex="1">
+          <mxGeometry height="15" width="84" x="1725" y="874" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-e72" edge="1" parent="1" source="BF-01-0-n13" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=6;strokeColor=#000000;strokeWidth=1.3;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="BF-01-0-n24">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-0-el73" parent="1" style="text;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=0;align=left;verticalAlign=middle;labelBackgroundColor=#FFFFFF;spacing=0;spacingLeft=3;" value="[No] E1" vertex="1">
+          <mxGeometry height="15" width="42.7" x="1725" y="951" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-e74" edge="1" parent="1" source="BF-01-0-n24" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=6;strokeColor=#000000;strokeWidth=1.3;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="BF-01-0-n31">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-0-e75" edge="1" parent="1" source="BF-01-0-n31" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=6;strokeColor=#000000;strokeWidth=1.3;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="BF-01-0-n8">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-0-e76" edge="1" parent="1" source="BF-01-0-n36" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=6;strokeColor=#000000;strokeWidth=1.3;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="BF-01-0-n23">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1290" y="920" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-0-el77" parent="1" style="text;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=0;align=left;verticalAlign=middle;labelBackgroundColor=#FFFFFF;spacing=0;spacingLeft=3;" value="[Paid, order invalid] E2" vertex="1">
+          <mxGeometry height="15" width="116.8" x="1350.2" y="923" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-e78" edge="1" parent="1" source="BF-01-0-n23" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=6;strokeColor=#000000;strokeWidth=1.3;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="BF-01-0-n26">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-0-e79" edge="1" parent="1" source="BF-01-0-n7" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="BF-01-0-n15">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1500" y="1100" />
+              <mxPoint x="190" y="1100" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-0-e80" edge="1" parent="1" source="BF-01-0-n15" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="BF-01-0-n11">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-0-e81" edge="1" parent="1" source="BF-01-0-n11" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.5;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="BF-01-0-n48">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="370" y="1280" />
+              <mxPoint x="370" y="1400" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-0-el82" parent="1" style="text;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=0;align=left;verticalAlign=middle;labelBackgroundColor=#FFFFFF;spacing=0;spacingLeft=3;" value="[Membership]" vertex="1">
+          <mxGeometry height="15" width="72.7" x="223" y="1283" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-e83" edge="1" parent="1" source="BF-01-0-n48" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="BF-01-0-n42">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-0-e84" edge="1" parent="1" source="BF-01-0-n42" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.5;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="BF-01-0-n48">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="370" y="1520" />
+              <mxPoint x="370" y="1400" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-0-el85" parent="1" style="text;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=0;align=left;verticalAlign=middle;labelBackgroundColor=#FFFFFF;spacing=0;spacingLeft=3;" value="[Yes, next visit]" vertex="1">
+          <mxGeometry height="15" width="79" x="368" y="1523" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-e86" edge="1" parent="1" source="BF-01-0-n42" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="BF-01-0-n32">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="480" y="1580" />
+              <mxPoint x="1460" y="1580" />
+              <mxPoint x="1460" y="1640" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-0-el87" parent="1" style="text;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=0;align=left;verticalAlign=middle;labelBackgroundColor=#FFFFFF;spacing=0;spacingLeft=3;" value="[No]" vertex="1">
+          <mxGeometry height="15" width="26.2" x="485" y="1551" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-e88" edge="1" parent="1" source="BF-01-0-n32" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="BF-01-0-n17">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-0-e89" edge="1" parent="1" source="BF-01-0-n17" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="BF-01-0-n44">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-0-e90" edge="1" parent="1" source="BF-01-0-n11" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=6;strokeColor=#000000;strokeWidth=1.3;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="BF-01-0-n18">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-0-el91" parent="1" style="text;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=0;align=left;verticalAlign=middle;labelBackgroundColor=#FFFFFF;spacing=0;spacingLeft=3;" value="[Day pass] A3" vertex="1">
+          <mxGeometry height="15" width="73.9" x="195" y="1311" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-e92" edge="1" parent="1" source="BF-01-0-n18" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=6;strokeColor=#000000;strokeWidth=1.3;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="BF-01-0-n30">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="360" y="1520" />
+              <mxPoint x="360" y="1640" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-0-el93" parent="1" style="text;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=0;align=left;verticalAlign=middle;labelBackgroundColor=#FFFFFF;spacing=0;spacingLeft=3;" value="[Yes]" vertex="1">
+          <mxGeometry height="15" width="30.1" x="223" y="1523" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-e94" edge="1" parent="1" source="BF-01-0-n30" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=6;strokeColor=#000000;strokeWidth=1.3;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="BF-01-0-n38">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-0-e95" edge="1" parent="1" source="BF-01-0-n18" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=6;strokeColor=#000000;strokeWidth=1.3;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="BF-01-0-n49">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="190" y="1700" />
+              <mxPoint x="1680" y="1700" />
+              <mxPoint x="1680" y="1640" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-0-el96" parent="1" style="text;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=0;align=left;verticalAlign=middle;labelBackgroundColor=#FFFFFF;spacing=0;spacingLeft=3;" value="[No]" vertex="1">
+          <mxGeometry height="15" width="26.2" x="195" y="1551" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-e97" edge="1" parent="1" source="BF-01-0-n49" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=6;strokeColor=#000000;strokeWidth=1.3;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="BF-01-0-n40">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-0-e98" edge="1" parent="1" source="BF-01-0-n40" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=6;strokeColor=#000000;strokeWidth=1.3;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="BF-01-0-n46">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-0-lg99" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=12;fontStyle=1;align=left;verticalAlign=top;spacingLeft=8;spacingTop=3;fillColor=#FFFFFF;strokeColor=#000000;" value="Legend" vertex="1">
+          <mxGeometry height="182" width="1825" x="40" y="1978" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-li100" parent="1" style="ellipse;html=1;shape=startState;fillColor=#000000;strokeColor=#000000;" value="" vertex="1">
+          <mxGeometry height="20" width="20" x="67" y="2015" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-lt101" parent="1" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" value="Initial node" vertex="1">
+          <mxGeometry height="26" width="533.3333333333334" x="112" y="2012" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-li102" parent="1" style="ellipse;html=1;shape=endState;fillColor=#000000;strokeColor=#000000;" value="" vertex="1">
+          <mxGeometry height="20" width="20" x="675.3333333333334" y="2015" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-lt103" parent="1" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" value="Activity final" vertex="1">
+          <mxGeometry height="26" width="533.3333333333334" x="720.3333333333334" y="2012" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-li104" parent="1" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=8;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" value="" vertex="1">
+          <mxGeometry height="26" width="50" x="1268.6666666666667" y="2012" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-lt105" parent="1" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" value="Action (use case step)" vertex="1">
+          <mxGeometry height="26" width="533.3333333333334" x="1328.6666666666667" y="2012" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-li106" parent="1" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=8;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" value="«system»" vertex="1">
+          <mxGeometry height="26" width="50" x="52" y="2048" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-lt107" parent="1" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" value="«system» action (automatic / job)" vertex="1">
+          <mxGeometry height="26" width="533.3333333333334" x="112" y="2048" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-li108" parent="1" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=8;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" value="«manual»" vertex="1">
+          <mxGeometry height="26" width="50" x="660.3333333333334" y="2048" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-lt109" parent="1" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" value="«manual» action (outside the system)" vertex="1">
+          <mxGeometry height="26" width="533.3333333333334" x="720.3333333333334" y="2048" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-li110" parent="1" style="shape=mxgraph.sysml.callBehAct;align=center;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=8;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" value="" vertex="1">
+          <mxGeometry height="26" width="50" x="1268.6666666666667" y="2048" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-lt111" parent="1" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" value="Call behavior action (reused flow)" vertex="1">
+          <mxGeometry height="26" width="533.3333333333334" x="1328.6666666666667" y="2048" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-li112" parent="1" style="shape=mxgraph.sysml.sendSigAct;align=center;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=8;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" value="" vertex="1">
+          <mxGeometry height="26" width="50" x="52" y="2084" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-lt113" parent="1" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" value="Send signal (notification)" vertex="1">
+          <mxGeometry height="26" width="533.3333333333334" x="112" y="2084" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-li114" parent="1" style="shape=mxgraph.sysml.accEvent;align=center;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=8;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" value="" vertex="1">
+          <mxGeometry height="26" width="50" x="660.3333333333334" y="2084" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-lt115" parent="1" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" value="Accept event (from an external system)" vertex="1">
+          <mxGeometry height="26" width="533.3333333333334" x="720.3333333333334" y="2084" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-li116" parent="1" style="shape=mxgraph.sysml.timeEvent;strokeWidth=1.5;verticalLabelPosition=bottom;verticalAlign=top;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=8;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" value="" vertex="1">
+          <mxGeometry height="26" width="16" x="1285.6666666666667" y="2084" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-lt117" parent="1" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" value="Time event" vertex="1">
+          <mxGeometry height="26" width="533.3333333333334" x="1328.6666666666667" y="2084" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-li118" parent="1" style="rhombus;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=8;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;" value="" vertex="1">
+          <mxGeometry height="24" width="24" x="65" y="2121" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-lt119" parent="1" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" value="Decision / merge node" vertex="1">
+          <mxGeometry height="26" width="533.3333333333334" x="112" y="2120" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-li120" edge="1" parent="1" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.3;strokeColor=#000000;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="660.3333333333334" y="2133" as="sourcePoint" />
+            <mxPoint x="710.3333333333334" y="2133" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-0-lt121" parent="1" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" value="Control flow" vertex="1">
+          <mxGeometry height="26" width="533.3333333333334" x="720.3333333333334" y="2120" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-0-li122" edge="1" parent="1" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=2.5;strokeColor=#000000;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1268.6666666666667" y="2133" as="sourcePoint" />
+            <mxPoint x="1318.6666666666667" y="2133" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-0-lt123" parent="1" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" value="Main flow" vertex="1">
+          <mxGeometry height="26" width="533.3333333333334" x="1328.6666666666667" y="2120" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="BF-01-1" name="BF-01a">
+    <mxGraphModel dx="1200" dy="900" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1905" pageHeight="2190" background="#FFFFFF" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="BF-01-1-t1" value="Figure 2.1a – Membership &amp; Day Pass Purchase (BF-01) – Main flow (counter sale)" style="text;html=1;fontFamily=Helvetica;fontSize=16;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="40" y="30" width="900" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-pool2" value="Gym Management System" style="swimlane;html=1;horizontal=1;startSize=30;fontFamily=Helvetica;fontSize=14;fontStyle=1;fillColor=none;strokeColor=#000000;strokeWidth=1.4;collapsible=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="70" width="1825" height="1884" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-lane3" value="Customer" style="swimlane;html=1;startSize=34;fontFamily=Helvetica;fontSize=13;fontStyle=1;fillColor=#FFFFFF;swimlaneFillColor=#FFFFFF;strokeColor=#000000;collapsible=0;" vertex="1" parent="BF-01-1-pool2">
+          <mxGeometry x="0" y="30" width="295" height="1854" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-lane4" value="Receptionist" style="swimlane;html=1;startSize=34;fontFamily=Helvetica;fontSize=13;fontStyle=1;fillColor=#FFFFFF;swimlaneFillColor=#FFFFFF;strokeColor=#000000;collapsible=0;" vertex="1" parent="BF-01-1-pool2">
+          <mxGeometry x="295" y="30" width="510" height="1854" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-lane5" value="VNPay" style="swimlane;html=1;startSize=34;fontFamily=Helvetica;fontSize=13;fontStyle=1;fillColor=#FFFFFF;swimlaneFillColor=#FFFFFF;strokeColor=#000000;collapsible=0;" vertex="1" parent="BF-01-1-pool2">
+          <mxGeometry x="805" y="30" width="295" height="1854" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-lane6" value="System" style="swimlane;html=1;startSize=34;fontFamily=Helvetica;fontSize=13;fontStyle=1;fillColor=#FFFFFF;swimlaneFillColor=#FFFFFF;strokeColor=#000000;collapsible=0;" vertex="1" parent="BF-01-1-pool2">
+          <mxGeometry x="1100" y="30" width="725" height="1854" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-n7" value="5. See the package on the&lt;br&gt;dashboard&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;UC-41&lt;/font&gt;&lt;/i&gt;" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="BF-01-1-lane3">
+          <mxGeometry x="65.0" y="1020.0" width="170" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-n8" value="Email the temporary&lt;br&gt;password&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;new Self profile&lt;/font&gt;&lt;/i&gt;" style="shape=mxgraph.sysml.sendSigAct;align=center;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="BF-01-1-lane6">
+          <mxGeometry x="275.0" y="432.0" width="170" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-n9" value="3. Collect cash or confirm&lt;br&gt;the transfer&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;UC-20&lt;/font&gt;&lt;/i&gt;" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="BF-01-1-lane4">
+          <mxGeometry x="60.0" y="660.0" width="170" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-n10" value="&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;«system»&lt;/font&gt;&lt;br&gt;7. Expire the membership&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;JOB-02&lt;/font&gt;&lt;/i&gt;" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="BF-01-1-lane6">
+          <mxGeometry x="275.0" y="1620.0" width="170" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-n11" value="2. Choose package, start&lt;br&gt;date and voucher&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;UC-20, UC-23&lt;/font&gt;&lt;/i&gt;" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="BF-01-1-lane4">
+          <mxGeometry x="60.0" y="540.0" width="170" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-n12" value="" style="rhombus;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;" vertex="1" parent="BF-01-1-lane3">
+          <mxGeometry x="125.0" y="195.0" width="50" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-nl13" value="Where to buy?" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=right;verticalAlign=top;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="106.4" y="289.0" width="75.6" height="18.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-n14" value="&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;«system»&lt;/font&gt;&lt;br&gt;4. Mark order Paid,&lt;br&gt;activate the package" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="BF-01-1-lane6">
+          <mxGeometry x="275.0" y="900.0" width="170" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-n15" value="" style="shape=mxgraph.sysml.timeEvent;strokeWidth=1.5;verticalLabelPosition=bottom;verticalAlign=top;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="BF-01-1-lane6">
+          <mxGeometry x="345.0" y="1520.0" width="30" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-nl16" value="After the end date" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=top;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="1521.0" y="1633.0" width="91.6" height="18.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-n17" value="" style="rhombus;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;" vertex="1" parent="BF-01-1-lane4">
+          <mxGeometry x="120.0" y="1395.0" width="50" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-nl18" value="Package still valid?" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=top;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="488.0" y="1489.0" width="97.6" height="18.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-n19" value="" style="ellipse;html=1;shape=endState;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="BF-01-1-lane6">
+          <mxGeometry x="345.0" y="1765.0" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-nl20" value="Package expired" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=center;verticalAlign=top;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="1457.0" y="1899.0" width="86.0" height="18.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-n21" value="6. Gym Check-in&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;BF-02&lt;/font&gt;&lt;/i&gt;" style="shape=mxgraph.sysml.callBehAct;align=center;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="BF-01-1-lane4">
+          <mxGeometry x="60.0" y="1260.0" width="170" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-n22" value="1. Find or create the&lt;br&gt;customer profile&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;UC-20&lt;/font&gt;&lt;/i&gt;" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="BF-01-1-lane4">
+          <mxGeometry x="60.0" y="300.0" width="170" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-n23" value="" style="rhombus;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;" vertex="1" parent="BF-01-1-lane3">
+          <mxGeometry x="125.0" y="1155.0" width="50" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-nl24" value="Day pass?" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=right;verticalAlign=top;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="126.0" y="1249.0" width="56.0" height="18.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-n25" value="" style="ellipse;html=1;shape=startState;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="BF-01-1-lane3">
+          <mxGeometry x="135.0" y="85.0" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-nl26" value="Customer wants a gym&lt;br&gt;package" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=top;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="211.0" y="186.0" width="116.5" height="32.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-e27" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-1-n25" target="BF-01-1-n12">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-1-e28" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.5;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-1-n12" target="BF-01-1-n22">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="370" y="320" />
+              <mxPoint x="370" y="440" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-1-el29" value="[At the counter]" style="text;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=0;align=left;verticalAlign=middle;labelBackgroundColor=#FFFFFF;spacing=0;spacingLeft=3;" vertex="1" parent="1">
+          <mxGeometry x="223.0" y="323.0" width="80.7" height="15.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-e30" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.5;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-1-n22" target="BF-01-1-n8">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1390" y="440" />
+              <mxPoint x="1390" y="560" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-1-e31" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-1-n8" target="BF-01-1-n11">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1500" y="620" />
+              <mxPoint x="480" y="620" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-1-e32" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-1-n11" target="BF-01-1-n9">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-1-e33" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-1-n9" target="BF-01-1-n14">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="480" y="980" />
+              <mxPoint x="1500" y="980" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-1-e34" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-1-n14" target="BF-01-1-n7">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1500" y="1100" />
+              <mxPoint x="190" y="1100" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-1-e35" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-1-n7" target="BF-01-1-n23">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-1-e36" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.5;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-1-n23" target="BF-01-1-n21">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="370" y="1280" />
+              <mxPoint x="370" y="1400" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-1-el37" value="[Membership]" style="text;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=0;align=left;verticalAlign=middle;labelBackgroundColor=#FFFFFF;spacing=0;spacingLeft=3;" vertex="1" parent="1">
+          <mxGeometry x="223.0" y="1283.0" width="72.7" height="15.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-e38" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-1-n21" target="BF-01-1-n17">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-1-e39" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.5;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-1-n17" target="BF-01-1-n21">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="370" y="1520" />
+              <mxPoint x="370" y="1400" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-1-el40" value="[Yes, next visit]" style="text;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=0;align=left;verticalAlign=middle;labelBackgroundColor=#FFFFFF;spacing=0;spacingLeft=3;" vertex="1" parent="1">
+          <mxGeometry x="368.0" y="1523.0" width="79.0" height="15.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-e41" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-1-n17" target="BF-01-1-n15">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="480" y="1580" />
+              <mxPoint x="1460" y="1580" />
+              <mxPoint x="1460" y="1640" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-1-el42" value="[No]" style="text;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=0;align=left;verticalAlign=middle;labelBackgroundColor=#FFFFFF;spacing=0;spacingLeft=3;" vertex="1" parent="1">
+          <mxGeometry x="485.0" y="1551.0" width="26.2" height="15.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-e43" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-1-n15" target="BF-01-1-n10">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-1-e44" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-1-n10" target="BF-01-1-n19">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-1-lg45" value="Legend" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=12;fontStyle=1;align=left;verticalAlign=top;spacingLeft=8;spacingTop=3;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1978" width="1825" height="182" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-li46" value="" style="ellipse;html=1;shape=startState;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="67.0" y="2015" width="20" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-lt47" value="Initial node" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="112.0" y="2012" width="533.3333333333334" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-li48" value="" style="ellipse;html=1;shape=endState;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="675.3333333333334" y="2015" width="20" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-lt49" value="Activity final" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="720.3333333333334" y="2012" width="533.3333333333334" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-li50" value="" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=8;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1268.6666666666667" y="2012" width="50" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-lt51" value="Action (use case step)" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1328.6666666666667" y="2012" width="533.3333333333334" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-li52" value="«system»" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=8;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="52.0" y="2048" width="50" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-lt53" value="«system» action (automatic / job)" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="112.0" y="2048" width="533.3333333333334" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-li54" value="«manual»" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=8;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="660.3333333333334" y="2048" width="50" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-lt55" value="«manual» action (outside the system)" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="720.3333333333334" y="2048" width="533.3333333333334" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-li56" value="" style="shape=mxgraph.sysml.callBehAct;align=center;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=8;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1268.6666666666667" y="2048" width="50" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-lt57" value="Call behavior action (reused flow)" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1328.6666666666667" y="2048" width="533.3333333333334" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-li58" value="" style="shape=mxgraph.sysml.sendSigAct;align=center;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=8;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="52.0" y="2084" width="50" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-lt59" value="Send signal (notification)" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="112.0" y="2084" width="533.3333333333334" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-li60" value="" style="shape=mxgraph.sysml.timeEvent;strokeWidth=1.5;verticalLabelPosition=bottom;verticalAlign=top;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=8;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="677.3333333333334" y="2084" width="16" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-lt61" value="Time event" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="720.3333333333334" y="2084" width="533.3333333333334" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-li62" value="" style="rhombus;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=8;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="1281.6666666666667" y="2085" width="24" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-lt63" value="Decision / merge node" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1328.6666666666667" y="2084" width="533.3333333333334" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-li64" value="" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.3;strokeColor=#000000;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="52.0" y="2133" as="sourcePoint" />
+            <mxPoint x="102.0" y="2133" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-1-lt65" value="Control flow" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="112.0" y="2120" width="533.3333333333334" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-1-li66" value="" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=2.5;strokeColor=#000000;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="660.3333333333334" y="2133" as="sourcePoint" />
+            <mxPoint x="710.3333333333334" y="2133" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-1-lt67" value="Main flow" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="720.3333333333334" y="2120" width="533.3333333333334" height="26" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="BF-01-2" name="BF-01b">
+    <mxGraphModel dx="1200" dy="900" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1905" pageHeight="2190" background="#FFFFFF" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="BF-01-2-t1" value="Figure 2.1b – Membership &amp; Day Pass Purchase (BF-01) – Online purchase (A1, A2, E1, E2)" style="text;html=1;fontFamily=Helvetica;fontSize=16;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="40" y="30" width="900" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-pool2" value="Gym Management System" style="swimlane;html=1;horizontal=1;startSize=30;fontFamily=Helvetica;fontSize=14;fontStyle=1;fillColor=none;strokeColor=#000000;strokeWidth=1.4;collapsible=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="70" width="1825" height="1884" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-lane3" value="Customer" style="swimlane;html=1;startSize=34;fontFamily=Helvetica;fontSize=13;fontStyle=1;fillColor=#FFFFFF;swimlaneFillColor=#FFFFFF;strokeColor=#000000;collapsible=0;" vertex="1" parent="BF-01-2-pool2">
+          <mxGeometry x="0" y="30" width="295" height="1854" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-lane4" value="Receptionist" style="swimlane;html=1;startSize=34;fontFamily=Helvetica;fontSize=13;fontStyle=1;fillColor=#FFFFFF;swimlaneFillColor=#FFFFFF;strokeColor=#000000;collapsible=0;" vertex="1" parent="BF-01-2-pool2">
+          <mxGeometry x="295" y="30" width="510" height="1854" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-lane5" value="VNPay" style="swimlane;html=1;startSize=34;fontFamily=Helvetica;fontSize=13;fontStyle=1;fillColor=#FFFFFF;swimlaneFillColor=#FFFFFF;strokeColor=#000000;collapsible=0;" vertex="1" parent="BF-01-2-pool2">
+          <mxGeometry x="805" y="30" width="295" height="1854" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-lane6" value="System" style="swimlane;html=1;startSize=34;fontFamily=Helvetica;fontSize=13;fontStyle=1;fillColor=#FFFFFF;swimlaneFillColor=#FFFFFF;strokeColor=#000000;collapsible=0;" vertex="1" parent="BF-01-2-pool2">
+          <mxGeometry x="1100" y="30" width="725" height="1854" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-n7" value="&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;«system»&lt;/font&gt;&lt;br&gt;4. Mark order Paid,&lt;br&gt;activate the package" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="BF-01-2-lane6">
+          <mxGeometry x="275.0" y="900.0" width="170" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-n8" value="" style="ellipse;html=1;shape=endState;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="BF-01-2-lane6">
+          <mxGeometry x="565.0" y="1165.0" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-nl9" value="Order cancelled" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=center;verticalAlign=top;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="1679.2" y="1299.0" width="81.7" height="18.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-n10" value="Payment result received" style="shape=mxgraph.sysml.accEvent;align=center;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="BF-01-2-lane6">
+          <mxGeometry x="275.0" y="672.0" width="170" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-n11" value="" style="rhombus;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;" vertex="1" parent="BF-01-2-lane3">
+          <mxGeometry x="125.0" y="1155.0" width="50" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-nl12" value="Day pass?" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=right;verticalAlign=top;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="126.0" y="1249.0" width="56.0" height="18.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-n13" value="" style="rhombus;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;" vertex="1" parent="BF-01-2-lane6">
+          <mxGeometry x="555.0" y="795.0" width="50" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-nl14" value="Before the deadline?" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=right;verticalAlign=top;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="1606.4" y="889.0" width="105.6" height="18.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-n15" value="5. See the package on the&lt;br&gt;dashboard&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;UC-41&lt;/font&gt;&lt;/i&gt;" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="BF-01-2-lane3">
+          <mxGeometry x="65.0" y="1020.0" width="170" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-n16" value="3. Collect cash or confirm&lt;br&gt;the transfer&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;UC-20&lt;/font&gt;&lt;/i&gt;" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="BF-01-2-lane4">
+          <mxGeometry x="60.0" y="660.0" width="170" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-n17" value="&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;«system»&lt;/font&gt;&lt;br&gt;7. Expire the membership&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;JOB-02&lt;/font&gt;&lt;/i&gt;" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="BF-01-2-lane6">
+          <mxGeometry x="275.0" y="1620.0" width="170" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-n18" value="" style="rhombus;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;" vertex="1" parent="BF-01-2-lane3">
+          <mxGeometry x="125.0" y="195.0" width="50" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-nl19" value="Where to buy?" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=right;verticalAlign=top;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="106.4" y="289.0" width="75.6" height="18.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-n20" value="1. Find or create the&lt;br&gt;customer profile&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;UC-20&lt;/font&gt;&lt;/i&gt;" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="BF-01-2-lane4">
+          <mxGeometry x="60.0" y="300.0" width="170" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-n21" value="E2. Payment Reconciliation &amp;amp; Refund&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;BF-01d&lt;/font&gt;&lt;/i&gt;" style="shape=mxgraph.sysml.callBehAct;align=center;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="BF-01-2-lane6">
+          <mxGeometry x="65.0" y="900.0" width="170" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-n22" value="" style="shape=mxgraph.sysml.timeEvent;strokeWidth=1.5;verticalLabelPosition=bottom;verticalAlign=top;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="BF-01-2-lane6">
+          <mxGeometry x="565.0" y="920.0" width="30" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-nl23" value="Payment deadline&lt;br&gt;passed" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=top;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="1741.0" y="1026.0" width="92.1" height="32.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-n24" value="" style="ellipse;html=1;shape=endState;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="BF-01-2-lane6">
+          <mxGeometry x="135.0" y="1045.0" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-nl25" value="Refund needed (BF-05)" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=center;verticalAlign=top;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="1230.2" y="1179.0" width="119.7" height="18.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-n26" value="A1. Pay through VNPay&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;UC-22&lt;/font&gt;&lt;/i&gt;" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="BF-01-2-lane3">
+          <mxGeometry x="65.0" y="420.0" width="170" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-n27" value="2. Choose package, start&lt;br&gt;date and voucher&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;UC-20, UC-23&lt;/font&gt;&lt;/i&gt;" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="BF-01-2-lane4">
+          <mxGeometry x="60.0" y="540.0" width="170" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-n28" value="&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;«system»&lt;/font&gt;&lt;br&gt;E1. Cancel the overdue&lt;br&gt;order&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;JOB-05&lt;/font&gt;&lt;/i&gt;" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="BF-01-2-lane6">
+          <mxGeometry x="495.0" y="1020.0" width="170" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-n29" value="" style="shape=mxgraph.sysml.timeEvent;strokeWidth=1.5;verticalLabelPosition=bottom;verticalAlign=top;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="BF-01-2-lane6">
+          <mxGeometry x="345.0" y="1520.0" width="30" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-nl30" value="After the end date" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=top;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="1521.0" y="1633.0" width="91.6" height="18.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-n31" value="A1. Send the payment&lt;br&gt;result&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;UC-PAY&lt;/font&gt;&lt;/i&gt;" style="shape=mxgraph.sysml.sendSigAct;align=center;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="BF-01-2-lane5">
+          <mxGeometry x="60.0" y="552.0" width="170" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-n32" value="Email the temporary&lt;br&gt;password&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;new Self profile&lt;/font&gt;&lt;/i&gt;" style="shape=mxgraph.sysml.sendSigAct;align=center;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="BF-01-2-lane6">
+          <mxGeometry x="275.0" y="432.0" width="170" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-n33" value="" style="rhombus;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;" vertex="1" parent="BF-01-2-lane6">
+          <mxGeometry x="335.0" y="795.0" width="50" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-nl34" value="Payment result?" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=right;verticalAlign=top;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="1408.5" y="889.0" width="83.5" height="18.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-n35" value="A1. Choose package, start&lt;br&gt;date and voucher&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;UC-22, UC-23&lt;/font&gt;&lt;/i&gt;" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="BF-01-2-lane3">
+          <mxGeometry x="65.0" y="300.0" width="170" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-n36" value="" style="rhombus;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;" vertex="1" parent="BF-01-2-lane4">
+          <mxGeometry x="120.0" y="1395.0" width="50" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-nl37" value="Package still valid?" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=top;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="488.0" y="1489.0" width="97.6" height="18.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-n38" value="" style="ellipse;html=1;shape=endState;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="BF-01-2-lane6">
+          <mxGeometry x="345.0" y="1765.0" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-nl39" value="Package expired" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=center;verticalAlign=top;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="1457.0" y="1899.0" width="86.0" height="18.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-n40" value="6. Gym Check-in&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;BF-02&lt;/font&gt;&lt;/i&gt;" style="shape=mxgraph.sysml.callBehAct;align=center;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="BF-01-2-lane4">
+          <mxGeometry x="60.0" y="1260.0" width="170" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-n41" value="" style="ellipse;html=1;shape=startState;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="BF-01-2-lane3">
+          <mxGeometry x="135.0" y="85.0" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-nl42" value="Customer wants a gym&lt;br&gt;package" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=top;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="211.0" y="186.0" width="116.5" height="32.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-e43" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=6;strokeColor=#000000;strokeWidth=1.3;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-2-n41" target="BF-01-2-n18">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-2-e44" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=6;strokeColor=#000000;strokeWidth=1.3;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-2-n18" target="BF-01-2-n20">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="370" y="320" />
+              <mxPoint x="370" y="440" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-2-el45" value="[At the counter]" style="text;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=0;align=left;verticalAlign=middle;labelBackgroundColor=#FFFFFF;spacing=0;spacingLeft=3;" vertex="1" parent="1">
+          <mxGeometry x="223.0" y="323.0" width="80.7" height="15.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-e46" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=6;strokeColor=#000000;strokeWidth=1.3;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-2-n20" target="BF-01-2-n32">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1390" y="440" />
+              <mxPoint x="1390" y="560" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-2-e47" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=6;strokeColor=#000000;strokeWidth=1.3;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-2-n32" target="BF-01-2-n27">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1500" y="620" />
+              <mxPoint x="480" y="620" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-2-e48" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=6;strokeColor=#000000;strokeWidth=1.3;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-2-n27" target="BF-01-2-n16">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-2-e49" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=6;strokeColor=#000000;strokeWidth=1.3;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-2-n16" target="BF-01-2-n7">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="480" y="980" />
+              <mxPoint x="1500" y="980" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-2-e50" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-2-n18" target="BF-01-2-n35">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-2-el51" value="[Online] A1" style="text;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;align=left;verticalAlign=middle;labelBackgroundColor=#FFFFFF;spacing=0;spacingLeft=3;" vertex="1" parent="1">
+          <mxGeometry x="195.0" y="351.0" width="59.9" height="15.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-e52" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-2-n35" target="BF-01-2-n26">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-2-e53" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.5;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-2-n26" target="BF-01-2-n31">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="880" y="560" />
+              <mxPoint x="880" y="680" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-2-e54" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.5;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-2-n31" target="BF-01-2-n10">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1390" y="680" />
+              <mxPoint x="1390" y="800" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-2-e55" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-2-n10" target="BF-01-2-n33">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-2-e56" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-2-n33" target="BF-01-2-n7">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-2-el57" value="[Paid]" style="text;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;align=left;verticalAlign=middle;labelBackgroundColor=#FFFFFF;spacing=0;spacingLeft=3;" vertex="1" parent="1">
+          <mxGeometry x="1505.0" y="951.0" width="34.2" height="15.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-e58" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.5;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-2-n33" target="BF-01-2-n13">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-2-el59" value="[Failed or expired] A2" style="text;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;align=left;verticalAlign=middle;labelBackgroundColor=#FFFFFF;spacing=0;spacingLeft=3;" vertex="1" parent="1">
+          <mxGeometry x="1533.0" y="923.0" width="110.0" height="15.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-e60" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.5;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-2-n13" target="BF-01-2-n26">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1720" y="500" />
+              <mxPoint x="190" y="500" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-2-el61" value="[Yes, pay again]" style="text;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;align=left;verticalAlign=middle;labelBackgroundColor=#FFFFFF;spacing=0;spacingLeft=3;" vertex="1" parent="1">
+          <mxGeometry x="1725.0" y="874.0" width="84.0" height="15.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-e62" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-2-n13" target="BF-01-2-n22">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-2-el63" value="[No] E1" style="text;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;align=left;verticalAlign=middle;labelBackgroundColor=#FFFFFF;spacing=0;spacingLeft=3;" vertex="1" parent="1">
+          <mxGeometry x="1725.0" y="951.0" width="42.7" height="15.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-e64" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-2-n22" target="BF-01-2-n28">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-2-e65" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-2-n28" target="BF-01-2-n8">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-2-e66" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.5;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-2-n33" target="BF-01-2-n21">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1290" y="920" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-2-el67" value="[Paid, order invalid] E2" style="text;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;align=left;verticalAlign=middle;labelBackgroundColor=#FFFFFF;spacing=0;spacingLeft=3;" vertex="1" parent="1">
+          <mxGeometry x="1350.2" y="923.0" width="116.8" height="15.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-e68" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-2-n21" target="BF-01-2-n24">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-2-e69" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=6;strokeColor=#000000;strokeWidth=1.3;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-2-n7" target="BF-01-2-n15">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1500" y="1100" />
+              <mxPoint x="190" y="1100" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-2-e70" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=6;strokeColor=#000000;strokeWidth=1.3;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-2-n15" target="BF-01-2-n11">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-2-e71" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=6;strokeColor=#000000;strokeWidth=1.3;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-2-n11" target="BF-01-2-n40">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="370" y="1280" />
+              <mxPoint x="370" y="1400" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-2-el72" value="[Membership]" style="text;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=0;align=left;verticalAlign=middle;labelBackgroundColor=#FFFFFF;spacing=0;spacingLeft=3;" vertex="1" parent="1">
+          <mxGeometry x="223.0" y="1283.0" width="72.7" height="15.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-e73" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=6;strokeColor=#000000;strokeWidth=1.3;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-2-n40" target="BF-01-2-n36">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-2-e74" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=6;strokeColor=#000000;strokeWidth=1.3;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-2-n36" target="BF-01-2-n40">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="370" y="1520" />
+              <mxPoint x="370" y="1400" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-2-el75" value="[Yes, next visit]" style="text;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=0;align=left;verticalAlign=middle;labelBackgroundColor=#FFFFFF;spacing=0;spacingLeft=3;" vertex="1" parent="1">
+          <mxGeometry x="368.0" y="1523.0" width="79.0" height="15.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-e76" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=6;strokeColor=#000000;strokeWidth=1.3;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-2-n36" target="BF-01-2-n29">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="480" y="1580" />
+              <mxPoint x="1460" y="1580" />
+              <mxPoint x="1460" y="1640" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-2-el77" value="[No]" style="text;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=0;align=left;verticalAlign=middle;labelBackgroundColor=#FFFFFF;spacing=0;spacingLeft=3;" vertex="1" parent="1">
+          <mxGeometry x="485.0" y="1551.0" width="26.2" height="15.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-e78" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=6;strokeColor=#000000;strokeWidth=1.3;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-2-n29" target="BF-01-2-n17">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-2-e79" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=6;strokeColor=#000000;strokeWidth=1.3;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-2-n17" target="BF-01-2-n38">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-2-lg80" value="Legend" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=12;fontStyle=1;align=left;verticalAlign=top;spacingLeft=8;spacingTop=3;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1978" width="1825" height="182" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-li81" value="" style="ellipse;html=1;shape=startState;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="67.0" y="2015" width="20" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-lt82" value="Initial node" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="112.0" y="2012" width="533.3333333333334" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-li83" value="" style="ellipse;html=1;shape=endState;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="675.3333333333334" y="2015" width="20" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-lt84" value="Activity final" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="720.3333333333334" y="2012" width="533.3333333333334" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-li85" value="" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=8;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1268.6666666666667" y="2012" width="50" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-lt86" value="Action (use case step)" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1328.6666666666667" y="2012" width="533.3333333333334" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-li87" value="«system»" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=8;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="52.0" y="2048" width="50" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-lt88" value="«system» action (automatic / job)" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="112.0" y="2048" width="533.3333333333334" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-li89" value="«manual»" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=8;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="660.3333333333334" y="2048" width="50" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-lt90" value="«manual» action (outside the system)" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="720.3333333333334" y="2048" width="533.3333333333334" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-li91" value="" style="shape=mxgraph.sysml.callBehAct;align=center;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=8;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1268.6666666666667" y="2048" width="50" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-lt92" value="Call behavior action (reused flow)" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1328.6666666666667" y="2048" width="533.3333333333334" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-li93" value="" style="shape=mxgraph.sysml.sendSigAct;align=center;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=8;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="52.0" y="2084" width="50" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-lt94" value="Send signal (notification)" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="112.0" y="2084" width="533.3333333333334" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-li95" value="" style="shape=mxgraph.sysml.accEvent;align=center;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=8;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="660.3333333333334" y="2084" width="50" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-lt96" value="Accept event (from an external system)" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="720.3333333333334" y="2084" width="533.3333333333334" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-li97" value="" style="shape=mxgraph.sysml.timeEvent;strokeWidth=1.5;verticalLabelPosition=bottom;verticalAlign=top;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=8;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1285.6666666666667" y="2084" width="16" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-lt98" value="Time event" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1328.6666666666667" y="2084" width="533.3333333333334" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-li99" value="" style="rhombus;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=8;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="65.0" y="2121" width="24" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-lt100" value="Decision / merge node" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="112.0" y="2120" width="533.3333333333334" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-li101" value="" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.3;strokeColor=#000000;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="660.3333333333334" y="2133" as="sourcePoint" />
+            <mxPoint x="710.3333333333334" y="2133" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-2-lt102" value="Control flow" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="720.3333333333334" y="2120" width="533.3333333333334" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-2-li103" value="" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=2.5;strokeColor=#000000;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1268.6666666666667" y="2133" as="sourcePoint" />
+            <mxPoint x="1318.6666666666667" y="2133" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-2-lt104" value="Flow described in this figure" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1328.6666666666667" y="2120" width="533.3333333333334" height="26" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="BF-01-3" name="BF-01c">
+    <mxGraphModel dx="1200" dy="900" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1905" pageHeight="2190" background="#FFFFFF" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="BF-01-3-t1" value="Figure 2.1c – Membership &amp; Day Pass Purchase (BF-01) – Day pass (A3)" style="text;html=1;fontFamily=Helvetica;fontSize=16;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="40" y="30" width="900" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-pool2" value="Gym Management System" style="swimlane;html=1;horizontal=1;startSize=30;fontFamily=Helvetica;fontSize=14;fontStyle=1;fillColor=none;strokeColor=#000000;strokeWidth=1.4;collapsible=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="70" width="1825" height="1884" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-lane3" value="Customer" style="swimlane;html=1;startSize=34;fontFamily=Helvetica;fontSize=13;fontStyle=1;fillColor=#FFFFFF;swimlaneFillColor=#FFFFFF;strokeColor=#000000;collapsible=0;" vertex="1" parent="BF-01-3-pool2">
+          <mxGeometry x="0" y="30" width="295" height="1854" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-lane4" value="Receptionist" style="swimlane;html=1;startSize=34;fontFamily=Helvetica;fontSize=13;fontStyle=1;fillColor=#FFFFFF;swimlaneFillColor=#FFFFFF;strokeColor=#000000;collapsible=0;" vertex="1" parent="BF-01-3-pool2">
+          <mxGeometry x="295" y="30" width="510" height="1854" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-lane5" value="VNPay" style="swimlane;html=1;startSize=34;fontFamily=Helvetica;fontSize=13;fontStyle=1;fillColor=#FFFFFF;swimlaneFillColor=#FFFFFF;strokeColor=#000000;collapsible=0;" vertex="1" parent="BF-01-3-pool2">
+          <mxGeometry x="805" y="30" width="295" height="1854" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-lane6" value="System" style="swimlane;html=1;startSize=34;fontFamily=Helvetica;fontSize=13;fontStyle=1;fillColor=#FFFFFF;swimlaneFillColor=#FFFFFF;strokeColor=#000000;collapsible=0;" vertex="1" parent="BF-01-3-pool2">
+          <mxGeometry x="1100" y="30" width="725" height="1854" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-n7" value="&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;«system»&lt;/font&gt;&lt;br&gt;4. Mark order Paid,&lt;br&gt;activate the package" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="BF-01-3-lane6">
+          <mxGeometry x="275.0" y="900.0" width="170" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-n8" value="" style="rhombus;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;" vertex="1" parent="BF-01-3-lane3">
+          <mxGeometry x="125.0" y="1155.0" width="50" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-nl9" value="Day pass?" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=right;verticalAlign=top;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="126.0" y="1249.0" width="56.0" height="18.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-n10" value="5. See the package on the&lt;br&gt;dashboard&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;UC-41&lt;/font&gt;&lt;/i&gt;" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="BF-01-3-lane3">
+          <mxGeometry x="65.0" y="1020.0" width="170" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-n11" value="3. Collect cash or confirm&lt;br&gt;the transfer&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;UC-20&lt;/font&gt;&lt;/i&gt;" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="BF-01-3-lane4">
+          <mxGeometry x="60.0" y="660.0" width="170" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-n12" value="&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;«system»&lt;/font&gt;&lt;br&gt;7. Expire the membership&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;JOB-02&lt;/font&gt;&lt;/i&gt;" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="BF-01-3-lane6">
+          <mxGeometry x="275.0" y="1620.0" width="170" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-n13" value="" style="rhombus;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;" vertex="1" parent="BF-01-3-lane3">
+          <mxGeometry x="125.0" y="1395.0" width="50" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-nl14" value="Used on its day?" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=right;verticalAlign=top;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="96.0" y="1489.0" width="86.0" height="18.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-n15" value="" style="rhombus;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;" vertex="1" parent="BF-01-3-lane3">
+          <mxGeometry x="125.0" y="195.0" width="50" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-nl16" value="Where to buy?" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=right;verticalAlign=top;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="106.4" y="289.0" width="75.6" height="18.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-n17" value="1. Find or create the&lt;br&gt;customer profile&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;UC-20&lt;/font&gt;&lt;/i&gt;" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="BF-01-3-lane4">
+          <mxGeometry x="60.0" y="300.0" width="170" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-n18" value="2. Choose package, start&lt;br&gt;date and voucher&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;UC-20, UC-23&lt;/font&gt;&lt;/i&gt;" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="BF-01-3-lane4">
+          <mxGeometry x="60.0" y="540.0" width="170" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-n19" value="A3. Gym Check-in&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;BF-02&lt;/font&gt;&lt;/i&gt;" style="shape=mxgraph.sysml.callBehAct;align=center;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="BF-01-3-lane4">
+          <mxGeometry x="280.0" y="1500.0" width="170" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-n20" value="" style="shape=mxgraph.sysml.timeEvent;strokeWidth=1.5;verticalLabelPosition=bottom;verticalAlign=top;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="BF-01-3-lane6">
+          <mxGeometry x="345.0" y="1520.0" width="30" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-nl21" value="After the end date" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=top;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="1521.0" y="1633.0" width="91.6" height="18.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-n22" value="Email the temporary&lt;br&gt;password&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;new Self profile&lt;/font&gt;&lt;/i&gt;" style="shape=mxgraph.sysml.sendSigAct;align=center;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="BF-01-3-lane6">
+          <mxGeometry x="275.0" y="432.0" width="170" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-n23" value="" style="ellipse;html=1;shape=endState;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="BF-01-3-lane4">
+          <mxGeometry x="350.0" y="1645.0" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-nl24" value="Day pass used" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=center;verticalAlign=top;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="661.6" y="1779.0" width="76.8" height="18.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-n25" value="&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;«system»&lt;/font&gt;&lt;br&gt;A3. Expire the unused day&lt;br&gt;pass&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;JOB-03&lt;/font&gt;&lt;/i&gt;" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="BF-01-3-lane6">
+          <mxGeometry x="495.0" y="1620.0" width="170" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-n26" value="" style="ellipse;html=1;shape=endState;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="BF-01-3-lane6">
+          <mxGeometry x="345.0" y="1765.0" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-nl27" value="Package expired" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=center;verticalAlign=top;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="1457.0" y="1899.0" width="86.0" height="18.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-n28" value="" style="rhombus;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;" vertex="1" parent="BF-01-3-lane4">
+          <mxGeometry x="120.0" y="1395.0" width="50" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-nl29" value="Package still valid?" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=top;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="488.0" y="1489.0" width="97.6" height="18.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-n30" value="" style="ellipse;html=1;shape=endState;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="BF-01-3-lane6">
+          <mxGeometry x="565.0" y="1765.0" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-nl31" value="Day pass expired" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=center;verticalAlign=top;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="1675.5" y="1899.0" width="89.0" height="18.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-n32" value="6. Gym Check-in&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;BF-02&lt;/font&gt;&lt;/i&gt;" style="shape=mxgraph.sysml.callBehAct;align=center;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="BF-01-3-lane4">
+          <mxGeometry x="60.0" y="1260.0" width="170" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-n33" value="" style="shape=mxgraph.sysml.timeEvent;strokeWidth=1.5;verticalLabelPosition=bottom;verticalAlign=top;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="BF-01-3-lane6">
+          <mxGeometry x="565.0" y="1520.0" width="30" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-nl34" value="End of the day" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=top;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="1741.0" y="1633.0" width="75.0" height="18.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-n35" value="" style="ellipse;html=1;shape=startState;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="BF-01-3-lane3">
+          <mxGeometry x="135.0" y="85.0" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-nl36" value="Customer wants a gym&lt;br&gt;package" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=top;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="211.0" y="186.0" width="116.5" height="32.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-e37" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=6;strokeColor=#000000;strokeWidth=1.3;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-3-n35" target="BF-01-3-n15">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-3-e38" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=6;strokeColor=#000000;strokeWidth=1.3;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-3-n15" target="BF-01-3-n17">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="370" y="320" />
+              <mxPoint x="370" y="440" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-3-el39" value="[At the counter]" style="text;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=0;align=left;verticalAlign=middle;labelBackgroundColor=#FFFFFF;spacing=0;spacingLeft=3;" vertex="1" parent="1">
+          <mxGeometry x="223.0" y="323.0" width="80.7" height="15.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-e40" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=6;strokeColor=#000000;strokeWidth=1.3;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-3-n17" target="BF-01-3-n22">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1390" y="440" />
+              <mxPoint x="1390" y="560" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-3-e41" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=6;strokeColor=#000000;strokeWidth=1.3;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-3-n22" target="BF-01-3-n18">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1500" y="620" />
+              <mxPoint x="480" y="620" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-3-e42" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=6;strokeColor=#000000;strokeWidth=1.3;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-3-n18" target="BF-01-3-n11">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-3-e43" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=6;strokeColor=#000000;strokeWidth=1.3;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-3-n11" target="BF-01-3-n7">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="480" y="980" />
+              <mxPoint x="1500" y="980" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-3-e44" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=6;strokeColor=#000000;strokeWidth=1.3;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-3-n7" target="BF-01-3-n10">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1500" y="1100" />
+              <mxPoint x="190" y="1100" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-3-e45" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=6;strokeColor=#000000;strokeWidth=1.3;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-3-n10" target="BF-01-3-n8">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-3-e46" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=6;strokeColor=#000000;strokeWidth=1.3;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-3-n8" target="BF-01-3-n32">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="370" y="1280" />
+              <mxPoint x="370" y="1400" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-3-el47" value="[Membership]" style="text;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=0;align=left;verticalAlign=middle;labelBackgroundColor=#FFFFFF;spacing=0;spacingLeft=3;" vertex="1" parent="1">
+          <mxGeometry x="223.0" y="1283.0" width="72.7" height="15.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-e48" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=6;strokeColor=#000000;strokeWidth=1.3;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-3-n32" target="BF-01-3-n28">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-3-e49" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=6;strokeColor=#000000;strokeWidth=1.3;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-3-n28" target="BF-01-3-n32">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="370" y="1520" />
+              <mxPoint x="370" y="1400" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-3-el50" value="[Yes, next visit]" style="text;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=0;align=left;verticalAlign=middle;labelBackgroundColor=#FFFFFF;spacing=0;spacingLeft=3;" vertex="1" parent="1">
+          <mxGeometry x="368.0" y="1523.0" width="79.0" height="15.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-e51" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=6;strokeColor=#000000;strokeWidth=1.3;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-3-n28" target="BF-01-3-n20">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="480" y="1580" />
+              <mxPoint x="1460" y="1580" />
+              <mxPoint x="1460" y="1640" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-3-el52" value="[No]" style="text;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=0;align=left;verticalAlign=middle;labelBackgroundColor=#FFFFFF;spacing=0;spacingLeft=3;" vertex="1" parent="1">
+          <mxGeometry x="485.0" y="1551.0" width="26.2" height="15.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-e53" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=6;strokeColor=#000000;strokeWidth=1.3;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-3-n20" target="BF-01-3-n12">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-3-e54" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=6;strokeColor=#000000;strokeWidth=1.3;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-3-n12" target="BF-01-3-n26">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-3-e55" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-3-n8" target="BF-01-3-n13">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-3-el56" value="[Day pass] A3" style="text;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;align=left;verticalAlign=middle;labelBackgroundColor=#FFFFFF;spacing=0;spacingLeft=3;" vertex="1" parent="1">
+          <mxGeometry x="195.0" y="1311.0" width="73.9" height="15.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-e57" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.5;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-3-n13" target="BF-01-3-n19">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="360" y="1520" />
+              <mxPoint x="360" y="1640" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-3-el58" value="[Yes]" style="text;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;align=left;verticalAlign=middle;labelBackgroundColor=#FFFFFF;spacing=0;spacingLeft=3;" vertex="1" parent="1">
+          <mxGeometry x="223.0" y="1523.0" width="30.1" height="15.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-e59" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-3-n19" target="BF-01-3-n23">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-3-e60" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-3-n13" target="BF-01-3-n33">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="190" y="1700" />
+              <mxPoint x="1680" y="1700" />
+              <mxPoint x="1680" y="1640" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-3-el61" value="[No]" style="text;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;align=left;verticalAlign=middle;labelBackgroundColor=#FFFFFF;spacing=0;spacingLeft=3;" vertex="1" parent="1">
+          <mxGeometry x="195.0" y="1551.0" width="26.2" height="15.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-e62" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-3-n33" target="BF-01-3-n25">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-3-e63" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-3-n25" target="BF-01-3-n30">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-3-lg64" value="Legend" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=12;fontStyle=1;align=left;verticalAlign=top;spacingLeft=8;spacingTop=3;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1978" width="1825" height="182" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-li65" value="" style="ellipse;html=1;shape=startState;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="67.0" y="2015" width="20" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-lt66" value="Initial node" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="112.0" y="2012" width="533.3333333333334" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-li67" value="" style="ellipse;html=1;shape=endState;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="675.3333333333334" y="2015" width="20" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-lt68" value="Activity final" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="720.3333333333334" y="2012" width="533.3333333333334" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-li69" value="" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=8;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1268.6666666666667" y="2012" width="50" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-lt70" value="Action (use case step)" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1328.6666666666667" y="2012" width="533.3333333333334" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-li71" value="«system»" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=8;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="52.0" y="2048" width="50" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-lt72" value="«system» action (automatic / job)" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="112.0" y="2048" width="533.3333333333334" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-li73" value="«manual»" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=8;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="660.3333333333334" y="2048" width="50" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-lt74" value="«manual» action (outside the system)" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="720.3333333333334" y="2048" width="533.3333333333334" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-li75" value="" style="shape=mxgraph.sysml.callBehAct;align=center;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=8;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1268.6666666666667" y="2048" width="50" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-lt76" value="Call behavior action (reused flow)" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1328.6666666666667" y="2048" width="533.3333333333334" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-li77" value="" style="shape=mxgraph.sysml.sendSigAct;align=center;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=8;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="52.0" y="2084" width="50" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-lt78" value="Send signal (notification)" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="112.0" y="2084" width="533.3333333333334" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-li79" value="" style="shape=mxgraph.sysml.timeEvent;strokeWidth=1.5;verticalLabelPosition=bottom;verticalAlign=top;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=8;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="677.3333333333334" y="2084" width="16" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-lt80" value="Time event" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="720.3333333333334" y="2084" width="533.3333333333334" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-li81" value="" style="rhombus;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=8;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="1281.6666666666667" y="2085" width="24" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-lt82" value="Decision / merge node" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1328.6666666666667" y="2084" width="533.3333333333334" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-li83" value="" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.3;strokeColor=#000000;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="52.0" y="2133" as="sourcePoint" />
+            <mxPoint x="102.0" y="2133" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-3-lt84" value="Control flow" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="112.0" y="2120" width="533.3333333333334" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-3-li85" value="" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=2.5;strokeColor=#000000;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="660.3333333333334" y="2133" as="sourcePoint" />
+            <mxPoint x="710.3333333333334" y="2133" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-3-lt86" value="Flow described in this figure" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="720.3333333333334" y="2120" width="533.3333333333334" height="26" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="BF-01-4" name="BF-01d">
+    <mxGraphModel dx="1200" dy="900" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1905" pageHeight="2190" background="#FFFFFF" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="BF-01-4-t1" value="Figure 2.1d – Membership &amp; Day Pass Purchase (BF-01) – Payment reconciliation &amp; refund (A4 / E2)" style="text;html=1;fontFamily=Helvetica;fontSize=16;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="40" y="30" width="900" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-4-pool2" value="Gym Management System" style="swimlane;html=1;horizontal=1;startSize=30;fontFamily=Helvetica;fontSize=14;fontStyle=1;fillColor=none;strokeColor=#000000;strokeWidth=1.4;collapsible=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="70" width="1470" height="1644" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-4-lane3" value="Customer" style="swimlane;html=1;startSize=34;fontFamily=Helvetica;fontSize=13;fontStyle=1;fillColor=#FFFFFF;swimlaneFillColor=#FFFFFF;strokeColor=#000000;collapsible=0;" vertex="1" parent="BF-01-4-pool2">
+          <mxGeometry x="0" y="30" width="295" height="1614" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-4-n5" value="A4. Receive refund&lt;br&gt;notification&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;MSG335&lt;/font&gt;&lt;/i&gt;" style="shape=mxgraph.sysml.accEvent;align=center;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="BF-01-4-lane3">
+          <mxGeometry x="60.0" y="590.0" width="175" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-4-lane4" value="VNPay" style="swimlane;html=1;startSize=34;fontFamily=Helvetica;fontSize=13;fontStyle=1;fillColor=#FFFFFF;swimlaneFillColor=#FFFFFF;strokeColor=#000000;collapsible=0;" vertex="1" parent="BF-01-4-pool2">
+          <mxGeometry x="295" y="30" width="295" height="1614" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-4-n27" value="" style="ellipse;html=1;shape=startState;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="BF-01-4-lane4">
+          <mxGeometry x="135.0" y="225.0" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-4-nl28" value="Payment for an invalid&lt;br&gt;order (expired / cancelled)" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=top;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="510.0" y="326.0" width="150" height="32.0" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-4-n19" value="A4. Send payment result&lt;br&gt;(IPN callback)&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;UC-PAY&lt;/font&gt;&lt;/i&gt;" style="shape=mxgraph.sysml.sendSigAct;align=center;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="BF-01-4-lane4">
+          <mxGeometry x="60.0" y="342.0" width="175" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-4-lane5" value="System" style="swimlane;html=1;startSize=34;fontFamily=Helvetica;fontSize=13;fontStyle=1;fillColor=#FFFFFF;swimlaneFillColor=#FFFFFF;strokeColor=#000000;collapsible=0;" vertex="1" parent="BF-01-4-pool2">
+          <mxGeometry x="590" y="30" width="440" height="1614" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-4-n9" value="Payment result received&lt;br&gt;for cancelled order" style="shape=mxgraph.sysml.accEvent;align=center;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="BF-01-4-lane5">
+          <mxGeometry x="130.0" y="472.0" width="180" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-4-n14" value="&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;«system»&lt;/font&gt;&lt;br&gt;A4. Flag Needs refund = 1,&lt;br&gt;cancel the order&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;CBR-72, PaymentCallback&lt;/font&gt;&lt;/i&gt;" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="BF-01-4-lane5">
+          <mxGeometry x="130.0" y="590.0" width="180" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-4-n16" value="Send pending refund&lt;br&gt;notification to customer&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;MSG335&lt;/font&gt;&lt;/i&gt;" style="shape=mxgraph.sysml.sendSigAct;align=center;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="BF-01-4-lane5">
+          <mxGeometry x="130.0" y="720.0" width="180" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-4-lane6" value="Manager" style="swimlane;html=1;startSize=34;fontFamily=Helvetica;fontSize=13;fontStyle=1;fillColor=#FFFFFF;swimlaneFillColor=#FFFFFF;strokeColor=#000000;collapsible=0;" vertex="1" parent="BF-01-4-pool2">
+          <mxGeometry x="1030" y="30" width="440" height="1614" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-4-n20" value="A4. Open the refund list&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;UC-26, transaction-list.jsp&lt;/font&gt;&lt;/i&gt;" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="BF-01-4-lane6">
+          <mxGeometry x="130.0" y="720.0" width="180" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-4-n15" value="&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;«manual»&lt;/font&gt;&lt;br&gt;A4. Transfer the money back&lt;br&gt;to the customer&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;VNPay Portal / Bank (BR-47)&lt;/font&gt;&lt;/i&gt;" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="BF-01-4-lane6">
+          <mxGeometry x="130.0" y="860.0" width="180" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-4-n8" value="A4. Confirm the refund with a&lt;br&gt;note (≥ 5 chars)&lt;br&gt;&lt;i&gt;&lt;font style=&quot;font-size:11px&quot; color=&quot;#333333&quot;&gt;UC-26, ManagerTransactionService&lt;/font&gt;&lt;/i&gt;" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=12;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="BF-01-4-lane6">
+          <mxGeometry x="130.0" y="1000.0" width="180" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-4-n23" value="" style="ellipse;html=1;shape=endState;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="BF-01-4-lane6">
+          <mxGeometry x="205.0" y="1155.0" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-4-nl24" value="Refund recorded" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=center;verticalAlign=top;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="1235.0" y="1289.0" width="90.0" height="18.0" as="geometry" />
+        </mxCell>
+        <!-- Edges -->
+        <mxCell id="BF-01-4-e46" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.8;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-4-n27" target="BF-01-4-n19">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-4-e47" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.8;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-4-n19" target="BF-01-4-n9">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="680" y="400" />
+              <mxPoint x="680" y="530" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-4-e48" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.8;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-4-n9" target="BF-01-4-n14">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-4-e48b" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.8;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-4-n14" target="BF-01-4-n16">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-4-e_notif" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=1.3;dashed=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-4-n16" target="BF-01-4-n5">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="450" y="778" />
+              <mxPoint x="450" y="650" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-4-e49" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.8;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-4-n16" target="BF-01-4-n20">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-4-e50" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.8;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-4-n20" target="BF-01-4-n15">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-4-e51" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.8;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-4-n15" target="BF-01-4-n8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-4-e52" style="edgeStyle=none;rounded=0;html=1;endArrow=block;endFill=1;endSize=5;strokeColor=#000000;strokeWidth=2.8;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="BF-01-4-n8" target="BF-01-4-n23">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- Legend -->
+        <mxCell id="BF-01-4-lg64" value="Legend" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=12;fontStyle=1;align=left;verticalAlign=top;spacingLeft=8;spacingTop=3;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1540" y="70" width="300" height="398" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-4-li65" value="" style="ellipse;html=1;shape=startState;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1567.0" y="107" width="20" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-4-lt66" value="Initial node" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1612.0" y="104" width="225.0" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-4-li67" value="" style="ellipse;html=1;shape=endState;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1567.0" y="143" width="20" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-4-lt68" value="Activity final" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1612.0" y="140" width="225.0" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-4-li69" value="" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=8;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1552.0" y="176" width="50" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-4-lt70" value="Action (use case step)" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1612.0" y="176" width="225.0" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-4-li71" value="«system»" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=8;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1552.0" y="212" width="50" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-4-lt72" value="«system» action (automatic / job)" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1612.0" y="212" width="225.0" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-4-li73" value="«manual»" style="rounded=1;arcSize=22;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=8;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1552.0" y="248" width="50" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-4-lt74" value="«manual» action (outside the system)" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1612.0" y="248" width="225.0" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-4-li77" value="" style="shape=mxgraph.sysml.sendSigAct;align=center;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=8;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1552.0" y="284" width="50" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-4-lt78" value="Send signal (notification)" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1612.0" y="284" width="225.0" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-4-li79" value="" style="shape=mxgraph.sysml.accEvent;align=center;strokeWidth=1.5;html=1;whiteSpace=wrap;fontFamily=Helvetica;fontSize=8;fontColor=#000000;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1552.0" y="320" width="50" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-4-lt80" value="Accept event (external result)" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1612.0" y="320" width="225.0" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-4-li83" value="" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.3;strokeColor=#000000;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1552.0" y="369" as="sourcePoint" />
+            <mxPoint x="1602.0" y="369" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-4-lt84" value="Control flow" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1612.0" y="356" width="225.0" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="BF-01-4-li85" value="" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=2.8;strokeColor=#000000;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1552.0" y="405" as="sourcePoint" />
+            <mxPoint x="1602.0" y="405" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BF-01-4-lt86" value="Flow described in this figure" style="text;html=1;fontFamily=Helvetica;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1612.0" y="392" width="225.0" height="26" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
