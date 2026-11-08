@@ -1,2 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Context path="/gym-management-system"/>
+<Context path="/gym-management-system">
+    <!--
+      Giữ phiên đăng nhập khi Tomcat reload / restart app (NetBeans "Deploy on Save", sửa web.xml…).
+      Tomcat 10.1 mặc định TẮT việc này → mỗi lần app reload, mọi người đang đăng nhập bị đẩy về trang đăng nhập.
+      Tomcat ghi phiên ra work/…/SESSIONS.ser lúc dừng app và đọc lại lúc chạy lại (chỉ giữ thuộc tính Serializable).
+    -->
+    <Manager pathname="SESSIONS.ser"/>
+</Context>

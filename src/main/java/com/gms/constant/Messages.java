@@ -1001,6 +1001,14 @@ public final class Messages {
     public static final String MSG338_PT_NEW_SLOT_PAST_MIDNIGHT =
             "Giờ bắt đầu quá muộn: buổi %d phút sẽ qua ngày hôm sau.";
 
+    // Toast · mở trang của vai trò khác khi tài khoản CÓ vai trò đó (VD đang dùng PT, bấm link trang khách) → màn Chọn vai trò.
+    // %s = tên vai trò của trang (Khách hàng, Huấn luyện viên…).
+    public static final String MSG339_SWITCH_ROLE_TO_OPEN =
+            "Trang này dành cho vai trò %s. Chọn vai trò đó để mở tiếp.";
+    // Toast · mở trang của vai trò tài khoản KHÔNG có (thường do vừa đăng nhập tài khoản khác ở tab khác) → về trang chính.
+    public static final String MSG340_PAGE_OF_OTHER_ACCOUNT =
+            "Trang này không dành cho tài khoản đang đăng nhập. Nếu bạn vừa đăng nhập tài khoản khác ở tab khác, các tab cũ cũng dùng tài khoản mới.";
+
     private Messages() {
     }
 }

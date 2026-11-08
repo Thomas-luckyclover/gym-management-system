@@ -63,7 +63,16 @@ public class SessionRegistryListener implements HttpSessionListener, HttpSession
         }
     }
 
-    // ===== Method cho Service gọi =====
+    // ===== Method cho Filter / Service gọi =====
+
+    /**
+     * Ghi nhận lại phiên đang dùng (AuthFilter gọi mỗi request đã đăng nhập).
+     * Cần vì khi Tomcat reload app, phiên được nạp lại từ SESSIONS.ser nhưng KHÔNG gọi attributeAdded,
+     * và danh sách trong RAM đã trống → "đăng xuất mọi thiết bị" sẽ bỏ sót phiên đó.
+     */
+    public static void ensureRegistered(Integer accountId, HttpSession session) {
+        registerSession(accountId, session);
+    }
 
     /**
      * Huỷ mọi phiên đang mở của 1 tài khoản, có thể chừa lại phiên hiện tại.
