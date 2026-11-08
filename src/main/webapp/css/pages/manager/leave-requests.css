@@ -1,0 +1,732 @@
+/* ===================================================
+   BF-05 – CSS dùng cho form nhân viên và màn duyệt chi tiết
+   Danh sách có file riêng: leave-request-list.css
+   =================================================== */
+
+/* ===== Panel danh sách ===== */
+
+.leave-panel {
+    padding: var(--space-5);
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-card);
+    margin-bottom: var(--space-6);
+}
+
+.leave-panel .panel-head {
+    padding-bottom: var(--space-4);
+    margin-bottom: var(--space-4);
+    border-bottom: var(--border-width) solid var(--color-border);
+}
+
+.leave-panel .panel-head h2 {
+    margin: 0 0 var(--space-1);
+}
+
+.leave-panel .panel-head p {
+    margin: 0;
+    color: var(--color-text-soft);
+    font-size: var(--font-size-sm);
+}
+
+/* ===== Trống ===== */
+
+.leave-empty {
+    padding: var(--space-8);
+    text-align: center;
+    color: var(--color-text-muted);
+}
+
+/* ===== Trang nhân viên nộp đơn (màn #25, UC-14) ===== */
+
+.staff-leave-page .leave-staff-content {
+  max-width: calc(var(--space-12) * 12);
+  margin-inline: auto;
+}
+
+.staff-leave-page .leave-form-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+/* Dùng HintBox chung; các ID bên trong vẫn do leave-request-form.js cập nhật. */
+.staff-leave-page .pt-info-popover {
+  left: auto;
+  right: var(--space-2);
+  max-width: calc(100vw - var(--space-6));
+  max-height: calc(100dvh - var(--space-6) * 2);
+  overflow-y: auto;
+}
+
+.staff-leave-page .leave-help-title {
+  display: block;
+  margin-bottom: var(--space-2);
+}
+
+.staff-leave-page .leave-help-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-3);
+  margin: var(--space-0) var(--space-0) var(--space-2);
+}
+
+.staff-leave-page .leave-help-note {
+  margin: var(--space-0) var(--space-0) var(--space-3);
+  color: var(--color-text-soft);
+}
+
+.staff-leave-page .leave-help-note:last-child {
+  margin-bottom: var(--space-0);
+}
+
+.leave-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-4);
+    margin-bottom: var(--space-4);
+}
+
+.leave-history-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.leave-history-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg);
+}
+
+@media (max-width: 960px) {
+    .leave-form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ===================================================
+   BF-05 Redesign (Màn #26 & Màn #27)
+   =================================================== */
+
+/* ===== Màn #27 (Duyệt chi tiết) Layout 1366x768 ===== */
+.leave-review-page .content {
+  padding: var(--space-4) var(--space-6);
+}
+
+.leave-review-page .review-alert {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+}
+
+.review-top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin-bottom: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    background: var(--color-surface);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+}
+
+.review-top-left {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.review-top-title {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold);
+    margin: 0;
+}
+
+.review-top-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.review-grid-2col {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    gap: var(--space-4);
+    align-items: start;
+}
+
+@media (max-width: 900px) {
+    .review-grid-2col {
+        grid-template-columns: 1fr;
+    }
+    .leave-review-page .review-top-bar {
+      flex-wrap: wrap;
+    }
+    .leave-review-page .review-top-actions {
+      flex-wrap: wrap;
+    }
+}
+
+.review-card {
+    padding: var(--space-4-5);
+    background: var(--color-surface);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    margin: var(--space-0);
+}
+
+.review-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-3);
+    padding-bottom: var(--space-2);
+    border-bottom: var(--border-width) solid var(--color-border);
+    gap: var(--space-2);
+    flex-wrap: wrap;
+}
+
+.review-card-title {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+/* User header trong Card thông tin chung */
+.user-info-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding-bottom: var(--space-3);
+    margin-bottom: var(--space-3);
+    border-bottom: var(--border-width) solid var(--color-border);
+}
+
+.user-avatar-circle {
+    width: var(--avatar-size-sm);
+    height: var(--avatar-size-sm);
+    border-radius: var(--radius-circle);
+    flex-shrink: 0;
+    object-fit: cover;
+    background: var(--color-primary-tint);
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-base);
+}
+
+.user-name-meta b {
+    font-size: var(--font-size-lg);
+    display: block;
+}
+
+.user-name-meta small {
+    color: var(--color-text-soft);
+    font-size: var(--font-size-xs);
+}
+
+/* Bốn thông tin nghỉ xếp một cột; các giá trị dùng chung điểm bắt đầu. */
+.detail-prop-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    margin-bottom: var(--space-4);
+}
+
+.detail-prop-item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.8fr);
+    align-items: baseline;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-0);
+    border-bottom: var(--border-width) solid var(--color-border);
+}
+
+.detail-prop-item:last-child {
+    border-bottom: none;
+}
+
+.detail-prop-label {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-soft);
+    font-weight: var(--font-weight-regular);
+}
+
+.detail-prop-val {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text);
+    overflow-wrap: anywhere;
+}
+
+.reason-box-clamp {
+    padding: var(--space-3);
+    background: var(--color-bg);
+    border: none;
+    border-radius: var(--radius-md);
+    margin-top: var(--space-2);
+}
+
+.reason-clamp-text {
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-normal);
+    margin: var(--space-2) var(--space-0) var(--space-0);
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.reason-clamp-text.expanded {
+    -webkit-line-clamp: unset;
+    display: block;
+}
+
+.btn-toggle-reason {
+    background: none;
+    border: none;
+    color: var(--color-primary);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    cursor: pointer;
+    padding: var(--space-1) var(--space-0) var(--space-0);
+}
+
+/* Review Checks (Kiểm tra điều kiện) */
+.review-check-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-0);
+}
+
+.review-check-item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-4) var(--space-0);
+    border-bottom: var(--border-width) solid var(--color-border);
+}
+
+.review-check-item.pass {
+    color: var(--color-text);
+}
+
+.review-check-item.fail {
+    background: var(--color-danger-tint);
+    padding: var(--space-3);
+    border-radius: var(--radius-md);
+}
+
+.check-icon-badge {
+    width: var(--space-5);
+    height: var(--space-5);
+    border-radius: var(--radius-circle);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-size-xs);
+    flex-shrink: 0;
+    margin-top: var(--space-0);
+}
+
+.review-check-item.pass .check-icon-badge {
+    background: var(--color-success-tint);
+    color: var(--color-success-ink);
+}
+
+.review-check-item.fail .check-icon-badge {
+    background: var(--color-danger-tint);
+    color: var(--color-danger-ink);
+}
+
+.check-meta-content {
+    flex: 1;
+}
+
+.check-meta-title {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text);
+    margin-bottom: var(--space-1);
+}
+
+.check-meta-msg {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-soft);
+}
+
+.review-check-item.fail .check-meta-msg {
+    color: var(--color-danger-ink);
+    font-weight: var(--font-weight-medium);
+}
+
+/* Chi tiết phụ dùng details/summary của trình duyệt, không thêm JS đóng/mở. */
+.leave-review-page .review-col-left,
+.leave-review-page .review-col-right,
+.leave-review-page .check-meta-content {
+  min-width: 0;
+}
+
+.leave-review-page .review-extra {
+  margin-top: var(--space-2);
+  font-size: var(--font-size-xs);
+}
+
+.leave-review-page .review-extra summary {
+  cursor: pointer;
+  color: var(--color-text-soft);
+}
+
+@media (max-width: 640px) {
+  .detail-prop-item {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-1);
+  }
+
+  .leave-review-page .content {
+    padding: var(--space-4);
+  }
+}
+
+.leave-review-page .review-table-wrap {
+  min-width: 0;
+}
+
+.leave-review-page .review-staffing-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  margin-top: var(--space-2);
+  font-size: var(--font-size-xs);
+}
+
+.leave-review-page .review-staffing-table th,
+.leave-review-page .review-staffing-table td {
+  padding: var(--space-2) var(--space-1);
+  border-bottom: var(--border-width) solid var(--color-border);
+  text-align: left;
+  vertical-align: middle;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* Cột ngày rộng hơn; ba cột số và kết quả luôn nằm gọn trong khối điều kiện duyệt. */
+.leave-review-page .review-staffing-table th:first-child {
+  width: 32%;
+}
+
+.leave-review-page .review-staffing-table th:last-child {
+  width: 26%;
+}
+
+.leave-review-page .review-staffing-table th {
+  background: var(--color-surface-muted);
+  color: var(--color-text-soft);
+  font-weight: var(--font-weight-semibold);
+  text-transform: none;
+  letter-spacing: var(--letter-spacing-normal);
+}
+
+.leave-review-page .review-staffing-table :is(th, td):not(:first-child) {
+  text-align: center;
+}
+
+.leave-review-page .review-staffing-table .badge {
+  max-width: 100%;
+  white-space: normal;
+}
+
+/* Modals */
+.gms-modal {
+    padding: var(--space-0);
+    width: min(calc(100vw - var(--space-6)), calc(var(--space-12) * 6));
+    max-height: calc(100dvh - var(--space-6));
+    overflow-y: auto;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    color: var(--color-text);
+    box-shadow: var(--shadow-pop);
+}
+
+.gms-modal::backdrop {
+    background: var(--color-overlay);
+}
+
+.gms-modal-dialog {
+    background: var(--color-surface);
+    width: 100%;
+}
+
+.gms-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-4) var(--space-5);
+    border-bottom: var(--border-width) solid var(--color-border);
+}
+
+.gms-modal-title {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    margin: 0;
+}
+
+.gms-modal-close {
+    background: none;
+    border: none;
+    font-size: var(--font-size-lg);
+    color: var(--color-text-soft);
+    cursor: pointer;
+}
+
+.gms-modal-body {
+    padding: var(--space-4) var(--space-5);
+}
+
+.gms-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-5);
+    border-top: var(--border-width) solid var(--color-border);
+    background: var(--color-bg);
+    border-bottom-left-radius: var(--radius-lg);
+    border-bottom-right-radius: var(--radius-lg);
+}
+
+/* Kết quả cũ chỉ hiển thị người/thời gian xử lý và lý do từ chối đã lưu. */
+.review-result-reason {
+  margin: var(--space-2) var(--space-0) var(--space-0);
+  font-size: var(--font-size-sm);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* Cùng đợt: xem hai phần riêng, giữ màu và khoảng cách theo tokens của dự án. */
+.leave-related {
+  margin-top: var(--space-2);
+  font-size: var(--font-size-xs);
+}
+.leave-related summary {
+  cursor: pointer;
+  color: var(--color-text-soft);
+  overflow-wrap: anywhere;
+}
+.leave-related-parts {
+  display: grid;
+  gap: var(--space-2);
+  padding-block: var(--space-2);
+}
+.leave-related-part {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow-wrap: anywhere;
+}
+.leave-review-page .leave-related-parts {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.leave-review-page .leave-related-parts > small {
+  grid-column: 1 / -1;
+}
+.leave-submission-plan {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  margin-block: var(--space-4);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+.leave-submission-plan[hidden], .leave-submission-plan [hidden] {
+  display: none;
+}
+.leave-submission-plan > .btn {
+  justify-self: start;
+}
+.leave-plan-part {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding-block: var(--space-2);
+}
+.leave-consent {
+  display: flex;
+  align-items: start;
+  gap: var(--space-2);
+}
+.leave-history-group + .leave-history-group {
+  border-top: var(--border-width) solid var(--color-border);
+}
+.leave-group-heading {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface);
+}
+
+/* Một khung chung giúp nhận ra các phần phép năm/không lương của cùng đợt. */
+.staff-leave-page .leave-history-group.is-linked {
+  border: var(--border-width) solid var(--color-border);
+  border-left: var(--space-1) solid var(--color-info);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  overflow: hidden;
+}
+
+.staff-leave-page .is-linked .leave-group-heading {
+  border-bottom: var(--border-width) solid var(--color-border);
+}
+
+.staff-leave-page .leave-group-code {
+  display: block;
+  margin-top: var(--space-1);
+  color: var(--color-text-soft);
+  font-size: var(--font-size-xs);
+}
+
+.staff-leave-page .is-linked .leave-history-row {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.staff-leave-page .is-linked .leave-history-row + .leave-history-row {
+  border-top: var(--border-width) solid var(--color-border);
+}
+
+/* Form PT/Lễ tân: chỉ thu gọn màn nhân viên, không ảnh hưởng trang manager dùng cùng CSS. */
+html body.dock.staff-leave-page .leave-staff-content {
+  max-width: calc(var(--space-12) * 10);
+}
+html body.dock.staff-leave-page .leave-panel {
+  padding: var(--space-4-5);
+  margin-bottom: var(--space-4);
+}
+html body.dock.staff-leave-page .leave-form-grid {
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+html body.dock.staff-leave-page #leaveForm .field {
+  margin: 0;
+  min-width: 0;
+}
+html body.dock.staff-leave-page #leaveForm .field-label {
+  display: flex;
+  justify-content: flex-start;
+  gap: var(--space-1);
+  margin-bottom: var(--space-2);
+  font-size: var(--font-size-sm);
+}
+html body.dock.staff-leave-page #leaveForm .field-label > span {
+  margin: 0;
+  float: none;
+  color: var(--color-danger);
+}
+html body.dock.staff-leave-page #leaveForm :is(input[type="date"], select) {
+  min-height: var(--control-height-md);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--font-size-base);
+}
+html body.dock.staff-leave-page #leaveReason {
+  min-height: calc(var(--space-12) + var(--space-5));
+  padding: var(--space-3);
+  font-size: var(--font-size-base);
+}
+html body.dock.staff-leave-page .leave-date-hint {
+  display: block;
+  margin: var(--space-1) 0 var(--space-3);
+}
+html body.dock.staff-leave-page #leaveForm .leave-reason-field {
+  margin-block: var(--space-3);
+}
+html body.dock.staff-leave-page .leave-submission-plan {
+  gap: var(--space-2);
+  padding: var(--space-3);
+  margin-block: var(--space-3);
+  font-size: var(--font-size-sm);
+}
+html body.dock.staff-leave-page .leave-plan-part {
+  padding-block: var(--space-1);
+  gap: var(--space-2) var(--space-4);
+}
+html body.dock.staff-leave-page #leavePlanParts {
+  display: grid;
+  gap: var(--space-2);
+}
+html body.dock.staff-leave-page #leaveBalanceText {
+  padding-top: var(--space-2);
+  border-top: var(--border-width) solid var(--color-border);
+  color: var(--color-text-soft);
+}
+/* leave-request-form.js: renderPlan/resetPlan ẩn/hiện #leaveScheduleWarning và cập nhật message. */
+html body.dock.staff-leave-page .leave-schedule-warning {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width) solid var(--color-danger-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-danger-tint);
+  color: var(--color-danger-ink);
+  font-size: var(--font-size-sm);
+}
+html body.dock.staff-leave-page .leave-schedule-warning[hidden] {
+  display: none;
+}
+/* leave-request-form.js: renderPlan thêm các buổi trùng vào #leaveConflictingSessions. */
+html body.dock.staff-leave-page .leave-conflicting-sessions {
+  flex-basis: 100%;
+  margin: 0;
+  padding-left: var(--space-4);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2) var(--space-4);
+}
+html body.dock.staff-leave-page .leave-empty {
+  padding: var(--space-4);
+}
+@media (min-width: 641px) {
+  html body.dock.staff-leave-page .leave-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  html body.dock.staff-leave-page .leave-conflicting-sessions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  html body.dock.staff-leave-page .leave-form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

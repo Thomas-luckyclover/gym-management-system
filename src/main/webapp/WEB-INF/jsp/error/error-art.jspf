@@ -1,0 +1,69 @@
+<%@ page pageEncoding="UTF-8" %>
+<%-- Hình trang trí nền dùng chung cho 3 trang lỗi (403/404/500): tạ, hoa, nét vẽ tay. Chỉ để trang trí. --%>
+<div class="err-art" aria-hidden="true">
+
+  <%-- Tạ đơn — góc trên trái, trôi nhẹ --%>
+  <svg class="err-doodle err-dumbbell" viewBox="0 0 120 60">
+    <rect x="30" y="27" width="60" height="6" rx="3" />
+    <rect x="14" y="12" width="10" height="36" rx="3" />
+    <rect x="24" y="18" width="8" height="24" rx="2" />
+    <rect x="88" y="18" width="8" height="24" rx="2" />
+    <rect x="96" y="12" width="10" height="36" rx="3" />
+  </svg>
+
+  <%-- Tạ ấm — góc dưới phải, đung đưa --%>
+  <svg class="err-doodle err-kettlebell" viewBox="0 0 80 90">
+    <path d="M24 36 C18 8, 62 8, 56 36" />
+    <circle cx="40" cy="60" r="26" />
+    <path class="err-hint" d="M26 52 A16 16 0 0 1 38 40" />
+  </svg>
+
+  <%-- Hoa — góc trên phải, cánh xoay chậm --%>
+  <svg class="err-doodle err-flower err-flower--big" viewBox="0 0 80 80">
+    <g class="err-petals">
+      <ellipse cx="40" cy="20" rx="8" ry="15" />
+      <ellipse cx="40" cy="20" rx="8" ry="15" transform="rotate(60 40 40)" />
+      <ellipse cx="40" cy="20" rx="8" ry="15" transform="rotate(120 40 40)" />
+      <ellipse cx="40" cy="20" rx="8" ry="15" transform="rotate(180 40 40)" />
+      <ellipse cx="40" cy="20" rx="8" ry="15" transform="rotate(240 40 40)" />
+      <ellipse cx="40" cy="20" rx="8" ry="15" transform="rotate(300 40 40)" />
+    </g>
+    <circle class="err-fill" cx="40" cy="40" r="7" />
+  </svg>
+
+  <%-- Hoa nhỏ có cuống — góc dưới trái, lắc lư --%>
+  <svg class="err-doodle err-flower err-flower--stem" viewBox="0 0 60 110">
+    <path d="M30 104 C26 80, 34 64, 30 44" />
+    <path d="M30 78 C18 72, 12 76, 8 68 C18 64, 26 70, 30 78" />
+    <g class="err-petals">
+      <circle cx="30" cy="18" r="8" />
+      <circle cx="42" cy="28" r="8" />
+      <circle cx="18" cy="28" r="8" />
+      <circle cx="24" cy="40" r="7" />
+      <circle cx="36" cy="40" r="7" />
+    </g>
+    <circle class="err-fill" cx="30" cy="30" r="5" />
+  </svg>
+
+  <%-- Nét nguệch ngoạc: sóng, xoắn ốc, mũi tên — tự vẽ ra khi mở trang --%>
+  <svg class="err-doodle err-squiggle" viewBox="0 0 170 40">
+    <path class="err-draw" d="M5 22 Q 25 2, 45 22 T 85 22 T 125 22 T 165 22" />
+  </svg>
+  <svg class="err-doodle err-spiral" viewBox="0 0 80 80">
+    <path class="err-draw" d="M40 40 a4 4 0 1 1 8 0 a8 8 0 1 1 -16 0 a12 12 0 1 1 24 0 a16 16 0 1 1 -32 0 a20 20 0 1 1 40 0" />
+  </svg>
+  <svg class="err-doodle err-arrow" viewBox="0 0 120 70">
+    <path class="err-draw" d="M8 62 C 36 8, 84 6, 110 38" />
+    <path class="err-draw err-draw--late" d="M96 36 L110 38 L108 24" />
+  </svg>
+
+  <%-- Lấp lánh --%>
+  <svg class="err-sparkle err-sparkle--1" viewBox="0 0 40 40"><path d="M20 0 L24 16 L40 20 L24 24 L20 40 L16 24 L0 20 L16 16 Z" /></svg>
+  <svg class="err-sparkle err-sparkle--2" viewBox="0 0 40 40"><path d="M20 0 L24 16 L40 20 L24 24 L20 40 L16 24 L0 20 L16 16 Z" /></svg>
+  <svg class="err-sparkle err-sparkle--3" viewBox="0 0 40 40"><path d="M20 0 L24 16 L40 20 L24 24 L20 40 L16 24 L0 20 L16 16 Z" /></svg>
+  <svg class="err-sparkle err-sparkle--4" viewBox="0 0 40 40"><path d="M20 0 L24 16 L40 20 L24 24 L20 40 L16 24 L0 20 L16 16 Z" /></svg>
+
+  <span class="err-dot err-dot--1"></span>
+  <span class="err-dot err-dot--2"></span>
+  <span class="err-dot err-dot--3"></span>
+</div>

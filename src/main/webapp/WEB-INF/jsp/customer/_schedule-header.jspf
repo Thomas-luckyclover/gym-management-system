@@ -1,0 +1,37 @@
+<%@ page pageEncoding="UTF-8" %>
+<%--
+  THANH TIÊU ĐỀ dùng chung 2 màn khách: Gói của tôi (my-bookings.jsp) và Lịch tập (my-pt-sessions.jsp).
+  Trang cha đặt scheduleTitle (chữ tiêu đề); activeSidebar (Servlet đặt) chọn câu hướng dẫn trong nút "i":
+    "bookings" → hướng dẫn màn Gói của tôi · khác → hướng dẫn Lịch tập (+ nút "Đặt buổi lẻ").
+  Bên phải: chuông thông báo + thẻ tài khoản (common).
+--%>
+
+<header class="topbar">
+    <div class="tb-left">
+        <h1 class="tb-title">
+            <c:out value="${scheduleTitle}" />
+        </h1>
+
+        <span class="pt-info">
+            <button type="button" class="pt-info-trigger" aria-label="Hướng dẫn ${scheduleTitle}" aria-describedby="schedule-page-help"><span aria-hidden="true">i</span></button>
+            <span id="schedule-page-help" class="pt-info-popover" role="tooltip">
+                <c:choose>
+                    <c:when test="${activeSidebar eq 'bookings'}">Chọn một gói ở cột trái: xem buổi tới, lịch cố định hằng tuần, các buổi đã qua và những buổi cần để ý. Xem từng buổi trên Lịch tập. Muốn hủy hoặc đổi buổi, hãy nhắn PT qua Zalo.</c:when>
+                    <c:otherwise>Lịch chia thành Sáng, Chiều, Tối theo giờ bắt đầu. Bấm một buổi để xem chi tiết; bấm ngoài, nút Đóng hoặc Escape để đóng. Cần đổi/hủy buổi, hãy liên hệ PT.</c:otherwise>
+                </c:choose>
+            </span>
+        </span>
+
+    </div>
+    <div class="top-right">
+
+        <c:if test="${activeSidebar ne 'bookings'}">
+            <a class="btn btn-primary btn-sm tb-action" href="${pageContext.request.contextPath}/customer/book-session" aria-label="Đặt buổi lẻ"><i class="fa-solid fa-calendar-plus" aria-hidden="true"></i><span class="tb-action-text">Đặt buổi lẻ</span></a>
+        </c:if>
+
+        <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
+
+        <%@ include file="/WEB-INF/jsp/common/topbar-user.jspf" %>
+
+    </div>
+</header>

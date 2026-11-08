@@ -299,7 +299,7 @@ input,select,textarea{font-family:inherit;font-size:15px;}
 @media (max-width:600px){.post-grid{grid-template-columns:1fr;}}
 .post-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-card);cursor:pointer;transition:transform .15s,box-shadow .15s;display:flex;flex-direction:column;}
 .post-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-pop);}
-.post-thumb{height:142px;position:relative;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.92);}
+.post-thumb{height:200px;position:relative;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.92);}
 .cover-pattern{position:absolute;inset:0;width:100%;height:100%;}
 .post-thumb-icon{position:relative;z-index:1;display:flex;}
 .post-thumb-icon svg{width:30px;height:30px;}

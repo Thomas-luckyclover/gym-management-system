@@ -13,7 +13,37 @@ nb-configuration.xml
 .settings/
 .classpath
 .project
+.smarttomcat/
 
 # ===== Hệ điều hành =====
 .DS_Store
 Thumbs.db
+
+# ===== Script chạy tay trên máy cá nhân (file tự loại mình khỏi commit) =====
+day-len-github.bat
+
+# ===== File tạm khi thiết kế (bản xem trước, công cụ impeccable, cache Python) =====
+design-preview/
+design-preview.html
+.impeccable/
+__pycache__/
+# File cookie do curl/test sinh ra (chứa JSESSIONID) — không commit
+cookies.txt
+
+# Upload ảnh checkin
+src/main/webapp/uploads/checkin/
+
+# Local account exports and AI conversation logs
+/accounts_out.txt
+/demo_accounts_full.txt
+/output/ai-log-filled.md
+/output/conversation-export/
+/output/iteration-logs/
+
+outputs/
+
+# ===== Công cụ AI / skill cá nhân và file backup của draw.io =====
+.Codex/
+.agents/
+skills-lock.json
+*.bkp

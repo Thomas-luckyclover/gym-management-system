@@ -1,0 +1,79 @@
+<%@ page pageEncoding="UTF-8" %>
+<%--
+====================================================================================================
+ _schedule-day.jspf — 1 CỘT NGÀY của Lịch dạy
+ Nhúng vào: _schedule-grid.jspf, trong vòng lặp week.days (biến day = PtScheduleDay, dayLabel).
+ Dữ liệu: PtScheduleService.buildEmptyWeek (ngày, giờ, nghỉ phép) + fillWeek / classify (các ô item).
+ Gồm: đầu cột (tên ngày, Hôm nay / Phòng nghỉ, nghỉ phép) · vùng thả khung · từng ô → _schedule-slot.jspf.
+==================================================================================================== --%>
+
+                                            <%-- Class: is-today (day.today) · is-past (day.past) · is-closed (day.closedAllDay). --%>
+                                            <section class="pt-day ${day.today ? 'is-today' : ''} ${day.past ? 'is-past' : ''} ${day.closedAllDay ? 'is-closed' : ''}" aria-label="${dayLabel}">
+
+                                                <div class="pt-day-head">
+                                                    <h3 class="pt-day-title">
+                                                    <span class="pt-day-name"><c:out value="${day.dayName}" /></span>
+                                                    <span class="pt-day-date"><c:out value="${fn:substring(gms:formatDate(day.date), 0, 5)}" /></span>
+                                                    </h3>
+
+                                                    <%-- Nhãn "Hôm nay" / "Phòng nghỉ". --%>
+                                                    <c:if test="${day.today}"><small class="pt-day-note is-today">Hôm nay</small></c:if>
+                                                    <c:if test="${day.closedAllDay}"><small class="pt-day-note is-closed">Phòng nghỉ</small></c:if>
+
+                                                    <%--
+                                                      NGHỈ PHÉP: day.leaveLabel ("Nghỉ phép ca sáng · chờ duyệt") → mở xem day.leaveDetails (lý do)
+                                                      + day.leaveBookings (buổi có khách trùng ca nghỉ, PT cần tự xử lý) → nhãn đỏ "N buổi trùng ca nghỉ".
+                                                    --%>
+                                                    <c:if test="${not empty day.leaveLabel}">
+                                                        <details class="pt-day-leave">
+                                                            <summary><c:out value="${day.leaveLabel}" /></summary>
+                                                            <div class="pt-day-leave-details">
+                                                                <p class="pt-day-leave-reason"><c:out value="${day.leaveDetails}" /></p>
+                                                                <p>Đơn chờ duyệt cũng tạm khóa khung trống trong ca nghỉ. Buổi đã có khách không tự hủy.</p>
+                                                                <c:if test="${not empty day.leaveBookings}">
+                                                                    <p>Buổi có khách trùng ca nghỉ:</p>
+                                                                    <ul><c:forEach var="booking" items="${day.leaveBookings}"><li><c:out value="${booking}" /></li></c:forEach></ul>
+                                                                </c:if>
+                                                                <p>“Chưa chốt” nghĩa là buổi đã kết thúc nhưng chưa có kết quả, không có nghĩa là đã hủy hoặc khách vắng.</p>
+                                                            </div>
+                                                        </details>
+                                                        <c:if test="${not empty day.leaveBookings}"><small class="pt-day-note is-conflict"><c:out value="${fn:length(day.leaveBookings)}" /> buổi trùng ca nghỉ</small></c:if>
+                                                    </c:if>
+                                                </div>
+
+                                                <%-- VÙNG THẢ KHUNG: data-date (ngày) · data-first / data-last (phút được bắt đầu khung, chỉ khi ngày còn thêm được). --%>
+                                                <div class="pt-day-track" data-date="${day.date}" data-label="${fn:escapeXml(dayLabel)}"
+                                                     <c:if test="${not empty day.firstStartMinute}">data-first="${day.firstStartMinute}" data-last="${day.lastStartMinute}"</c:if>>
+
+                                                    <%-- Kiểu Danh sách: chèn tiêu đề "Ca sáng" / "Ca chiều" nếu ngày có ô ở ca đó (mốc week.shiftSplitHour = 13). --%>
+                                                    <c:set var="hasAm" value="false" />
+                                                    <c:set var="hasPm" value="false" />
+
+                                                    <%--
+                                                      MỖI Ô (item = PtScheduleItem): vị trí --start / chiều cao --length (phút) · màu is-<item.kind> · mờ khi item.past
+                                                      · --lane / --lanes (PtScheduleService.assignLanes): chỉ các ô CHỒNG GIỜ mới chia bề ngang, ô khác vẫn rộng đủ
+                                                      · id="session-<id>" (ô có khách, để cuộn tới) · data-start/end (ô chiếm giờ, JS chặn thêm khung chồng).
+                                                    --%>
+                                                    <c:forEach var="item" items="${day.items}">
+                                                        <%-- week.shiftSplitHour = getter tự tính getShiftSplitHour() · dto/PtScheduleWeek.java --%>
+                                                        <c:if test="${item.startTime.hour lt week.shiftSplitHour}"><c:set var="hasAm" value="true" /></c:if>
+                                                        <c:if test="${item.startTime.hour ge week.shiftSplitHour}"><c:set var="hasPm" value="true" /></c:if>
+                                                    </c:forEach>
+                                                    <c:if test="${hasAm}"><p class="pt-list-shift" style="order: -1">Ca sáng</p></c:if>
+                                                    <c:if test="${hasPm}"><p class="pt-list-shift is-pm" style="order: ${(week.shiftSplitHour - week.axisStartHour) * 60}">Ca chiều</p></c:if>
+
+                                                    <c:forEach var="item" items="${day.items}">
+
+                                                        <%-- 1 Ô (khung trống gỡ được / buổi sắp tới / chỉ xem) → _schedule-slot.jspf. --%>
+                                                        <%@ include file="/WEB-INF/jsp/pt/_schedule-slot.jspf" %>
+                                                    </c:forEach>
+
+                                                    <%-- Ngày không có ô nào → "Phòng nghỉ cả ngày" / "Chưa có khung". --%>
+                                                    <p class="pt-day-empty">
+                                                        <c:choose>
+                                                            <c:when test="${day.closedAllDay}">Phòng nghỉ cả ngày</c:when>
+                                                            <c:otherwise>Chưa có khung</c:otherwise>
+                                                        </c:choose>
+                                                    </p>
+                                                </div>
+                                            </section>

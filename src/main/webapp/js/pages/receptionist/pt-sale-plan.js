@@ -1,0 +1,1017 @@
+"use strict";
+
+/*
+ * BÁN GÓI PT — BƯỚC 3 "LỊCH TẬP" — pt-sale-plan.js
+ *
+ * Cách làm giống "sự kiện lặp lại" của Google Calendar và đặt lịch PT định kỳ của Mindbody / Glofox:
+ *   1. Lịch mẫu hằng tuần   mỗi thứ T2–T6: chọn Nghỉ hoặc 1 giờ.
+ *   2. Từng tuần            tab Tuần 1…N, mỗi tuần 5 ô ngày. Ô đỏ = ngày đó giờ mẫu không xếp được (+ lý do).
+ *   3. Sửa riêng 1 buổi     bấm 1 ô ngày → chọn giờ khác hoặc Không tập, CHỈ cho ngày đó ("chỉ sự kiện này").
+ *
+ * DỮ LIỆU: server tính sẵn (PtSaleService.buildPlan → <script id="sale-plan-data">):
+ *   days[]  mỗi ngày T2–T6 trong kỳ: {date, weekday 1–5, label, options[{time, end, ok, reason, warning, fresh}]}
+ *           fresh = PT chưa mở khung giờ đó ngày đó → giữ lịch sẽ tự tạo khung → phải tích "Đã xác nhận với PT"
+ *   times[] giờ của lịch mẫu · pattern[5] lịch mẫu ban đầu · requested[] buổi gửi lên lần trước (khi bị từ chối)
+ *   unpublished[] Thứ PT chưa công bố khung nào (1 = Thứ 2 …) → nhãn "PT chưa công bố" trong Lịch mẫu
+ * TRẠNG THÁI (chỉ 2 thứ):
+ *   pattern[0..4]  giờ của Thứ 2..Thứ 6, "" = Nghỉ
+ *   overrides      Map ngày → giờ sửa riêng ("" = bỏ buổi ngày đó)
+ *   Giờ của 1 ngày = overrides (nếu có) → không thì pattern của thứ đó.
+ * RA: form "Giữ lịch" (cột phải) nhận t1..t5 = pattern và sessions = "2026-10-27@09:30,…" (chỉ buổi xếp được).
+ *     Server KIỂM TRA LẠI từng buổi lúc giữ (PtSaleService.checkRequested), JS chỉ để xem nhanh.
+ *
+ * JS TÌM PHẦN TỬ NÀO TRÊN TRANG?  (querySelector("…") = "tìm phần tử HTML khớp mẫu này"; JSP in sẵn các ô RỖNG, JS vẽ vào)
+ *   Mẫu tìm                     Ở file JSP nào                         JS làm gì
+ *   #sale-plan-data             _pt-sale-plan.jspf  <script json>       đọc dữ liệu (JSON.parse) — chỉ đọc 1 lần
+ *   .sale-plan                  _pt-sale-plan.jspf  <section> bọc ngoài  = root: mọi tìm kiếm bên dưới đều trong root
+ *     [data-pattern]            ô rỗng "Lịch mẫu hằng tuần"             renderPattern vẽ 5 dòng Thứ 2…Thứ 6
+ *     [data-week-tabs]          ô rỗng các tab tuần                      renderWeek vẽ nút "Tuần 1…N"
+ *     [data-week]               ô rỗng 5 ngày của tuần                   renderWeek / dayCell vẽ ô ngày
+ *     [data-editor]             ô rỗng (hidden) "sửa riêng 1 ngày"       renderEditor vẽ khi bấm 1 ô ngày
+ *     [data-week-label]         <p> "Tuần 1 · 03/11 – 07/11"             renderWeek ghi chữ
+ *     [data-week-step]          2 nút ‹ ›                                 click → showWeek; renderWeek khóa nút ở đầu / cuối
+ *     [data-plan-total]         <p> cạnh tiêu đề "Lịch tập"              renderSummary ghi "24 buổi · 3 buổi/tuần"
+ *   [data-plan-form]            _pt-sale-actions.jspf form Giữ lịch      = form
+ *     [data-plan-t='1'..'5']    5 ô ẩn t1..t5                             renderSummary điền giờ lịch mẫu
+ *     [data-plan-sessions]      ô ẩn sessions                             renderSummary điền "ngày@giờ,…"
+ *     [data-plan-confirm]       ô tích "Đã xác nhận với PT" (hidden)      hiện khi có buổi "PT chưa mở"
+ *     [data-plan-submit]        nút "Giữ lịch 15 phút" (disabled)         mở khi đủ điều kiện
+ *   [data-plan-count]           pt-sales.jsp ô "Buổi" ở Đơn bán            "24 buổi · 687.500đ/buổi"
+ *   [data-step-plan]            _pt-sale-stepper.jspf bước 2              tô xong / đang làm
+ *   [data-plan-note]            _pt-sale-actions.jspf bong bóng Pumpy     câu nhắc bước kế tiếp
+ *   Các phần tử JS TỰ TẠO mang data-day, data-week-tab, data-reset, data-close-editor, data-jump-issue, data-focus-key
+ *   → bắt bằng 1 listener click / change / keydown gắn trên root ("ủy quyền sự kiện"), không gắn từng nút.
+ *
+ * BỐ CỤC: HÀM CHÍNH (DOMContentLoaded → initPlan) → bên trong initPlan: dữ liệu · trạng thái · chỗ vẽ · sự kiện
+ *         → hàm phụ: đổi trạng thái → tính (không đụng HTML) → vẽ → cuối file: hàm phụ dùng chung không cần trạng thái.
+ */
+
+const PLAN_DAY_NAMES = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6"];
+const PLAN_DAY_SHORT = ["T2", "T3", "T4", "T5", "T6"];
+// Lý do (server gửi) → chữ ngắn ghi dưới nút giờ. Lý do đầy đủ vẫn hiện khi rê chuột và ở phần Từng tuần.
+const PLAN_SHORT_REASON = {
+    "Khách có buổi khác trùng giờ": "Khách trùng giờ",
+    "PT đã có khách giờ này": "PT có khách",
+    "Đang được giữ cho đơn khác": "Đơn khác đang giữ",
+    "PT đã gỡ khung giờ này": "PT đã gỡ khung",
+    "PT có khung khác chồng giờ": "PT chồng giờ",
+    "Khung cũ khác thời lượng": "Khung khác thời lượng",
+    "Đã qua giờ": "Đã qua giờ"
+};
+
+/* ==================== HÀM CHÍNH — chạy khi HTML tải xong ==================== */
+document.addEventListener("DOMContentLoaded", function () {
+    const dataNode = document.getElementById("sale-plan-data");   // <script type="application/json"> chứa PtSalePlan
+    const root = document.querySelector(".sale-plan");            // <section> thẻ "Lịch tập"
+    // Không có (chưa chọn đủ gói / PT / ngày, hoặc đang giữ chỗ) → trang không có Lịch tập, không làm gì.
+    if (!dataNode || !root) {
+        return;
+    }
+    initPlan(root, JSON.parse(dataNode.textContent));
+});
+
+/**
+ * HÀM CHÍNH 2 — dựng cả phần Lịch tập. root = <section class="sale-plan">, data = PtSalePlan (JSON server gửi).
+ * Mọi hàm phụ bên dưới nằm TRONG initPlan để dùng chung biến pattern, overrides, weekIndex, editingDate.
+ * Vòng lặp duy nhất: người dùng bấm → đổi trạng thái (setPatternDay / setOverride / showWeek) → render() vẽ lại tất cả.
+ */
+function initPlan(root, data) {
+    // ===== Dữ liệu tính 1 lần =====
+    const days = data.days;
+    const dayByDate = new Map();
+    for (const day of days) {
+        dayByDate.set(day.date, day);
+    }
+    const weeks = groupWeeks(days);
+
+    // ===== Trạng thái =====
+    const pattern = [];            // 5 phần tử: giờ của Thứ 2..Thứ 6, "" = Nghỉ   → ví dụ ["07:00", "", "07:00", "", "07:00"]
+    for (let i = 0; i < 5; i++) {
+        pattern.push(data.pattern[i] || "");
+    }
+    const overrides = new Map();    // ngày → giờ sửa riêng, "" = bỏ buổi ngày đó   → ví dụ { "2026-11-11" → "09:00" }
+    let weekIndex = 0;
+    let editingDate = null;
+    restoreRequested();
+    openEditorFromUrl();
+    rejectBlockedTimes();
+
+    // ===== Chỗ vẽ =====
+    const patternBox = root.querySelector("[data-pattern]");       // ô rỗng "Lịch mẫu hằng tuần"
+    const tabsBox = root.querySelector("[data-week-tabs]");        // ô rỗng các tab "Tuần 1…N"
+    const weekBox = root.querySelector("[data-week]");             // ô rỗng 5 ngày của tuần đang xem
+    const editorBox = root.querySelector("[data-editor]");         // ô rỗng sửa riêng 1 ngày
+    const weekLabel = root.querySelector("[data-week-label]");     // chữ "Tuần 1 · 03/11 – 07/11"
+    const totalBox = root.querySelector("[data-plan-total]");      // chữ "24 buổi · 3 buổi/tuần"
+    const form = document.querySelector("[data-plan-form]");       // form Giữ lịch ở cột phải (ngoài root); null nếu thiếu
+    const unpublished = data.unpublished || [];
+    // Giờ tự nhập không dùng được (server kiểm giờ mở cửa + mốc 15 phút) → khung đỏ trên đầu Lịch tập.
+    if (data.notice) {
+        const notice = el("p", "sale-msg is-error", data.notice);
+        notice.setAttribute("role", "alert");
+        root.querySelector(".plan-block").before(notice);
+    }
+    // Tích / bỏ tích "Đã xác nhận với PT" → tính lại nút Giữ lịch.
+    if (form) {
+        form.addEventListener("change", function (event) {
+            if (event.target.name === "confirmPt") {
+                renderSummary();
+            }
+        });
+    }
+
+    // ===== Sự kiện (gắn 1 lần, ủy quyền theo data-*) =====
+    root.addEventListener("change", function (event) {
+        const input = event.target;
+        if (input.name && input.name.startsWith("plan-wd-")) {
+            setPatternDay(Number(input.dataset.weekday), input.value);
+        } else if (input.name === "plan-edit") {
+            setOverride(editingDate, input.value);
+        }
+    });
+    root.addEventListener("click", function (event) {
+        // Nút giờ đang khóa: bấm vào thì toast nói lý do (không chỉ gạch ngang).
+        const blockedChip = event.target.closest(".plan-chip.is-disabled");
+        if (blockedChip && blockedChip.dataset.blockedMessage) {
+            showToast("warning", blockedChip.dataset.blockedMessage);
+            return;
+        }
+        const target = event.target.closest("button");
+        if (!target || !root.contains(target)) {
+            return;
+        }
+        if (target.dataset.weekStep) {
+            showWeek(weekIndex + Number(target.dataset.weekStep));
+        } else if (target.dataset.weekTab) {
+            showWeek(Number(target.dataset.weekTab));
+        } else if (target.dataset.day) {
+            editingDate = editingDate === target.dataset.day ? null : target.dataset.day;
+            render();
+            focusKey(editingDate ? "edit-current" : "day-" + target.dataset.day);
+        } else if (target.dataset.reset) {
+            overrides.delete(editingDate);
+            render();
+        } else if (target.dataset.closeEditor !== undefined) {
+            const date = editingDate;
+            editingDate = null;
+            render();
+            focusKey("day-" + date);
+        } else if (target.dataset.jumpIssue !== undefined) {
+            jumpToFirstIssue();
+        }
+    });
+    root.addEventListener("keydown", function (event) {
+        // Tab tuần: ← → đổi tuần (mẫu tablist chuẩn), Esc đóng ô sửa riêng.
+        const onTab = event.target.dataset && event.target.dataset.weekTab !== undefined;
+        if (onTab && (event.key === "ArrowLeft" || event.key === "ArrowRight")) {
+            event.preventDefault();
+            showWeek(weekIndex + (event.key === "ArrowRight" ? 1 : -1));
+            return;
+        }
+        if (event.key === "Escape" && editingDate) {
+            const date = editingDate;
+            editingDate = null;
+            render();
+            focusKey("day-" + date);
+        }
+    });
+
+    render();
+
+
+    /* ---------- HÀM PHỤ 1: ĐỔI TRẠNG THÁI (gọi từ các listener ở trên) rồi render() ---------- */
+
+
+    // setPatternDay và setOvveride gọi render()
+    /** I. Bấm nút ở Lịch mẫu thì gọi setPatternDay
+     *  Ngày sửa riêng trùng giờ thì xóa ô data ô sửa riêng và ô sửa riêng
+     *   */
+    function setPatternDay(weekday, time) {
+        const note = time ? patternNote(weekday, time) : null;
+        // Không còn ngày nào xếp được → không chọn, toast lý do.
+        if (note && note.full) {
+            showToast("error", blockedMessage(PLAN_DAY_NAMES[weekday - 1], time, note.reason));
+            return;
+        }
+        // Xếp được một phần → vẫn chọn, toast nói ngày nào không xếp được.
+        if (note && note.meta) {
+            showToast("warning", note.detail);
+        }
+        pattern[weekday - 1] = time;
+        // Ngày đã sửa riêng mà nay trùng lịch mẫu → không còn là "sửa riêng".
+        for (const day of days) {
+            if (day.weekday === weekday && overrides.get(day.date) === time) {
+                overrides.delete(day.date);
+            }
+        }
+        render();
+    }
+
+    /** II. Bấm trong ô sửa riêng thì gọi setOverride 
+     * Sửa riêng 1 ngày (chip trong ô sửa riêng); trùng giờ mẫu thì xóa sửa riêng. "" = bỏ buổi ngày đó. */
+    function setOverride(date, time) {
+        const day = dayByDate.get(date);
+        const option = day.options.find(function (item) { return item.time === time; });
+        if (option && !option.ok) {
+            showToast("error", blockedMessage(day.label, time, option.reason));
+            return;
+        }
+        if (time === pattern[day.weekday - 1]) {
+            overrides.delete(date);
+        } else {
+            overrides.set(date, time);
+        }
+        // render() chạy renderPattern, renderWeek, renderEditor, renderSummary. Kết quả ngày nào xếp được hay không lấy sẵn từ days[].options[].ok mà server đã tính.
+        render();
+        focusKey("edit-current");
+    }
+
+    /** Chuyển sang tuần thứ index (tab / ‹ › / phím ← →), đóng ô sửa riêng. */
+    function showWeek(index) {
+        weekIndex = Math.max(0, Math.min(weeks.length - 1, index));
+        editingDate = null;
+        render();
+        focusKey("tab-" + weekIndex);
+    }
+
+    /** Nút "N ngày chưa xếp được — xem": nhảy tới ngày lỗi đầu tiên và mở ô sửa riêng của nó. */
+    function jumpToFirstIssue() {
+        for (let i = 0; i < weeks.length; i++) {
+            const bad = weeks[i].days.find(function (day) { return stateOf(day).kind === "bad"; });
+            if (bad) {
+                weekIndex = i;
+                editingDate = bad.date;
+                render();
+                focusKey("edit-current");
+                return;
+            }
+        }
+    }
+
+    /** Giữ lịch bị server từ chối → trang vẽ lại: khôi phục các buổi đã gửi thành "sửa riêng" so với lịch mẫu. */
+    function restoreRequested() {
+        if (!data.requested || data.requested.length === 0) {
+            return;
+        }
+        const requested = new Map();
+        for (const item of data.requested) {
+            const parts = item.split("@");
+            requested.set(parts[0], parts[1]);
+        }
+        for (const day of days) {
+            const time = requested.get(day.date) || "";
+            if (time !== pattern[day.weekday - 1]) {
+                overrides.set(day.date, time);
+            }
+        }
+    }
+
+
+    /**
+     * Sau khi tải trang: giờ đang chọn mà không còn ngày nào xếp được (vd. "+ Thêm giờ" bị PT chồng giờ)
+     * → toast lý do, bỏ giờ đó, quay về giờ đã chọn trước đó (URL prev=thứ@giờ, reloadWithTime gắn).
+     */
+    function rejectBlockedTimes() {
+        const previous = (new URL(window.location.href).searchParams.get("prev") || "").split("@");
+        const addedWeekday = Number(previous[0]);
+        for (let weekday = 1; weekday <= 5; weekday++) {
+            const time = pattern[weekday - 1];
+            const note = time ? patternNote(weekday, time) : null;
+            if (note && note.full) {
+                showToast("error", blockedMessage(PLAN_DAY_NAMES[weekday - 1], time, note.reason));
+                if (data.custom && data.custom[weekday - 1] === time) {
+                    data.custom[weekday - 1] = null;
+                }
+                const back = weekday === addedWeekday && data.times.includes(previous[1]) ? previous[1] : "";
+                pattern[weekday - 1] = back;
+            } else if (note && note.meta && weekday === addedWeekday) {
+                showToast("warning", note.detail);
+            }
+        }
+        // Giờ mới thêm riêng 1 ngày (URL edit=ngày) mà ngày đó không xếp được → cũng toast rồi bỏ.
+        if (!editingDate || !overrides.get(editingDate)) {
+            return;
+        }
+        const day = dayByDate.get(editingDate);
+        const time = overrides.get(editingDate);
+        const option = day.options.find(function (item) { return item.time === time; });
+        if (option && !option.ok) {
+            showToast("error", blockedMessage(day.label, time, option.reason));
+            overrides.delete(editingDate);
+            if (!data.published.includes(time)) {
+                day.options = day.options.filter(function (item) { return item !== option; });
+            }
+        }
+    }
+
+    /** Câu toast: "Thứ 2 lúc 17:45 không xếp được: PT có khung khác chồng giờ." */
+    function blockedMessage(dayName, time, reason) {
+        return dayName + " lúc " + time + " không xếp được: " + reason + ".";
+    }
+
+    /** Trang vừa tải lại sau "+ Thêm giờ" ở ô sửa riêng (URL ?edit=ngày) → mở lại đúng ô đó, đúng tuần đó. */
+    function openEditorFromUrl() {
+        const date = new URL(window.location.href).searchParams.get("edit");
+        if (!date || !dayByDate.has(date)) {
+            return;
+        }
+        editingDate = date;
+        weekIndex = weeks.findIndex(function (week) {
+            return week.days.some(function (day) { return day.date === date; });
+        });
+    }
+
+    /**
+     * "+ Thêm giờ" với giờ CHƯA có trong dữ liệu → tải lại trang để SERVER kiểm giờ đó bằng đúng luật lúc Giữ lịch
+     * (checkDay: khách trùng giờ, PT có khách / chồng giờ, đã qua giờ, PT nghỉ, giờ mở cửa…).
+     * JS không tự đoán "xếp được" nữa. Lịch mẫu + các buổi sửa riêng đi theo URL (t1..t5, sessions) nên không mất.
+     *   weekday + time  → đổi lịch mẫu thứ đó · date + time → sửa riêng ngày đó (và mở lại ô sửa riêng của ngày đó)
+     */
+    function reloadWithTime(change) {
+        const nextPattern = pattern.slice();
+        const nextOverrides = new Map(overrides);
+        if (change.weekday) {
+            nextPattern[change.weekday - 1] = change.time;
+            for (const day of days) {
+                if (day.weekday === change.weekday && nextOverrides.get(day.date) === change.time) {
+                    nextOverrides.delete(day.date);
+                }
+            }
+        } else {
+            nextOverrides.set(change.date, change.time);
+        }
+        const url = planUrl(nextPattern, nextOverrides);
+        if (change.date) {
+            url.searchParams.set("edit", change.date);
+        } else {
+            url.searchParams.set("prev", change.weekday + "@" + pattern[change.weekday - 1]);
+        }
+        root.classList.add("is-loading");
+        window.location.assign(url.toString());
+    }
+
+    /** URL hiện tại + t1..t5 = lịch mẫu + sessions = mọi buổi dự định (chỉ khi có sửa riêng) → F5 / tải lại không mất lịch. */
+    function planUrl(currentPattern, currentOverrides) {
+        const url = new URL(window.location.href);
+        // Giữ lịch bị từ chối → trang vẽ lại từ POST, URL chỉ còn /pt-sales (mất gói, PT, ngày, khách).
+        // Lấy lại từ ô ẩn của form Giữ lịch để F5 / thêm giờ / chọn khách không quay về trang trống.
+        if (form) {
+            for (const name of ["customer", "partner", "package", "pt", "start"]) {
+                const input = form.querySelector("input[name='" + name + "']");
+                if (input && input.value) {
+                    url.searchParams.set(name, input.value);
+                } else if (input) {
+                    url.searchParams.delete(name);
+                }
+            }
+        }
+        for (let weekday = 1; weekday <= 5; weekday++) {
+            url.searchParams.set("t" + weekday, currentPattern[weekday - 1]);
+        }
+        url.searchParams.delete("edit");
+        url.searchParams.delete("prev");
+        if (currentOverrides.size === 0) {
+            url.searchParams.delete("sessions");
+            return url;
+        }
+        const planned = [];
+        for (const day of days) {
+            const time = currentOverrides.has(day.date) ? currentOverrides.get(day.date) : currentPattern[day.weekday - 1];
+            if (time) {
+                planned.push(day.date + "@" + time);
+            }
+        }
+        url.searchParams.set("sessions", planned.join(","));
+        return url;
+    }
+
+    /** Các giờ hiện ở 1 dòng Lịch mẫu = giờ PT đã công bố + giờ lễ tân tự thêm CHO RIÊNG thứ đó (server đã kiểm). */
+    function rowTimes(weekday) {
+        const times = data.times.slice();
+        const custom = data.custom ? data.custom[weekday - 1] : null;
+        if (custom && !times.includes(custom)) {
+            times.push(custom);
+            times.sort();
+        }
+        return times;
+    }
+
+
+    /* ---------- HÀM PHỤ 2: TÍNH (chỉ đọc data + trạng thái, không đụng HTML) ---------- */
+
+    /** Trạng thái 1 ngày: off (Nghỉ theo mẫu) · skipped (bỏ riêng) · ok · warn (có buổi, PT cần dời sau) · bad (không xếp được). */
+    function stateOf(day) {
+        const edited = overrides.has(day.date);
+        const time = edited ? overrides.get(day.date) : pattern[day.weekday - 1];
+        if (!time) {
+            return { kind: edited ? "skipped" : "off", edited: edited };
+        }
+        const option = day.options.find(function (item) { return item.time === time; });
+        if (!option) {
+            return { kind: "bad", time: time, reason: "PT không có khung giờ này", edited: edited };
+        }
+        if (!option.ok) {
+            return { kind: "bad", time: time, reason: option.reason, edited: edited };
+        }
+        return { kind: option.warning ? "warn" : "ok", time: time, end: option.end, warning: option.warning, edited: edited,
+            fresh: option.fresh };
+    }
+
+    /**
+     * Lịch mẫu "Thứ X lúc giờ Y": trong kỳ có bao nhiêu ngày Thứ X (total), bao nhiêu ngày không xếp được (blocked),
+     * và từng ngày đó vì sao (misses). Ví dụ Thứ 3 20:00: total 9, blocked 5 → "Còn 4/9 buổi · Khách trùng giờ".
+     */
+    function blockedCount(weekday, time) {
+        let blocked = 0;
+        let total = 0;
+        const misses = [];
+        for (const day of days) {
+            if (day.weekday !== weekday) {
+                continue;
+            }
+            total++;
+            const option = day.options.find(function (item) { return item.time === time; });
+            if (!option || !option.ok) {
+                blocked++;
+                misses.push({ date: day.date, reason: option ? option.reason : "PT không có khung giờ này" });
+            }
+        }
+        return { blocked: blocked, total: total, misses: misses };
+    }
+
+    /**
+     * Chữ ghi dưới 1 nút giờ của lịch mẫu.
+     *   meta    "Còn 4/9 buổi" (hết thì "Không còn buổi"); đủ mọi tuần → không ghi gì
+     *   sub     lý do gặp nhiều nhất, viết ngắn ("Khách trùng giờ")
+     *   detail  câu đầy đủ khi rê chuột: "Không xếp được 5 ngày: 03/11, 10/11 (Khách có buổi khác trùng giờ) …"
+     *   reason  lý do gặp nhiều nhất, nguyên văn (ghi vào toast)
+     */
+    function patternNote(weekday, time) {
+        const count = blockedCount(weekday, time);
+        const left = count.total - count.blocked;
+        if (count.blocked === 0) {
+            return { meta: "", sub: "", detail: "Đủ " + count.total + "/" + count.total + " buổi trong kỳ", full: false };
+        }
+        const byReason = new Map();
+        for (const miss of count.misses) {
+            if (!byReason.has(miss.reason)) {
+                byReason.set(miss.reason, []);
+            }
+            byReason.get(miss.reason).push(shortDate(miss.date));
+        }
+        let topReason = "";
+        let topCount = 0;
+        const parts = [];
+        byReason.forEach(function (dates, reason) {
+            parts.push(dates.join(", ") + " (" + reason + ")");
+            if (dates.length > topCount) {
+                topReason = reason;
+                topCount = dates.length;
+            }
+        });
+        const sub = (PLAN_SHORT_REASON[topReason] || topReason) + (byReason.size > 1 ? " …" : "");
+        return {
+            meta: left === 0 ? "Không còn buổi" : "Còn " + left + "/" + count.total + " buổi",
+            sub: sub,
+            detail: "Còn " + left + "/" + count.total + " buổi. Không xếp được " + count.blocked + " ngày: " + parts.join("; "),
+            reason: topReason,
+            full: left === 0
+        };
+    }
+
+    /** Đếm cả kỳ: số buổi xếp được, ngày lỗi, ngày sửa riêng, buổi "PT chưa mở"; picked = ["2026-11-03@09:30", …] gửi server. */
+    function summary() {
+        let sessions = 0;
+        let bad = 0;
+        let edited = 0;
+        let fresh = 0;      // buổi PT chưa mở khung (giữ lịch sẽ tự tạo)
+        const picked = [];
+        for (const day of days) {
+            const state = stateOf(day);
+            if (state.kind === "ok" || state.kind === "warn") {
+                sessions++;
+                picked.push(day.date + "@" + state.time);
+                fresh += state.fresh ? 1 : 0;
+            }
+            if (state.kind === "bad") {
+                bad++;
+            }
+            if (state.edited) {
+                edited++;
+            }
+        }
+        const perWeek = pattern.filter(function (time) { return time !== ""; }).length;
+        return { sessions: sessions, bad: bad, edited: edited, fresh: fresh, perWeek: perWeek, picked: picked };
+    }
+
+
+    /* ---------- HÀM PHỤ 3: VẼ (xóa ô rỗng rồi tạo lại HTML từ trạng thái) ---------- */
+
+    /** Vẽ lại MỌI phần sau mỗi thay đổi: lịch mẫu → tuần → ô sửa riêng → tóm tắt + form Giữ lịch. */
+    function render() {
+        renderPattern();
+        renderWeek();
+        renderEditor();
+        
+        // renderSummary đếm số buổi, ghi “36 buổi · 3 buổi/tuần” và ô Buổi bên phải, điền ô ẩn t1..t5 và sessions của form Giữ lịch. Nó tắt nút nếu chưa có buổi nào, chưa đủ khách, hoặc có buổi “PT chưa mở” mà chưa tích xác nhận.
+        renderSummary();
+    }
+
+    /** Vẽ "Lịch mẫu hằng tuần" vào [data-pattern]: mỗi Thứ 2…6 một dòng chip "Nghỉ" + các giờ (kèm "Còn x/9 buổi"). */
+    function renderPattern() {
+        patternBox.replaceChildren();
+        for (let weekday = 1; weekday <= 5; weekday++) {
+            const row = el("div", "plan-row");
+            const head = el("div", "plan-row-day");
+            head.append(el("strong", "", PLAN_DAY_NAMES[weekday - 1]));
+            head.append(el("small", "", "Tối đa " + countWeekday(weekday) + " buổi"));
+            if (unpublished.includes(weekday)) {
+                head.append(el("small", "plan-row-flag", "PT chưa công bố"));
+            }
+
+            const chips = el("div", "plan-chips");
+            chips.setAttribute("role", "radiogroup");
+            chips.setAttribute("aria-label", "Giờ tập " + PLAN_DAY_NAMES[weekday - 1]);
+            chips.append(chip("plan-wd-" + weekday, "", "Nghỉ", "", pattern[weekday - 1] === "", false,
+                    "p-" + weekday + "-off", weekday, "is-rest"));
+            for (const time of rowTimes(weekday)) {
+                const note = patternNote(weekday, time);
+                // Giờ lễ tân tự nhập (không nằm trong published) → ghi thêm "PT chưa mở" để biết phải tick "Đã xác nhận với PT".
+                const custom = !data.published.includes(time);
+                const meta = custom ? (note.meta ? note.meta + " · PT chưa mở" : "PT chưa mở") : note.meta;
+                const item = chip("plan-wd-" + weekday, time, time, meta, pattern[weekday - 1] === time,
+                        note.full, "p-" + weekday + "-" + time, weekday, meta ? "has-meta" : "");
+                if (note.sub) {
+                    item.append(el("small", "plan-chip-sub", note.sub));
+                }
+                // Rê chuột: danh sách ngày; trình đọc màn hình đọc cùng câu đó.
+                item.title = note.detail;
+                if (note.full) {
+                    item.dataset.blockedMessage = blockedMessage(PLAN_DAY_NAMES[weekday - 1], time, note.reason);
+                }
+                item.append(el("span", "visually-hidden", note.detail));
+                chips.append(item);
+            }
+            // Nút "+ Thêm giờ": lễ tân tự nhập giờ PT chưa công bố → tick "Đã xác nhận với PT" rồi Giữ lịch.
+            chips.append(addTimeButton(weekday));
+            row.append(head, chips);
+            patternBox.append(row);
+        }
+    }
+
+    /**
+     * Nút "+ Thêm giờ" + ô nhập giờ tự do cho 1 thứ (T2..T6). Bấm → hiện ô nhập + nút Xác nhận/Hủy.
+     * Xác nhận → kiểm giờ mở cửa + mốc 15 phút (min/max/step). Giờ đã có trên dòng → chỉ chọn.
+     * Giờ mới → reloadWithTime: server kiểm TỪNG ngày Thứ đó bằng checkDay, giờ chỉ thêm cho ĐÚNG thứ này.
+     */
+    function addTimeButton(weekday) {
+        const wrap = el("span", "plan-add-time");
+
+        const button = el("button", "plan-chip plan-chip-add", "+ Thêm giờ");
+        button.type = "button";
+        button.setAttribute("aria-label", "Thêm giờ tập " + PLAN_DAY_NAMES[weekday - 1]);
+        button.setAttribute("aria-expanded", "false");
+
+        const input = document.createElement("input");
+        input.type = "time";
+        input.className = "plan-time-input";
+        input.hidden = true;
+        if (data.open) {
+            input.min = data.open;
+        }
+        if (data.close) {
+            input.max = data.close;
+        }
+        input.step = 900;   // mốc 15 phút, cùng lưới khung PT công bố
+        input.setAttribute("aria-label", "Giờ tập tự do " + PLAN_DAY_NAMES[weekday - 1]);
+
+        const confirm = el("button", "plan-time-confirm", "Xác nhận");
+        confirm.type = "button";
+        confirm.hidden = true;
+        const cancel = el("button", "plan-time-cancel", "Hủy");
+        cancel.type = "button";
+        cancel.hidden = true;
+
+        function open() {
+            input.hidden = false;
+            confirm.hidden = false;
+            cancel.hidden = false;
+            button.hidden = true;
+            button.setAttribute("aria-expanded", "true");
+            input.value = pattern[weekday - 1] || "";
+            input.focus();
+        }
+        function close() {
+            input.hidden = true;
+            confirm.hidden = true;
+            cancel.hidden = true;
+            button.hidden = false;
+            button.setAttribute("aria-expanded", "false");
+        }
+
+        button.addEventListener("click", open);
+        cancel.addEventListener("click", close);
+        confirm.addEventListener("click", function () {
+            // Dùng min/max/step của ô giờ để chặn giờ ngoài giờ mở cửa hoặc lệch mốc 15 phút.
+            if (!input.reportValidity()) {
+                return;
+            }
+            const time = input.value;
+            if (!time) {
+                input.setCustomValidity("Nhập giờ bắt đầu buổi tập.");
+                input.reportValidity();
+                input.setCustomValidity("");
+                return;
+            }
+            close();
+            if (rowTimes(weekday).includes(time)) {
+                setPatternDay(weekday, time);              // giờ đã có trên dòng → chỉ chọn, không tải lại
+            } else {
+                reloadWithTime({ weekday: weekday, time: time });   // giờ mới → server kiểm từng ngày Thứ này
+            }
+        });
+
+        wrap.append(button, input, confirm, cancel);
+        return wrap;
+    }
+
+    /** Vẽ tab tuần [data-week-tabs] + 5 ô ngày của tuần đang xem [data-week] + chữ [data-week-label]. */
+    function renderWeek() {
+        const week = weeks[weekIndex];
+        weekLabel.textContent = "Tuần " + (weekIndex + 1) + "/" + weeks.length + " · " + shortDate(week.days[0].date)
+                + " – " + shortDate(week.days[week.days.length - 1].date);
+        root.querySelector("[data-week-step='-1']").disabled = weekIndex === 0;
+        root.querySelector("[data-week-step='1']").disabled = weekIndex === weeks.length - 1;
+
+        // Tab tuần: chấm đỏ = có ngày chưa xếp được, chấm xanh đĩa = có ngày sửa riêng.
+        tabsBox.replaceChildren();
+        weeks.forEach(function (item, index) {
+            let bad = false;
+            let edited = false;
+            let count = 0;
+            for (const day of item.days) {
+                const state = stateOf(day);
+                bad = bad || state.kind === "bad";
+                edited = edited || state.edited;
+                count += state.kind === "ok" || state.kind === "warn" ? 1 : 0;
+            }
+            const tab = el("button", "plan-tab" + (bad ? " has-bad" : "") + (edited ? " has-edit" : ""));
+            tab.type = "button";
+            tab.dataset.weekTab = String(index);
+            tab.dataset.focusKey = "tab-" + index;
+            tab.setAttribute("role", "tab");
+            tab.setAttribute("aria-selected", String(index === weekIndex));
+            tab.tabIndex = index === weekIndex ? 0 : -1;
+            tab.setAttribute("aria-label", "Tuần " + (index + 1) + ", " + count + " buổi"
+                    + (bad ? ", có ngày chưa xếp được" : ""));
+            tab.append(el("b", "", String(index + 1)), el("small", "", shortDate(item.monday)));
+            tabsBox.append(tab);
+        });
+
+        // 5 ô ngày T2–T6 của tuần đang xem; ngày ngoài kỳ (tuần đầu / cuối) để trống.
+        weekBox.replaceChildren();
+        for (let weekday = 1; weekday <= 5; weekday++) {
+            const day = week.days.find(function (item) { return item.weekday === weekday; });
+            weekBox.append(day ? dayCell(day) : outCell(week.monday, weekday));
+        }
+    }
+
+    /** 1 ô ngày trong tuần: nút data-day="2026-11-03" (bấm → mở ô sửa riêng), màu theo stateOf(day).kind. */
+    function dayCell(day) {
+        const state = stateOf(day);
+        const cell = el("button", "plan-day is-" + state.kind + (state.edited ? " is-edited" : ""));
+        cell.type = "button";
+        cell.dataset.day = day.date;
+        cell.dataset.focusKey = "day-" + day.date;
+        cell.setAttribute("aria-pressed", String(editingDate === day.date));
+
+        const head = el("span", "plan-day-head");
+        head.append(el("b", "", PLAN_DAY_SHORT[day.weekday - 1]), el("span", "", shortDate(day.date)));
+        cell.append(head);
+
+        let text = "";
+        if (state.kind === "ok" || state.kind === "warn") {
+            const time = el("span", "plan-day-time");
+            time.append(el("strong", "", state.time), el("small", "", "– " + state.end));
+            cell.append(time);
+            text = state.time + " – " + state.end;
+            if (state.warning) {
+                cell.append(el("span", "plan-day-note", state.warning));
+                text += ". " + state.warning;
+            }
+            if (state.fresh) {
+                cell.append(el("span", "plan-day-fresh", "PT chưa mở"));
+                text += ". PT chưa mở khung giờ này, cần hỏi PT";
+            }
+        } else if (state.kind === "bad") {
+            cell.append(el("span", "plan-day-time", state.time));
+            cell.append(el("span", "plan-day-note", state.reason));
+            text = "chưa xếp được " + state.time + ": " + state.reason;
+        } else {
+            cell.append(el("span", "plan-day-rest", state.kind === "skipped" ? "Bỏ buổi này" : "Nghỉ"));
+            text = state.kind === "skipped" ? "đã bỏ buổi" : "nghỉ theo lịch mẫu";
+        }
+        if (state.edited) {
+            cell.append(el("span", "plan-day-flag", "Sửa riêng"));
+            text += ", sửa riêng";
+        }
+        cell.setAttribute("aria-label", day.label + ": " + text + ". Bấm để sửa riêng ngày này.");
+        return cell;
+    }
+
+    /** Ô xám cho ngày nằm ngoài kỳ (tuần đầu / tuần cuối không đủ 5 ngày). */
+    function outCell(monday, weekday) {
+        const date = addDays(monday, weekday - 1);
+        const cell = el("div", "plan-day is-out");
+        cell.setAttribute("aria-hidden", "true");
+        const head = el("span", "plan-day-head");
+        head.append(el("b", "", PLAN_DAY_SHORT[weekday - 1]), el("span", "", shortDate(date)));
+        cell.append(head, el("span", "plan-day-rest", "Ngoài kỳ"));
+        return cell;
+    }
+
+    /** Ô sửa riêng 1 ngày (giống "Chỉ sự kiện này" của Google Calendar). */
+    function renderEditor() {
+        editorBox.replaceChildren();
+        const day = editingDate ? dayByDate.get(editingDate) : null;
+        editorBox.hidden = !day;
+        if (!day) {
+            return;
+        }
+        const state = stateOf(day);
+        const current = state.edited ? overrides.get(day.date) : pattern[day.weekday - 1];
+
+        const head = el("div", "plan-editor-head");
+        const title = el("p", "plan-editor-title");
+        title.append(el("strong", "", "Sửa riêng " + day.label));
+        const close = el("button", "plan-nav");
+        close.type = "button";
+        close.dataset.closeEditor = "";
+        close.setAttribute("aria-label", "Đóng");
+        close.innerHTML = '<i class="fa-solid fa-xmark" aria-hidden="true"></i>';
+        head.append(title, close);
+
+        const chips = el("div", "plan-chips");
+        chips.setAttribute("role", "radiogroup");
+        chips.setAttribute("aria-label", "Giờ tập " + day.label);
+        chips.append(chip("plan-edit", "", "Không tập", "", current === "", false,
+                current === "" ? "edit-current" : "edit-off", 0, "is-rest"));
+        for (const option of day.options) {
+            const meta = option.ok ? (option.warning ? "PT cần dời" : (option.fresh ? "PT chưa mở" : "")) : option.reason;
+            const item = chip("plan-edit", option.time, option.time + " – " + option.end, meta, current === option.time,
+                    !option.ok, current === option.time ? "edit-current" : "edit-" + option.time, 0,
+                    option.ok ? (meta ? "has-meta" : "") : "is-blocked");
+            if (!option.ok) {
+                item.dataset.blockedMessage = blockedMessage(day.label, option.time, option.reason);
+            }
+            chips.append(item);
+        }
+        // Nút "+ Thêm giờ" cho RIÊNG ngày này: lễ tân tự nhập giờ PT chưa công bố → tick "Đã xác nhận với PT".
+        chips.append(editorAddTimeButton(day));
+        editorBox.append(head, chips);
+
+        if (state.edited) {
+            const base = pattern[day.weekday - 1];
+            const reset = el("button", "plan-reset", "Về lịch mẫu (" + (base || "Nghỉ") + ")");
+            reset.type = "button";
+            reset.dataset.reset = "1";
+            editorBox.append(reset);
+        }
+    }
+
+    /**
+     * Nút "+ Thêm giờ" trong ô sửa riêng 1 ngày: lễ tân tự nhập giờ PT chưa công bố cho RIÊNG ngày này.
+     * Bấm → hiện ô nhập + Xác nhận/Hủy. Xác nhận → kiểm giờ mở cửa + mốc 15 phút; giờ đã có trong ngày → chỉ chọn;
+     * giờ mới → reloadWithTime: server kiểm RIÊNG ngày này bằng checkDay, các ngày / thứ khác không bị thêm giờ.
+     */
+    function editorAddTimeButton(day) {
+        const wrap = el("span", "plan-add-time");
+
+        const button = el("button", "plan-chip plan-chip-add", "+ Thêm giờ");
+        button.type = "button";
+        button.setAttribute("aria-label", "Thêm giờ tập " + day.label);
+        button.setAttribute("aria-expanded", "false");
+
+        const input = document.createElement("input");
+        input.type = "time";
+        input.className = "plan-time-input";
+        input.hidden = true;
+        if (data.open) {
+            input.min = data.open;
+        }
+        if (data.close) {
+            input.max = data.close;
+        }
+        input.step = 900;   // mốc 15 phút, cùng lưới khung PT công bố
+        input.setAttribute("aria-label", "Giờ tập tự do " + day.label);
+
+        const confirm = el("button", "plan-time-confirm", "Xác nhận");
+        confirm.type = "button";
+        confirm.hidden = true;
+        const cancel = el("button", "plan-time-cancel", "Hủy");
+        cancel.type = "button";
+        cancel.hidden = true;
+
+        function open() {
+            input.hidden = false;
+            confirm.hidden = false;
+            cancel.hidden = false;
+            button.hidden = true;
+            button.setAttribute("aria-expanded", "true");
+            input.value = overrides.has(day.date) ? overrides.get(day.date) : "";
+            input.focus();
+        }
+        function close() {
+            input.hidden = true;
+            confirm.hidden = true;
+            cancel.hidden = true;
+            button.hidden = false;
+            button.setAttribute("aria-expanded", "false");
+        }
+
+        button.addEventListener("click", open);
+        cancel.addEventListener("click", close);
+        confirm.addEventListener("click", function () {
+            // Cùng kiểm như "+ Thêm giờ" của Lịch mẫu: trong giờ mở cửa, đúng mốc 15 phút.
+            if (!input.reportValidity()) {
+                return;
+            }
+            const time = input.value;
+            if (!time) {
+                input.setCustomValidity("Nhập giờ bắt đầu buổi tập.");
+                input.reportValidity();
+                input.setCustomValidity("");
+                return;
+            }
+            close();
+            if (day.options.some(function (option) { return option.time === time; })) {
+                setOverride(day.date, time);                       // giờ đã có trong ngày → chỉ chọn
+            } else {
+                reloadWithTime({ date: day.date, time: time });    // giờ mới → server kiểm RIÊNG ngày này
+            }
+        });
+
+        wrap.append(button, input, confirm, cancel);
+        return wrap;
+    }
+
+    /**
+     * Tóm tắt + đẩy kết quả sang server: chữ "N buổi", ô "Buổi" ở Đơn bán, 5 ô ẩn t1..t5 + ô ẩn sessions,
+     * ô tích "Đã xác nhận với PT", khóa / mở nút "Giữ lịch 15 phút", thanh bước 2, bong bóng Pumpy, URL (syncUrl).
+     */
+    function renderSummary() {
+        const result = summary();
+        totalBox.replaceChildren();
+        if (result.sessions > 0) {
+            totalBox.append(el("strong", "", result.sessions + " buổi"));
+            totalBox.append(document.createTextNode(" · " + result.perWeek + " buổi/tuần"
+                    + (result.edited > 0 ? " · " + result.edited + " ngày sửa riêng" : "")));
+        } else {
+            totalBox.append(document.createTextNode("Chưa có buổi nào"));
+        }
+        if (result.bad > 0) {
+            const jump = el("button", "plan-issue", result.bad + " ngày chưa xếp được — xem");
+            jump.type = "button";
+            jump.dataset.jumpIssue = "";
+            totalBox.append(jump);
+        }
+
+        // Cột phải "Đơn bán": số buổi, giá 1 buổi, nút Giữ lịch.
+        const count = document.querySelector("[data-plan-count]");
+        if (count) {
+            count.textContent = result.sessions > 0
+                    ? result.sessions + " buổi · " + formatMoney(Math.round(data.price / result.sessions)) + "/buổi"
+                    : "—";
+        }
+        if (!form) {
+            return;
+        }
+        for (let weekday = 1; weekday <= 5; weekday++) {
+            form.querySelector("[data-plan-t='" + weekday + "']").value = pattern[weekday - 1];
+        }
+        form.querySelector("[data-plan-sessions]").value = result.picked.join(",");
+        // Có buổi PT chưa mở khung → hiện ô "Đã xác nhận với PT" (server cũng đếm lại lúc giữ).
+        const unconfirmed = result.fresh;
+        const confirmBox = form.querySelector("[data-plan-confirm]");
+        const confirmInput = confirmBox.querySelector("input");
+        confirmBox.hidden = unconfirmed === 0;
+        confirmInput.required = unconfirmed > 0;
+        if (unconfirmed === 0) {
+            confirmInput.checked = false;
+        }
+        form.querySelector("[data-plan-confirm-text]").textContent =
+                unconfirmed + " buổi PT chưa mở khung — đã hỏi PT và PT đồng ý dạy.";
+        const needConfirm = unconfirmed > 0 && !confirmInput.checked;
+        // Giữ lịch cần đủ: ít nhất 1 buổi + khách (server ghi data-customer-ready) + đã xác nhận với PT (nếu cần).
+        const customerReady = form.dataset.customerReady === "true";
+        form.querySelector("[data-plan-submit]").disabled = result.sessions === 0 || !customerReady || needConfirm;
+        const stepPlan = document.querySelector("[data-step-plan]");
+        if (stepPlan) {
+            stepPlan.classList.toggle("is-done", result.sessions > 0);
+            stepPlan.classList.toggle("is-current", result.sessions === 0);
+        }
+        // Bong bóng của Pumpy: nói BƯỚC KẾ TIẾP bằng tên phần trên màn ("Lịch tập", "Khách mua gói"),
+        // không nói "bên trái / bên phải" vì iPad / điện thoại xếp 1 cột. innerHTML chỉ ghép số + chữ cố định (không có dữ liệu người dùng).
+        const note = document.querySelector("[data-plan-note]");
+        if (note) {
+            let html;
+            if (result.sessions === 0) {
+                html = "Chưa có buổi nào. Chọn giờ tập cho từng thứ ở phần <b>Lịch tập</b> nhé.";
+            } else if (!customerReady) {
+                html = "Lịch xong rồi! Giờ tìm khách ở ô <b>Khách mua gói</b> là giữ lịch được.";
+            } else if (needConfirm) {
+                html = "Có <b>" + unconfirmed + " buổi</b> PT chưa mở giờ này. Hỏi PT trước, rồi tích <b>Đã xác nhận với PT</b> nhé.";
+            } else {
+                html = "Sẵn sàng! Bấm <b>Giữ lịch</b> để giữ " + result.sessions + " buổi trong 15 phút, rồi thu tiền.";
+                if (result.bad > 0) {
+                    html += " Còn " + result.bad + " ngày chưa xếp được (ô đỏ) — bấm vào ô đó để đổi giờ.";
+                }
+            }
+            note.innerHTML = html;
+        }
+        syncUrl();
+    }
+
+    /** Lưu lịch mẫu (t1..t5) + buổi sửa riêng (sessions) lên URL để F5 / tải lại không mất. */
+    function syncUrl() {
+        window.history.replaceState(null, "", planUrl(pattern, overrides));
+    }
+
+    /** Trong kỳ có bao nhiêu ngày Thứ X ("Tối đa 9 buổi"). */
+    function countWeekday(weekday) {
+        return days.filter(function (day) { return day.weekday === weekday; }).length;
+    }
+
+    /** Sau khi vẽ lại, đưa con trỏ bàn phím về đúng phần tử (theo data-focus-key). */
+    function focusKey(key) {
+        const target = key ? root.querySelector("[data-focus-key='" + key + "']") : null;
+        if (target) {
+            target.focus();
+        }
+    }
+}
+
+
+/* ==================== HÀM PHỤ DÙNG CHUNG (ngoài initPlan, không cần trạng thái) ==================== */
+
+/** 1 nút chọn dạng chip = <label> bọc radio thật (Tab / mũi tên / Space dùng được như radio thường). */
+function chip(name, value, text, meta, checked, disabled, focusKey, weekday, extraClass) {
+    const label = el("label", "plan-chip" + (extraClass ? " " + extraClass : ""));
+    const input = document.createElement("input");
+    input.type = "radio";
+    input.name = name;
+    input.value = value;
+    input.checked = checked;
+    input.disabled = disabled;
+    input.dataset.focusKey = focusKey;
+    if (weekday) {
+        input.dataset.weekday = String(weekday);
+    }
+    label.append(input, el("span", "plan-chip-text", text));
+    if (meta) {
+        label.append(el("small", "plan-chip-meta", meta));
+    }
+    if (disabled) {
+        label.classList.add("is-disabled");
+    }
+    return label;
+}
+
+/** Gom các ngày T2–T6 theo tuần (thứ 2 đầu tuần). */
+function groupWeeks(days) {
+    const weeks = [];
+    for (const day of days) {
+        const monday = addDays(day.date, 1 - day.weekday);
+        let week = weeks[weeks.length - 1];
+        if (!week || week.monday !== monday) {
+            week = { monday: monday, days: [] };
+            weeks.push(week);
+        }
+        week.days.push(day);
+    }
+    return weeks;
+}
+
+/** "2026-10-27" + n ngày → "2026-10-27" (tính theo UTC để không lệch múi giờ). */
+function addDays(isoDate, count) {
+    const date = new Date(isoDate + "T00:00:00Z");
+    date.setUTCDate(date.getUTCDate() + count);
+    return date.toISOString().slice(0, 10);
+}
+
+/** "2026-10-27" → "27/10". */
+function shortDate(isoDate) {
+    return isoDate.slice(8, 10) + "/" + isoDate.slice(5, 7);
+}
+
+/** Tạo thẻ HTML có chữ (textContent → an toàn, không chèn HTML). */
+function el(tag, className, text) {
+    const element = document.createElement(tag);
+    if (className) {
+        element.className = className;
+    }
+    if (text !== undefined) {
+        element.textContent = text;
+    }
+    return element;
+}

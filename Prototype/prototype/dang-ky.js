@@ -4,12 +4,12 @@
 
 /* --- dữ liệu mẫu để tra số điện thoại --- */
 const PHONE_DB = {
-  '0901111111': { type: 'has_account' },
-  '0902222222': { type: 'profile_with_email', email: 'lan.tran@gmail.com' },
-  '0903333333': { type: 'profile_no_email' },
-  '0904444444': { type: 'deleted_profile' },
+  '0905123456': { type: 'has_account' },
+  '0981333444': { type: 'profile_with_email', email: 'lanchi.do@gmail.com' },
+  '0913456789': { type: 'profile_no_email' },
+  '0911000975': { type: 'deleted_profile' },
 };
-const USED_EMAILS = ['minh.pt@supergym.vn', 'ketoan@supergym.vn'];
+const USED_EMAILS = ['an.nguyen@email.com', 'hoa.nt@gms.vn', 'long.h@gms.vn'];
 const OTP_CODE = '123456';
 
 const state = { 
@@ -60,7 +60,7 @@ document.addEventListener('click', e => {
 
 const retryBtn = document.getElementById('retryEmailBtn');
 if (retryBtn) {
-  retryBtn.addEventListener('click', () => goStep('form'));
+  retryBtn.addEventListener('click', () => goStep(state.claim ? 'claim' : 'form'));
 }
 
 /* ---------- Bước 1: form nhập SĐT, tra trùng trước ---------- */
@@ -87,12 +87,14 @@ phoneForm.addEventListener('submit', e => {
     if (info.type === 'has_account') { goStep('blocked-account'); return; }
     if (info.type === 'profile_no_email') { goStep('blocked-no-email'); return; }
     if (info.type === 'profile_with_email') {
+      state.claim = true;
       setProfileEmail(info.email);
-      goStep('blocked-email-mismatch');
+      goStep('claim');
       return;
     }
   }
 
+  state.claim = false;
   goStep('form');
 });
 
@@ -242,9 +244,46 @@ otpForm.addEventListener('submit', e => {
   state.otpAttempts = 0;
   state.otpLockUntil = null;
   
+  if (state.claim) {                       // kích hoạt hồ sơ cũ: đặt mật khẩu rồi mới xong
+    goStep('claim-password');
+    return;
+  }
   setSuccessMode('new');
   goStep('success');
   showToast('success', 'Tạo tài khoản thành công!');
+});
+
+/* ---------- kích hoạt hồ sơ đã có tại quầy ---------- */
+document.getElementById('claimForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const input = document.getElementById('claimEmail');
+  const v = input.value.trim().toLowerCase();
+  const info = PHONE_DB[state.phone];
+  if (!v) return fieldError(input, 'claimEmailErr', 'Email không được để trống.');
+  if (!EMAIL_RE.test(v)) return fieldError(input, 'claimEmailErr', 'Email không hợp lệ.');
+  clearErr('claimEmailErr');
+  if (!info || v !== info.email.toLowerCase()) {
+    setProfileEmail(info ? info.email : '');
+    goStep('blocked-email-mismatch');
+    return;
+  }
+  state.email = v;
+  sendOTP();
+});
+
+document.getElementById('claimPassForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const p1 = document.getElementById('claimPass');
+  const p2 = document.getElementById('claimPass2');
+  let ok = true;
+  if (p1.value.length < 8 || p1.value.length > 64 || !/[a-zA-Z]/.test(p1.value) || !/\d/.test(p1.value)) {
+    fieldError(p1, 'claimPassErr', 'Mật khẩu phải từ 8-64 ký tự, có chữ và số.'); ok = false;
+  } else clearErr('claimPassErr');
+  if (p2.value !== p1.value) { fieldError(p2, 'claimPass2Err', 'Mật khẩu nhập lại không khớp.'); ok = false; } else clearErr('claimPass2Err');
+  if (!ok) return;
+  setSuccessMode('linked');
+  goStep('success');
+  showToast('success', 'Kích hoạt hồ sơ thành công!');
 });
 
 /* gửi lại mã — khóa nút 60 giây, kiểm tra giới hạn */

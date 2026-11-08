@@ -1,0 +1,602 @@
+/* =====================================================================
+   Customer Dashboard (#48, UC-41) — /customer/dashboard
+   Giữ các khối nghiệp vụ; giao diện thời tiết dùng chung với PT Dashboard.
+   Palette đọc từ tokens.css theo class weather-* trên body.
+   ===================================================================== */
+
+/* ===== 4. BỐ CỤC 2 CỘT (.split, .col-main, .col-side) ===== */
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: var(--space-6);
+  align-items: start;
+}
+
+.split > .col-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  min-width: 0;
+}
+
+.split > .col-side {
+  position: sticky;
+  top: calc(var(--space-12) + var(--space-5));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+@media (max-width: 1080px) {
+  .split { grid-template-columns: 1fr; }
+  .split > .col-side { position: static; }
+}
+
+/* ===== 5. STATUS HERO CARD ===== */
+.status-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: var(--color-board);
+  color: var(--color-board-text);
+  padding: var(--space-6);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--space-5);
+  align-items: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.status-hero::after {
+  content: "";
+  position: absolute;
+  width: 420px;
+  height: 420px;
+  border-radius: 50%;
+  top: -230px;
+  right: -90px;
+  background: radial-gradient(circle, rgba(180, 71, 31, 0.5), rgba(180, 71, 31, 0) 64%);
+  pointer-events: none;
+}
+
+.status-hero > * {
+  position: relative;
+  z-index: 1;
+}
+
+.status-hero .section-label {
+  color: var(--color-board-soft);
+}
+
+.status-hero h2 {
+  color: var(--color-board-text);
+  font-size: 1.5rem;
+  margin-top: var(--space-2);
+}
+
+.status-hero .status-meta {
+  display: flex;
+  gap: var(--space-6);
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  flex-wrap: wrap;
+}
+
+.status-hero .status-meta b {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.15rem;
+  color: var(--color-board-text);
+}
+
+.status-hero .status-meta span {
+  font-size: 0.8125rem;
+  text-transform: none;
+  letter-spacing: 0.06em;
+  color: var(--color-board-soft);
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 720px) {
+  .status-hero { grid-template-columns: 1fr; }
+}
+
+/* ===== 6. ALERT BANNER ===== */
+.alert-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  font-size: 0.88rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.alert-banner > span {
+  flex: 1;
+  min-width: 12ch;
+}
+
+.alert-banner .btn {
+  flex-shrink: 0;
+}
+
+.alert-banner > i {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.alert-banner.warn {
+  background: var(--color-warning-tint);
+  border: 1px solid var(--color-warning-border);
+  color: var(--color-warning-ink);
+}
+
+.alert-banner.danger {
+  background: var(--color-danger-tint);
+  border: 1px solid var(--color-danger-border);
+  color: var(--color-danger-ink);
+}
+
+.alert-banner.info {
+  background: var(--color-info-tint);
+  border: 1px solid var(--color-info-border);
+  color: var(--color-info-ink);
+}
+
+.alert-banner.ok {
+  background: var(--color-success-tint);
+  border: 1px solid var(--color-success-border);
+  color: var(--color-success-ink);
+}
+
+@media (max-width: 640px) {
+  .alert-banner .btn { width: 100%; }
+}
+
+/* ===== 7. PANEL & DATA LIST ===== */
+.panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-card);
+}
+
+.panel > * + * {
+  margin-top: var(--space-5);
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.panel-head h2 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-accent-ink);
+}
+
+.data-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  overflow: hidden;
+}
+
+.data-row {
+  padding: var(--space-4) var(--space-5);
+  display: grid;
+  gap: var(--space-3) var(--space-4);
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  transition: background 0.15s;
+}
+
+.data-row + .data-row {
+  border-top: 1px solid var(--color-border);
+}
+
+.data-row:hover {
+  background: var(--color-surface-hover);
+}
+
+.data-row .row-main {
+  min-width: 0;
+}
+
+.data-row .row-title {
+  font-weight: 600;
+  font-size: 0.94rem;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  color: var(--color-accent-ink);
+}
+
+.data-row .row-meta {
+  display: flex;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  font-size: 0.82rem;
+  color: var(--color-text-soft);
+  margin-top: var(--space-2);
+}
+
+.data-row .row-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1-5);
+}
+
+.data-row .row-meta i {
+  width: 14px;
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .data-row { grid-template-columns: 1fr; }
+}
+
+/* ===== 8. SIDE CARD (Cột phụ) ===== */
+.side-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-card);
+}
+
+.side-card h3 {
+  font-size: 0.94rem;
+  font-weight: 700;
+  color: var(--color-accent-ink);
+  margin: 0;
+}
+
+.side-card .section-label {
+  display: block;
+  margin-bottom: var(--space-3);
+}
+
+.side-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  font-size: 0.84rem;
+  padding: var(--space-2) 0;
+}
+
+.side-row + .side-row {
+  border-top: 1px solid var(--color-border);
+}
+
+.side-row span {
+  color: var(--color-text-soft);
+}
+
+.side-row b {
+  color: var(--color-accent-ink);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.section-label {
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0.1em;
+  color: var(--color-text-soft);
+}
+
+/* ===== 9. TIỆN ÍCH & BADGES ===== */
+.kpi-bar {
+  height: 6px;
+  border-radius: var(--radius-sm);
+  background: var(--color-border);
+  overflow: hidden;
+  margin-block: var(--space-3);
+}
+
+.kpi-bar i {
+  display: block;
+  height: 100%;
+  width: var(--progress, 0%);
+  background: var(--color-primary);
+  border-radius: var(--radius-sm);
+}
+
+.kpi-bar.muted i {
+  background: var(--color-text-disabled);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  width: fit-content;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.badge-ok     { background: var(--color-success-tint); color: var(--color-success-ink); border-color: var(--color-success-border); }
+.badge-warn   { background: var(--color-warning-tint); color: var(--color-warning-ink); border-color: var(--color-warning-border); }
+.badge-danger { background: var(--color-danger-tint); color: var(--color-danger-ink); border-color: var(--color-danger-border); }
+.badge-info   { background: var(--color-info-tint); color: var(--color-info-ink); border-color: var(--color-info-border); }
+.badge-muted  { background: var(--color-bg); color: var(--color-text-soft); border-color: var(--color-border); }
+
+.stack-3 { display: flex; flex-direction: column; gap: var(--space-3); }
+.btn-block { display: block; width: 100%; text-align: center; }
+.muted { color: var(--color-text-soft); font-size: 0.85rem; }
+
+/* ===== Dashboard Hội viên trên nền thời tiết (weather-scene.css lo nền + topbar kính) ===== */
+.customer-weather-page .content {
+  max-width: var(--layout-content-width);
+  margin-inline: auto;
+}
+.customer-weather-page .tb-user-text { min-width: 0; }
+.customer-weather-page .tb-user-text b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.customer-weather-page .tb-user-text span {
+  display: inline-block;
+  padding: var(--space-0-5) var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--color-primary-tint);
+  color: var(--color-accent-ink);
+}
+/* Thẻ trạng thái gói: bảng điểm đen, viền trên màu thời tiết */
+.customer-weather-page .status-hero {
+  background: var(--color-board);
+  color: var(--color-board-text);
+  box-shadow: var(--shadow-lift);
+}
+.customer-weather-page .status-hero::after {
+  background: radial-gradient(circle, color-mix(in srgb, var(--color-primary) 55%, transparent), transparent 64%);
+}
+.customer-weather-page .status-hero .section-label,
+.customer-weather-page .status-hero .status-meta span { color: var(--color-board-soft); }
+
+/* Gói còn từ 7 ngày trở xuống: nhắc gia hạn ngay trong khối trạng thái (nền đen) */
+.status-expiring {
+  margin: var(--space-2) 0 0;
+  color: var(--color-warning-border);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* =====================================================================
+   CUSTOMER DASHBOARD — thương hiệu SUNSET × DEEP OCEAN (cùng chế độ tối/sáng với PT, biến --pt-* ở tokens.css).
+   Đại dương làm nền, hoàng hôn cho khối trạng thái gói (điểm nóng duy nhất ngoài dải lời chào).
+   ===================================================================== */
+body.customer-dashboard-page { background: var(--pt-bg); color: var(--pt-text); }
+.customer-dashboard-page .app,
+.customer-dashboard-page .main { background: transparent; }
+.customer-dashboard-page .topbar {
+  background: color-mix(in srgb, var(--pt-bg) 88%, transparent);
+  border-bottom: var(--border-width) solid var(--pt-line);
+  backdrop-filter: blur(var(--space-3));
+  color: var(--pt-text);
+}
+.customer-dashboard-page .top-right { display: flex; align-items: center; gap: var(--space-3); }
+.customer-dashboard-page .tb-user { border: var(--border-width) solid var(--pt-line-strong); background: var(--pt-panel); color: var(--pt-text); }
+
+/* Nút hành động trên topbar (Lịch tập: "Đặt buổi lẻ"): icon + chữ. */
+.tb-action { display: inline-flex; align-items: center; gap: var(--space-1-5); }
+
+/* Điện thoại rất hẹp: thu gọn cụm nút góc phải để tiêu đề trang không bị đẩy mất.
+   Nút hành động chỉ còn icon (tên nút vẫn nằm trong aria-label). */
+@media (max-width: 480px) {
+  .customer-dashboard-page .tb-left { gap: var(--space-2); }
+  .customer-dashboard-page .tb-left .pt-info-trigger { width: var(--control-height-sm); height: var(--control-height-sm); min-width: var(--control-height-sm); min-height: var(--control-height-sm); }
+  .customer-dashboard-page .top-right { gap: var(--space-2); }
+  .customer-dashboard-page .top-right .theme-toggle { margin-right: 0; padding: var(--space-1); }
+  .customer-dashboard-page .tb-user { padding: 0; border-color: transparent; background: transparent; }
+  .tb-action-text { display: none; }
+}
+
+.cust-hero { margin-top: var(--space-6); margin-bottom: 0; }
+
+/* Gói đang dùng: ngày và hành động đọc rõ, điểm nhấn thương hiệu gọn. */
+.customer-dashboard-page .status-hero {
+  border: var(--border-width) solid var(--pt-line-strong);
+  border-radius: var(--radius-md);
+  background: var(--brand-ocean-deep);
+  color: var(--dock-text);
+  box-shadow: none;
+}
+.customer-dashboard-page .status-hero::after { display: none; }
+.customer-dashboard-page .status-hero h2 {
+  margin-top: var(--space-2);
+  font-family: var(--font-body);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-snug);
+  text-transform: none;
+  color: var(--brand-aqua-soft);
+}
+.customer-dashboard-page .status-hero .section-label,
+.customer-dashboard-page .status-hero .status-meta span { color: var(--dock-muted); }
+.customer-dashboard-page .status-hero .status-meta b { color: var(--dock-text); }
+.customer-dashboard-page .status-expiring { color: var(--brand-sunset-hi); }
+
+/* Panel và thẻ bên: nước sâu */
+.customer-dashboard-page .panel,
+.customer-dashboard-page .side-card {
+  border: var(--border-width) solid var(--pt-line);
+  border-radius: var(--radius-sm);
+  background: var(--pt-panel);
+  color: var(--pt-text);
+  box-shadow: var(--pt-shadow);
+}
+.customer-dashboard-page .panel-head h2,
+.customer-dashboard-page .side-card h3 {
+  font-family: var(--font-body);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-normal);
+  text-transform: none;
+  color: var(--pt-text);
+}
+.customer-dashboard-page .section-label { color: var(--pt-lagoon-text); letter-spacing: var(--letter-spacing-normal); }
+.customer-dashboard-page .side-row span,
+.customer-dashboard-page .muted { color: var(--pt-soft); }
+.customer-dashboard-page .data-list { border-color: var(--pt-line); background: transparent; }
+.customer-dashboard-page .data-row { border-color: var(--pt-line); }
+.customer-dashboard-page .data-row:hover { background: var(--pt-panel-2); }
+.customer-dashboard-page .kpi-bar { background: var(--pt-line-strong); }
+.customer-dashboard-page .kpi-bar i { background: linear-gradient(90deg, var(--brand-aqua), var(--brand-ocean)); }
+
+/* Lịch ngang: dashboard.js/selectScheduleDay đổi .is-active và hidden của nội dung từng ngày. */
+.customer-dashboard-page .cust-hero {
+  margin-bottom: var(--space-5);
+}
+.customer-dashboard-page .customer-week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+.customer-dashboard-page .customer-day {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-2);
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  cursor: pointer;
+}
+.customer-dashboard-page .customer-day span {
+  text-transform: uppercase;
+  color: var(--color-text-soft);
+  font-size: var(--font-size-xs);
+}
+.customer-dashboard-page .customer-day b {
+  font-size: var(--font-size-sm);
+}
+.customer-dashboard-page .customer-day.is-active {
+  border-color: var(--color-border);
+  border-bottom: var(--border-width-thick) solid var(--color-primary);
+  background: var(--color-surface);
+}
+.customer-dashboard-page .customer-day:focus-visible {
+  outline: var(--focus-outline-width) solid var(--color-primary);
+  outline-offset: var(--focus-outline-offset);
+}
+.customer-dashboard-page .customer-day-sessions[hidden] {
+  display: none;
+}
+.customer-dashboard-page .customer-schedule-empty {
+  padding: var(--space-4);
+  text-align: center;
+  color: var(--color-text-soft);
+  border: var(--border-width) dashed var(--color-border);
+  border-radius: var(--radius-sm);
+}
+.customer-dashboard-page .customer-trainer {
+  padding-block: var(--space-4);
+  border-bottom: var(--border-width) solid var(--color-border);
+}
+.customer-dashboard-page .customer-trainer:last-child {
+  border-bottom: none;
+}
+.customer-dashboard-page .customer-trainer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+@media (max-width: 768px) {
+  .customer-dashboard-page .customer-week {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* Panel gói: thẻ gọn, không lặp lại các hàng tổng/đã dùng và thanh tiến độ. */
+.customer-dashboard-page .customer-package-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.customer-dashboard-page .customer-package-card {
+  min-width: 0;
+  padding: var(--space-4);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+.customer-dashboard-page .customer-package-card h3 {
+  margin: var(--space-2) 0;
+  font-size: var(--font-size-base);
+}
+.customer-dashboard-page .customer-package-card p,
+.customer-dashboard-page .customer-package-card small,
+.customer-dashboard-page .customer-package-start,
+.customer-dashboard-page .customer-trainer-package {
+  color: var(--color-text-soft);
+  font-size: var(--font-size-sm);
+}
+.customer-dashboard-page .customer-package-balance {
+  display: block;
+  margin-top: var(--space-3);
+  font-size: var(--font-size-xl);
+}
+.customer-dashboard-page .customer-trainer-package {
+  margin-top: var(--space-2);
+}
+html body.dock.customer-dashboard-page:not(.no-arena) .content .customer-trainer-actions .btn.customer-zalo {
+  background: var(--brand-lagoon);
+  border-color: var(--brand-lagoon);
+  color: var(--dock-text);
+}
+html body.dock.customer-dashboard-page:not(.no-arena) .content .customer-trainer-actions .btn.customer-zalo:hover {
+  background: var(--brand-ocean);
+}
+.customer-dashboard-page .customer-schedule-empty .empty-state {
+  margin: 0;
+  padding: var(--space-4);
+  background: transparent;
+  border: none;
+}
+
+.customer-dashboard-page .customer-day.is-active span {
+  color: var(--color-primary);
+}
+@media (max-width: 768px) {
+  .customer-dashboard-page .customer-package-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Gỡ khoảng cách mặc định .panel > * + * ở nút dưới lưới gói. */
+.customer-dashboard-page .customer-packages > .btn {
+  margin-top: var(--space-2);
+  align-self: start;
+  justify-self: start;
+}
+.customer-dashboard-page .customer-package-grid {
+  margin-bottom: 0;
+}

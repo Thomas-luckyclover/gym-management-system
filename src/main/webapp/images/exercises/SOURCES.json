@@ -1,0 +1,6 @@
+{
+  "origin": "free-exercise-db (github.com/yuhonas/free-exercise-db), phát hành public domain (Unlicense) — dùng tự do, không cần ghi nguồn; vẫn ghi ở cuối trang Thư viện bài tập cho minh bạch.",
+  "use": "Kho ảnh minh họa cho bài tập wger KHÔNG có ảnh (service/ExerciseImagePool). Khớp tên động tác trước, rồi lấy theo nhóm cơ, không trùng ảnh trên 1 trang.",
+  "library": "library/<nhóm>/<tên-bài>.jpg — 194 ảnh: chest 26, back 26, shoulders 26, arms 26, abs 26, legs 26, calves 12, cardio 26. Danh sách + tên gốc từng ảnh: src/main/resources/exercise-images.json.",
+  "selection": "31/10/2026: chọn tay từ ảnh 0.jpg của các bài (bỏ bài giãn cơ), bỏ ảnh dọc bị bóp hẹp, ảnh quá tối, ảnh ngoài trời / chất lượng kém; thu nhỏ còn 640px, JPEG 82. Thay 8 ảnh chung theo nhóm cơ trước đây (bị lặp nhiều)."
+}

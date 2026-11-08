@@ -1,0 +1,115 @@
+<%@ page pageEncoding="UTF-8" %>
+<a class="skip-link" href="#main-content">Bỏ qua menu, đến nội dung</a>
+<div class="dockwrap" id="dock">
+
+    <aside class="sidebar">
+
+        <div class="brand">
+            <span class="brand-mark"><img src="${pageContext.request.contextPath}/images/brand/super-gym-mark.svg?v=20261014d" alt="" width="44" height="44"></span>
+            <div class="brand-text">
+              <div class="brand-name">
+                  Super Gym
+              </div>
+  
+              <div class="brand-role">
+                  Quản trị hệ thống
+              </div>
+            </div>
+        </div>
+
+        <nav class="nav" aria-label="Điều hướng chính">
+
+            <div class="nav-group">
+                Tài khoản &amp; bảo mật
+            </div>
+
+            <a
+                href="${pageContext.request.contextPath}/admin/accounts"
+                class="nav-link"
+            >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="9" cy="8" r="3.5"></circle>
+                    <path d="M2.5 20c.6-3.6 3.3-5.5 6.5-5.5s5.9 1.9 6.5 5.5"></path>
+                    <path d="M16 4.6a3.5 3.5 0 0 1 0 6.8"></path>
+                    <path d="M18.5 14.8c1.6.7 2.7 2.4 3 5.2"></path>
+                </svg>
+
+                <span>Tài khoản hệ thống</span>
+            </a>
+
+            <a
+                href="${pageContext.request.contextPath}/admin/audit"
+                class="nav-link"
+            >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M6 3h12v18H6z"></path>
+                    <path d="M9 7h6"></path>
+                    <path d="M9 11h6"></path>
+                    <path d="M9 15h4"></path>
+                </svg>
+
+                <span>Audit Log</span>
+            </a>
+
+            <div class="nav-group">
+                Theo dõi
+            </div>
+
+            <a
+                href="${pageContext.request.contextPath}/admin/dashboard"
+                class="nav-link ${activeSidebar eq 'dashboard' ? 'active' : ''}"
+                aria-current="${activeSidebar eq 'dashboard' ? 'page' : 'false'}"
+            >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M4 20V10"></path>
+                    <path d="M10 20V4"></path>
+                    <path d="M16 20v-7"></path>
+                    <path d="M22 20H2"></path>
+                </svg>
+
+                <span>Báo cáo</span>
+            </a>
+            <a
+                href="${pageContext.request.contextPath}/account"
+                class="nav-link ${activeSidebar eq 'account' ? 'active' : ''}"
+            >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3V2.8h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9A1.7 1.7 0 0 0 21 10h.2v4H21a1.7 1.7 0 0 0-1.6 1z"></path>
+                </svg>
+
+                <span>Cài đặt tài khoản</span>
+            </a>
+
+        </nav>
+
+        <div class="side-foot">
+
+            <%-- CBR-113: tài khoản nhiều vai trò → đổi vai trò không cần đăng nhập lại --%>
+            <c:if test="${not empty sessionScope.availableRoles and sessionScope.availableRoles.contains(',')}">
+              <a href="${pageContext.request.contextPath}/select-role" class="logout"><i class="fa-solid fa-repeat" aria-hidden="true"></i> Đổi vai trò</a>
+            </c:if>
+            <a
+                href="${pageContext.request.contextPath}/logout"
+                class="logout"
+            >
+                Đăng xuất
+            </a>
+
+        </div>
+
+    </aside>
+  <button class="dock-backdrop" type="button" tabindex="-1" aria-hidden="true"></button>
+
+    <button
+        id="dockHandle"
+        class="dock-handle"
+        type="button"
+        aria-label="Mở menu điều hướng"
+        aria-expanded="false"
+        aria-controls="dock"
+    >
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg>
+    </button>
+
+</div>

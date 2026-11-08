@@ -1,0 +1,349 @@
+@charset "UTF-8";
+/* =====================================================================
+   KHỐI CHÀO + THỜI TIẾT — dùng chung cho PT Dashboard và Customer Dashboard.
+   Markup: <section class="pt-board__hero"> bọc common/dashboard-weather.jspf + <dl class="pt-pulse">.
+   Tải SAU dashboard-weather.css và dashboard-comic.css (comic lo màu giấy/mực, file này lo BỐ CỤC).
+
+   4 phần tử con được đặt vào 4 ô tên:
+     greet  = lời chào "CHÀO, ĐINH CÔNG SƠN"
+     pulse  = 3 con số nhanh (buổi hôm nay, buổi đầu ngày, cần chú ý)
+     gym    = tranh phòng tập chuyển động
+     card   = thẻ thời tiết
+
+   Bố cục theo bề ngang (mobile-first: viết cho điện thoại trước, màn to hơn mới ghi đè):
+     < 768px    1 cột:   greet → pulse (3 cột số) → gym → card (thẻ thời tiết thấp 2 hàng)
+     768–1279   2 cột:   [greet / pulse / gym] [card]
+     ≥ 1280     3 cột:   [greet + pulse dọc] [gym] [card]  → khối thấp hẳn, lịch dạy lên cao hơn
+   ===================================================================== */
+
+/* ---------- 1. Khung + lưới ---------- */
+.pt-board__hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "greet" "pulse" "gym" "card";
+  gap: var(--space-3) var(--space-5);
+  align-items: start;
+  padding: var(--space-4);
+  /* Thẻ trắng như mọi khối khác (24/10): chữ mực, tên người dùng màu cobalt */
+  border: var(--border-width) solid var(--zone-card-line);
+  border-radius: 18px;
+  background: var(--zone-card);
+  color: var(--zone-ink);
+  box-shadow: var(--ink-shadow);
+}
+
+/* Hai lớp bọc trong fragment không tạo hộp riêng → con của chúng thành ô lưới trực tiếp. */
+.pt-board__hero .wx-hero,
+.pt-board__hero .wx-greet { display: contents; }
+
+.pt-board__hero .wx-greet h2 { grid-area: greet; }
+.pt-board__hero .pt-pulse { grid-area: pulse; }
+.pt-board__hero .wx-gym-panel { grid-area: gym; }
+.pt-board__hero .wx-card { grid-area: card; }
+
+@media (min-width: 768px) {
+  .pt-board__hero {
+    grid-template-columns: minmax(0, 1.5fr) minmax(16rem, 1fr);
+    grid-template-areas:
+      "greet card"
+      "pulse card"
+      "gym   card";
+    padding: var(--space-5);
+  }
+}
+
+/* 4 hàng: 2 hàng giữa cho lời chào + con số, 2 hàng 1fr hai đầu đẩy cụm này vào giữa theo chiều dọc. */
+@media (min-width: 1280px) {
+  .pt-board__hero {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.6fr) minmax(17rem, 1fr);
+    grid-template-areas:
+      ".     gym card"
+      "greet gym card"
+      "pulse gym card"
+      ".     gym card";
+    grid-template-rows: 1fr auto auto 1fr;
+    align-items: center;
+  }
+}
+
+
+/* ---------- 2. Lời chào ---------- */
+.pt-board__hero .wx-greet h2 {
+  min-width: 0;
+  margin: 0;
+  color: var(--pt-text);
+  font-family: var(--font-brand-display);
+  font-size: var(--font-size-4xl);
+  font-style: normal;
+  font-weight: var(--font-weight-bold);
+  line-height: 1.1;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+.pt-board__hero .wx-name { color: var(--pt-lagoon-text); }
+
+
+/* ---------- 3. Ba con số nhanh ---------- */
+/* Điện thoại: 3 cột đều, chữ nhỏ ở trên, số ở dưới. */
+.pt-pulse {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+}
+/* space-between: nhãn dài xuống 2 dòng thì số vẫn thẳng hàng với 2 ô bên cạnh. */
+.pt-pulse div { display: grid; align-content: space-between; gap: var(--space-0-5); min-width: 0; }
+.pt-pulse dt { color: var(--pt-muted); font-size: var(--font-size-xs); line-height: var(--line-height-normal); }
+.pt-pulse dd { margin: 0; color: var(--pt-text); font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold); font-variant-numeric: tabular-nums; }
+
+/* Tablet: 1 hàng ngang "Buổi hôm nay 0 · Buổi đầu ngày 18:00 · Cần chú ý 1". */
+@media (min-width: 768px) {
+  .pt-pulse { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-5); }
+  .pt-pulse div { display: flex; align-items: baseline; gap: var(--space-2); }
+  .pt-pulse dt { font-size: var(--font-size-sm); }
+}
+
+/* Màn rộng (khối 3 cột): xếp dọc dưới lời chào. */
+@media (min-width: 1280px) {
+  .pt-pulse { flex-direction: column; gap: var(--space-1); }
+}
+
+
+/* ---------- 4. Tranh phòng tập ---------- */
+/* Khung cùng tỉ lệ với tranh (2400×837) → luôn thấy trọn tranh, không cắt biển SUPER GYM. */
+.pt-board__hero .wx-gym-panel { position: relative; min-width: 0; }
+.pt-board__hero .wx-gym {
+  height: auto;
+  min-height: 0;
+  aspect-ratio: 2400 / 837;
+  margin: 0;
+  border: var(--border-width) solid var(--pt-line);
+  border-radius: var(--radius-xs);
+}
+
+/* Nút tạm dừng hiệu ứng (common.js bật/tắt class dashboard-motion-paused trên body).
+   dashboard-comic.css đặt nút vào giữa tranh và chỉ hiện khi rê chuột. */
+.dashboard-motion-toggle {
+  position: absolute;
+  z-index: var(--z-base);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  border: var(--border-width) solid var(--dock-line);
+  background: var(--dock-bg);
+  color: var(--dock-text);
+  font: inherit;
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+}
+.dashboard-motion-toggle svg { width: var(--icon-size-md); height: var(--icon-size-md); fill: none; stroke: currentColor; stroke-width: 2; }
+.dashboard-motion-toggle[aria-pressed="true"] svg { fill: currentColor; }
+.dashboard-motion-paused .wx-icon,
+.dashboard-motion-paused .wx-icon *,
+.dashboard-motion-paused .wx-gym *,
+.dashboard-motion-paused .wx-gym *::before,
+.dashboard-motion-paused .wx-gym *::after { animation-play-state: paused; }
+
+
+/* ---------- 5. Thẻ thời tiết ---------- */
+/* Điện thoại: thẻ thấp 2 hàng
+     [icon] [HÀ NỘI · Mưa vừa · cập nhật lúc…]
+     [26°]  [Chi tiết thời tiết ▸]                                   */
+.pt-board__hero .wx-card {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  grid-template-areas:
+    "icon place place"
+    "temp temp  more";
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  min-width: 0;
+  min-height: 0;          /* bỏ chiều cao cố định 21rem của dashboard-comic.css */
+  padding: var(--space-4);
+  border: var(--border-width) solid color-mix(in srgb, var(--brand-aqua-soft) 18%, transparent);
+  border-radius: var(--radius-xs);
+  overflow: hidden;
+}
+.pt-board__hero .wx-card__top { display: contents; }
+.pt-board__hero .wx-card__top > div { grid-area: place; min-width: 0; }
+.pt-board__hero .wx-card__top > * { position: relative; z-index: 1; }   /* nằm trên lớp tranh nền */
+
+.pt-board__hero .wx-icon { grid-area: icon; width: 40px; height: 40px; border: 0; transform: none; box-shadow: none; }
+
+.pt-board__hero .wx-card__place { margin: 0; white-space: normal; overflow-wrap: anywhere; }
+.pt-board__hero .wx-card__condition { margin: 2px 0 0; font-weight: var(--font-weight-semibold); }
+.pt-board__hero .wx-card__temp {
+  grid-area: temp;
+  font-size: var(--font-size-display);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1;
+  letter-spacing: -0.01em;
+  transform: none;
+}
+
+.pt-board__hero .wx-card__more { grid-area: more; min-width: 0; }
+.pt-board__hero .wx-card__more > summary {
+  width: fit-content;
+  min-height: var(--control-height-md);
+  align-content: center;
+}
+.pt-board__hero .wx-card__details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  transform: none;
+}
+.pt-board__hero .wx-card__details div { display: flex; align-items: baseline; gap: var(--space-1); }
+.pt-board__hero .wx-card__details dt,
+.pt-board__hero .wx-card__details dd { margin: 0; font-size: var(--font-size-xs); }
+.pt-board__hero .wx-card__details dd { font-weight: var(--font-weight-medium); }
+.pt-board__hero .wx-card__more[open] .wx-card__details { margin-bottom: var(--space-3); }
+.pt-board__hero .wx-card__advice {
+  margin: 0;
+  padding: var(--space-3) 0 0;
+  border: 0;
+  border-top: var(--border-width) solid var(--comic-ink);   /* chỉ 1 vạch mực phía trên, không đóng khung */
+  border-radius: 0;
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-normal);
+}
+.pt-board__hero .wx-card--offline .wx-card__advice { grid-area: more; }
+
+/* Từ tablet: thẻ cao bằng cả cột trái, nhiệt độ là con số lớn duy nhất. */
+@media (min-width: 768px) {
+  .pt-board__hero .wx-card {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      "icon place"
+      "temp temp"
+      "more more";
+    grid-template-rows: auto 1fr auto;
+    align-self: stretch;
+    padding: var(--space-5);
+  }
+  /* Số nhiệt độ là "con số lớn" duy nhất của thẻ comic — giữ cỡ cũ của thiết kế thời tiết. */
+  .pt-board__hero .wx-card__temp { align-self: center; font-size: clamp(3.5rem, 5vw, 4.75rem); }
+  .pt-board__hero .wx-card__more { align-self: end; }
+}
+
+/* ---------- 6. ARENA (24/10 tối) — khối chào cho cả PT Dashboard và Trang cá nhân khách ----------
+   Khối tối có đèn sân khấu, vân nhám thanh đòn 8px trên đỉnh (điểm nhấn duy nhất của khu làm việc),
+   "CHÀO," nhỏ màu thép + tên to đậm có chấm vuông ember, 3 con số thành 3 ô ghép.
+   Tranh comic phòng tập, thẻ thời tiết và mọi animation giữ nguyên. */
+/* --- Khối tối có đèn. Đổi biến chữ/viền trong khối → phần tử con tự đổi theo. --- */
+html body.dock:not(.no-arena) .pt-board__hero {
+  --pt-text: var(--arena-on-dark);
+  --pt-soft: var(--arena-steel);
+  --pt-muted: var(--arena-steel);
+  --pt-line: var(--arena-line-dark);
+  --pt-line-strong: var(--arena-line-dark-strong);
+  --pt-panel: var(--arena-900);
+  --pt-panel-2: var(--arena-800);
+  --pt-lagoon-text: var(--arena-focus);
+  --arena-focus-ring: var(--arena-focus);
+  --color-text: var(--arena-on-dark);
+  --color-text-soft: var(--arena-steel);
+  --color-surface-muted: var(--arena-800);
+  border: 0;
+  border-radius: var(--arena-radius-block);
+  background:
+    radial-gradient(120% 90% at 0% 0%, var(--arena-glow), transparent 55%),
+    var(--arena-900);
+  color: var(--arena-on-dark);
+  box-shadow: var(--arena-shadow-dark);
+}
+html.gms-lite body.dock:not(.no-arena) .pt-board__hero { background: var(--arena-900); }
+
+/* --- Khối chào: vân nhám thanh đòn 8px trên đỉnh (2 lớp sọc chéo, không ảnh) --- */
+html body.dock:not(.no-arena) .pt-board__hero {
+  overflow: hidden;
+  padding: calc(var(--arena-pad) + var(--arena-knurl-height)) var(--arena-pad) var(--arena-pad);
+}
+html body.dock:not(.no-arena) .pt-board__hero::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: var(--arena-knurl-height);
+  background:
+    repeating-linear-gradient(45deg, var(--arena-knurl) 0 1.5px, transparent 1.5px 5px),
+    repeating-linear-gradient(-45deg, var(--arena-knurl) 0 1.5px, transparent 1.5px 5px),
+    var(--arena-knurl-base);
+  pointer-events: none;
+}
+
+/* Lời chào 2 dòng, không sửa JSP: "CHÀO," là chữ của h2 (nhỏ, thép), tên là <span class="wx-name"> (to, trắng) */
+html body.dock:not(.no-arena) .pt-board__hero .wx-greet h2 {
+  color: var(--arena-steel);
+  font-family: var(--font-brand-mono);
+  font-size: var(--font-size-sm);
+  font-style: normal;
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.2;
+  letter-spacing: 0.14em;
+}
+html body.dock:not(.no-arena) .pt-board__hero .wx-name {
+  display: block;
+  margin-top: var(--space-2);
+  color: var(--arena-on-dark);
+  font-family: var(--font-brand-display);
+  font-size: clamp(2.25rem, 3.3vw, 3.1rem);
+  font-weight: var(--font-weight-extrabold);
+  line-height: 0.98;
+  letter-spacing: -0.025em;
+}
+html body.dock:not(.no-arena) .pt-board__hero .wx-name::after {
+  content: "";
+  display: inline-block;
+  width: 0.2em;
+  height: 0.2em;
+  margin-left: 0.08em;
+  background: var(--arena-ember);
+}
+
+/* Ba con số: 3 ô ghép, số to ở trên, nhãn thép ở dưới (ô ember "Cần chú ý" chỉ ở PT: pt/dashboard.css) */
+html body.dock:not(.no-arena) .pt-board__hero .pt-pulse {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--arena-gap-tile);
+}
+html body.dock:not(.no-arena) .pt-board__hero .pt-pulse div {
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-end;
+  gap: var(--space-0-5);
+  padding: var(--space-2-5) var(--space-3);
+  border: var(--border-width) solid var(--arena-line-dark);
+  border-radius: var(--arena-radius-tile);
+  background: var(--arena-tile-dark);
+}
+html body.dock:not(.no-arena) .pt-board__hero .pt-pulse dd {
+  color: var(--arena-on-dark);
+  font-family: var(--font-brand-display);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-extrabold);
+  line-height: 1.1;
+}
+html body.dock:not(.no-arena) .pt-board__hero .pt-pulse dt { color: var(--arena-steel); font-size: var(--font-size-xs); }
+
+@media (min-width: 1280px) {
+  html body.dock:not(.no-arena) .pt-board__hero {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.5fr) minmax(17rem, 1fr);
+  }
+}
+
+/* Tranh phòng tập + thẻ thời tiết giữ tranh comic, chỉ đổi góc */
+html body.dock:not(.no-arena) .pt-board__hero :is(.wx-gym, .wx-card) { border-radius: var(--arena-radius-tile); }
+
+@media (max-width: 767px) {
+  html body.dock:not(.no-arena) .pt-board__hero { padding: calc(var(--arena-pad-sm) + var(--arena-knurl-height)) var(--arena-pad-sm) var(--arena-pad-sm); }
+  html body.dock:not(.no-arena) .pt-board__hero .wx-name { font-size: clamp(1.9rem, 9vw, 2.4rem); }
+  html body.dock:not(.no-arena) .pt-board__hero .pt-pulse div { padding: var(--space-2) var(--space-2-5); }
+  html body.dock:not(.no-arena) .pt-board__hero .pt-pulse dt { font-size: var(--font-size-xs); line-height: 1.25; }
+}

@@ -1,0 +1,861 @@
+/* Danh sách BF-05: mỗi thành phần có một khối style, không ghi đè từ CSS màn khác. */
+
+/* Hai đơn mở ngay dưới hàng cha; bảng giữ nguyên chiều rộng, không có khung bên cạnh. */
+.leave-list-page .leave-expanded-row[hidden] {
+  display: none;
+}
+
+.leave-list-page .leave-row-selected {
+  background: var(--color-warning-tint);
+  box-shadow: inset var(--space-1) 0 var(--color-primary);
+}
+
+.leave-list-page .leave-group-note {
+  color: var(--color-text-soft);
+  font-size: var(--font-size-xs);
+}
+
+.leave-list-page .leave-table .leave-expanded-row > td {
+  padding: var(--space-0) var(--space-4) var(--space-4);
+  background: var(--color-surface);
+}
+
+.leave-list-page .leave-group-detail {
+  border-left: var(--space-1) solid var(--color-primary);
+  padding-left: var(--space-4);
+}
+
+.leave-list-page .leave-group-reason {
+  padding: var(--space-3) var(--space-0);
+}
+
+.leave-list-page .leave-group-reason p {
+  margin: var(--space-1) var(--space-0);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.leave-list-page .leave-detail-part {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 1.4fr) auto;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-0);
+  border-top: var(--border-width) solid var(--color-border);
+  overflow-wrap: anywhere;
+}
+
+.leave-list-page .leave-detail-part h3 {
+  margin: var(--space-0) var(--space-0) var(--space-2);
+  font-size: var(--font-size-sm);
+}
+
+.leave-list-page .leave-detail-part small,
+.leave-list-page .leave-group-reason small {
+  display: block;
+  color: var(--color-text-soft);
+  font-size: var(--font-size-xs);
+}
+
+.leave-list-page .leave-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.leave-list-page .leave-detail-check {
+  font-size: var(--font-size-xs);
+}
+
+.leave-list-page .leave-detail-check.pass {
+  color: var(--color-success-ink);
+}
+
+.leave-list-page .leave-detail-check.fail,
+.leave-list-page .leave-detail-error {
+  color: var(--color-danger);
+}
+
+.leave-list-page .leave-detail-error {
+  padding: var(--space-4);
+}
+
+.leave-list-page .leave-detail-result {
+  grid-column: span 2;
+}
+
+.leave-list-page .leave-date-cell > .badge {
+  align-self: flex-start;
+  max-width: 100%;
+  white-space: normal;
+}
+
+@media (max-width: 900px) {
+  .leave-list-page .leave-detail-part {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .leave-list-page .leave-detail-actions {
+    justify-content: flex-start;
+  }
+}
+
+/* Chỉ tên nhân viên là điểm mở tooltip; tên vẫn bấm được để vào chi tiết. */
+.leave-list-page .leave-reason-trigger {
+  display: inline-block;
+  max-width: 100%;
+  color: inherit;
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: var(--color-text-soft);
+  text-underline-offset: var(--space-1);
+}
+
+/* JS đặt vị trí dưới tên; fixed giúp tooltip không bị khung cuộn của bảng cắt mất. */
+.leave-list-page .leave-reason-tooltip {
+  position: fixed;
+  z-index: var(--z-dropdown);
+  width: calc(var(--space-12) * 3 + var(--space-7));
+  max-width: calc(100vw - var(--space-4));
+  padding: var(--space-3);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-pop);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+}
+
+.leave-list-page .leave-reason-tooltip::before {
+  content: "";
+  position: absolute;
+  left: var(--space-4);
+  top: calc(-1 * var(--space-1) - var(--border-width));
+  width: var(--space-2);
+  height: var(--space-2);
+  background: var(--color-surface);
+  border-top: var(--border-width) solid var(--color-border-strong);
+  border-left: var(--border-width) solid var(--color-border-strong);
+  transform: rotate(45deg);
+}
+
+.leave-list-page .leave-reason-tooltip[data-placement="above"]::before {
+  top: auto;
+  bottom: calc(-1 * var(--space-1) - var(--border-width));
+  transform: rotate(225deg);
+}
+
+.leave-list-page .leave-reason-title {
+  display: block;
+  margin-bottom: var(--space-1);
+  color: var(--color-text-soft);
+  font-size: var(--font-size-xs);
+}
+
+.leave-list-page .leave-reason-tooltip p {
+  margin: var(--space-0);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+.leave-list-page .leave-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  flex-direction: column;
+}
+
+.leave-list-page .leave-tabs-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+}
+
+.leave-list-page .leave-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-soft);
+  text-decoration: none;
+  background: transparent;
+  border: var(--border-width) solid transparent;
+  transition: all var(--duration-base);
+  font-family: var(--font-body);
+}
+
+.leave-list-page .leave-tab-btn:hover {
+  color: var(--color-text);
+  background: var(--color-bg);
+}
+
+.leave-list-page .leave-tab-btn.active {
+  color: var(--color-primary-ink);
+  background: var(--color-primary-tint);
+  border-color: var(--color-primary-border);
+  font-weight: var(--font-weight-semibold);
+}
+
+.leave-list-page .leave-tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--space-5);
+  height: var(--space-5);
+  padding: var(--space-0) var(--space-1);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  background: var(--color-surface-muted);
+  color: inherit;
+}
+
+.leave-list-page .leave-tab-btn.active .leave-tab-count {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.leave-list-page .leave-filter-nav {
+  display: grid;
+  align-items: end;
+  gap: var(--space-3);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) auto auto auto;
+}
+
+.leave-list-page .leave-search-field {
+  position: relative;
+  min-width: 0;
+}
+
+.leave-list-page .leave-search-field i {
+  position: absolute;
+  left: var(--space-3);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-soft);
+  pointer-events: none;
+}
+
+/* Khoảng ngày gửi luôn trống khi chưa chọn để đơn cũ không bị ẩn. */
+.leave-list-page .leave-date-filters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.leave-list-page .leave-date-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-soft);
+}
+
+.leave-list-page .leave-date-field input {
+  width: 100%;
+}
+
+/* details giữ hai bộ lọc phụ trong cùng form GET, không cần JavaScript. */
+.leave-list-page .leave-more-filters {
+  position: relative;
+}
+
+.leave-list-page .leave-more-filters summary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--control-height-md);
+  white-space: nowrap;
+  cursor: pointer;
+  list-style: none;
+}
+
+.leave-list-page .leave-more-filters summary::-webkit-details-marker {
+  display: none;
+}
+
+.leave-list-page .leave-more-filters summary:focus-visible {
+  outline: var(--border-width-thick) solid var(--color-primary);
+  outline-offset: var(--space-1);
+}
+
+.leave-list-page .leave-filter-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--space-5);
+  height: var(--space-5);
+  padding: var(--space-0) var(--space-1);
+  border-radius: var(--radius-pill);
+  background: var(--color-primary-tint);
+  color: var(--color-primary-ink);
+}
+
+.leave-list-page .leave-filter-popover {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + var(--space-2));
+  right: var(--space-0);
+  display: grid;
+  gap: var(--space-2);
+  width: calc(var(--space-12) * 3);
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-pop);
+  color: var(--color-text-soft);
+  font-size: var(--font-size-sm);
+}
+
+.leave-list-page .leave-filter-popover label:not(:first-child) {
+  margin-top: var(--space-1);
+}
+
+.leave-list-page .leave-panel {
+  padding: var(--space-0);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  margin-bottom: var(--space-6);
+  overflow: hidden;
+}
+
+.leave-list-page .leave-table-wrap {
+  overflow-x: auto;
+}
+
+.leave-list-page .leave-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+  min-width: calc(var(--space-12) * 10);
+  table-layout: fixed;
+  font-family: var(--font-body);
+}
+
+.leave-list-page .leave-table thead tr {
+  border-bottom: var(--border-width) solid var(--color-border);
+}
+
+.leave-list-page .leave-table th {
+  padding: var(--space-3);
+  text-align: left;
+  color: var(--color-text-soft);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+  background: var(--color-surface);
+  font-family: var(--font-body);
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--letter-spacing-normal);
+  text-transform: none;
+}
+
+.leave-list-page .leave-table td {
+  padding: var(--space-4) var(--space-3);
+  border-bottom: var(--border-width) solid var(--color-border);
+  vertical-align: middle;
+  line-height: var(--line-height-snug);
+  overflow-wrap: break-word;
+}
+
+.leave-list-page .leave-table td b {
+  display: block;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+}
+
+.leave-list-page .leave-table td small {
+  display: block;
+  color: var(--color-text-soft);
+  font-size: var(--font-size-xs);
+  margin-top: var(--space-1);
+}
+
+.leave-list-page .leave-table tbody tr:hover {
+  background: var(--color-bg);
+}
+
+.leave-list-page .leave-employee-cell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.leave-list-page .leave-employee-avatar {
+  width: var(--avatar-size-sm);
+  height: var(--avatar-size-sm);
+  border-radius: var(--radius-circle);
+  object-fit: cover;
+  border: var(--border-width) solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.leave-list-page .leave-employee-initial {
+  width: var(--avatar-size-sm);
+  height: var(--avatar-size-sm);
+  border-radius: var(--radius-circle);
+  background: var(--color-primary-tint);
+  color: var(--color-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-xs);
+  border: var(--border-width) solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.leave-list-page .leave-employee-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* Checkbox đầu bảng thẳng với checkbox từng đơn; tên cột thẳng với avatar. */
+.leave-list-page .leave-employee-heading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.leave-list-page .leave-row-near {
+  background: var(--color-surface);
+}
+
+.leave-list-page .leave-row-near:hover {
+  background: var(--color-bg);
+}
+
+.leave-list-page .leave-empty {
+  padding: var(--space-8);
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.leave-list-page .leave-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  margin-top: var(--space-0);
+  color: var(--color-text-soft);
+  font-size: var(--font-size-sm);
+  padding: var(--space-4);
+}
+
+.leave-list-page .leave-filter-nav .filter-select,
+.leave-list-page .leave-filter-nav .filter-input-search {
+  width: 100%;
+  min-width: 0;
+  min-height: var(--control-height-md);
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-button);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+}
+
+.leave-list-page .leave-search-field .filter-input-search {
+  padding-left: var(--space-8);
+}
+
+.leave-list-page .leave-list-caption {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  color: var(--color-text-soft);
+  font-size: var(--font-size-xs);
+}
+
+/* Tên cột quyết định độ rộng; ẩn cột không dùng không làm lệch các cột còn lại. */
+.leave-list-page .leave-col-date {
+  width: 32%;
+}
+.leave-list-page .leave-col-type {
+  width: 16%;
+}
+.leave-list-page .leave-col-status {
+  width: 16%;
+}
+.leave-list-page .leave-col-check {
+  width: 14%;
+}
+.leave-list-page .leave-col-actions {
+  width: 22%;
+}
+
+.leave-list-page .leave-request-table .leave-col-employee {
+  width: 28%;
+}
+.leave-list-page .leave-request-table .leave-col-date {
+  width: 25%;
+}
+.leave-list-page .leave-request-table .leave-col-type {
+  width: 18%;
+}
+.leave-list-page .leave-request-table .leave-col-check {
+  width: 11%;
+}
+.leave-list-page .leave-request-table .leave-col-actions {
+  width: 18%;
+}
+
+/* Đơn đã xử lý không có cột kiểm tra/thao tác rỗng. */
+.leave-list-page .leave-decided-table {
+  min-width: 0;
+}
+.leave-list-page .leave-decided-table .leave-col-date {
+  width: 50%;
+}
+.leave-list-page .leave-decided-table .leave-col-type {
+  width: 25%;
+}
+.leave-list-page .leave-decided-table .leave-col-status {
+  width: 25%;
+}
+.leave-list-page .leave-request-table.leave-decided-table .leave-col-employee {
+  width: 40%;
+}
+.leave-list-page .leave-request-table.leave-decided-table .leave-col-date {
+  width: 35%;
+}
+
+/* Ngày nghỉ, thời lượng và nhãn sắp nghỉ cùng một nhóm; không trộn với trạng thái đơn. */
+.leave-list-page .leave-date-cell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+/* Hai loại nghỉ cùng đợt: nền nhãn ôm đủ chữ, màn hẹp thì xuống dòng trong ô. */
+.leave-list-page .leave-group-types {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.leave-list-page .leave-group-types .badge {
+  width: fit-content;
+  max-width: 100%;
+  box-sizing: border-box;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.leave-list-page .leave-group-types .badge::before {
+  flex-shrink: 0;
+}
+
+.leave-list-page .leave-date-cell small,
+.leave-list-page .leave-date-cell .leave-near-label {
+  margin-top: var(--space-0);
+}
+
+.leave-date-range {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+  font-weight: var(--font-weight-medium);
+  font-variant-numeric: var(--font-numeric);
+}
+
+.leave-date-range span {
+  white-space: nowrap;
+}
+
+.leave-type-label {
+  color: var(--color-text);
+  font-weight: var(--font-weight-medium);
+}
+
+/* Nhãn sắp nghỉ dùng nền nổi bật để phân biệt với chữ ghi chú và trạng thái chờ. */
+.leave-list-page .leave-near-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  width: fit-content;
+  margin-top: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--color-danger-tint);
+  color: var(--color-danger-ink);
+  border: var(--border-width) solid var(--color-danger-border);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-snug);
+}
+
+.leave-list-page .leave-actions-cell {
+  text-align: right;
+}
+
+.leave-list-page .leave-actions-cell .btn {
+  padding: var(--space-2);
+  min-width: calc(var(--space-8) + var(--space-4));
+  min-height: var(--control-height-sm);
+  font-size: var(--font-size-xs);
+  white-space: nowrap;
+}
+
+/* leave-request-list.js dùng cả hàng làm điểm mở chi tiết; form/nút không kích hoạt điều hướng. */
+.leave-list-page .leave-request-row {
+  cursor: pointer;
+}
+
+.leave-list-page .leave-request-row:focus-visible {
+  outline: var(--border-width-thick) solid var(--color-primary);
+  outline-offset: calc(var(--border-width-thick) * -1);
+}
+
+.leave-list-page .leave-row-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: nowrap;
+  gap: var(--space-2);
+  margin: var(--space-0);
+}
+
+/* Checkbox liên kết leave-bulk-form. */
+.leave-list-page .leave-selection-checkbox {
+  flex-shrink: 0;
+  margin: var(--space-0) var(--space-2) var(--space-0) var(--space-0);
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+
+.leave-list-page .leave-bulk-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-0) var(--space-0) var(--space-0) auto;
+}
+
+.leave-list-page .leave-bulk-actions span,
+.leave-list-page .leave-bulk-actions .btn {
+  white-space: nowrap;
+}
+
+.leave-list-page .leave-bulk-result {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin: var(--space-0) var(--space-0) var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-sm);
+}
+
+.leave-list-page .leave-bulk-result details {
+  flex-basis: 100%;
+}
+
+.leave-list-page .leave-bulk-result summary {
+  cursor: pointer;
+  color: var(--color-danger-ink);
+}
+
+.leave-list-page .leave-list-error {
+  color: var(--color-danger-ink);
+}
+
+@media (max-width: 900px) {
+  .leave-list-page .leave-filter-nav {
+    grid-template-columns: minmax(0, 1fr) auto auto auto;
+  }
+
+  .leave-list-page .leave-search-field {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 640px) {
+  .leave-list-page .leave-filter-nav {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+  }
+
+  .leave-list-page .leave-date-filters {
+    grid-column: 1 / -1;
+  }
+
+  .leave-list-page .leave-filter-popover {
+    right: auto;
+    left: var(--space-0);
+  }
+}
+
+/* Nhân viên là hàng cha; details/summary tự hỗ trợ mở rộng bằng chuột và bàn phím. */
+.leave-employee-list {
+  padding: var(--space-4);
+}
+
+.leave-employee-group {
+  margin-bottom: var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  overflow: hidden;
+}
+
+.leave-employee-group:last-child {
+  margin-bottom: var(--space-0);
+}
+
+.leave-employee-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  list-style: none;
+}
+
+summary.leave-employee-summary {
+  cursor: pointer;
+}
+
+summary.leave-employee-summary::-webkit-details-marker {
+  display: none;
+}
+
+summary.leave-employee-summary:hover {
+  background: var(--color-bg);
+}
+
+summary.leave-employee-summary:focus-visible {
+  outline: var(--border-width-thick) solid var(--color-primary);
+  outline-offset: calc(var(--border-width-thick) * -1);
+}
+
+.leave-employee-near > .leave-employee-summary {
+  background: var(--color-warning-tint);
+}
+
+.leave-employee-name {
+  color: var(--color-text);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
+}
+
+.leave-employee-description,
+.leave-total-count,
+.leave-zero-count {
+  color: var(--color-text-soft);
+  font-size: var(--font-size-xs);
+}
+
+.leave-employee-description {
+  margin-top: var(--space-1);
+}
+
+.leave-employee-counts {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.leave-list-page .leave-employee-counts .leave-near-label {
+  margin-top: var(--space-0);
+}
+
+.leave-expand-icon {
+  color: var(--color-text-soft);
+  transition: transform var(--duration-base);
+}
+
+.leave-employee-group[open] > summary .leave-expand-icon {
+  transform: rotate(180deg);
+}
+
+.leave-employee-requests {
+  border-top: var(--border-width) solid var(--color-border);
+}
+
+.leave-group-empty {
+  margin: var(--space-0);
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-soft);
+}
+
+@media (max-width: 640px) {
+  .leave-employee-summary {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .leave-employee-counts {
+    justify-content: flex-start;
+  }
+}
+
+/* Cùng đợt: xem hai phần riêng, giữ màu và khoảng cách theo tokens của dự án. */
+.leave-related {
+  margin-top: var(--space-2);
+  font-size: var(--font-size-xs);
+}
+.leave-related summary {
+  cursor: pointer;
+  color: var(--color-text-soft);
+  overflow-wrap: anywhere;
+}
+.leave-related-parts {
+  display: grid;
+  gap: var(--space-2);
+  padding-block: var(--space-2);
+}
+.leave-related-part {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow-wrap: anywhere;
+}
+
+/* common.css ep chu nut primary thanh trang; nut khoa can chu dam de doc ro. */
+.leave-list-page #leave-approve-selected:disabled {
+  color: var(--color-text) !important;
+  text-shadow: none;
+}
+
+/* Mau hover phai cung tong voi chu tren bang trong ca hai theme. */
+.leave-list-page .leave-table tbody tr:hover,
+.leave-list-page .leave-tab-btn:hover {
+  background: var(--color-surface-hover);
+}

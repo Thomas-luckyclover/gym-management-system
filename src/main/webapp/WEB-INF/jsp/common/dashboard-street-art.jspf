@@ -1,0 +1,11 @@
+<%@ page pageEncoding="UTF-8" %>
+<%-- Thành phố trong bóng đầu người, nét mực comic; mỗi kiểu thời tiết một tranh (nguồn: ảnh nhóm tạo bằng Gemini 15/10/2026;
+     "night" suy ra từ tranh nắng bằng script). Chọn theo weatherType của WeatherView; giá trị lạ → sunny.
+     Chữ thời tiết là dữ liệu thật đặt trên nền giấy góc trái; mưa/tuyết/sao/chớp do js/weather-card.js vẽ đè. --%>
+<c:choose>
+    <c:when test="${weatherType eq 'sunny' or weatherType eq 'hot' or weatherType eq 'cloudy' or weatherType eq 'rain' or weatherType eq 'storm' or weatherType eq 'snow' or weatherType eq 'wind' or weatherType eq 'night'}">
+        <c:set var="comicWeatherArt" value="${weatherType}" />
+    </c:when>
+    <c:otherwise><c:set var="comicWeatherArt" value="sunny" /></c:otherwise>
+</c:choose>
+<img class="comic-photo__weather" src="${pageContext.request.contextPath}/images/comic/weather-${comicWeatherArt}.webp" alt="" width="1600" height="1073" decoding="async">

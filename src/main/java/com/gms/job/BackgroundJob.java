@@ -3,15 +3,10 @@ package com.gms.job;
 import java.sql.SQLException;
 
 /**
- * Một tác vụ chạy ngầm theo lịch (GBR-14, SRS "Background Job Inventory" JOB-01 … JOB-07).
- *
- * Quy tắc chung SRS 5.0 mà mọi job phải theo khi implement run():
- * - Chọn bản ghi theo TRẠNG THÁI, không theo "hôm qua" → lần chạy bị lỡ sẽ được lần sau xử lý bù.
- * - Mỗi bản ghi xử lý trong 1 transaction riêng, kiểm tra lại trạng thái ngay trước khi ghi;
- *   1 bản ghi lỗi không được chặn các bản ghi khác.
- * - Mọi thay đổi trạng thái ghi AuditLog với người thực hiện = System.
- * - Job chỉ gọi Service (không viết SQL trong job) — job giống 1 "Servlet chạy theo giờ".
- */
+// Đây là 1 interface, tức là 1 bản hợp đồng - contract. Class nào muốn làm JOB chạy ngầm sẽ bắt buộc có 2 hàm này. File này ko có code chạy, chhir khai báo
+// Interface: Abstraction: Chỉ cho biết làm gì, giấu làm như nào + Polymorphism: Cùng 1 lợi gọi, mỗi class chạy 1 kiểu
+// BackgroundJob là interface thể hiện trừu tượng hóa: Scheduler chỉ biết mọi job có getName() và run(), không cần biết chi tiết từng job. Nhờ đó dùng được đa hình: một vòng lặp job.run() chạy được mọi job, thêm job mới không phải sửa Scheduler.
+*/
 public interface BackgroundJob {
 
     /**
@@ -21,7 +16,7 @@ public interface BackgroundJob {
 
     /**
      * Chạy 1 lượt job.
-     * @throws SQLException khi không kết nối được DB — scheduler sẽ thử lại theo SRS 5.0
+     * @throws SQLException khi không kết nối được DB — scheduler sẽ thử lại theo SRS
      */
     void run() throws SQLException;
 }

@@ -1,0 +1,104 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Thư viện bài tập — Super Gym</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/js/all.min.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../customer.css">
+</head>
+<body class="cust staff">
+<div id="toastRoot"></div>
+<div id="modalRoot"></div>
+
+<!-- 9.5.2 — Client List · L1 · UC-32 -->
+<div class="cust-shell" id="custShell">
+
+  <div class="cust-dock" id="custDock">
+    <aside class="cust-sidebar">
+      <a class="cust-brand" href="trang-chu.html">
+        <b>Super Gym</b><span>Huấn luyện viên</span>
+      </a>
+      <nav class="cust-nav">
+        <h4>Tổng quan</h4>
+        <a href="trang-chu.html"><i class="fa-solid fa-gauge-high"></i>Tổng quan</a>
+        <h4>Lịch dạy</h4>
+        <a href="lich-ranh.html"><i class="fa-solid fa-calendar-days"></i>Lịch dạy</a>
+        <h4>Khách phụ trách</h4>
+        <a href="khach-cua-toi.html"><i class="fa-solid fa-user-group"></i>Khách của tôi</a>
+        <h4>Huấn luyện</h4>
+        <a href="thu-vien-bai-tap.html" aria-current="page"><i class="fa-solid fa-dumbbell"></i>Thư viện bài tập</a>
+        <h4>Cá nhân</h4>
+        <a href="nghi-phep.html"><i class="fa-solid fa-plane-departure"></i>Nghỉ phép</a>
+        <a href="tai-khoan.html"><i class="fa-solid fa-user-gear"></i>Cài đặt tài khoản</a>
+        <a href="../chon-vai-tro.html"><i class="fa-solid fa-repeat"></i>Đổi vai trò</a>
+      </nav>
+      <div class="cust-sidebar-foot">
+        <a href="../dang-nhap.html"><i class="fa-solid fa-arrow-right-from-bracket"></i>Đăng xuất</a>
+      </div>
+    </aside>
+    <button class="cust-handle" type="button" id="dockHandle"
+            aria-label="Mở menu điều hướng" aria-expanded="false" aria-controls="custDock">
+      <i class="fa-solid fa-chevron-right"></i>
+    </button>
+  </div>
+
+  <div class="cust-main">
+    <header class="cust-topbar">
+      <div>
+        <h1>Thư viện bài tập</h1>
+      </div>
+      <div class="cust-topbar-actions">
+        <a class="cust-user" href="tai-khoan.html" title="Cài đặt tài khoản">
+          <span class="avatar">HL</span>
+          <span class="cust-user-text">
+            <b>Hoàng Long</b>
+            <span>PT · NV-0118</span>
+          </span>
+        </a>
+      </div>
+    </header>
+
+    <main class="cust-content">
+      <div id="exMain">
+        <p class="muted" id="exSummary"></p>
+        <div class="toolbar">
+          <div class="search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input id="exQuery" type="search" maxlength="50" placeholder="squat, bench press…" aria-label="Tên bài (tiếng Anh)">
+          </div>
+          <label for="exEquip">Dụng cụ</label>
+          <select id="exEquip"><option value="">Tất cả</option></select>
+          <label for="exSort">Sắp xếp</label>
+          <select id="exSort">
+            <option value="name">Tên A → Z</option>
+            <option value="-name">Tên Z → A</option>
+          </select>
+          <button class="btn btn-primary btn-sm" type="button" id="exApply">Lọc</button>
+          <button class="btn btn-ghost btn-sm reset" type="button" id="exReset">Xóa lọc</button>
+        </div>
+        <div class="row-meta" id="exChips" aria-label="Lọc theo nhóm cơ"></div>
+        <div class="data-list" id="exList"></div>
+        <div class="empty-state" id="exEmpty" hidden>
+          <div class="empty-icon"><i class="fa-solid fa-box-open"></i></div>
+          <p>Không tìm thấy bài nào. Thử bỏ bớt bộ lọc.</p>
+        </div>
+        <div class="pager" data-pager>
+          <div class="pager-info"></div>
+          <div class="pager-btns"></div>
+        </div>
+      </div>
+    
+    </main>
+  </div>
+</div>
+
+<script src="../app.js"></script>
+<script src="../kh/customer.js"></script>
+<script src="../exercise-data.js"></script>
+<script src="thu-vien-bai-tap.js"></script>
+</body>
+</html>

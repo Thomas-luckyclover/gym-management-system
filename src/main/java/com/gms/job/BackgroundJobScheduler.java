@@ -14,52 +14,78 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Khởi động/dừng toàn bộ job chạy ngầm cùng vòng đời của ứng dụng trên Tomcat.
- * Không cần thư viện ngoài (Quartz...) — dùng ScheduledExecutorService có sẵn trong JDK.
+ * BỘ HẸN GIỜ CHẠY JOB — bật / tắt theo vòng đời Tomcat (ScheduledExecutorService của JDK, không cần Quartz).
  *
- * Lịch chạy theo SRS 5.3 / 5.0:
- * - Job hằng ngày: 00:05 giờ Việt Nam, chạy NỐI TIẾP JOB-01 → 02 → 03 → 04 (JOB-01 phải cộng ngày bảo lưu trước khi JOB-02 xét hết hạn).
- *   Lỗi kết nối DB → thử lại tối đa 3 lần, mỗi lần cách 5 phút, sau đó ghi lỗi nghiêm trọng và chờ lượt ngày mai.
- * - Job mỗi phút: JOB-05, 06, 07. Lỗi thì không thử lại riêng — lượt 1 phút sau chính là lần thử lại.
- * - Không chạy chồng: dùng scheduleWithFixedDelay nên lượt sau chỉ bắt đầu khi lượt trước đã xong.
+ * LỊCH CHẠY (giá trị hiện tại)
+ *   Hằng ngày 00:05 giờ VN, chạy NỐI TIẾP theo thứ tự trong DAILY_JOBS:
+ *     JOB-01 cộng ngày bảo lưu → JOB-02 hết hạn gói → JOB-03 hết hạn vé ngày → JOB-04 chốt buổi PT → JOB-08 nhắc khách ngày mai
+ *     (JOB-01/02/03 hiện là khung trống TODO do thành viên khác làm; JOB-04, JOB-08 đã chạy thật.)
+ *   Mỗi phút, các job trong MINUTE_JOBS chạy độc lập (hiện đều là khung TODO).
+ *   Job hằng ngày lỗi DB → thử lại tối đa 3 lần, mỗi lần cách 5 phút.
  *
- * Thêm job mới: tạo class implements BackgroundJob, rồi thêm vào DAILY_JOBS hoặc MINUTE_JOBS bên dưới.
+ * CÁC HÀM
+ *   contextInitialized   Tomcat gọi khi app khởi động → lên lịch
+ *   contextDestroyed     Tomcat gọi khi app dừng / redeploy → tắt luồng
+ *   runDailyJobs         chạy chuỗi job hằng ngày → runDailyJobWithRetry
+ *   runMinuteJob         chạy 1 job mỗi phút
+ *
+ * Thêm job: tạo class implements BackgroundJob rồi thêm vào DAILY_JOBS hoặc MINUTE_JOBS.
+ * BackgroundJobScheduler như 1 Listener lắng nghe vòng đời ứng dụng
  */
+
+// I. 
+// ServletContextListener chỉ nghe 2 sự kiện từ Tomcat: app khởi động thì Tomcat gọi contextInitialized; app dừng hoặc redeploy thì Tomcat gọi contextDestroed
+// Cả vòng đời ứng dụng, mỗi hàm chỉ được gọi 1 lần
+
+// II. 
+// BackgroundJob còn đóng vai 1 bộ hẹn giờ lo phân thời gian
+// Phần "Đến giờ thì chạy" dô ScheduledExecutorService của Java đảm nhận. Đây là luồng chạy ngầm mà Listener tạo ra lúc khởi động
+
+// III.
+// Tomcat start (sự kiện) => Listener.contextInitialized (do @WebListener) => Tạo bộ hẹn giờ cho executor. executor tự gọi runDailyJobs
+// Tomcat stop (sự kiện) => Listener.contextDestroyed => Tắt executor
+
+
 @WebListener
 public class BackgroundJobScheduler implements ServletContextListener {
 
-    private static final LocalTime DAILY_RUN_TIME = LocalTime.of(0, 5);
-    private static final int DAILY_MAX_RETRIES = 3;
-    private static final long DAILY_RETRY_DELAY_MINUTES = 5;
+    // ===== Cấu hình lịch chạy (giá trị hiện tại ghi bên phải) =====
+    private static final LocalTime DAILY_RUN_TIME = LocalTime.of(0, 5);    // = 00:05 giờ VN mỗi ngày
+    private static final int DAILY_MAX_RETRIES = 3;                        // = lỗi DB thì thử lại tối đa 3 lần
+    private static final long DAILY_RETRY_DELAY_MINUTES = 5;               // = mỗi lần thử lại cách 5 phút
 
     /** Job hằng ngày — THỨ TỰ TRONG LIST LÀ THỨ TỰ CHẠY, không đảo. */
     private static final List<BackgroundJob> DAILY_JOBS = List.of(
-            new ResumeExpiredFreezesJob(),
-            new ExpireMembershipPackagesJob(),
-            new ExpireUnusedDayPassesJob(),
-            new AutoCloseUnmarkedSessionsJob()
+            new ResumeExpiredFreezesJob(),        // JOB-01: hết bảo lưu (khung TODO)
+            new ExpireMembershipPackagesJob(),    // JOB-02: gói tập / gói PT hết hạn → Expired (ExpirePackagesService)
+            new ExpireUnusedDayPassesJob(),       // JOB-03: vé ngày không dùng → Expired (khung TODO)
+            new AutoCloseUnmarkedSessionsJob(),   // JOB-04: chốt buổi PT đã qua ngày (AutoCloseSessionService)
+            new RemindMissingGymAccessJob()       // JOB-08: chạy SAU các job hết hạn để xét quyền vào gym mới nhất
     );
 
     /** Job chạy mỗi phút — độc lập nhau. */
     private static final List<BackgroundJob> MINUTE_JOBS = List.of(
-            new CancelOverdueOnlineOrdersJob(),
-            new ExpireTimedOutTransactionsJob(),
-            new AutoRejectOverdueLeaveRequestsJob()
+            new CancelOverdueOnlineOrdersJob(),      // JOB-05: hủy đơn online quá hạn thanh toán (khung TODO)
+            new ExpireTimedOutTransactionsJob(),     // JOB-06: giao dịch quá thời gian chờ (khung TODO)
+            new LeaveRequestReminderJob()            // JOB-07: nhắc Manager đơn nghỉ đến hạn (không tự quyết thay Manager)
     );
 
     private ScheduledExecutorService dailyExecutor;
     private ScheduledExecutorService minuteExecutor;
 
-    // ===== Tomcat gọi khi ứng dụng khởi động =====
+    // =================================================================================================
+    // 1. BẬT / TẮT THEO TOMCAT
+    // =================================================================================================
 
+    /** HÀM CHÍNH — Tomcat gọi 1 lần khi ứng dụng khởi động (nhờ @WebListener). */
     @Override
     public void contextInitialized(ServletContextEvent event) {
         // B1: tạo 2 luồng riêng — job hằng ngày có thể ngủ chờ thử lại 5 phút, không được làm trễ job mỗi phút
-        dailyExecutor = Executors.newSingleThreadScheduledExecutor();
-        minuteExecutor = Executors.newScheduledThreadPool(MINUTE_JOBS.size());
+        dailyExecutor = Executors.newSingleThreadScheduledExecutor(); // JOB hàng ngày
+        minuteExecutor = Executors.newScheduledThreadPool(MINUTE_JOBS.size()); // Job mỗi phút
 
         // B2: lên lịch chuỗi job hằng ngày lúc 00:05
-        long initialDelaySeconds = calculateSecondsUntilNextDailyRun();
+        long initialDelaySeconds = calculateSecondsUntilNextDailyRun(); // Tính toán số giây còn lại đến lượt chạy tiếp theo
         long oneDaySeconds = TimeUnit.DAYS.toSeconds(1);
         dailyExecutor.scheduleAtFixedRate(this::runDailyJobs, initialDelaySeconds, oneDaySeconds, TimeUnit.SECONDS);
 
@@ -72,8 +98,7 @@ public class BackgroundJobScheduler implements ServletContextListener {
         System.out.println("[JOB] Đã khởi động scheduler. Lượt hằng ngày kế tiếp sau " + initialDelaySeconds + " giây.");
     }
 
-    // ===== Tomcat gọi khi ứng dụng dừng/redeploy =====
-
+    /** HÀM CHÍNH — Tomcat gọi khi ứng dụng dừng / redeploy. */
     @Override
     public void contextDestroyed(ServletContextEvent event) {
         // Dừng hẳn các luồng, tránh rò rỉ thread khi redeploy nhiều lần trong lúc code
@@ -85,10 +110,13 @@ public class BackgroundJobScheduler implements ServletContextListener {
         }
     }
 
-    // ===== Chạy job =====
+    // =================================================================================================
+    // 2. CHẠY JOB
+    // =================================================================================================
 
     /**
-     * Chạy nối tiếp các job hằng ngày, mỗi job có cơ chế thử lại khi mất kết nối DB.
+     * HÀM CHÍNH — luồng dailyExecutor gọi mỗi ngày lúc 00:05 (lên lịch ở B2 của contextInitialized).
+     * Chạy nối tiếp các job hằng ngày; job trước xong mới tới job sau.
      */
     private void runDailyJobs() {
         for (BackgroundJob job : DAILY_JOBS) {
@@ -96,6 +124,11 @@ public class BackgroundJobScheduler implements ServletContextListener {
         }
     }
 
+    /**
+     * HÀM PHỤ — gọi trong vòng lặp của runDailyJobs, mỗi job một lần.
+     * Lỗi DB (SQLException) → in lỗi, chờ 5 phút, thử lại; quá 3 lần thì bỏ, chờ lượt ngày mai.
+     * Lỗi khác (RuntimeException) → in lỗi và bỏ qua job này.
+     */
     private void runDailyJobWithRetry(BackgroundJob job) {
         for (int attempt = 1; attempt <= DAILY_MAX_RETRIES + 1; attempt++) {
             try {
@@ -122,6 +155,10 @@ public class BackgroundJobScheduler implements ServletContextListener {
         }
     }
 
+    /**
+     * HÀM CHÍNH — luồng minuteExecutor gọi mỗi phút cho từng job (lên lịch ở B3 của contextInitialized).
+     * Lỗi thì chỉ in ra, không thử lại: 1 phút sau job tự chạy lượt mới.
+     */
     private void runMinuteJob(BackgroundJob job) {
         try {
             job.run();
@@ -133,10 +170,14 @@ public class BackgroundJobScheduler implements ServletContextListener {
         }
     }
 
-    // ===== Tiện ích tính giờ =====
+    // =================================================================================================
+    // 3. TÍNH GIỜ
+    // =================================================================================================
 
     /**
+     * HÀM PHỤ — gọi ở B2 của contextInitialized.
      * Số giây từ bây giờ tới 00:05 kế tiếp (giờ Việt Nam).
+     * VD bây giờ 23:00 → còn 3.900 giây (1 giờ 5 phút); bây giờ 00:10 → chờ tới 00:05 ngày mai.
      */
     private long calculateSecondsUntilNextDailyRun() {
         LocalDateTime now = DateTimeUtil.now();
@@ -149,7 +190,8 @@ public class BackgroundJobScheduler implements ServletContextListener {
     }
 
     /**
-     * Ngủ chờ thử lại; trả false nếu bị ngắt do ứng dụng đang tắt.
+     * HÀM PHỤ — gọi trong runDailyJobWithRetry trước mỗi lần thử lại.
+     * Ngủ chờ; trả false nếu bị ngắt vì ứng dụng đang tắt (khi đó thôi thử lại).
      */
     private boolean sleepMinutes(long minutes) {
         try {

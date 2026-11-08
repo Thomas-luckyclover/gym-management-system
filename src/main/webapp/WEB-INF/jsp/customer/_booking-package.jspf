@@ -1,0 +1,14 @@
+<%@ page pageEncoding="UTF-8" %>
+<%--
+  1 THẺ GÓI ở cột trái màn Gói của tôi — include trong my-bookings.jsp (2 vòng lặp: gói đang tập, gói đã kết thúc).
+  Biến từ trang cha: p = MyPtPackageView (MyPtSessionDAO.findMyPackages → MyBookingService.fillPackage), pageUrl, booking.
+  Bấm thẻ → GET ?package=<p.subscriptionId> → MyBookingServlet; thẻ đang xem có aria-current="page" (tô nổi).
+  Hiện: p.packageName · "PT <tên cuối>" · "còn N buổi" (= totalSessions − pastSessions, ≤ 3 → chữ cảnh báo).
+--%>
+
+<c:set var="left" value="${p.totalSessions - p.pastSessions}" />
+<c:set var="ptWords" value="${fn:split(p.ptName, ' ')}" />
+<a class="booking-package" href="${pageUrl}?package=${p.subscriptionId}" aria-current="${booking.selectedPackage.subscriptionId eq p.subscriptionId ? 'page' : 'false'}">
+    <strong class="booking-package-name"><c:out value="${p.packageName}" /></strong>
+    <span class="booking-package-meta">PT <c:out value="${ptWords[fn:length(ptWords) - 1]}" /> · <b class="${left le 3 ? 'is-ending' : ''}">còn <c:out value="${left}" /> buổi</b></span>
+</a>

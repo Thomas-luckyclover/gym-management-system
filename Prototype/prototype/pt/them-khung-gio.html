@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Thêm khung giờ — Super Gym PT</title>
+<title>Thêm khung giờ — Super Gym</title>
 <meta name="robots" content="noindex">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/js/all.min.js" crossorigin="anonymous"></script>
@@ -23,16 +23,18 @@
         <b>Super Gym</b><span>Huấn luyện viên</span>
       </a>
       <nav class="cust-nav">
-        <h4>Hôm nay</h4>
+        <h4>Tổng quan</h4>
         <a href="trang-chu.html"><i class="fa-solid fa-gauge-high"></i>Tổng quan</a>
-        <a href="diem-danh.html"><i class="fa-solid fa-clipboard-check"></i>Điểm danh</a>
         <h4>Lịch dạy</h4>
-        <a href="lich-ranh.html" aria-current="page"><i class="fa-solid fa-calendar-days"></i>Lịch rảnh</a>
+        <a href="lich-ranh.html"><i class="fa-solid fa-calendar-days"></i>Lịch dạy</a>
         <h4>Khách phụ trách</h4>
         <a href="khach-cua-toi.html"><i class="fa-solid fa-user-group"></i>Khách của tôi</a>
+        <h4>Huấn luyện</h4>
+        <a href="thu-vien-bai-tap.html"><i class="fa-solid fa-dumbbell"></i>Thư viện bài tập</a>
         <h4>Cá nhân</h4>
         <a href="nghi-phep.html"><i class="fa-solid fa-plane-departure"></i>Nghỉ phép</a>
         <a href="tai-khoan.html"><i class="fa-solid fa-user-gear"></i>Cài đặt tài khoản</a>
+        <a href="../chon-vai-tro.html"><i class="fa-solid fa-repeat"></i>Đổi vai trò</a>
       </nav>
       <div class="cust-sidebar-foot">
         <a href="../dang-nhap.html"><i class="fa-solid fa-arrow-right-from-bracket"></i>Đăng xuất</a>
@@ -48,7 +50,7 @@
     <header class="cust-topbar">
       <div>
         <div class="crumb"><a href="lich-ranh.html">Lịch rảnh</a> <i class="fa-solid fa-chevron-right"></i> <span>Khung giờ mới</span></div>
-        <h1>Thêm khung giờ</h1>
+        <h1>Thêm khung giờ (đã gộp)</h1>
       </div>
       <div class="cust-topbar-actions">
         <a class="cust-user" href="tai-khoan.html" title="Cài đặt tài khoản">
@@ -62,52 +64,18 @@
     </header>
 
     <main class="cust-content">
-      <div class="split">
-        <div class="col-main">
-          <section class="panel">
-            <form id="slotForm" novalidate>
-              <label class="field">
-                <span class="field-label">Ngày</span>
-                <input id="slotDate" type="date" value="2026-09-28">
-                <span class="field-error" id="slotDateErr" hidden></span>
-              </label>
-              <div class="form-grid">
-                <label class="field">
-                  <span class="field-label">Giờ bắt đầu</span>
-                  <input id="slotStart" type="time" value="18:00" step="900">
-                  <span class="field-error" id="slotStartErr" hidden></span>
-                </label>
-                <label class="field">
-                  <span class="field-label">Giờ kết thúc</span>
-                  <input id="slotEnd" type="time" value="19:30" step="900">
-                  <span class="field-hint"><i class="fa-solid fa-circle-info"></i><span>Mỗi khung dài đúng 90 phút, tự tính theo giờ bắt đầu.</span></span>
-                  <span class="field-error" id="slotEndErr" hidden></span>
-                </label>
-              </div>
-              <button class="btn btn-primary" type="submit">Lưu khung giờ</button>
-            </form>
-          </section>
+      <section class="panel">
+        <div class="alert-banner info">
+          <i class="fa-solid fa-circle-info"></i>
+          <span>Màn này đã gộp vào Lịch dạy: thêm khung giờ ngay trên lịch.</span>
+          <a class="btn btn-primary btn-sm" href="lich-ranh.html">Mở Lịch dạy</a>
         </div>
-
-        <aside class="col-side">
-          <div class="side-card">
-            <span class="section-label">Giờ hoạt động</span>
-            <div class="side-row"><span>Ngày thường</span><b>06:00 – 22:00</b></div>
-            <div class="side-row"><span>Thứ 7 &amp; CN</span><b>05:00 – 22:00</b></div>
-            <p class="muted" style="margin-top:var(--space-3)">Khung giờ phải nằm trong giờ hoạt động của ngày đã chọn.</p>
-          </div>
-          <div class="side-card">
-            <span class="section-label">Lưu ý</span>
-            <p class="muted">Khai báo được bất kỳ ngày nào trong tương lai, gồm cả cuối tuần. Nhưng khách chỉ đặt được slot trong tuần hiện tại; từ Thứ 7 mở thêm tuần kế.</p>
-          </div>
-        </aside>
-      </div>
+      </section>
     </main>
   </div>
 </div>
 
 <script src="../app.js"></script>
 <script src="../kh/customer.js"></script>
-<script src="them-khung-gio.js"></script>
 </body>
 </html>

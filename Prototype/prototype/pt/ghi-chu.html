@@ -23,16 +23,18 @@
         <b>Super Gym</b><span>Huấn luyện viên</span>
       </a>
       <nav class="cust-nav">
-        <h4>Hôm nay</h4>
+        <h4>Tổng quan</h4>
         <a href="trang-chu.html"><i class="fa-solid fa-gauge-high"></i>Tổng quan</a>
-        <a href="diem-danh.html"><i class="fa-solid fa-clipboard-check"></i>Điểm danh</a>
         <h4>Lịch dạy</h4>
-        <a href="lich-ranh.html"><i class="fa-solid fa-calendar-days"></i>Lịch rảnh</a>
+        <a href="lich-ranh.html"><i class="fa-solid fa-calendar-days"></i>Lịch dạy</a>
         <h4>Khách phụ trách</h4>
         <a href="khach-cua-toi.html" aria-current="page"><i class="fa-solid fa-user-group"></i>Khách của tôi</a>
+        <h4>Huấn luyện</h4>
+        <a href="thu-vien-bai-tap.html"><i class="fa-solid fa-dumbbell"></i>Thư viện bài tập</a>
         <h4>Cá nhân</h4>
         <a href="nghi-phep.html"><i class="fa-solid fa-plane-departure"></i>Nghỉ phép</a>
         <a href="tai-khoan.html"><i class="fa-solid fa-user-gear"></i>Cài đặt tài khoản</a>
+        <a href="../chon-vai-tro.html"><i class="fa-solid fa-repeat"></i>Đổi vai trò</a>
       </nav>
       <div class="cust-sidebar-foot">
         <a href="../dang-nhap.html"><i class="fa-solid fa-arrow-right-from-bracket"></i>Đăng xuất</a>
@@ -73,8 +75,22 @@
           <section class="panel">
             <form id="noteForm" novalidate>
               <label class="field">
-                <span class="field-label">Ghi chú mới</span>
-                <textarea id="noteText" rows="6" placeholder="Ví dụ: vai phải còn cấn khi bench, tuần sau giảm tạ."></textarea>
+                <span class="field-label">Khách *</span>
+                <select id="clientPick">
+                  <option value="KH-0241" selected>KH-0241 · Nguyễn Minh An</option>
+                  <option value="KH-0318">KH-0318 · Trần Gia Bảo</option>
+                  <option value="KH-1009">KH-1009 · Trịnh Quốc Bảo</option>
+                  <option value="KH-0276">KH-0276 · Lê Thu Hà</option>
+                  <option value="KH-0402">KH-0402 · Phạm Quốc Huy</option>
+                  <option value="KH-0299">KH-0299 · Bùi Khánh Linh</option>
+                  <option value="KH-1005">KH-1005 · Vũ Hoài Nam</option>
+                  <option value="KH-1011">KH-1011 · Đỗ Lan Chi</option>
+                  <option value="KH-0433">KH-0433 · Hoàng Đức Duy</option>
+                </select>
+              </label>
+              <label class="field">
+                <span class="field-label">Nội dung ghi chú *</span>
+                <textarea id="noteText" rows="6" maxlength="2000" required placeholder="Ví dụ: vai phải còn cấn khi bench, tuần sau giảm tạ."></textarea>
                 <span class="field-error" id="noteTextErr" hidden></span>
               </label>
               <button class="btn btn-primary" type="submit">Lưu ghi chú</button>
@@ -113,11 +129,11 @@
             <div style="display:flex;align-items:center;gap:var(--space-3)">
               <span class="avatar" style="width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-weight:700">MA</span>
               <div>
-                <h3>Nguyễn Minh An</h3>
-                <p class="muted">SG-0241</p>
+                <h3 id="clName">Nguyễn Minh An</h3>
+                <p class="muted" id="clCode">KH-0241</p>
               </div>
             </div>
-            <div class="side-row" style="margin-top:var(--space-4)"><span>Gói PT</span><b>10 buổi · còn 4</b></div>
+            <div class="side-row" style="margin-top:var(--space-4)"><span>Gói PT</span><b>Gói PT 3 Tháng · còn 59/65</b></div>
             <div class="side-row"><span>Gói tập</span><b>tới 14/11/2026</b></div>
             <a class="btn btn-ghost btn-sm btn-block" href="giao-an.html">Soạn giáo án</a>
           </div>

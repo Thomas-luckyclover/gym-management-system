@@ -30,12 +30,15 @@
       <a href="mua-goi.html"><i class="fa-solid fa-cart-shopping"></i>Mua gói</a>
       <a href="lich-su-giao-dich.html" aria-current="page"><i class="fa-solid fa-receipt"></i>Lịch sử giao dịch</a>
         <h4>Lịch tập</h4>
-      <a href="lich-cua-toi.html"><i class="fa-solid fa-calendar-check"></i>Lịch của tôi</a>
-      <a href="buoi-pt.html"><i class="fa-solid fa-user-check"></i>Buổi PT của tôi</a>
+      <a href="lich-cua-toi.html"><i class="fa-solid fa-box-open"></i>Gói của tôi</a>
+      <a href="buoi-pt.html"><i class="fa-solid fa-calendar-check"></i>Lịch của tôi</a>
       <a href="dat-buoi-le.html"><i class="fa-solid fa-calendar-plus"></i>Đặt buổi lẻ</a>
       <a href="giao-an.html"><i class="fa-solid fa-clipboard-list"></i>Giáo án của tôi</a>
+      <a href="thu-vien-bai-tap.html"><i class="fa-solid fa-person-running"></i>Thư viện bài tập</a>
+      <a href="chi-so-co-the.html"><i class="fa-solid fa-weight-scale"></i>Chỉ số cơ thể</a>
         <h4>Tài khoản</h4>
       <a href="tai-khoan.html"><i class="fa-solid fa-user-gear"></i>Cài đặt tài khoản</a>
+      <a href="../chon-vai-tro.html"><i class="fa-solid fa-repeat"></i>Đổi vai trò</a>
         <h4>Hòm thư</h4>
       <a href="gop-y.html"><i class="fa-solid fa-inbox"></i>Hòm thư góp ý</a>
       </nav>
@@ -69,7 +72,7 @@
       <div class="toolbar">
         <div class="search">
           <i class="fa-solid fa-magnifying-glass"></i>
-          <input id="txSearch" type="search" placeholder="Tìm mã đơn hoặc tên gói" aria-label="Tìm đơn hàng">
+          <input id="txSearch" type="search" placeholder="Tìm mã đơn, tên gói hoặc phương thức" aria-label="Tìm đơn hàng">
         </div>
         <label for="txPeriod">Thời gian</label>
         <select id="txPeriod">
@@ -82,21 +85,22 @@
         <label for="txStatus">Trạng thái</label>
         <select id="txStatus">
           <option value="all">Tất cả</option>
-          <option value="Paid">Đã thanh toán</option>
-          <option value="Pending">Chờ thanh toán</option>
-          <option value="Cancelled">Đã hủy</option>
+          <option value="Success">Thành công</option>
+          <option value="Pending">Đang chờ</option>
+          <option value="Failed">Thất bại</option>
+          <option value="Expired">Hết hạn</option>
         </select>
         <button class="btn btn-ghost btn-sm reset" type="button" id="txReset">Xoá lọc</button>
       </div>
 
       <div class="data-list" id="txList">
-        <div class="data-row" data-status="Pending" data-date="20/09/2026" data-q="dh-2026-1191 gói 12 tháng">
+        <div class="data-row" data-status="Pending" data-date="20/09/2026" data-q="dh-2026-1191 gói 12 tháng cổng thanh toán">
           <div class="row-main">
-            <div class="row-title">Gói 12 Tháng <span class="badge badge-warn">Chờ thanh toán</span></div>
+            <div class="row-title">Gói 12 Tháng <span class="badge badge-warn">Đang chờ</span></div>
             <div class="row-meta">
-              <span><i class="fa-solid fa-hashtag"></i> DH-2026-1191</span>
-              <span><i class="fa-solid fa-calendar-days"></i> 20/09/2026</span>
-              <span><i class="fa-solid fa-receipt"></i> VAT 517.778đ</span>
+              <span><i class="fa-solid fa-hashtag"></i> Mã đơn DH-2026-1191</span>
+              <span><i class="fa-solid fa-calendar-days"></i> 20/09/2026 09:12</span>
+              <span><i class="fa-solid fa-credit-card"></i> Cổng thanh toán</span>
             </div>
           </div>
           <div class="row-actions">
@@ -104,26 +108,21 @@
             <button class="btn btn-ghost btn-sm" type="button" data-toggle-detail aria-expanded="false">Chi tiết</button>
           </div>
           <div class="row-detail" hidden>
-            <table class="tx-table">
-              <thead><tr><th>Thời điểm</th><th>Phương thức</th><th>Số tiền</th><th>Kết quả</th></tr></thead>
-              <tbody>
-                <tr>
-                  <td data-label="Thời điểm" class="tabular">20/09/2026 09:12</td>
-                  <td data-label="Phương thức">Cổng online</td>
-                  <td data-label="Số tiền" class="tabular">6.990.000đ</td>
-                  <td data-label="Kết quả"><span class="badge badge-warn">Đang chờ</span></td>
-                </tr>
-              </tbody>
-            </table>
+            <div class="side-row"><span>Giá gốc</span><b class="tabular">6.990.000đ</b></div>
+            <div class="side-row"><span>Giảm giá</span><b>Không áp dụng</b></div>
+            <div class="side-row"><span>Đã gồm VAT 8%</span><b class="tabular">517.778đ</b></div>
+            <div class="side-row"><span>Phương thức</span><b>Cổng thanh toán</b></div>
+            <div class="side-row"><span>Mã đơn</span><b class="tabular">DH-2026-1191</b></div>
+            
           </div>
         </div>
-        <div class="data-row" data-status="Cancelled" data-date="19/09/2026" data-q="dh-2026-1190 gói 3 tháng">
+        <div class="data-row" data-status="Expired" data-date="19/09/2026" data-q="dh-2026-1190 gói 3 tháng cổng thanh toán">
           <div class="row-main">
-            <div class="row-title">Gói 3 Tháng <span class="badge badge-muted">Đã hủy</span></div>
+            <div class="row-title">Gói 3 Tháng <span class="badge badge-muted">Hết hạn</span></div>
             <div class="row-meta">
-              <span><i class="fa-solid fa-hashtag"></i> DH-2026-1190</span>
-              <span><i class="fa-solid fa-calendar-days"></i> 19/09/2026</span>
-              <span><i class="fa-solid fa-receipt"></i> VAT 162.222đ</span>
+              <span><i class="fa-solid fa-hashtag"></i> Mã đơn DH-2026-1190</span>
+              <span><i class="fa-solid fa-calendar-days"></i> 19/09/2026 21:40</span>
+              <span><i class="fa-solid fa-credit-card"></i> Cổng thanh toán</span>
             </div>
           </div>
           <div class="row-actions">
@@ -131,221 +130,153 @@
             <button class="btn btn-ghost btn-sm" type="button" data-toggle-detail aria-expanded="false">Chi tiết</button>
           </div>
           <div class="row-detail" hidden>
-            <table class="tx-table">
-              <thead><tr><th>Thời điểm</th><th>Phương thức</th><th>Số tiền</th><th>Kết quả</th></tr></thead>
-              <tbody>
-                <tr>
-                  <td data-label="Thời điểm" class="tabular">19/09/2026 21:40</td>
-                  <td data-label="Phương thức">Cổng online</td>
-                  <td data-label="Số tiền" class="tabular">2.190.000đ</td>
-                  <td data-label="Kết quả"><span class="badge badge-muted">Hết hạn</span></td>
-                </tr>
-              </tbody>
-            </table>
+            <div class="side-row"><span>Giá gốc</span><b class="tabular">2.190.000đ</b></div>
+            <div class="side-row"><span>Giảm giá</span><b>Không áp dụng</b></div>
+            <div class="side-row"><span>Đã gồm VAT 8%</span><b class="tabular">162.222đ</b></div>
+            <div class="side-row"><span>Phương thức</span><b>Cổng thanh toán</b></div>
+            <div class="side-row"><span>Mã đơn</span><b class="tabular">DH-2026-1190</b></div>
+            <p class="muted">Đơn đã hủy do quá hạn thanh toán</p>
           </div>
         </div>
-        <div class="data-row" data-status="Paid" data-date="18/09/2026" data-q="dh-2026-1187 buổi pt lẻ · 18/09">
+        <div class="data-row" data-status="Success" data-date="18/09/2026" data-q="dh-2026-1187 buổi pt lẻ · 30/09 cổng thanh toán">
           <div class="row-main">
-            <div class="row-title">Buổi PT lẻ · 18/09 <span class="badge badge-ok">Đã thanh toán</span></div>
+            <div class="row-title">Buổi PT lẻ · 30/09 <span class="badge badge-ok">Thành công</span></div>
             <div class="row-meta">
-              <span><i class="fa-solid fa-hashtag"></i> DH-2026-1187</span>
-              <span><i class="fa-solid fa-calendar-days"></i> 18/09/2026</span>
-              <span><i class="fa-solid fa-receipt"></i> VAT 40.741đ</span>
+              <span><i class="fa-solid fa-hashtag"></i> Mã đơn DH-2026-1187</span>
+              <span><i class="fa-solid fa-calendar-days"></i> 18/09/2026 14:02</span>
+              <span><i class="fa-solid fa-credit-card"></i> Cổng thanh toán</span>
             </div>
           </div>
           <div class="row-actions">
-            <b class="tabular">550.000đ</b>
+            <b class="tabular">450.000đ</b>
             <button class="btn btn-ghost btn-sm" type="button" data-toggle-detail aria-expanded="false">Chi tiết</button>
           </div>
           <div class="row-detail" hidden>
-            <table class="tx-table">
-              <thead><tr><th>Thời điểm</th><th>Phương thức</th><th>Số tiền</th><th>Kết quả</th></tr></thead>
-              <tbody>
-                <tr>
-                  <td data-label="Thời điểm" class="tabular">18/09/2026 14:02</td>
-                  <td data-label="Phương thức">Cổng online</td>
-                  <td data-label="Số tiền" class="tabular">550.000đ</td>
-                  <td data-label="Kết quả"><span class="badge badge-ok">Thành công</span></td>
-                </tr>
-              </tbody>
-            </table>
+            <div class="side-row"><span>Giá gốc</span><b class="tabular">450.000đ</b></div>
+            <div class="side-row"><span>Giảm giá</span><b>Không áp dụng</b></div>
+            <div class="side-row"><span>Đã gồm VAT 8%</span><b class="tabular">33.333đ</b></div>
+            <div class="side-row"><span>Phương thức</span><b>Cổng thanh toán</b></div>
+            <div class="side-row"><span>Mã đơn</span><b class="tabular">DH-2026-1187</b></div>
+            
           </div>
         </div>
-        <div class="data-row" data-status="Paid" data-date="04/09/2026" data-q="dh-2026-1166 buổi pt lẻ · 04/09">
+        <div class="data-row" data-status="Success" data-date="04/09/2026" data-q="dh-2026-1166 buổi pt lẻ · 12/09 cổng thanh toán">
           <div class="row-main">
-            <div class="row-title">Buổi PT lẻ · 04/09 <span class="badge badge-ok">Đã thanh toán</span></div>
+            <div class="row-title">Buổi PT lẻ · 12/09 <span class="badge badge-ok">Thành công</span></div>
             <div class="row-meta">
-              <span><i class="fa-solid fa-hashtag"></i> DH-2026-1166</span>
-              <span><i class="fa-solid fa-calendar-days"></i> 04/09/2026</span>
-              <span><i class="fa-solid fa-receipt"></i> VAT 40.741đ</span>
+              <span><i class="fa-solid fa-hashtag"></i> Mã đơn DH-2026-1166</span>
+              <span><i class="fa-solid fa-calendar-days"></i> 04/09/2026 10:18</span>
+              <span><i class="fa-solid fa-credit-card"></i> Cổng thanh toán</span>
             </div>
           </div>
           <div class="row-actions">
-            <b class="tabular">550.000đ</b>
+            <b class="tabular">450.000đ</b>
             <button class="btn btn-ghost btn-sm" type="button" data-toggle-detail aria-expanded="false">Chi tiết</button>
           </div>
           <div class="row-detail" hidden>
-            <table class="tx-table">
-              <thead><tr><th>Thời điểm</th><th>Phương thức</th><th>Số tiền</th><th>Kết quả</th></tr></thead>
-              <tbody>
-                <tr>
-                  <td data-label="Thời điểm" class="tabular">04/09/2026 10:18</td>
-                  <td data-label="Phương thức">Cổng online</td>
-                  <td data-label="Số tiền" class="tabular">550.000đ</td>
-                  <td data-label="Kết quả"><span class="badge badge-ok">Thành công</span></td>
-                </tr>
-              </tbody>
-            </table>
+            <div class="side-row"><span>Giá gốc</span><b class="tabular">450.000đ</b></div>
+            <div class="side-row"><span>Giảm giá</span><b>Không áp dụng</b></div>
+            <div class="side-row"><span>Đã gồm VAT 8%</span><b class="tabular">33.333đ</b></div>
+            <div class="side-row"><span>Phương thức</span><b>Cổng thanh toán</b></div>
+            <div class="side-row"><span>Mã đơn</span><b class="tabular">DH-2026-1166</b></div>
+            
           </div>
         </div>
-        <div class="data-row" data-status="Paid" data-date="28/08/2026" data-q="dh-2026-1152 gói ngày">
+        <div class="data-row" data-status="Success" data-date="20/08/2026" data-q="dh-2026-1147 buổi pt lẻ · 24/08 cổng thanh toán">
           <div class="row-main">
-            <div class="row-title">Gói Ngày <span class="badge badge-ok">Đã thanh toán</span></div>
+            <div class="row-title">Buổi PT lẻ · 24/08 <span class="badge badge-ok">Thành công</span></div>
             <div class="row-meta">
-              <span><i class="fa-solid fa-hashtag"></i> DH-2026-1152</span>
-              <span><i class="fa-solid fa-calendar-days"></i> 28/08/2026</span>
-              <span><i class="fa-solid fa-receipt"></i> VAT 8.889đ</span>
+              <span><i class="fa-solid fa-hashtag"></i> Mã đơn DH-2026-1147</span>
+              <span><i class="fa-solid fa-calendar-days"></i> 20/08/2026 09:44</span>
+              <span><i class="fa-solid fa-credit-card"></i> Cổng thanh toán</span>
             </div>
           </div>
           <div class="row-actions">
-            <b class="tabular">120.000đ</b>
+            <b class="tabular">450.000đ</b>
             <button class="btn btn-ghost btn-sm" type="button" data-toggle-detail aria-expanded="false">Chi tiết</button>
           </div>
           <div class="row-detail" hidden>
-            <table class="tx-table">
-              <thead><tr><th>Thời điểm</th><th>Phương thức</th><th>Số tiền</th><th>Kết quả</th></tr></thead>
-              <tbody>
-                <tr>
-                  <td data-label="Thời điểm" class="tabular">28/08/2026 07:45</td>
-                  <td data-label="Phương thức">Tại quầy</td>
-                  <td data-label="Số tiền" class="tabular">120.000đ</td>
-                  <td data-label="Kết quả"><span class="badge badge-ok">Thành công</span></td>
-                </tr>
-              </tbody>
-            </table>
+            <div class="side-row"><span>Giá gốc</span><b class="tabular">450.000đ</b></div>
+            <div class="side-row"><span>Giảm giá</span><b>Không áp dụng</b></div>
+            <div class="side-row"><span>Đã gồm VAT 8%</span><b class="tabular">33.333đ</b></div>
+            <div class="side-row"><span>Phương thức</span><b>Cổng thanh toán</b></div>
+            <div class="side-row"><span>Mã đơn</span><b class="tabular">DH-2026-1147</b></div>
+            
           </div>
         </div>
-        <div class="data-row" data-status="Cancelled" data-date="15/08/2026" data-q="dh-2026-1140 buổi pt lẻ · 15/08">
+        <div class="data-row" data-status="Success" data-date="17/08/2026" data-q="dh-2026-1143 gói pt 3 tháng tiền mặt">
           <div class="row-main">
-            <div class="row-title">Buổi PT lẻ · 15/08 <span class="badge badge-muted">Đã hủy</span></div>
+            <div class="row-title">Gói PT 3 Tháng <span class="badge badge-ok">Thành công</span></div>
             <div class="row-meta">
-              <span><i class="fa-solid fa-hashtag"></i> DH-2026-1140</span>
-              <span><i class="fa-solid fa-calendar-days"></i> 15/08/2026</span>
-              <span><i class="fa-solid fa-receipt"></i> VAT 40.741đ</span>
+              <span><i class="fa-solid fa-hashtag"></i> Mã đơn DH-2026-1143</span>
+              <span><i class="fa-solid fa-calendar-days"></i> 17/08/2026 10:15</span>
+              <span><i class="fa-solid fa-credit-card"></i> Tiền mặt</span>
             </div>
           </div>
           <div class="row-actions">
-            <b class="tabular">550.000đ</b>
+            <b class="tabular">23.900.000đ</b>
             <button class="btn btn-ghost btn-sm" type="button" data-toggle-detail aria-expanded="false">Chi tiết</button>
           </div>
           <div class="row-detail" hidden>
-            <table class="tx-table">
-              <thead><tr><th>Thời điểm</th><th>Phương thức</th><th>Số tiền</th><th>Kết quả</th></tr></thead>
-              <tbody>
-                <tr>
-                  <td data-label="Thời điểm" class="tabular">15/08/2026 19:30</td>
-                  <td data-label="Phương thức">Cổng online</td>
-                  <td data-label="Số tiền" class="tabular">550.000đ</td>
-                  <td data-label="Kết quả"><span class="badge badge-danger">Thất bại</span></td>
-                </tr>
-                <tr>
-                  <td data-label="Thời điểm" class="tabular">15/08/2026 20:05</td>
-                  <td data-label="Phương thức">Cổng online</td>
-                  <td data-label="Số tiền" class="tabular">550.000đ</td>
-                  <td data-label="Kết quả"><span class="badge badge-muted">Hết hạn</span></td>
-                </tr>
-              </tbody>
-            </table>
+            <div class="side-row"><span>Giá gốc</span><b class="tabular">23.900.000đ</b></div>
+            <div class="side-row"><span>Giảm giá</span><b>Không áp dụng</b></div>
+            <div class="side-row"><span>Đã gồm VAT 8%</span><b class="tabular">1.770.370đ</b></div>
+            <div class="side-row"><span>Phương thức</span><b>Tiền mặt</b></div>
+            <div class="side-row"><span>Mã đơn</span><b class="tabular">DH-2026-1143</b></div>
+            <p class="muted">Thu tại quầy</p>
           </div>
         </div>
-        <div class="data-row" data-status="Paid" data-date="22/07/2026" data-q="dh-2026-1098 gói ngày">
+        <div class="data-row" data-status="Expired" data-date="15/08/2026" data-q="dh-2026-1140 buổi pt lẻ · 22/08 cổng thanh toán">
           <div class="row-main">
-            <div class="row-title">Gói Ngày <span class="badge badge-ok">Đã thanh toán</span></div>
+            <div class="row-title">Buổi PT lẻ · 22/08 <span class="badge badge-muted">Hết hạn</span></div>
             <div class="row-meta">
-              <span><i class="fa-solid fa-hashtag"></i> DH-2026-1098</span>
-              <span><i class="fa-solid fa-calendar-days"></i> 22/07/2026</span>
-              <span><i class="fa-solid fa-receipt"></i> VAT 8.889đ</span>
+              <span><i class="fa-solid fa-hashtag"></i> Mã đơn DH-2026-1140</span>
+              <span><i class="fa-solid fa-calendar-days"></i> 15/08/2026 20:05</span>
+              <span><i class="fa-solid fa-credit-card"></i> Cổng thanh toán</span>
             </div>
           </div>
           <div class="row-actions">
-            <b class="tabular">120.000đ</b>
+            <b class="tabular">450.000đ</b>
             <button class="btn btn-ghost btn-sm" type="button" data-toggle-detail aria-expanded="false">Chi tiết</button>
           </div>
           <div class="row-detail" hidden>
-            <table class="tx-table">
-              <thead><tr><th>Thời điểm</th><th>Phương thức</th><th>Số tiền</th><th>Kết quả</th></tr></thead>
-              <tbody>
-                <tr>
-                  <td data-label="Thời điểm" class="tabular">22/07/2026 08:02</td>
-                  <td data-label="Phương thức">Tại quầy</td>
-                  <td data-label="Số tiền" class="tabular">120.000đ</td>
-                  <td data-label="Kết quả"><span class="badge badge-ok">Thành công</span></td>
-                </tr>
-              </tbody>
-            </table>
+            <div class="side-row"><span>Giá gốc</span><b class="tabular">450.000đ</b></div>
+            <div class="side-row"><span>Giảm giá</span><b>Không áp dụng</b></div>
+            <div class="side-row"><span>Đã gồm VAT 8%</span><b class="tabular">33.333đ</b></div>
+            <div class="side-row"><span>Phương thức</span><b>Cổng thanh toán</b></div>
+            <div class="side-row"><span>Mã đơn</span><b class="tabular">DH-2026-1140</b></div>
+            <p class="muted">Đơn đã hủy do quá hạn thanh toán</p>
           </div>
         </div>
-        <div class="data-row" data-status="Paid" data-date="02/06/2026" data-q="dh-2026-1043 gói pt 10 buổi">
+        <div class="data-row" data-status="Failed" data-date="15/08/2026" data-q="dh-2026-1140 buổi pt lẻ · 22/08 cổng thanh toán">
           <div class="row-main">
-            <div class="row-title">Gói PT 10 Buổi <span class="badge badge-ok">Đã thanh toán</span></div>
+            <div class="row-title">Buổi PT lẻ · 22/08 <span class="badge badge-danger">Thất bại</span></div>
             <div class="row-meta">
-              <span><i class="fa-solid fa-hashtag"></i> DH-2026-1043</span>
-              <span><i class="fa-solid fa-calendar-days"></i> 02/06/2026</span>
-              <span><i class="fa-solid fa-receipt"></i> VAT 333.333đ</span>
+              <span><i class="fa-solid fa-hashtag"></i> Mã đơn DH-2026-1140</span>
+              <span><i class="fa-solid fa-calendar-days"></i> 15/08/2026 19:30</span>
+              <span><i class="fa-solid fa-credit-card"></i> Cổng thanh toán</span>
             </div>
           </div>
           <div class="row-actions">
-            <b class="tabular">4.500.000đ</b>
+            <b class="tabular">450.000đ</b>
             <button class="btn btn-ghost btn-sm" type="button" data-toggle-detail aria-expanded="false">Chi tiết</button>
           </div>
           <div class="row-detail" hidden>
-            <table class="tx-table">
-              <thead><tr><th>Thời điểm</th><th>Phương thức</th><th>Số tiền</th><th>Kết quả</th></tr></thead>
-              <tbody>
-                <tr>
-                  <td data-label="Thời điểm" class="tabular">02/06/2026 17:25</td>
-                  <td data-label="Phương thức">Tại quầy</td>
-                  <td data-label="Số tiền" class="tabular">4.500.000đ</td>
-                  <td data-label="Kết quả"><span class="badge badge-ok">Thành công</span></td>
-                </tr>
-              </tbody>
-            </table>
+            <div class="side-row"><span>Giá gốc</span><b class="tabular">450.000đ</b></div>
+            <div class="side-row"><span>Giảm giá</span><b>Không áp dụng</b></div>
+            <div class="side-row"><span>Đã gồm VAT 8%</span><b class="tabular">33.333đ</b></div>
+            <div class="side-row"><span>Phương thức</span><b>Cổng thanh toán</b></div>
+            <div class="side-row"><span>Mã đơn</span><b class="tabular">DH-2026-1140</b></div>
+            <p class="muted">Ngân hàng từ chối</p>
           </div>
         </div>
-        <div class="data-row" data-status="Paid" data-date="24/05/2026" data-q="dh-2026-0988 buổi pt lẻ · 24/05">
+        <div class="data-row" data-status="Success" data-date="15/05/2026" data-q="dh-2026-0912 gói 6 tháng cổng thanh toán">
           <div class="row-main">
-            <div class="row-title">Buổi PT lẻ · 24/05 <span class="badge badge-ok">Đã thanh toán</span></div>
+            <div class="row-title">Gói 6 Tháng <span class="badge badge-ok">Thành công</span></div>
             <div class="row-meta">
-              <span><i class="fa-solid fa-hashtag"></i> DH-2026-0988</span>
-              <span><i class="fa-solid fa-calendar-days"></i> 24/05/2026</span>
-              <span><i class="fa-solid fa-receipt"></i> VAT 40.741đ</span>
-            </div>
-          </div>
-          <div class="row-actions">
-            <b class="tabular">550.000đ</b>
-            <button class="btn btn-ghost btn-sm" type="button" data-toggle-detail aria-expanded="false">Chi tiết</button>
-          </div>
-          <div class="row-detail" hidden>
-            <table class="tx-table">
-              <thead><tr><th>Thời điểm</th><th>Phương thức</th><th>Số tiền</th><th>Kết quả</th></tr></thead>
-              <tbody>
-                <tr>
-                  <td data-label="Thời điểm" class="tabular">24/05/2026 16:40</td>
-                  <td data-label="Phương thức">Cổng online</td>
-                  <td data-label="Số tiền" class="tabular">550.000đ</td>
-                  <td data-label="Kết quả"><span class="badge badge-ok">Thành công</span></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-        <div class="data-row" data-status="Paid" data-date="15/05/2026" data-q="dh-2026-0912 gói 6 tháng">
-          <div class="row-main">
-            <div class="row-title">Gói 6 Tháng <span class="badge badge-ok">Đã thanh toán</span></div>
-            <div class="row-meta">
-              <span><i class="fa-solid fa-hashtag"></i> DH-2026-0912</span>
-              <span><i class="fa-solid fa-calendar-days"></i> 15/05/2026</span>
-              <span><i class="fa-solid fa-receipt"></i> VAT 295.556đ</span>
+              <span><i class="fa-solid fa-hashtag"></i> Mã đơn DH-2026-0912</span>
+              <span><i class="fa-solid fa-calendar-days"></i> 15/05/2026 08:36</span>
+              <span><i class="fa-solid fa-credit-card"></i> Cổng thanh toán</span>
             </div>
           </div>
           <div class="row-actions">
@@ -353,32 +284,43 @@
             <button class="btn btn-ghost btn-sm" type="button" data-toggle-detail aria-expanded="false">Chi tiết</button>
           </div>
           <div class="row-detail" hidden>
-            <table class="tx-table">
-              <thead><tr><th>Thời điểm</th><th>Phương thức</th><th>Số tiền</th><th>Kết quả</th></tr></thead>
-              <tbody>
-                <tr>
-                  <td data-label="Thời điểm" class="tabular">15/05/2026 08:31</td>
-                  <td data-label="Phương thức">Cổng online</td>
-                  <td data-label="Số tiền" class="tabular">3.990.000đ</td>
-                  <td data-label="Kết quả"><span class="badge badge-danger">Thất bại</span></td>
-                </tr>
-                <tr>
-                  <td data-label="Thời điểm" class="tabular">15/05/2026 08:36</td>
-                  <td data-label="Phương thức">Cổng online</td>
-                  <td data-label="Số tiền" class="tabular">3.990.000đ</td>
-                  <td data-label="Kết quả"><span class="badge badge-ok">Thành công</span></td>
-                </tr>
-              </tbody>
-            </table>
+            <div class="side-row"><span>Giá gốc</span><b class="tabular">3.990.000đ</b></div>
+            <div class="side-row"><span>Giảm giá</span><b>Không áp dụng</b></div>
+            <div class="side-row"><span>Đã gồm VAT 8%</span><b class="tabular">295.556đ</b></div>
+            <div class="side-row"><span>Phương thức</span><b>Cổng thanh toán</b></div>
+            <div class="side-row"><span>Mã đơn</span><b class="tabular">DH-2026-0912</b></div>
+            
           </div>
         </div>
-        <div class="data-row" data-status="Paid" data-date="12/05/2026" data-q="dh-2026-0905 gói ngày">
+        <div class="data-row" data-status="Failed" data-date="15/05/2026" data-q="dh-2026-0912 gói 6 tháng cổng thanh toán">
           <div class="row-main">
-            <div class="row-title">Gói Ngày <span class="badge badge-ok">Đã thanh toán</span></div>
+            <div class="row-title">Gói 6 Tháng <span class="badge badge-danger">Thất bại</span></div>
             <div class="row-meta">
-              <span><i class="fa-solid fa-hashtag"></i> DH-2026-0905</span>
-              <span><i class="fa-solid fa-calendar-days"></i> 12/05/2026</span>
-              <span><i class="fa-solid fa-receipt"></i> VAT 8.889đ</span>
+              <span><i class="fa-solid fa-hashtag"></i> Mã đơn DH-2026-0912</span>
+              <span><i class="fa-solid fa-calendar-days"></i> 15/05/2026 08:31</span>
+              <span><i class="fa-solid fa-credit-card"></i> Cổng thanh toán</span>
+            </div>
+          </div>
+          <div class="row-actions">
+            <b class="tabular">3.990.000đ</b>
+            <button class="btn btn-ghost btn-sm" type="button" data-toggle-detail aria-expanded="false">Chi tiết</button>
+          </div>
+          <div class="row-detail" hidden>
+            <div class="side-row"><span>Giá gốc</span><b class="tabular">3.990.000đ</b></div>
+            <div class="side-row"><span>Giảm giá</span><b>Không áp dụng</b></div>
+            <div class="side-row"><span>Đã gồm VAT 8%</span><b class="tabular">295.556đ</b></div>
+            <div class="side-row"><span>Phương thức</span><b>Cổng thanh toán</b></div>
+            <div class="side-row"><span>Mã đơn</span><b class="tabular">DH-2026-0912</b></div>
+            <p class="muted">Ngân hàng từ chối</p>
+          </div>
+        </div>
+        <div class="data-row" data-status="Success" data-date="12/05/2026" data-q="dh-2026-0905 gói ngày tiền mặt">
+          <div class="row-main">
+            <div class="row-title">Gói Ngày <span class="badge badge-ok">Thành công</span></div>
+            <div class="row-meta">
+              <span><i class="fa-solid fa-hashtag"></i> Mã đơn DH-2026-0905</span>
+              <span><i class="fa-solid fa-calendar-days"></i> 12/05/2026 18:20</span>
+              <span><i class="fa-solid fa-credit-card"></i> Tiền mặt</span>
             </div>
           </div>
           <div class="row-actions">
@@ -386,17 +328,12 @@
             <button class="btn btn-ghost btn-sm" type="button" data-toggle-detail aria-expanded="false">Chi tiết</button>
           </div>
           <div class="row-detail" hidden>
-            <table class="tx-table">
-              <thead><tr><th>Thời điểm</th><th>Phương thức</th><th>Số tiền</th><th>Kết quả</th></tr></thead>
-              <tbody>
-                <tr>
-                  <td data-label="Thời điểm" class="tabular">12/05/2026 18:20</td>
-                  <td data-label="Phương thức">Tại quầy</td>
-                  <td data-label="Số tiền" class="tabular">120.000đ</td>
-                  <td data-label="Kết quả"><span class="badge badge-ok">Thành công</span></td>
-                </tr>
-              </tbody>
-            </table>
+            <div class="side-row"><span>Giá gốc</span><b class="tabular">120.000đ</b></div>
+            <div class="side-row"><span>Giảm giá</span><b>Không áp dụng</b></div>
+            <div class="side-row"><span>Đã gồm VAT 8%</span><b class="tabular">8.889đ</b></div>
+            <div class="side-row"><span>Phương thức</span><b>Tiền mặt</b></div>
+            <div class="side-row"><span>Mã đơn</span><b class="tabular">DH-2026-0905</b></div>
+            <p class="muted">Thu tại quầy</p>
           </div>
         </div>
         <div class="empty-state" data-empty hidden>

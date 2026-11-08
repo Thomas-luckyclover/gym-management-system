@@ -1,0 +1,81 @@
+@charset "UTF-8";
+/* base.css — Bố cục trang và vị trí topbar cho PT Dashboard.
+   Thẻ người dùng (user badge) nằm riêng trong dashboard.css để tránh xung đột. */
+
+:is(.pt-dashboard-page, .customer-weather-page) {
+  --awning-h: var(--space-12);
+  --pt-awning-height: var(--awning-h);
+  --pt-header-h: var(--space-12);
+  padding-top: var(--awning-h);
+  scroll-padding-top: calc(var(--pt-header-h) + var(--space-3));
+  font-family: var(--font-body);
+  scrollbar-gutter: stable;
+}
+
+:is(.pt-dashboard-page, .customer-weather-page) .app {
+  position: relative;
+  background: transparent;
+}
+
+:is(.pt-dashboard-page, .customer-weather-page) .main {
+  padding-top: 0;
+}
+
+/* Bình thường header sticky dưới bạt. Khi bạt thu, ::before giữ chỗ của header fixed. */
+:is(.pt-dashboard-page, .customer-weather-page) .topbar {
+  top: var(--awning-h);
+  height: var(--pt-header-h);
+  box-sizing: border-box;
+  padding: var(--space-2) max(var(--layout-gutter), calc((100% - var(--layout-content-width)) / 2));
+  border-bottom-color: color-mix(in srgb, var(--color-surface) 18%, transparent);
+  background:
+    linear-gradient(115deg,
+      color-mix(in srgb, var(--pt-sky-top) 7%, transparent),
+      color-mix(in srgb, var(--pt-sky-bottom) 5%, transparent)),
+    color-mix(in srgb, var(--color-surface) 8%, transparent);
+  box-shadow: inset 0 1px color-mix(in srgb, var(--color-surface) 26%, transparent), 0 8px 24px -22px var(--pt-awning-rail);
+  backdrop-filter: blur(6px) saturate(1.04);
+  -webkit-backdrop-filter: blur(6px) saturate(1.04);
+  transition: top 500ms cubic-bezier(.21, 1.3, .41, 1), box-shadow 500ms var(--ease-out);
+}
+:is(.pt-dashboard-page, .customer-weather-page).is-retracted .main::before {
+  content: "";
+  display: block;
+  height: var(--pt-header-h);
+}
+:is(.pt-dashboard-page, .customer-weather-page).is-retracted .topbar {
+  position: fixed;
+  top: var(--space-1-5);
+  right: 0;
+  left: 0;
+  width: 100%;
+  box-shadow: var(--pt-card-shadow);
+}
+:is(.pt-dashboard-page, .customer-weather-page) .content > section { scroll-margin-top: calc(var(--pt-header-h) + var(--space-3)); }
+/* Rail mỏng vẫn ở mép trên khi bạt đã cuốn khỏi màn hình. */
+:is(.pt-dashboard-page, .customer-weather-page)::before {
+  content: "";
+  position: fixed;
+  z-index: var(--z-header);
+  inset: 0 0 auto;
+  height: var(--space-1-5);
+  background: var(--pt-awning-rail);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration-slow);
+}
+:is(.pt-dashboard-page, .customer-weather-page).is-retracted::before {
+  opacity: 1;
+}
+
+@media (max-width: 640px) {
+  :is(.pt-dashboard-page, .customer-weather-page) {
+    --awning-h: var(--space-10);
+    --pt-header-h: var(--space-10);
+  }
+  :is(.pt-dashboard-page, .customer-weather-page) .topbar { padding-inline: var(--layout-gutter-mobile); }
+}
+@media (prefers-reduced-motion: reduce) {
+  :is(.pt-dashboard-page, .customer-weather-page) .topbar,
+  :is(.pt-dashboard-page, .customer-weather-page)::before { transition: none; }
+}

@@ -1,0 +1,276 @@
+/* Chi tiết Journal: bề rộng đọc 72ch; ảnh bìa tự nhiên 3:2.
+   blog-detail.js dùng #readingProgressBar, #articleBody, #btnShareArticle, #btnScrollToTop. */
+.journal-detail #readingProgressBar {
+  position: fixed;
+  inset: 0 auto auto 0;
+  height: var(--border-width-accent);
+  width: 0%;
+  background: var(--brand-ember);
+  z-index: var(--z-header);
+}
+
+.journal-detail .article-wrap {
+  max-width: var(--layout-text-max-width);
+  margin-inline: auto;
+  padding-block: var(--space-8) var(--space-12);
+}
+
+.journal-detail .back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--control-height-lg);
+  margin-bottom: var(--space-5);
+  color: var(--brand-muted);
+  font-size: var(--font-size-sm);
+  text-decoration: none;
+}
+
+.journal-detail .back-link:hover {
+  color: var(--brand-ember);
+}
+
+.journal-detail .article-cover {
+  position: relative;
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  background: var(--brand-ocean-deep);
+  margin-bottom: var(--space-6);
+}
+
+.journal-detail .article-cover-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.journal-detail .article-cover-fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--brand-aqua);
+}
+
+.journal-detail .article-cover-fallback.is-hidden {
+  display: none;
+}
+
+.journal-detail .article-cover-icon {
+  font-size: var(--font-size-display);
+  position: relative;
+}
+
+.journal-detail .article-wrap h1 {
+  font-family: var(--font-body);
+  font-size: var(--font-size-display);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-snug);
+  letter-spacing: var(--letter-spacing-normal);
+  text-wrap: balance;
+  margin-block: var(--space-4) var(--space-5);
+}
+
+.journal-detail .article-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+  padding-bottom: var(--space-5);
+  border-bottom: var(--border-width) solid var(--brand-line);
+  color: var(--brand-muted);
+  font-size: var(--font-size-sm);
+}
+
+.journal-detail .meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.journal-detail .btn-share, .journal-detail .btn-top {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--control-height-lg);
+  padding: var(--space-2) var(--space-4);
+  border: var(--border-width) solid var(--brand-line);
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--brand-paper);
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+
+.journal-detail .btn-share {
+  margin-left: auto;
+}
+
+.journal-detail .btn-share:hover, .journal-detail .btn-top:hover {
+  border-color: var(--brand-ember);
+  color: var(--brand-ember);
+}
+
+.journal-detail .btn-share:focus-visible, .journal-detail .btn-top:focus-visible, .journal-detail .back-link:focus-visible {
+  outline: var(--focus-outline-width) solid var(--brand-aqua);
+  outline-offset: var(--focus-outline-offset);
+}
+
+.journal-detail .article-body {
+  margin-top: var(--space-8);
+  font-family: var(--font-body);
+  font-size: var(--font-size-lg);
+  line-height: var(--line-height-relaxed);
+  color: var(--brand-paper);
+  overflow-wrap: anywhere;
+}
+
+.journal-detail .article-body p {
+  margin-block: 0 var(--space-5);
+}
+
+.journal-detail .article-body h2 {
+  font-size: var(--font-size-2xl);
+  margin-block: var(--space-10) var(--space-4);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-snug);
+  text-wrap: balance;
+}
+
+.journal-detail .article-body h3 {
+  font-size: var(--font-size-xl);
+  margin-block: var(--space-8) var(--space-4);
+  line-height: var(--line-height-normal);
+}
+
+.journal-detail .article-body h4 {
+  font-size: var(--font-size-lg);
+  margin-block: var(--space-6) var(--space-3);
+}
+
+.journal-detail .article-body a {
+  color: var(--brand-aqua);
+  text-underline-offset: var(--space-1);
+}
+
+.journal-detail .article-body a:hover {
+  color: var(--brand-paper);
+}
+
+.journal-detail .article-body ul, .journal-detail .article-body ol {
+  margin-block: var(--space-5);
+  padding-left: var(--space-6);
+}
+
+.journal-detail .article-body li {
+  padding-left: var(--space-1);
+  margin-bottom: var(--space-3);
+}
+
+.journal-detail .article-body li::marker {
+  color: var(--brand-ember);
+}
+
+.journal-detail .article-body blockquote {
+  margin: var(--space-8) 0;
+  padding: var(--space-6);
+  background: var(--brand-ocean-deep);
+  font-size: var(--font-size-xl);
+  line-height: var(--line-height-relaxed);
+}
+
+.journal-detail .article-body blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+.journal-detail .article-body img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin-block: var(--space-6);
+}
+
+.journal-detail .article-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-block: var(--space-6);
+  font-size: var(--font-size-sm);
+}
+
+.journal-detail .article-body th, .journal-detail .article-body td {
+  padding: var(--space-3);
+  border: var(--border-width) solid var(--brand-line);
+  text-align: left;
+}
+
+.journal-detail .article-body th {
+  background: var(--brand-ocean-deep);
+}
+
+.journal-detail .article-body hr {
+  border: 0;
+  border-top: var(--border-width) solid var(--brand-line);
+  margin-block: var(--space-8);
+}
+
+.journal-detail .article-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  border-top: var(--border-width) solid var(--brand-line);
+  padding-top: var(--space-6);
+  margin-top: var(--space-10);
+}
+
+.journal-detail .back-link-flush {
+  margin-bottom: 0;
+}
+
+.journal-detail .related-section {
+  padding-block: var(--space-12);
+  background: var(--brand-ocean-surface);
+}
+
+.journal-detail .section-head {
+  margin-bottom: var(--space-8);
+}
+
+.journal-detail .section-head h2 {
+  margin: 0;
+  font-family: var(--font-cinematic);
+  font-size: var(--brand-heading-size);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+  text-transform: uppercase;
+}
+
+.journal-detail .section-head .eyebrow {
+  display: none;
+}
+@media (max-width: 640px) {
+  .journal-detail .article-wrap {
+  padding-top: var(--space-5);
+}
+
+.journal-detail .article-body {
+  font-size: var(--font-size-base);
+}
+
+.journal-detail .article-wrap h1 {
+  font-size: var(--font-size-4xl);
+}
+
+.journal-detail .btn-share {
+  margin-left: 0;
+}
+
+.journal-detail .article-nav {
+  align-items: flex-start;
+}
+}

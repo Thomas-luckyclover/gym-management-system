@@ -6,8 +6,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Các thao tác lặp lại ở Servlet/Filter: đọc tham số, forward/redirect, toast qua redirect, nhận diện AJAX.
@@ -29,10 +32,7 @@ public final class RequestUtil {
     // ===== Đọc tham số =====
 
     /**
-     * Đọc tham số dạng chuỗi, đã trim (GBR-19: từ khóa luôn được trim).
-     * @param request request hiện tại
-     * @param name tên tham số
-     * @return chuỗi đã trim, hoặc null nếu không gửi lên
+     * Đọc tham số dạng chuỗi (đã trim). Trả null nếu không gửi lên.
      */
     public static String getTrimmedParam(HttpServletRequest request, String name) {
         String value = request.getParameter(name);
@@ -43,11 +43,7 @@ public final class RequestUtil {
     }
 
     /**
-     * Đọc tham số dạng số nguyên, sai định dạng thì dùng giá trị mặc định.
-     * @param request request hiện tại
-     * @param name tên tham số
-     * @param defaultValue giá trị khi thiếu/sai
-     * @return số nguyên
+     * Đọc tham số dạng số nguyên. Sai/không có thì trả defaultValue.
      */
     public static int getIntParam(HttpServletRequest request, String name, int defaultValue) {
         String value = request.getParameter(name);
@@ -57,13 +53,32 @@ public final class RequestUtil {
         return Integer.parseInt(value.trim());
     }
 
+    /**
+     * Đọc tham số dạng số nguyên dương. Trả null nếu rỗng/sai/không dương.
+     * Khác getIntParam: phân biệt được "không có tham số" với "tham số sai/≤ 0"
+     * — servlet dùng khi cần fail thân thiện thay vì lặng lẽ dùng default.
+     *
+     * @param request request gửi lên
+     * @param name    tên tham số
+     * @return số nguyên dương, hoặc null nếu thiếu/sai/không dương
+     */
+    public static Integer getPositiveIntParam(HttpServletRequest request, String name) {
+        String value = request.getParameter(name);
+        if (ValidationUtil.isNullOrEmpty(value)) {
+            return null;
+        }
+        try {
+            int parsed = Integer.parseInt(value.trim());
+            return parsed > 0 ? parsed : null;
+        } catch (NumberFormatException ex) {
+            return null;
+        }
+    }
+
     // ===== Điều hướng =====
 
     /**
-     * Forward tới JSP trong WEB-INF/jsp.
-     * @param request request hiện tại
-     * @param response response hiện tại
-     * @param viewName đường dẫn tương đối, không đuôi .jsp — VD "customer/dashboard"
+     * Forward tới JSP trong WEB-INF/jsp (đường dẫn không kèm đuôi .jsp).
      */
     public static void forward(HttpServletRequest request, HttpServletResponse response, String viewName)
             throws ServletException, IOException {
@@ -72,10 +87,7 @@ public final class RequestUtil {
     }
 
     /**
-     * Redirect tới 1 đường dẫn trong ứng dụng (tự gắn context path ở đầu).
-     * @param request request hiện tại
-     * @param response response hiện tại
-     * @param path đường dẫn tính từ context path — VD "/customer/dashboard"
+     * Redirect tới đường dẫn trong ứng dụng (hàm tự gắn context path).
      */
     public static void redirect(HttpServletRequest request, HttpServletResponse response, String path)
             throws IOException {
@@ -85,10 +97,7 @@ public final class RequestUtil {
     // ===== Toast qua redirect (Post/Redirect/Get) =====
 
     /**
-     * Gắn toast để trang KẾ TIẾP (sau redirect) hiển thị — JSP include common/flash-toast.jspf sẽ hiện rồi xóa.
-     * @param request request hiện tại
-     * @param type "success" | "info" | "warning" | "error"
-     * @param message nội dung thông báo
+     * Gắn toast để trang KẾ TIẾP (sau redirect) hiển thị rồi tự xoá.
      */
     public static void setFlashToast(HttpServletRequest request, String type, String message) {
         Map<String, String> toast = new LinkedHashMap<>();
@@ -96,14 +105,12 @@ public final class RequestUtil {
         toast.put("message", message);
         HttpSession session = request.getSession();
         session.setAttribute(SessionKey.FLASH_TOAST, toast);
-    }
+    } 
 
     // ===== Nhận diện request =====
 
     /**
      * Request có phải gọi bằng AJAX (qua js/common.js) không — Filter dùng để trả JSON 401/403 thay vì redirect.
-     * @param request request hiện tại
-     * @return true nếu là AJAX
      */
     public static boolean isAjaxRequest(HttpServletRequest request) {
         String headerValue = request.getHeader(AJAX_HEADER);
@@ -111,9 +118,7 @@ public final class RequestUtil {
     }
 
     /**
-     * Đường dẫn request tính từ context path, VD "/customer/dashboard".
-     * @param request request hiện tại
-     * @return đường dẫn không gồm context path
+     * Đường dẫn request tính từ context path (không gồm context path).
      */
     public static String getPathWithinApp(HttpServletRequest request) {
         String uri = request.getRequestURI();
@@ -122,10 +127,7 @@ public final class RequestUtil {
     }
 
     /**
-     * GBR-31: kiểm tra returnUrl an toàn trước khi redirect về sau đăng nhập — chỉ cho phép đường dẫn nội bộ,
-     * chặn kiểu "https://trang-lua-dao.com" hoặc "//trang-lua-dao.com" (lỗ hổng Open Redirect).
-     * @param returnUrl giá trị lấy từ tham số returnUrl
-     * @return true nếu là đường dẫn nội bộ hợp lệ, VD "/customer/bookings?page=2"
+     * Kiểm tra returnUrl có phải đường dẫn nội bộ an toàn không (chặn open redirect tới trang lừa đảo).
      */
     public static boolean isSafeReturnUrl(String returnUrl) {
         if (ValidationUtil.isNullOrEmpty(returnUrl)) {
@@ -138,10 +140,8 @@ public final class RequestUtil {
     }
 
     /**
-     * Lấy IP thật của người dùng — VNPay bắt buộc gửi vnp_IpAddr.
-     * Nếu chạy sau proxy (ngrok khi test IPN) thì IP thật nằm ở header X-Forwarded-For.
-     * @param request request hiện tại
-     * @return địa chỉ IP
+     * Lấy IP thật của người dùng (VNPay bắt buộc gửi vnp_IpAddr).
+     * Nếu chạy sau proxy thì IP nằm ở header X-Forwarded-For.
      */
     public static String getClientIp(HttpServletRequest request) {
         String forwardedFor = request.getHeader("X-Forwarded-For");
@@ -150,5 +150,76 @@ public final class RequestUtil {
         }
         String[] ipList = forwardedFor.split(",");
         return ipList[0].trim();
+    }
+
+    // ===== CSRF Token (TC-17A) =====
+
+    /**
+     * Lấy hoặc sinh mới CSRF token ngẫu nhiên gắn với session hiện tại.
+     * @param session session của người dùng
+     * @return chuỗi token ngẫu nhiên, hoặc null nếu session null
+     */
+    public static String getOrCreateCsrfToken(HttpSession session) {
+        if (session == null) {
+            return null;
+        }
+        String token = (String) session.getAttribute(SessionKey.CSRF_TOKEN);
+        if (token == null || token.isBlank()) {
+            token = UUID.randomUUID().toString();
+            session.setAttribute(SessionKey.CSRF_TOKEN, token);
+        }
+        return token;
+    }
+
+    /**
+     * Kiểm tra CSRF token gửi lên từ request có khớp với token trong session không.
+     * Sử dụng so sánh an toàn tránh timing attack.
+     * @param request request gửi lên từ form
+     * @return true nếu token hợp lệ và khớp với session
+     */
+    public static boolean isValidCsrfToken(HttpServletRequest request) {
+        if (request == null) {
+            return false;
+        }
+        HttpSession session = request.getSession(false);
+        if (session == null) {
+            return false;
+        }
+        String sessionToken = (String) session.getAttribute(SessionKey.CSRF_TOKEN);
+        if (sessionToken == null || sessionToken.isBlank()) {
+            return false;
+        }
+        String requestToken = request.getParameter("csrfToken");
+        if (requestToken == null || requestToken.isBlank()) {
+            return false;
+        }
+        return MessageDigest.isEqual(
+                sessionToken.getBytes(StandardCharsets.UTF_8),
+                requestToken.getBytes(StandardCharsets.UTF_8)
+        );
+    }
+
+    /**
+     * Chặn POST có CSRF token sai / thiếu. Servlet gọi ở đầu doPost (sau bước kiểm đăng nhập):
+     *     if (RequestUtil.rejectInvalidCsrf(request, response, "/receptionist/shift")) { return; }
+     * Token đúng → trả false, Servlet làm tiếp. Token sai → tự trả lời rồi trả true:
+     *   AJAX (header X-Requested-With) → JSON 403 kèm MSG214; form thường → toast lỗi MSG214 + quay lại backPath.
+     * Token được common.js tự gắn vào mọi form POST và mọi postData (đọc từ meta csrf-token trong head.jspf).
+     * @param backPath đường dẫn tính từ context path để quay lại khi token sai, VD "/receptionist/check-in"
+     * @return true nếu đã chặn (Servlet phải return ngay)
+     */
+    public static boolean rejectInvalidCsrf(HttpServletRequest request, HttpServletResponse response, String backPath)
+            throws IOException {
+        if (isValidCsrfToken(request)) {
+            return false;
+        }
+        if (isAjaxRequest(request)) {
+            JsonUtil.writeJson(response, HttpServletResponse.SC_FORBIDDEN,
+                    com.gms.dto.JsonResponse.error(com.gms.constant.Messages.MSG214_FORM_SESSION_EXPIRED));
+        } else {
+            setFlashToast(request, "error", com.gms.constant.Messages.MSG214_FORM_SESSION_EXPIRED);
+            redirect(request, response, backPath);
+        }
+        return true;
     }
 }

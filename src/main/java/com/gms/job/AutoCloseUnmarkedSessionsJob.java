@@ -1,25 +1,26 @@
 package com.gms.job;
 
+import com.gms.service.AutoCloseSessionService;
 import java.sql.SQLException;
 
 /**
- * JOB-04 — Auto-close unmarked PT sessions (SRS 5.3 Background Job Inventory).
- *
- * Lịch chạy: hằng ngày, ngay sau JOB-03
- * Luật: buổi còn Scheduled quá P-07 (24h) sau giờ kết thúc → xét trước: buổi thuộc gói PT mà khách không còn gói tập hợp lệ → Missed; khách có check-in trong ngày buổi tập → Completed; không check-in → Missed.
- *
- * Người phụ trách gợi ý: TV5 (xem docs/team-plan.md).
- * TODO: gọi Service tương ứng trong run(); job KHÔNG tự viết SQL.
+ * JOB-04 — tự chốt trạng thái buổi tập mà PT chưa xử lý (Hủy buổi)
+ * Ai chạy: BackgroundJobScheduler, mỗi ngày 00:05 (sau JOB-01/02/03, trước JOB-08).
  */
 public class AutoCloseUnmarkedSessionsJob implements BackgroundJob {
-
+    // Tên job in ra log.
+    // Hàm này chỉ dùng cho log. Khi lỗi, Scheduler in "[JOB] JOB-04 Auto close… lỗi DB, thử lại sau 5 phút". @Override báo cho compiler kiểm tra: hàm này đúng là hàm trong interface. Gõ sai tên thì compiler báo lỗi ngay
     @Override
     public String getName() {
-        return "JOB-04 Auto-close unmarked PT sessions";
+        return "JOB-04 Auto close unmarked PT sessions";
     }
 
+    // Gọi AutoCloseSessionService.runJob() (ngày = hôm nay).
+    // new AutoCloseSessionService(): mỗi lượt tạo một Service mới. Service không giữ dữ liệu giữa các lần chạy, nên tạo mới cho sạch.
+    // .runJob() không truyền ngày. Bên trong, nó gọi runJob(DateTimeUtil.today()), tức lấy hôm nay theo giờ Việt Nam.
+    
     @Override
     public void run() throws SQLException {
-        // TODO(JOB-04): gọi Service xử lý, VD: new XxxService().runJob();
+        new AutoCloseSessionService().runJob();
     }
 }

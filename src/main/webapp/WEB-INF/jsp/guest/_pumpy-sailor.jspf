@@ -1,0 +1,51 @@
+<%@ page pageEncoding="UTF-8" %>
+<%-- ===== Pumpy đi thuyền buồm lúc hoàng hôn (hero trang Về chúng tôi, góc phải trên mặt nước) =====
+     JS: js/pages/guest/about-pumpy.js — thuyền trôi ra phía mặt trời rồi trôi về chỗ cũ, Pumpy nói thoại theo hành trình;
+         về đúng điểm xuất phát thì than "kẹt vòng lặp thời gian" và hiện nút Giải cứu Pumpy (link đăng ký).
+     CSS: css/pages/guest/about.css mục "Pumpy đi thuyền". Hình giữ silhouette, bụng xoáy, tay tròn và miệng zigzag gốc.
+     Thoại tự chạy chỉ trang trí (aria-hidden); bấm Pumpy thì câu thoại được đọc qua vùng aria-live riêng. --%>
+<div class="sailor" id="pumpySailor">
+    <div class="sailor__track" id="sailorTrack">
+        <p class="sailor__bubble" id="sailorBubble" aria-hidden="true"></p>
+        <a class="sailor__rescue" id="sailorRescue" href="${pageContext.request.contextPath}/register">Giải cứu Pumpy · Đăng ký</a>
+        <button type="button" class="sailor__hit" id="sailorButton" aria-label="Trò chuyện với Pumpy đang đi thuyền">
+            <svg class="sailor__svg" viewBox="0 0 360 300" aria-hidden="true" focusable="false">
+                <g class="sailor__bob">
+                    <%-- Buồm chính bên phải cột, dải cam Super Gym; cờ nhỏ trên đỉnh cột. --%>
+                    <path d="M206 30V214" stroke="#141414" stroke-width="6" stroke-linecap="round"/>
+                    <path class="sailor__sail" d="M212 40C262 86 300 146 318 204H212Z" fill="#E9DDCF" stroke="#141414" stroke-width="5" stroke-linejoin="round"/>
+                    <path d="M212 150H296C302 160 306 170 309 180H212Z" fill="#F25A32"/>
+                    <path d="M212 40C262 86 300 146 318 204H212Z" fill="none" stroke="#141414" stroke-width="5" stroke-linejoin="round"/>
+                    <path class="sailor__flag" d="M206 30L176 38L206 48Z" fill="#F25A32" stroke="#141414" stroke-width="3" stroke-linejoin="round"/>
+
+                    <%-- Pumpy ngồi đuôi thuyền, nhìn về phía mặt trời; thân dưới khuất sau mạn thuyền. --%>
+                    <g transform="translate(22 22) scale(0.6)">
+                        <path d="M66 178 L72 132 L108 152 Z" fill="#294F78" stroke="#141414" stroke-width="6"/>
+                        <path d="M234 178 L228 132 L192 152 Z" fill="#294F78" stroke="#141414" stroke-width="6"/>
+                        <path d="M40 252 C40 175 92 140 150 140 C208 140 260 175 260 252 C260 312 215 340 150 340 C85 340 40 312 40 252 Z" fill="#294F78" stroke="#141414" stroke-width="6"/>
+                        <path d="M66 196 Q78 168 108 157" fill="none" stroke="#fff" stroke-width="7" opacity=".7"/>
+                        <ellipse cx="150" cy="278" rx="56" ry="46" fill="#F2FBF8"/>
+                        <path d="M150 278c4 2 2 8-3 8-9 0-12-12-5-18 9-8 25-4 28 9 4 15-9 28-25 27-20-1-31-20-26-38 6-21 30-31 50-23" fill="none" stroke="#24496E" stroke-width="5" stroke-linecap="round"/>
+                        <g class="sailor__eyes">
+                            <g class="sailor__blink">
+                                <circle cx="108" cy="206" r="7" fill="#141414"/><circle cx="180" cy="206" r="7" fill="#141414"/>
+                                <circle cx="106" cy="203.5" r="2.4" fill="#fff"/><circle cx="178" cy="203.5" r="2.4" fill="#fff"/>
+                            </g>
+                        </g>
+                        <path class="sailor__mouth" d="M128 224 L136 232 L144 224 L152 232 L160 224" fill="none" stroke="#141414" stroke-width="4.5" stroke-linejoin="round"/>
+                    </g>
+
+                    <%-- Thân thuyền mực, mép cam ánh hoàng hôn, hai tay tròn của Pumpy bám mạn. --%>
+                    <path d="M26 206H344L314 254Q304 266 284 266H92Q72 266 60 254Z" fill="#141414"/>
+                    <path d="M26 206H344" stroke="#F25A32" stroke-width="4" stroke-linecap="round"/>
+                    <path d="M58 228H318" stroke="#E9DDCF" stroke-width="3" stroke-linecap="round" opacity=".55"/>
+                    <circle cx="54" cy="206" r="13" fill="#294F78" stroke="#141414" stroke-width="4"/>
+                    <circle cx="150" cy="206" r="13" fill="#294F78" stroke="#141414" stroke-width="4"/>
+                </g>
+                <%-- Vệt nước sau đuôi thuyền và bóng phản chiếu mờ. --%>
+                <path class="sailor__wake" d="M330 276h22M312 286h34M60 278H24M70 288H38" stroke="#8CB2D0" stroke-width="3" stroke-linecap="round"/>
+            </svg>
+        </button>
+    </div>
+    <p class="visually-hidden" id="sailorLive" aria-live="polite"></p>
+</div>

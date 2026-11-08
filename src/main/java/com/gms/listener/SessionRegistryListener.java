@@ -14,19 +14,9 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Theo dõi các phiên đăng nhập đang mở của từng tài khoản, để đăng xuất "mọi phiên khác" khi:
- * - đổi/khôi phục mật khẩu (UC-03, MSG49),
- * - đổi email đăng nhập (UC-04, MSG56),
- * - người dùng bấm "Đăng xuất khỏi thiết bị khác" (MSG59),
- * - Admin khóa/ngừng hoạt động tài khoản (UC-07).
- *
- * Cách hoạt động: Tomcat tự gọi listener này mỗi khi session gắn/bỏ attribute accountId hoặc bị hủy.
- * Dữ liệu nằm trong RAM — Tomcat khởi động lại thì mọi session cũng mất theo, nên không cần lưu DB
- * (không phải sửa database — agents.md Phần 5).
- *
- * Cách dùng trong Service:
- *   - Giữ lại phiên hiện tại:  SessionRegistryListener.invalidateSessionsOfAccount(accountId, currentSessionId);
- *   - Đăng xuất tất cả:         SessionRegistryListener.invalidateSessionsOfAccount(accountId, null);
+ * Theo dõi các phiên đăng nhập đang mở theo từng tài khoản, để Service có thể "đăng xuất mọi phiên khác"
+ * khi đổi mật khẩu, đổi email, admin khoá tài khoản, hoặc chính người dùng bấm "đăng xuất khỏi thiết bị khác".
+ * Dữ liệu nằm trong RAM — restart Tomcat thì mất theo.
  */
 @WebListener
 public class SessionRegistryListener implements HttpSessionListener, HttpSessionAttributeListener {
@@ -73,13 +63,20 @@ public class SessionRegistryListener implements HttpSessionListener, HttpSession
         }
     }
 
-    // ===== Method cho Service gọi =====
+    // ===== Method cho Filter / Service gọi =====
 
     /**
-     * Hủy mọi phiên đang mở của 1 tài khoản, có thể chừa lại phiên hiện tại.
-     * @param accountId id tài khoản
-     * @param keepSessionId id phiên muốn giữ lại (session.getId()), truyền null để hủy tất cả
-     * @return số phiên đã hủy
+     * Ghi nhận lại phiên đang dùng (AuthFilter gọi mỗi request đã đăng nhập).
+     * Cần vì khi Tomcat reload app, phiên được nạp lại từ SESSIONS.ser nhưng KHÔNG gọi attributeAdded,
+     * và danh sách trong RAM đã trống → "đăng xuất mọi thiết bị" sẽ bỏ sót phiên đó.
+     */
+    public static void ensureRegistered(Integer accountId, HttpSession session) {
+        registerSession(accountId, session);
+    }
+
+    /**
+     * Huỷ mọi phiên đang mở của 1 tài khoản, có thể chừa lại phiên hiện tại.
+     * Truyền keepSessionId = null để huỷ tất cả.
      */
     public static int invalidateSessionsOfAccount(int accountId, String keepSessionId) {
         Set<HttpSession> sessions = SESSIONS_BY_ACCOUNT.get(accountId);

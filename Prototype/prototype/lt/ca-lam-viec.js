@@ -36,16 +36,20 @@
     list.reset();
   });
   list.render();
+  document.getElementById('txApply')?.addEventListener('click', list.reset);
 
   /* ---------- tổng lại KPI sau mỗi thay đổi ---------- */
   function recount() {
-    let cash = 0, bank = 0, n = 0;
+    let cash = 0, bank = 0, n = 0, nCash = 0, nBank = 0;
     list.rows.forEach(r => {
-      if (r.dataset.st === 'void') return;
+      if (r.dataset.st !== 'ok') return;          // chỉ đơn Paid mới tính vào ca
       const amt = num(r.querySelector('.row-end b').textContent);
-      if (r.dataset.pay === 'cash') cash += amt; else bank += amt;
+      if (r.dataset.pay === 'cash') { cash += amt; nCash++; } else { bank += amt; nBank++; }
       n++;
     });
+    kCash.nextElementSibling.textContent = nCash + ' hoá đơn';
+    kBank.nextElementSibling.textContent = nBank + ' hoá đơn';
+    kAll.nextElementSibling.textContent = n + ' hoá đơn hợp lệ';
     kCash.textContent = vnd(cash);
     kBank.textContent = vnd(bank);
     kAll.textContent = vnd(cash + bank);
@@ -90,8 +94,13 @@
   document.getElementById('pendOk').addEventListener('click', () => {
     pending = 0;
     pendBox.hidden = true;
+    const row = list.rows.find(r => r.dataset.st === 'pending');
+    if (row) {
+      row.dataset.st = 'ok';                      // đơn chuyển Paid, giao dịch Success
+      row.querySelector('.badge-warn').outerHTML = '<span class="badge badge-ok">Đã thanh toán</span>';
+    }
     recount();
-    showToast('success', 'Đã xác nhận HD-20904. Ca không còn đơn treo.');
+    showToast('success', 'Đã xác nhận DH-2026-1198. Ca không còn đơn treo.');
   });
 
   /* ---------- chốt ca ---------- */
@@ -138,12 +147,12 @@
 
   function closeShift(diff) {
     open = false;
-    hero.querySelector('h2').textContent = 'Đã chốt lúc ' + new Date().toTimeString().slice(0, 5);
+    hero.querySelector('h2').textContent = 'Đã chốt lúc ' + sampleNow().toTimeString().slice(0, 5);
     hero.querySelector('p').textContent = diff === 0
       ? 'Tiền mặt khớp sổ. Sổ ca đã gửi lên Quản lý.'
       : `Lệch ${diff > 0 ? 'thừa' : 'thiếu'} ${vnd(Math.abs(diff))}, đã ghi kèm lý do. Sổ ca đã gửi lên Quản lý.`;
     btnClose.hidden = true;
-    btnOpen.hidden = false;
+    btnOpen.hidden = true;                  // chỉ có ca sáng và ca chiều; ca sáng mai mở vào 21/09
 
     const chip = document.getElementById('shiftChip');
     chip.className = 'badge badge-muted';
@@ -155,13 +164,37 @@
 
   btnOpen.addEventListener('click', () => {
     openConfirmModal({
-      title: 'Mở ca tối 20/09',
-      body: '<p>Ca mới bắt đầu từ bây giờ. Mọi hoá đơn phát sinh sau thời điểm này tính vào ca tối.</p>',
+      title: 'Mở ca sáng 21/09',
+      body: '<p>Ca mới bắt đầu từ bây giờ. Mọi hoá đơn phát sinh sau thời điểm này tính vào ca sáng.</p>',
       confirmLabel: 'Mở ca',
       danger: false,
       onConfirm() { location.reload(); },
     });
   });
+
+  /* đơn vừa kết ở ban-hang.html / ban-goi-pt.html thuộc ca đang mở: thêm lên đầu danh sách */
+  try {
+    const raw = sessionStorage.getItem('gms_new_order');
+    if (raw) {
+      sessionStorage.removeItem('gms_new_order');
+      const o = JSON.parse(raw);
+      const wrap = document.querySelector('#txList');
+      const row = document.createElement('div');
+      row.className = 'data-row';
+      row.dataset.pay = o.pay;
+      row.dataset.st = 'ok';
+      row.dataset.q = `${o.code} ${o.cust} ${o.pkg}`;
+      row.innerHTML = `<div class="row-main"><div class="row-title">${o.code} · ${o.cust} <span class="badge badge-ok">Đã thanh toán</span></div>
+        <div class="row-meta"><span><i class="fa-solid fa-clock"></i> ${o.time}</span><span><i class="fa-solid fa-dumbbell"></i> ${o.pkg}</span>
+        <span class="badge badge-muted">${o.pay === 'cash' ? 'Tiền mặt' : 'Chuyển khoản'}</span></div></div>
+        <div class="row-end"><b class="tabular">${o.amount.toLocaleString('vi-VN')}đ</b>
+        <button class="btn btn-ghost btn-sm" type="button" data-void="${o.code}">Huỷ đơn</button></div>`;
+      wrap.prepend(row);
+      list.rows.unshift(row);
+      showToast('success', `${o.code} đã ghi vào ca chiều 20/09.`);
+      list.reset();
+    }
+  } catch {}
 
   recount();
 })();

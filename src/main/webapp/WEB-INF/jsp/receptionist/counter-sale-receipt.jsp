@@ -1,0 +1,154 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="gms" uri="/WEB-INF/gms-functions.tld" %>
+<%--
+================================================================================
+ counter-sale-receipt.jsp — BIÊN LAI THU TIỀN TẠI QUẦY (/receptionist/sales?receipt=…)
+ HIỂN THỊ SAU KHI LỄ TÂN XÁC NHẬN THU TIỀN THÀNH CÔNG:
+   - Thông tin biên lai: Mã đơn, Khách hàng, Gói, Hiệu lực, Hình thức, Số tiền.
+   - Nút: "In biên lai" (window.print) & "Bán đơn mới" (quay lại /receptionist/sales).
+ BIẾN: receipt (CounterSaleReceipt)
+================================================================================ --%>
+<c:set var="ctx" value="${pageContext.request.contextPath}" />
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
+    <title>Phiếu thu dịch vụ #<c:out value="${receipt.orderCode}" /> · Super Gym Lễ tân</title>
+    <link rel="stylesheet" href="${ctx}/css/pages/receptionist/counter-sale.css?v=20261031_vVoucherDone">
+    <link rel="stylesheet" href="${ctx}/css/pages/customer/start-date-picker.css?v=20261101_vGymResult">
+    <script src="${ctx}/js/pages/customer/start-date-picker.js?v=2" defer></script>
+</head>
+<body class="dock theme-staff counter-sale-page">
+<%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
+<div class="app">
+    <%@ include file="/WEB-INF/jsp/common/layout-receptionist.jspf" %>
+    <div class="main">
+        <header class="topbar no-print">
+            <div class="tb-left">
+                <h1 class="tb-title">Phiếu thu dịch vụ</h1>
+            </div>
+            <div class="top-right">
+                <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
+                <%@ include file="/WEB-INF/jsp/common/topbar-user.jspf" %>
+            </div>
+        </header>
+
+        <main class="content counter-sale" id="main-content" tabindex="-1">
+            <div class="receipt-container">
+
+                <%-- ===== Khối 1: Banner thông báo thành công (no-print) ===== --%>
+                <div class="receipt-success-banner no-print">
+                    <div class="receipt-success-icon"><i class="fa-solid fa-circle-check"></i></div>
+                    <div class="receipt-success-text">
+                        <h2>Giao dịch hoàn tất!</h2>
+                        <p>Đã ghi nhận thanh toán và kích hoạt gói tập thành công trên hệ thống.</p>
+                    </div>
+                </div>
+
+                <%-- ===== Khối 2: Thẻ phiếu thu / Biên lai in nhiệt (receipt: CounterSaleReceipt) ===== --%>
+                <div class="pos-receipt-card" id="printableReceipt">
+                    <div class="receipt-brand">
+                        <i class="fa-solid fa-dumbbell receipt-brand-icon"></i>
+                        <h3 class="receipt-brand-name">SUPER GYM FITNESS</h3>
+                        <p class="receipt-brand-sub">Phiếu thu dịch vụ tại quầy</p>
+                    </div>
+
+                    <div class="receipt-dashed-line"></div>
+
+                    <div class="receipt-info-grid">
+                        <div class="receipt-row">
+                            <span class="receipt-label">Mã đơn hàng:</span>
+                            <strong class="receipt-val"><c:out value="${receipt.orderCode}" /></strong>
+                        </div>
+                        <div class="receipt-row">
+                            <span class="receipt-label">Thời gian thu:</span>
+                            <span class="receipt-val"><c:out value="${receipt.paidAtText}" /></span>
+                        </div>
+                        <div class="receipt-row">
+                            <span class="receipt-label">Lễ tân thu tiền:</span>
+                            <span class="receipt-val"><c:out value="${receipt.receptionistName}" /></span>
+                        </div>
+                        <div class="receipt-row">
+                            <span class="receipt-label">Hình thức:</span>
+                            <span class="receipt-val"><c:out value="${receipt.paymentMethodText}" /></span>
+                        </div>
+                    </div>
+
+                    <div class="receipt-dashed-line"></div>
+
+                    <div class="receipt-info-grid">
+                        <div class="receipt-row">
+                            <span class="receipt-label">Hội viên:</span>
+                            <strong class="receipt-val"><c:out value="${receipt.customerName}" /></strong>
+                        </div>
+                        <div class="receipt-row">
+                            <span class="receipt-label">Mã KH / SĐT:</span>
+                            <span class="receipt-val"><c:out value="${receipt.customerCode}" /> · <c:out value="${receipt.phoneText}" /></span>
+                        </div>
+                        <div class="receipt-row">
+                            <span class="receipt-label">Gói đăng ký:</span>
+                            <strong class="receipt-val"><c:out value="${receipt.packageName}" /> (<c:out value="${receipt.durationText}" />)</strong>
+                        </div>
+                        <div class="receipt-row receipt-row--validity">
+                            <span class="receipt-label">Hiệu lực gói:</span>
+                            <c:choose>
+                                <%-- startPicker.editable = getter tự tính isEditable() · dto/StartDatePicker.java --%>
+                                <c:when test="${not empty startPicker and startPicker.editable}">
+                                    <div class="sdp-anchor receipt-sdp" data-sdp data-sdp-url="${ctx}/receptionist/subscription/start-date"
+                                         data-sdp-sub="${startPicker.subscriptionId}" data-sdp-csrf="<c:out value='${csrfToken}' />">
+                                        <div class="receipt-validity-line">
+                                            <span class="receipt-val">
+                                                <%-- startPicker.startText = getter tự tính getStartText() · dto/StartDatePicker.java --%>
+                                                <span data-sdp-start><c:out value="${startPicker.startText}" /></span> → <span data-sdp-end><c:out value="${startPicker.endText}" /></span>
+                                            </span>
+                                            <button type="button" class="btn btn-sm sdp-btn no-print" data-sdp-toggle aria-expanded="false" title="Đổi ngày bắt đầu gói">
+                                                <i class="fa-solid fa-calendar-days"></i> Đổi ngày
+                                            </button>
+                                        </div>
+                                        <c:set var="picker" value="${startPicker}" />
+                                        <%@ include file="/WEB-INF/jsp/customer/_start-date-picker.jspf" %>
+                                    </div>
+                                </c:when>
+                                <c:otherwise>
+                                    <span class="receipt-val"><c:out value="${receipt.startDateText}" /> → <c:out value="${receipt.endDateText}" /></span>
+                                </c:otherwise>
+                            </c:choose>
+                        </div>
+                        <c:if test="${receipt.discountAmount > 0}">
+                            <div class="receipt-row">
+                                <span class="receipt-label">Giảm giá (<c:out value="${receipt.voucherCode}" />):</span>
+                                <span class="receipt-val receipt-val-discount">-<c:out value="${gms:formatMoney(receipt.discountAmount)}" /></span>
+                            </div>
+                        </c:if>
+                    </div>
+
+                    <div class="receipt-dashed-line"></div>
+
+                    <div class="receipt-total-row">
+                        <span class="receipt-total-label">TỔNG ĐÃ THU:</span>
+                        <span class="receipt-total-val"><c:out value="${gms:formatMoney(receipt.finalAmount)}" /></span>
+                    </div>
+
+                    <div class="receipt-footer-note">
+                        <p>Cảm ơn quý khách đã đồng hành cùng Super Gym!</p>
+                        <p><small>Vui lòng giữ phiếu thu để đối chiếu khi cần thiết.</small></p>
+                    </div>
+                </div>
+
+                <%-- ===== Khối 3: Nút thao tác In / Bán đơn mới (no-print) ===== --%>
+                <div class="receipt-actions no-print">
+                    <button type="button" class="btn btn-outline" onclick="window.print()">
+                        <i class="fa-solid fa-print"></i> In phiếu thu
+                    </button>
+                    <a class="btn btn-primary" href="${ctx}/receptionist/sales">
+                        <i class="fa-solid fa-plus"></i> Bán đơn mới
+                    </a>
+                </div>
+
+            </div>
+        </main>
+    </div>
+</div>
+</body>
+</html>

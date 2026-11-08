@@ -1,0 +1,24 @@
+<%@ page pageEncoding="UTF-8" %>
+<%--
+====================================================================================================
+ _schedule-legend.jspf — CHÚ THÍCH MÀU + TIÊU ĐỀ CỘT (kiểu Danh sách)
+ Nhúng vào: schedule.jsp, ngay dưới thanh công cụ (static include → dùng chung biến với trang cha).
+ Không đọc dữ liệu: chữ cố định. title của mỗi màu = giải thích khi rê chuột (bản đầy đủ ở nút "i" cạnh tiêu đề).
+ pt-list-columns chỉ hiện ở kiểu Danh sách (CSS .is-list).
+==================================================================================================== --%>
+
+<%-- ===== BẮT ĐẦU: CHÚ THÍCH MÀU ===== --%>
+                                <%-- CHÚ THÍCH MÀU: free · booked · held · locked · draft (nháp JS) · removing (đã tích gỡ). --%>
+                                <div class="pt-plan-legend" aria-label="Màu trạng thái">
+                                    <%-- title = giải thích khi rê chuột (bản đầy đủ nằm trong nút "i" cạnh tiêu đề). --%>
+                                    <span data-kind="free" title="Khung đã công bố, chưa ai đặt. Bấm để đánh dấu gỡ.">Còn trống</span>
+                                    <span data-kind="booked" title="Đã có buổi với khách. Bấm buổi sắp tới để Dời / Chuyển PT / Hủy.">Có khách</span>
+                                    <span data-kind="held" title="Một đơn mua gói PT đang giữ khung này chờ thanh toán. Trả tiền → Có khách; hết hạn / hủy đơn → Còn trống.">Đang giữ</span>
+                                    <span data-kind="locked" title="Khung trùng ca bạn xin nghỉ (chờ duyệt hoặc đã duyệt). Khách không đặt được.">Tạm khóa</span>
+                                    <span data-kind="draft" title="Khung vừa thêm, chưa lưu. Bấm Công bố để khách thấy, bấm × để bỏ.">Nháp mới</span>
+                                    <span data-kind="removing" title="Khung trống bạn đã đánh dấu gỡ. Bấm Công bố để gỡ thật.">Chờ gỡ</span>
+                                </div>
+                                <div class="pt-list-columns" aria-hidden="true">
+                                    <span>Giờ tập</span><span>Buổi / khung giờ</span><span>Trạng thái</span><span>Thao tác</span>
+                                </div>
+<%-- ===== KẾT THÚC: CHÚ THÍCH MÀU ===== --%>

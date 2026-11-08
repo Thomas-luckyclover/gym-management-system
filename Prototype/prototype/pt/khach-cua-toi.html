@@ -23,16 +23,18 @@
         <b>Super Gym</b><span>Huấn luyện viên</span>
       </a>
       <nav class="cust-nav">
-        <h4>Hôm nay</h4>
+        <h4>Tổng quan</h4>
         <a href="trang-chu.html"><i class="fa-solid fa-gauge-high"></i>Tổng quan</a>
-        <a href="diem-danh.html"><i class="fa-solid fa-clipboard-check"></i>Điểm danh</a>
         <h4>Lịch dạy</h4>
-        <a href="lich-ranh.html"><i class="fa-solid fa-calendar-days"></i>Lịch rảnh</a>
+        <a href="lich-ranh.html"><i class="fa-solid fa-calendar-days"></i>Lịch dạy</a>
         <h4>Khách phụ trách</h4>
         <a href="khach-cua-toi.html" aria-current="page"><i class="fa-solid fa-user-group"></i>Khách của tôi</a>
+        <h4>Huấn luyện</h4>
+        <a href="thu-vien-bai-tap.html"><i class="fa-solid fa-dumbbell"></i>Thư viện bài tập</a>
         <h4>Cá nhân</h4>
         <a href="nghi-phep.html"><i class="fa-solid fa-plane-departure"></i>Nghỉ phép</a>
         <a href="tai-khoan.html"><i class="fa-solid fa-user-gear"></i>Cài đặt tài khoản</a>
+        <a href="../chon-vai-tro.html"><i class="fa-solid fa-repeat"></i>Đổi vai trò</a>
       </nav>
       <div class="cust-sidebar-foot">
         <a href="../dang-nhap.html"><i class="fa-solid fa-arrow-right-from-bracket"></i>Đăng xuất</a>
@@ -64,36 +66,36 @@
       <div class="toolbar">
         <div class="search">
           <i class="fa-solid fa-magnifying-glass"></i>
-          <input id="cSearch" type="search" placeholder="Tìm tên khách hoặc mã hội viên" aria-label="Tìm khách">
+          <input id="cSearch" type="search" maxlength="100" placeholder="Tìm tên khách hoặc mã hội viên" aria-label="Tìm khách">
         </div>
         <label for="cState">Trạng thái gói</label>
         <select id="cState">
           <option value="all">Tất cả</option>
-          <option value="active">Còn hiệu lực</option>
-          <option value="frozen">Bảo lưu</option>
-          <option value="expired">Hết hạn</option>
+          <option value="active">Gói đang chạy</option>
+          <option value="expired">Gói hết hạn</option>
         </select>
         <label for="cPkg">Gói PT</label>
         <select id="cPkg">
           <option value="all">Tất cả</option>
-          <option value="Gói PT 10 buổi">10 buổi</option>
-          <option value="Gói PT Tháng">Tháng</option>
-          <option value="Gói PT Couple">Couple</option>
+          <option value="Gói PT">Gói PT</option>
+          <option value="Gói PT Couple">Gói PT Couple</option>
         </select>
         <button class="btn btn-ghost btn-sm reset" type="button" id="cReset">Xoá lọc</button>
       </div>
 
       <div class="data-list" id="clientList">
-        <div class="data-row" data-state="active" data-pkg="Gói PT 10 buổi" data-q="nguyễn minh an sg-0241">
+        <div class="data-row" data-state="active" data-pkg="Gói PT" data-q="nguyễn minh an kh-0241">
           <div class="row-main">
             <div class="row-title">
               <span class="avatar" style="width:30px;height:30px;border-radius:50%;display:inline-grid;place-items:center;font-size:.72rem;font-weight:700">MA</span>
               Nguyễn Minh An <span class="badge badge-ok">Còn hiệu lực</span>
             </div>
             <div class="row-meta">
-              <span><i class="fa-solid fa-id-card"></i> SG-0241</span>
-              <span><i class="fa-solid fa-layer-group"></i> Gói PT 10 buổi · còn 4 buổi</span>
+              <span><i class="fa-solid fa-id-card"></i> KH-0241</span>
+              <span><i class="fa-solid fa-layer-group"></i> Gói PT 3 Tháng · còn 59/65 buổi</span>
+              <span><i class="fa-solid fa-hourglass-half"></i> Gói PT đến 18/11/2026</span>
               <span><i class="fa-solid fa-calendar-days"></i> Gói tập tới 14/11/2026</span>
+              <span><i class="fa-solid fa-clock"></i> Buổi kế tiếp: 23/09 19:00</span>
             </div>
           </div>
           <div class="row-actions">
@@ -101,16 +103,18 @@
             <a class="btn btn-outline btn-sm" href="giao-an.html">Giáo án</a>
           </div>
         </div>
-        <div class="data-row" data-state="active" data-pkg="Gói PT Tháng" data-q="trần gia bảo sg-0318">
+        <div class="data-row" data-state="active" data-pkg="Gói PT" data-q="trần gia bảo kh-0318">
           <div class="row-main">
             <div class="row-title">
               <span class="avatar" style="width:30px;height:30px;border-radius:50%;display:inline-grid;place-items:center;font-size:.72rem;font-weight:700">GB</span>
               Trần Gia Bảo <span class="badge badge-ok">Còn hiệu lực</span>
             </div>
             <div class="row-meta">
-              <span><i class="fa-solid fa-id-card"></i> SG-0318</span>
-              <span><i class="fa-solid fa-layer-group"></i> Gói PT Tháng · còn 14 buổi</span>
+              <span><i class="fa-solid fa-id-card"></i> KH-0318</span>
+              <span><i class="fa-solid fa-layer-group"></i> Gói PT 2 Tháng · còn 30/43 buổi</span>
+              <span><i class="fa-solid fa-hourglass-half"></i> Gói PT đến 14/10/2026</span>
               <span><i class="fa-solid fa-calendar-days"></i> Gói tập tới 02/12/2026</span>
+              <span><i class="fa-solid fa-clock"></i> Buổi kế tiếp: 21/09 08:00</span>
             </div>
           </div>
           <div class="row-actions">
@@ -118,16 +122,37 @@
             <a class="btn btn-outline btn-sm" href="giao-an.html">Giáo án</a>
           </div>
         </div>
-        <div class="data-row" data-state="expired" data-pkg="Gói PT 10 buổi" data-q="lê thu hà sg-0276">
+        <div class="data-row" data-state="active" data-pkg="Gói PT" data-q="trịnh quốc bảo kh-1009">
+          <div class="row-main">
+            <div class="row-title">
+              <span class="avatar" style="width:30px;height:30px;border-radius:50%;display:inline-grid;place-items:center;font-size:.72rem;font-weight:700">QB</span>
+              Trịnh Quốc Bảo <span class="badge badge-ok">Còn hiệu lực</span>
+            </div>
+            <div class="row-meta">
+              <span><i class="fa-solid fa-id-card"></i> KH-1009</span>
+              <span><i class="fa-solid fa-layer-group"></i> Gói PT 1 Tháng · còn 6 buổi</span>
+              <span><i class="fa-solid fa-hourglass-half"></i> Gói PT đến 15/10/2026</span>
+              <span><i class="fa-solid fa-calendar-days"></i> Gói tập tới 01/12/2026</span>
+              <span><i class="fa-solid fa-clock"></i> Buổi kế tiếp: Hôm nay 19:00</span>
+            </div>
+          </div>
+          <div class="row-actions">
+            <a class="btn btn-ghost btn-sm" href="ghi-chu.html">Ghi chú</a>
+            <a class="btn btn-outline btn-sm" href="giao-an.html">Giáo án</a>
+          </div>
+        </div>
+        <div class="data-row" data-state="active" data-pkg="Gói PT" data-q="lê thu hà kh-0276">
           <div class="row-main">
             <div class="row-title">
               <span class="avatar" style="width:30px;height:30px;border-radius:50%;display:inline-grid;place-items:center;font-size:.72rem;font-weight:700">TH</span>
-              Lê Thu Hà <span class="badge badge-danger">Hết hạn</span>
+              Lê Thu Hà <span class="badge badge-ok">Còn hiệu lực</span>
             </div>
             <div class="row-meta">
-              <span><i class="fa-solid fa-id-card"></i> SG-0276</span>
-              <span><i class="fa-solid fa-layer-group"></i> Gói PT 10 buổi · còn 3 buổi</span>
-              <span><i class="fa-solid fa-calendar-days"></i> Gói tập hết hạn 12/09/2026</span>
+              <span><i class="fa-solid fa-id-card"></i> KH-0276</span>
+              <span><i class="fa-solid fa-layer-group"></i> Gói PT 1 Tháng · còn 3 buổi</span>
+              <span><i class="fa-solid fa-hourglass-half"></i> Gói PT đến 12/10/2026</span>
+              <span><i class="fa-solid fa-calendar-days"></i> Gói tập hết hạn 12/09/2026</span> <span class="badge badge-warn"><i class="fa-solid fa-triangle-exclamation"></i> Chưa có gói tập</span>
+              <span><i class="fa-solid fa-clock"></i> Buổi kế tiếp: 22/09 19:00</span>
             </div>
           </div>
           <div class="row-actions">
@@ -135,16 +160,18 @@
             <a class="btn btn-outline btn-sm" href="giao-an.html">Giáo án</a>
           </div>
         </div>
-        <div class="data-row" data-state="active" data-pkg="Gói PT 10 buổi" data-q="phạm quốc huy sg-0402">
+        <div class="data-row" data-state="active" data-pkg="Gói PT" data-q="phạm quốc huy kh-0402">
           <div class="row-main">
             <div class="row-title">
               <span class="avatar" style="width:30px;height:30px;border-radius:50%;display:inline-grid;place-items:center;font-size:.72rem;font-weight:700">QH</span>
               Phạm Quốc Huy <span class="badge badge-ok">Còn hiệu lực</span>
             </div>
             <div class="row-meta">
-              <span><i class="fa-solid fa-id-card"></i> SG-0402</span>
-              <span><i class="fa-solid fa-layer-group"></i> Gói PT 10 buổi · còn 7 buổi</span>
-              <span><i class="fa-solid fa-calendar-days"></i> Gói tập tới 30/10/2026</span>
+              <span><i class="fa-solid fa-id-card"></i> KH-0402</span>
+              <span><i class="fa-solid fa-layer-group"></i> Gói PT 1 Tháng · còn 9 buổi</span>
+              <span><i class="fa-solid fa-hourglass-half"></i> Gói PT đến 05/10/2026</span>
+              <span><i class="fa-solid fa-calendar-days"></i> Gói tập tới 20/12/2026</span>
+              <span><i class="fa-solid fa-clock"></i> Buổi kế tiếp: 25/09 18:00</span>
             </div>
           </div>
           <div class="row-actions">
@@ -152,16 +179,37 @@
             <a class="btn btn-outline btn-sm" href="giao-an.html">Giáo án</a>
           </div>
         </div>
-        <div class="data-row" data-state="active" data-pkg="Gói PT Couple" data-q="vũ hoài nam sg-0355">
+        <div class="data-row" data-state="active" data-pkg="Gói PT" data-q="bùi khánh linh kh-0299">
+          <div class="row-main">
+            <div class="row-title">
+              <span class="avatar" style="width:30px;height:30px;border-radius:50%;display:inline-grid;place-items:center;font-size:.72rem;font-weight:700">KL</span>
+              Bùi Khánh Linh <span class="badge badge-ok">Còn hiệu lực</span>
+            </div>
+            <div class="row-meta">
+              <span><i class="fa-solid fa-id-card"></i> KH-0299</span>
+              <span><i class="fa-solid fa-layer-group"></i> Gói PT 1 Tháng · còn 12 buổi</span>
+              <span><i class="fa-solid fa-hourglass-half"></i> Gói PT đến 14/10/2026</span>
+              <span><i class="fa-solid fa-calendar-days"></i> Gói tập tới 31/10/2026</span>
+              <span><i class="fa-solid fa-clock"></i> Buổi kế tiếp: 01/10 17:00</span>
+            </div>
+          </div>
+          <div class="row-actions">
+            <a class="btn btn-ghost btn-sm" href="ghi-chu.html">Ghi chú</a>
+            <a class="btn btn-outline btn-sm" href="giao-an.html">Giáo án</a>
+          </div>
+        </div>
+        <div class="data-row" data-state="active" data-pkg="Gói PT Couple" data-q="vũ hoài nam kh-1005">
           <div class="row-main">
             <div class="row-title">
               <span class="avatar" style="width:30px;height:30px;border-radius:50%;display:inline-grid;place-items:center;font-size:.72rem;font-weight:700">HN</span>
               Vũ Hoài Nam <span class="badge badge-ok">Còn hiệu lực</span>
             </div>
             <div class="row-meta">
-              <span><i class="fa-solid fa-id-card"></i> SG-0355</span>
-              <span><i class="fa-solid fa-layer-group"></i> Gói PT Couple · còn 5 buổi</span>
-              <span><i class="fa-solid fa-calendar-days"></i> Quota chung với Đỗ Lan Chi</span>
+              <span><i class="fa-solid fa-id-card"></i> KH-1005</span>
+              <span><i class="fa-solid fa-layer-group"></i> Gói PT Couple 1 Tháng · còn 22/22 buổi (chung với Đỗ Lan Chi)</span>
+              <span><i class="fa-solid fa-hourglass-half"></i> Gói PT đến 22/10/2026</span>
+              <span><i class="fa-solid fa-calendar-days"></i> Chưa có gói tập</span>
+              <span><i class="fa-solid fa-clock"></i> Buổi kế tiếp: 23/09 17:00</span>
             </div>
           </div>
           <div class="row-actions">
@@ -169,16 +217,18 @@
             <a class="btn btn-outline btn-sm" href="giao-an.html">Giáo án</a>
           </div>
         </div>
-        <div class="data-row" data-state="active" data-pkg="Gói PT Couple" data-q="đỗ lan chi sg-0356">
+        <div class="data-row" data-state="active" data-pkg="Gói PT Couple" data-q="đỗ lan chi kh-1011">
           <div class="row-main">
             <div class="row-title">
               <span class="avatar" style="width:30px;height:30px;border-radius:50%;display:inline-grid;place-items:center;font-size:.72rem;font-weight:700">LC</span>
               Đỗ Lan Chi <span class="badge badge-ok">Còn hiệu lực</span>
             </div>
             <div class="row-meta">
-              <span><i class="fa-solid fa-id-card"></i> SG-0356</span>
-              <span><i class="fa-solid fa-layer-group"></i> Gói PT Couple · còn 5 buổi</span>
-              <span><i class="fa-solid fa-calendar-days"></i> Quota chung với Vũ Hoài Nam</span>
+              <span><i class="fa-solid fa-id-card"></i> KH-1011</span>
+              <span><i class="fa-solid fa-layer-group"></i> Gói PT Couple 1 Tháng · còn 22/22 buổi (chung với Vũ Hoài Nam)</span>
+              <span><i class="fa-solid fa-hourglass-half"></i> Gói PT đến 22/10/2026</span>
+              <span><i class="fa-solid fa-calendar-days"></i> Chưa có gói tập</span>
+              <span><i class="fa-solid fa-clock"></i> Buổi kế tiếp: 23/09 17:00</span>
             </div>
           </div>
           <div class="row-actions">
@@ -186,33 +236,18 @@
             <a class="btn btn-outline btn-sm" href="giao-an.html">Giáo án</a>
           </div>
         </div>
-        <div class="data-row" data-state="frozen" data-pkg="Gói PT 10 buổi" data-q="bùi khánh linh sg-0299">
-          <div class="row-main">
-            <div class="row-title">
-              <span class="avatar" style="width:30px;height:30px;border-radius:50%;display:inline-grid;place-items:center;font-size:.72rem;font-weight:700">KL</span>
-              Bùi Khánh Linh <span class="badge badge-warn">Bảo lưu</span>
-            </div>
-            <div class="row-meta">
-              <span><i class="fa-solid fa-id-card"></i> SG-0299</span>
-              <span><i class="fa-solid fa-layer-group"></i> Gói PT 10 buổi · còn 6 buổi</span>
-              <span><i class="fa-solid fa-calendar-days"></i> Đang bảo lưu tới 05/10/2026</span>
-            </div>
-          </div>
-          <div class="row-actions">
-            <a class="btn btn-ghost btn-sm" href="ghi-chu.html">Ghi chú</a>
-            <a class="btn btn-outline btn-sm" href="giao-an.html">Giáo án</a>
-          </div>
-        </div>
-        <div class="data-row" data-state="expired" data-pkg="Gói PT Tháng" data-q="hoàng đức duy sg-0433">
+        <div class="data-row" data-state="expired" data-pkg="Gói PT" data-q="hoàng đức duy kh-0433">
           <div class="row-main">
             <div class="row-title">
               <span class="avatar" style="width:30px;height:30px;border-radius:50%;display:inline-grid;place-items:center;font-size:.72rem;font-weight:700">ĐD</span>
               Hoàng Đức Duy <span class="badge badge-danger">Hết hạn</span>
             </div>
             <div class="row-meta">
-              <span><i class="fa-solid fa-id-card"></i> SG-0433</span>
-              <span><i class="fa-solid fa-layer-group"></i> Gói PT Tháng · còn 0 buổi</span>
+              <span><i class="fa-solid fa-id-card"></i> KH-0433</span>
+              <span><i class="fa-solid fa-layer-group"></i> Gói PT 1 Tháng · còn 0 buổi</span>
+              <span><i class="fa-solid fa-hourglass-half"></i> Gói PT hết hạn 31/08/2026</span>
               <span><i class="fa-solid fa-calendar-days"></i> Gói tập hết hạn 31/08/2026</span>
+              <span><i class="fa-solid fa-clock"></i> Buổi kế tiếp: Chưa có</span>
             </div>
           </div>
           <div class="row-actions">

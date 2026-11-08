@@ -32,11 +32,12 @@
         <a href="hoi-vien.html"><i class="fa-solid fa-user-group"></i>Hồ sơ khách</a>
         <a href="bao-luu.html"><i class="fa-solid fa-circle-pause"></i>Bảo lưu</a>
         <h4>Cơ sở vật chất</h4>
-        <a href="co-so-vat-chat.html" aria-current="page"><i class="fa-solid fa-boxes-stacked"></i>Danh mục</a>
+        <a href="co-so-vat-chat.html" aria-current="page"><i class="fa-solid fa-boxes-stacked"></i>Báo hỏng thiết bị</a>
         <a href="bao-tri.html"><i class="fa-solid fa-screwdriver-wrench"></i>Yêu cầu bảo trì</a>
         <h4>Cá nhân</h4>
         <a href="nghi-phep.html"><i class="fa-solid fa-plane-departure"></i>Nghỉ phép</a>
         <a href="tai-khoan.html"><i class="fa-solid fa-user-gear"></i>Cài đặt tài khoản</a>
+        <a href="../chon-vai-tro.html"><i class="fa-solid fa-repeat"></i>Đổi vai trò</a>
       </nav>
       <div class="cust-sidebar-foot">
         <a href="../dang-nhap.html"><i class="fa-solid fa-arrow-right-from-bracket"></i>Đăng xuất</a>
@@ -51,10 +52,10 @@
   <div class="cust-main">
     <header class="cust-topbar">
       <div>
-        <h1>Cơ sở vật chất</h1>
+        <h1>Báo hỏng thiết bị</h1>
       </div>
       <div class="cust-topbar-actions">
-        <a class="btn btn-primary btn-sm" href="bao-tri.html"><i class="fa-solid fa-screwdriver-wrench"></i> Báo hỏng</a>
+        <a class="btn btn-outline btn-sm" href="bao-tri.html">Yêu cầu bảo trì</a>
         <a class="badge badge-ok" href="ca-lam-viec.html" id="shiftChip"><i class="fa-solid fa-circle-check"></i> Ca chiều 20/09 đang mở</a>
         <a class="cust-user" href="tai-khoan.html" title="Cài đặt tài khoản">
           <span class="avatar">NH</span>
@@ -69,54 +70,53 @@
     <main class="cust-content">
       <div class="alert-banner info">
         <i class="fa-solid fa-circle-info"></i>
-        <span>Danh mục do Quản lý duy trì. Lễ tân chỉ xem và gửi yêu cầu bảo trì khi thiết bị có vấn đề.</span>
+        <span>Danh mục do Quản lý duy trì. Bước 1: tích chọn thiết bị bị hỏng, rồi sang bước 2 để mô tả sự cố.</span>
       </div>
 
       <div class="toolbar">
         <div class="search">
           <i class="fa-solid fa-magnifying-glass"></i>
-          <input id="eqq" type="search" placeholder="Tìm tên thiết bị hoặc mã" aria-label="Tìm thiết bị">
+          <input id="eqq" type="search" placeholder="Tìm theo tên máy hoặc số trên tem dán" aria-label="Tìm theo tên máy hoặc số trên tem dán">
         </div>
         <label for="eqZone">Khu vực</label>
         <select id="eqZone">
           <option value="all">Tất cả</option>
           <option>Cardio</option>
-          <option>Tạ máy</option>
+          <option>Máy tập</option>
           <option>Tạ tự do</option>
           <option>Tiện ích</option>
         </select>
         <label for="eqSt">Tình trạng</label>
         <select id="eqSt">
           <option value="all">Tất cả</option>
-          <option value="ok">Hoạt động</option>
+          <option value="ok">Sẵn sàng</option>
           <option value="fix">Đang bảo trì</option>
-          <option value="broke">Hỏng, ngừng dùng</option>
-        </select>
-        <button class="btn btn-ghost btn-sm reset" type="button" id="eqReset">Xoá lọc</button>
+                  </select>
+        <button class="btn btn-ghost btn-sm reset" type="button" id="eqReset">Xóa lọc</button>
       </div>
 
       <div class="data-list" id="eqList">
         <div class="data-row" data-zone="Cardio" data-st="ok" data-q="Máy chạy bộ Technogym Run TB-0101 Cardio">
           <div class="row-main">
-            <div class="row-title">Máy chạy bộ Technogym Run <span class="badge badge-ok">Hoạt động</span></div>
+            <div class="row-title">Máy chạy bộ Technogym Run <span class="badge badge-ok">Sẵn sàng</span></div>
             <div class="row-meta">
               <span><i class="fa-solid fa-barcode"></i> TB-0101</span>
               <span><i class="fa-solid fa-location-dot"></i> Cardio</span>
               <span><i class="fa-solid fa-calendar"></i> Nhập 03/2024</span>
             </div>
           </div>
-          <a class="btn btn-ghost btn-sm" href="bao-tri.html?tb=TB-0101">Báo hỏng</a>
+          <label class="pay-option"><input type="checkbox" data-pick="TB-0101"><span class="pay-body"><b>Chọn</b></span></label>
         </div>
         <div class="data-row" data-zone="Cardio" data-st="ok" data-q="Máy chạy bộ Technogym Run TB-0102 Cardio">
           <div class="row-main">
-            <div class="row-title">Máy chạy bộ Technogym Run <span class="badge badge-ok">Hoạt động</span></div>
+            <div class="row-title">Máy chạy bộ Technogym Run <span class="badge badge-ok">Sẵn sàng</span></div>
             <div class="row-meta">
               <span><i class="fa-solid fa-barcode"></i> TB-0102</span>
               <span><i class="fa-solid fa-location-dot"></i> Cardio</span>
               <span><i class="fa-solid fa-calendar"></i> Nhập 03/2024</span>
             </div>
           </div>
-          <a class="btn btn-ghost btn-sm" href="bao-tri.html?tb=TB-0102">Báo hỏng</a>
+          <label class="pay-option"><input type="checkbox" data-pick="TB-0102"><span class="pay-body"><b>Chọn</b></span></label>
         </div>
         <div class="data-row" data-zone="Cardio" data-st="fix" data-q="Xe đạp tập Keiser M3i TB-0103 Cardio">
           <div class="row-main">
@@ -128,74 +128,74 @@
               <span><i class="fa-solid fa-circle-info"></i> Đang sửa bánh đà, dự kiến xong 23/09</span>
             </div>
           </div>
-          <a class="btn btn-ghost btn-sm" href="bao-tri.html?tb=TB-0103">Báo hỏng</a>
+          <label class="pay-option"><input type="checkbox" data-pick="TB-0103" disabled><span class="pay-body"><b>Chọn</b></span></label>
         </div>
-        <div class="data-row" data-zone="Tạ máy" data-st="ok" data-q="Giàn tạ đa năng Hammer TB-0201 Tạ máy">
+        <div class="data-row" data-zone="Máy tập" data-st="ok" data-q="Giàn tạ đa năng Hammer TB-0201 Máy tập">
           <div class="row-main">
-            <div class="row-title">Giàn tạ đa năng Hammer <span class="badge badge-ok">Hoạt động</span></div>
+            <div class="row-title">Giàn tạ đa năng Hammer <span class="badge badge-ok">Sẵn sàng</span></div>
             <div class="row-meta">
               <span><i class="fa-solid fa-barcode"></i> TB-0201</span>
-              <span><i class="fa-solid fa-location-dot"></i> Tạ máy</span>
+              <span><i class="fa-solid fa-location-dot"></i> Máy tập</span>
               <span><i class="fa-solid fa-calendar"></i> Nhập 11/2023</span>
             </div>
           </div>
-          <a class="btn btn-ghost btn-sm" href="bao-tri.html?tb=TB-0201">Báo hỏng</a>
+          <label class="pay-option"><input type="checkbox" data-pick="TB-0201"><span class="pay-body"><b>Chọn</b></span></label>
         </div>
-        <div class="data-row" data-zone="Tạ máy" data-st="ok" data-q="Máy kéo cáp Life Fitness TB-0202 Tạ máy">
+        <div class="data-row" data-zone="Máy tập" data-st="ok" data-q="Máy kéo cáp Life Fitness TB-0202 Máy tập">
           <div class="row-main">
-            <div class="row-title">Máy kéo cáp Life Fitness <span class="badge badge-ok">Hoạt động</span></div>
+            <div class="row-title">Máy kéo cáp Life Fitness <span class="badge badge-ok">Sẵn sàng</span></div>
             <div class="row-meta">
               <span><i class="fa-solid fa-barcode"></i> TB-0202</span>
-              <span><i class="fa-solid fa-location-dot"></i> Tạ máy</span>
+              <span><i class="fa-solid fa-location-dot"></i> Máy tập</span>
               <span><i class="fa-solid fa-calendar"></i> Nhập 11/2023</span>
             </div>
           </div>
-          <a class="btn btn-ghost btn-sm" href="bao-tri.html?tb=TB-0202">Báo hỏng</a>
+          <label class="pay-option"><input type="checkbox" data-pick="TB-0202"><span class="pay-body"><b>Chọn</b></span></label>
         </div>
-        <div class="data-row" data-zone="Tạ máy" data-st="broke" data-q="Máy đẩy ngực Matrix TB-0203 Tạ máy">
+        <div class="data-row" data-zone="Máy tập" data-st="fix" data-q="Máy đẩy ngực Matrix TB-0203 Máy tập">
           <div class="row-main">
-            <div class="row-title">Máy đẩy ngực Matrix <span class="badge badge-danger">Hỏng, ngừng dùng</span></div>
+            <div class="row-title">Máy đẩy ngực Matrix <span class="badge badge-warn">Đang bảo trì</span></div>
             <div class="row-meta">
               <span><i class="fa-solid fa-barcode"></i> TB-0203</span>
-              <span><i class="fa-solid fa-location-dot"></i> Tạ máy</span>
+              <span><i class="fa-solid fa-location-dot"></i> Máy tập</span>
               <span><i class="fa-solid fa-calendar"></i> Nhập 01/2023</span>
-              <span><i class="fa-solid fa-circle-info"></i> Gãy chốt điều chỉnh ghế, đã dán băng cảnh báo</span>
+              <span><i class="fa-solid fa-circle-info"></i> Đang thay chốt ghế, thợ hẹn 21/09</span>
             </div>
           </div>
-          <a class="btn btn-ghost btn-sm" href="bao-tri.html?tb=TB-0203">Báo hỏng</a>
+          <label class="pay-option"><input type="checkbox" data-pick="TB-0203" disabled><span class="pay-body"><b>Chọn</b></span></label>
         </div>
         <div class="data-row" data-zone="Tạ tự do" data-st="ok" data-q="Giá squat Rogue R-3 TB-0301 Tạ tự do">
           <div class="row-main">
-            <div class="row-title">Giá squat Rogue R-3 <span class="badge badge-ok">Hoạt động</span></div>
+            <div class="row-title">Giá squat Rogue R-3 <span class="badge badge-ok">Sẵn sàng</span></div>
             <div class="row-meta">
               <span><i class="fa-solid fa-barcode"></i> TB-0301</span>
               <span><i class="fa-solid fa-location-dot"></i> Tạ tự do</span>
               <span><i class="fa-solid fa-calendar"></i> Nhập 05/2024</span>
             </div>
           </div>
-          <a class="btn btn-ghost btn-sm" href="bao-tri.html?tb=TB-0301">Báo hỏng</a>
+          <label class="pay-option"><input type="checkbox" data-pick="TB-0301"><span class="pay-body"><b>Chọn</b></span></label>
         </div>
         <div class="data-row" data-zone="Tạ tự do" data-st="ok" data-q="Bộ tạ đòn Olympic 150kg TB-0302 Tạ tự do">
           <div class="row-main">
-            <div class="row-title">Bộ tạ đòn Olympic 150kg <span class="badge badge-ok">Hoạt động</span></div>
+            <div class="row-title">Bộ tạ đòn Olympic 150kg <span class="badge badge-ok">Sẵn sàng</span></div>
             <div class="row-meta">
               <span><i class="fa-solid fa-barcode"></i> TB-0302</span>
               <span><i class="fa-solid fa-location-dot"></i> Tạ tự do</span>
               <span><i class="fa-solid fa-calendar"></i> Nhập 05/2024</span>
             </div>
           </div>
-          <a class="btn btn-ghost btn-sm" href="bao-tri.html?tb=TB-0302">Báo hỏng</a>
+          <label class="pay-option"><input type="checkbox" data-pick="TB-0302"><span class="pay-body"><b>Chọn</b></span></label>
         </div>
         <div class="data-row" data-zone="Tạ tự do" data-st="ok" data-q="Bộ tạ đơn 2–40kg TB-0303 Tạ tự do">
           <div class="row-main">
-            <div class="row-title">Bộ tạ đơn 2–40kg <span class="badge badge-ok">Hoạt động</span></div>
+            <div class="row-title">Bộ tạ đơn 2–40kg <span class="badge badge-ok">Sẵn sàng</span></div>
             <div class="row-meta">
               <span><i class="fa-solid fa-barcode"></i> TB-0303</span>
               <span><i class="fa-solid fa-location-dot"></i> Tạ tự do</span>
               <span><i class="fa-solid fa-calendar"></i> Nhập 05/2024</span>
             </div>
           </div>
-          <a class="btn btn-ghost btn-sm" href="bao-tri.html?tb=TB-0303">Báo hỏng</a>
+          <label class="pay-option"><input type="checkbox" data-pick="TB-0303"><span class="pay-body"><b>Chọn</b></span></label>
         </div>
         <div class="data-row" data-zone="Tiện ích" data-st="fix" data-q="Điều hoà Daikin 24000BTU TB-0401 Tiện ích">
           <div class="row-main">
@@ -207,29 +207,29 @@
               <span><i class="fa-solid fa-circle-info"></i> Chảy nước, thợ hẹn 22/09</span>
             </div>
           </div>
-          <a class="btn btn-ghost btn-sm" href="bao-tri.html?tb=TB-0401">Báo hỏng</a>
+          <label class="pay-option"><input type="checkbox" data-pick="TB-0401" disabled><span class="pay-body"><b>Chọn</b></span></label>
         </div>
         <div class="data-row" data-zone="Tiện ích" data-st="ok" data-q="Bình nóng lạnh Ariston TB-0402 Tiện ích">
           <div class="row-main">
-            <div class="row-title">Bình nóng lạnh Ariston <span class="badge badge-ok">Hoạt động</span></div>
+            <div class="row-title">Bình nóng lạnh Ariston <span class="badge badge-ok">Sẵn sàng</span></div>
             <div class="row-meta">
               <span><i class="fa-solid fa-barcode"></i> TB-0402</span>
               <span><i class="fa-solid fa-location-dot"></i> Tiện ích</span>
               <span><i class="fa-solid fa-calendar"></i> Nhập 02/2022</span>
             </div>
           </div>
-          <a class="btn btn-ghost btn-sm" href="bao-tri.html?tb=TB-0402">Báo hỏng</a>
+          <label class="pay-option"><input type="checkbox" data-pick="TB-0402"><span class="pay-body"><b>Chọn</b></span></label>
         </div>
         <div class="data-row" data-zone="Tiện ích" data-st="ok" data-q="Tủ khoá cá nhân · dãy A TB-0403 Tiện ích">
           <div class="row-main">
-            <div class="row-title">Tủ khoá cá nhân · dãy A <span class="badge badge-ok">Hoạt động</span></div>
+            <div class="row-title">Tủ khoá cá nhân · dãy A <span class="badge badge-ok">Sẵn sàng</span></div>
             <div class="row-meta">
               <span><i class="fa-solid fa-barcode"></i> TB-0403</span>
               <span><i class="fa-solid fa-location-dot"></i> Tiện ích</span>
               <span><i class="fa-solid fa-calendar"></i> Nhập 02/2022</span>
             </div>
           </div>
-          <a class="btn btn-ghost btn-sm" href="bao-tri.html?tb=TB-0403">Báo hỏng</a>
+          <label class="pay-option"><input type="checkbox" data-pick="TB-0403"><span class="pay-body"><b>Chọn</b></span></label>
         </div>
         <div class="empty-state" data-empty hidden>
           <div class="empty-icon"><i class="fa-solid fa-box-open"></i></div>
@@ -241,6 +241,16 @@
         <div class="pager-info"></div>
         <div class="pager-btns"></div>
       </div>
+
+      <section class="panel">
+        <div class="panel-head"><h2>Chiếc nào bị hỏng?</h2>
+          <div class="btn-row">
+            <button type="button" class="btn btn-ghost btn-sm" id="eqAll">Chọn tất cả</button>
+            <button type="button" class="btn btn-ghost btn-sm" id="eqNone">Bỏ chọn</button>
+          </div></div>
+        <p class="muted" id="eqPicked">Chưa chọn thiết bị nào.</p>
+        <button type="button" class="btn btn-primary" id="eqNext" disabled>Tiếp tục: mô tả sự cố →</button>
+      </section>
     </main>
   </div>
 </div>

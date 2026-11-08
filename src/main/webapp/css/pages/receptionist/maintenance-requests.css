@@ -1,0 +1,629 @@
+/* =====================================================================
+   maintenance-requests.css — Lễ tân Yêu cầu bảo trì (theme-staff)
+   Design System: Super Gym (tokens.css)
+   Không hard-code mã màu / px / font.
+   ===================================================================== */
+
+/* ===== 1. Thống kê trạng thái KPI ===== */
+.maintenance-receptionist-content {
+  max-width: var(--layout-content-width);
+  margin-inline: auto;
+}
+
+.maintenance-stats {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--space-2-5);
+  margin-bottom: var(--space-4);
+}
+
+@media (max-width: 900px) {
+  .maintenance-stats {
+    grid-template-columns: repeat(auto-fit, minmax(calc(var(--layout-sidebar-width) / 2), 1fr));
+  }
+}
+
+.maintenance-stat {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.maintenance-stat:hover,
+.maintenance-stat.active {
+  border-color: var(--brand-sunset);
+  background: var(--color-surface-hover);
+  text-decoration: none;
+}
+
+.maintenance-stat strong {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: var(--font-numeric);
+}
+
+.maintenance-stat span {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-soft);
+}
+
+/* ===== 2. Khung chính danh sách yêu cầu ===== */
+.maintenance-panel {
+  margin-bottom: var(--space-5);
+  padding: var(--space-5);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.maintenance-panel .panel-head {
+  padding-bottom: var(--space-4);
+  border-bottom: var(--border-width) solid var(--color-border);
+}
+
+.maintenance-panel .panel-head h2 {
+  margin: var(--space-0);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+}
+
+.maintenance-panel .panel-head p {
+  margin: var(--space-1) var(--space-0) var(--space-0);
+  color: var(--color-text-soft);
+  font-size: var(--font-size-sm);
+}
+
+/* Label chọn tất cả đang xử lý — JS inline toggle hiển thị theo tab */
+.select-all-in-progress-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1-5);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-soft);
+  cursor: pointer;
+  user-select: none;
+}
+
+/* ===== 3. Bộ lọc tìm kiếm ===== */
+.maintenance-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1-5);
+  margin-bottom: var(--space-4);
+  padding: var(--space-1-5) var(--space-2-5);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-muted);
+}
+
+.maintenance-filter input,
+.maintenance-filter select {
+  height: var(--control-height-sm);
+  padding: var(--space-1) var(--space-2);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--font-size-xs);
+}
+
+.maintenance-filter input[type="search"] {
+  flex: 2;
+  min-width: calc(var(--space-12) * 2 + var(--space-7));
+}
+
+.maintenance-filter select {
+  flex: 1;
+  min-width: calc(var(--space-12) + var(--space-8) + var(--space-0-5));
+}
+
+.maintenance-filter select[name="pageSize"] {
+  flex: none;
+  width: auto;
+  min-width: var(--space-10);
+}
+
+.maintenance-filter input[type="date"] {
+  flex: none;
+  min-width: calc(var(--space-12) + var(--space-7));
+}
+
+.maintenance-filter .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--control-height-sm);
+  padding: var(--space-0) var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+}
+
+/* ===== 4. Danh sách thẻ yêu cầu bảo trì ===== */
+.maintenance-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4-5);
+}
+
+/* Thẻ yêu cầu: khoảng cách dọc rộng hơn, đổ bóng nhẹ và viền tách biệt */
+.maintenance-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--layout-sidebar-width);
+  gap: var(--space-3);
+  padding: var(--space-3-5) var(--space-4);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.maintenance-card-main:only-child {
+  grid-column: 1 / -1;
+}
+
+.maintenance-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.maintenance-card-title-group {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.maintenance-card-head strong {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+}
+
+/* Nhóm badge trạng thái + cảnh báo */
+.maintenance-badges-group {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1-5);
+  flex-shrink: 0;
+}
+
+/* Badge tăng padding ngang, cùng chiều cao, viền rõ hơn */
+.maintenance-badges-group .badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: var(--control-height-sm);
+  padding: var(--space-0-5) var(--space-2-5);
+  border: var(--border-width) solid transparent;
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-none);
+  white-space: nowrap;
+}
+
+.maintenance-badges-group .badge-danger {
+  border-color: var(--color-danger-border);
+  background: var(--color-danger-tint);
+  color: var(--color-danger-ink);
+}
+
+.maintenance-badges-group .badge-warning {
+  border-color: var(--color-warning-border);
+  background: var(--color-warning-tint);
+  color: var(--color-warning-ink);
+}
+
+.maintenance-badges-group .badge-info {
+  border-color: var(--color-info-border);
+  background: var(--color-info-tint);
+  color: var(--color-info-ink);
+}
+
+.maintenance-badges-group .badge-neutral {
+  border-color: var(--color-neutral-border);
+  background: var(--color-neutral-tint);
+  color: var(--color-text-soft);
+}
+
+.maintenance-badges-group .badge-success {
+  border-color: var(--color-success-border);
+  background: var(--color-success-tint);
+  color: var(--color-success-ink);
+}
+
+/* Dòng metadata (Ngày báo, Ưu tiên, Khu vực, Sự cố, Người báo) */
+.maintenance-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  margin-top: var(--space-2);
+  color: var(--color-text-soft);
+  font-size: var(--font-size-xs);
+}
+
+.maintenance-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--color-text-soft);
+  font-size: var(--font-size-xs);
+}
+
+/* Dấu chấm phân cách mảnh bằng CSS giữa các cặp nhãn/giá trị */
+.maintenance-meta span:not(:last-child)::after {
+  content: "·";
+  margin-left: var(--space-3);
+  color: var(--color-border-strong);
+  font-weight: var(--font-weight-regular);
+}
+
+.maintenance-meta b {
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Giá trị Ưu tiên = Khẩn: đổi sang màu đỏ sáng + đậm hơn */
+.maintenance-meta b.priority-urgent {
+  color: var(--color-danger-ink);
+  font-weight: var(--font-weight-bold);
+}
+
+.maintenance-meta b.priority-normal {
+  color: var(--color-text);
+  font-weight: var(--font-weight-semibold);
+}
+
+.maintenance-meta b.priority-low {
+  color: var(--color-text-soft);
+  font-weight: var(--font-weight-medium);
+}
+
+/* Hàng thân thẻ: mô tả sự cố & thumbnail ảnh đính kèm */
+.maintenance-body-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin: var(--space-2) var(--space-0);
+}
+
+.maintenance-desc-col {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Ô mô tả sự cố: nền tối hơn thẻ, viền mảnh, chữ trắng cỡ nội dung, padding dọc rộng */
+.maintenance-description {
+  margin: var(--space-0);
+  padding: var(--space-2-5) var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-muted);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+}
+
+.maintenance-image-col {
+  flex-shrink: 0;
+}
+
+.maintenance-image-thumb-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-0-5);
+  width: var(--space-10);
+  padding: var(--space-0-5);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-xs);
+  background: var(--color-surface-muted);
+  text-decoration: none;
+}
+
+.maintenance-image-thumb-card:hover {
+  border-color: var(--brand-sunset);
+  text-decoration: none;
+}
+
+.maintenance-thumbnail-img {
+  display: block;
+  width: 100%;
+  height: calc(var(--space-10) - var(--space-2));
+  border-radius: var(--radius-xs);
+  background: var(--color-surface);
+  object-fit: cover;
+}
+
+.maintenance-thumbnail-caption {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-0-5);
+  color: var(--color-text-soft);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+}
+
+/* Thanh "Chờ Quản lý duyệt": nền xanh đen sáng hơn thẻ, vạch cam bên trái, chữ sáng hơn */
+.maintenance-progress {
+  padding: var(--space-2) var(--space-2-5);
+  border-left: var(--border-width-accent) solid var(--brand-sunset);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-muted);
+  color: var(--color-text-soft);
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-snug);
+}
+
+/* Tên người duyệt và nội dung ghi chú chuyển sang trắng/sáng để dễ đọc */
+.maintenance-progress b {
+  color: var(--color-text);
+  font-weight: var(--font-weight-semibold);
+}
+
+.maintenance-progress .manager-note {
+  margin-top: var(--space-1);
+  color: var(--color-text-soft);
+  font-size: var(--font-size-xs);
+}
+
+.maintenance-progress .manager-note b {
+  color: var(--color-text);
+  font-weight: var(--font-weight-medium);
+}
+
+/* Cột phải: Form nghiệm thu đóng yêu cầu */
+.maintenance-close-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-3-5);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-muted);
+}
+
+.maintenance-close-form .field-label {
+  color: var(--color-text-soft);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+}
+
+.maintenance-close-form textarea {
+  min-height: calc(var(--space-8) + var(--space-1-5));
+  padding: calc(var(--space-1) + var(--border-width)) calc(var(--space-1-5) + var(--border-width));
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--font-size-xs);
+}
+
+.maintenance-close-form .btn {
+  align-self: flex-start;
+  padding: var(--space-1) var(--space-2-5);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+}
+
+.maintenance-empty {
+  padding: var(--space-8);
+  color: var(--color-text-soft);
+  font-size: var(--font-size-xs);
+  text-align: center;
+}
+
+.maintenance-pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-top: var(--space-6);
+  padding-top: var(--space-3);
+  border-top: var(--border-width) solid var(--color-border);
+}
+
+.maintenance-pager .pager-info {
+  color: var(--color-text-soft);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+}
+
+.maintenance-pager .btn[disabled] {
+  opacity: var(--opacity-disabled);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+@media (max-width: 900px) {
+  .maintenance-filter {
+    grid-template-columns: 1fr;
+  }
+
+  .maintenance-card {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===== 5. Checkbox & Nghiệm thu hàng loạt (JS inline trong JSP thao tác) ===== */
+.bulk-checkbox {
+  width: var(--icon-size-md);
+  height: var(--icon-size-md);
+  accent-color: var(--brand-sunset);
+  vertical-align: middle;
+  cursor: pointer;
+}
+
+/* Thẻ được chọn qua checkbox — JS toggle class .is-selected */
+.maintenance-card.is-selected {
+  border-color: var(--brand-sunset);
+  background: var(--color-surface-hover);
+  box-shadow: 0 0 0 var(--border-width) var(--brand-sunset), var(--shadow-card);
+}
+
+.bulk-action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3-5);
+  padding: var(--space-2-5) var(--space-3-5);
+  border: var(--border-width) solid var(--arena-ember-border);
+  border-radius: var(--radius-sm);
+  background: var(--arena-ember-tint);
+  box-shadow: var(--shadow-card);
+}
+
+.bulk-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text);
+  font-size: var(--font-size-xs);
+}
+
+.bulk-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-5);
+  height: var(--space-5);
+  border-radius: var(--radius-circle);
+  background: var(--brand-sunset);
+  color: var(--color-on-primary);
+  font-size: var(--font-size-xs);
+}
+
+.bulk-codes {
+  color: var(--color-text-soft);
+  font-size: var(--font-size-xs);
+}
+
+.bulk-buttons {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.bulk-modal-summary {
+  padding: var(--space-2-5) var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-muted);
+  color: var(--color-text);
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-normal);
+}
+
+.bulk-modal-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1-5);
+  max-height: var(--control-height-textarea);
+  margin-top: var(--space-2);
+  overflow-y: auto;
+}
+
+.bulk-code-pill {
+  display: inline-block;
+  padding: var(--space-0-5) var(--space-2);
+  border: var(--border-width) solid var(--arena-ember-border);
+  border-radius: var(--radius-pill);
+  background: var(--arena-ember-tint);
+  color: var(--brand-sunset);
+  font-family: var(--font-brand-mono, monospace);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* ===== 6. Modal Nghiệm thu hàng loạt (JS toggle class .show) ===== */
+.gms-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  align-items: center;
+  justify-content: center;
+  background: var(--color-overlay);
+  padding: var(--space-4);
+}
+
+.gms-modal.show {
+  display: flex;
+}
+
+.gms-modal-dialog {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: var(--layout-dialog-width);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-pop);
+}
+
+.gms-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: var(--border-width) solid var(--color-border);
+}
+
+.gms-modal-title {
+  margin: var(--space-0);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+}
+
+.gms-modal-close {
+  padding: var(--space-0-5) var(--space-1-5);
+  border: none;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--color-text-soft);
+  font-size: var(--font-size-lg);
+  line-height: var(--line-height-none);
+  cursor: pointer;
+}
+
+.gms-modal-close:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+}
+
+.gms-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3-5) var(--space-4);
+}
+
+.gms-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-top: var(--border-width) solid var(--color-border);
+  border-bottom-left-radius: var(--radius-lg);
+  border-bottom-right-radius: var(--radius-lg);
+  background: var(--color-surface-muted);
+}

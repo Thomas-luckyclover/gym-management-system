@@ -1,7 +1,7 @@
 /**
  * Khu vực Quản lý — URL /manager/*, được ManagerAreaFilter bảo vệ.
  *
- * <p>Servlet dự kiến (nguồn: SRS 5.1 Screen List — bảng đầy đủ ở docs/project-structure.md):</p>
+ * <p>Servlet dự kiến (nguồn: SRS 5.1 Screen List):</p>
  * <pre>
  * ManagerDashboardServlet          /manager/dashboard                                   #66  Operational & Revenue Report       TV3
  * ParameterListServlet             /manager/parameters                                  #14  Operating Parameters               TV3

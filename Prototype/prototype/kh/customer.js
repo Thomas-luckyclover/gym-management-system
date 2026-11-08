@@ -73,7 +73,7 @@ const dm = d => String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth()
 const dmy = d => dm(d) + '/' + d.getFullYear();
 
 function buildWeek({ weekendOnly = false } = {}) {
-  const today = new Date();
+  const today = sampleNow();
   today.setHours(0, 0, 0, 0);
   const dow = (today.getDay() + 6) % 7;             // 0 = Thứ 2
   const monday = new Date(today);

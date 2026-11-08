@@ -1,0 +1,4 @@
+# Gộp tên tác giả cho git log / git shortlog (không đổi lịch sử).
+# "Claude" = các phiên làm việc AI của Lê Công Minh (mb1); "Le Cong Minh" = tên cũ cùng email.
+Thomas-luckyclover <lecongminh180706@gmail.com>
+Thomas-luckyclover <lecongminh180706@gmail.com> Claude <noreply@anthropic.com>

@@ -1,0 +1,364 @@
+/* =====================================================================
+   Payment Result Stylesheet — SUPER GYM
+   Thiết kế chuẩn Iron Athletic:
+   - Màu nền thẻ: Tối liền mạch (#0d1522), viền tinh tế rgba(255, 255, 255, 0.12)
+   - Phân cấp rõ rệt: Tiêu đề lớn, thông tin đơn đóng khung rõ ràng
+   - Lịch chọn ngày bắt đầu (StartDatePicker) mở trực tiếp BÊN TRONG thẻ,
+     đẩy các nút điều hướng xuống tự nhiên, KHÔNG bị rơi/trôi ra ngoài nền
+   - KHÔNG bo góc trên nội dung (border-radius: 0 !important)
+   ===================================================================== */
+
+.payment-result-page .content {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  padding: 2rem 1.5rem 5rem !important;
+  box-sizing: border-box !important;
+}
+
+.payment-result {
+  width: 100% !important;
+  max-width: 680px !important;
+  margin: 1.5rem auto 3rem !important;
+  padding: 2.25rem 2.5rem !important;
+  background: #0d1522 !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #f1f5f9 !important;
+  border-radius: 0 !important;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 1.25rem !important;
+  text-align: center !important;
+  height: auto !important;
+  box-sizing: border-box !important;
+}
+
+.payment-result__logo {
+  width: 130px !important;
+  height: auto !important;
+  margin: 0 auto 0.25rem auto !important;
+}
+
+.payment-result h2 {
+  margin: 0 !important;
+  font-family: "Inter Tight", "Montserrat", system-ui, sans-serif !important;
+  font-size: 1.65rem !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: -0.01em !important;
+  color: #ffffff !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6) !important;
+}
+
+.payment-result p {
+  margin: 0 !important;
+  color: #94adc5 !important;
+  font-family: "Inter", system-ui, sans-serif !important;
+  font-size: 0.95rem !important;
+  line-height: 1.5 !important;
+}
+
+.payment-result dl {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.85rem !important;
+  margin: 0.5rem 0 0 0 !important;
+  padding: 1.25rem 1.5rem !important;
+  background: rgba(15, 23, 42, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 0 !important;
+  text-align: left !important;
+}
+
+.payment-result dl div {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+}
+
+.payment-result dt {
+  color: #94adc5 !important;
+  font-family: "Inter", system-ui, sans-serif !important;
+  font-size: 0.92rem !important;
+  font-weight: 600 !important;
+}
+
+.payment-result dd {
+  margin: 0 !important;
+  color: #ffffff !important;
+  font-family: "Inter Tight", "Montserrat", system-ui, sans-serif !important;
+  font-size: 1.05rem !important;
+  font-weight: 800 !important;
+}
+
+/* ==================== KHUNG HIỆU LỰC GÓI & NÚT ĐỔI NGÀY ==================== */
+.sdp-anchor {
+  position: static !important;
+  width: 100% !important;
+  margin: 0 !important;
+}
+
+.validity-line {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  gap: 1rem !important;
+  padding: 1.25rem 1.5rem !important;
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.5) 0%, rgba(15, 23, 42, 0.85) 100%) !important;
+  border: 1px solid rgba(56, 189, 248, 0.3) !important;
+  border-radius: 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.validity-line__label {
+  color: #cbd5e1 !important;
+  font-family: "Inter", system-ui, sans-serif !important;
+  font-size: 0.85rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.4rem !important;
+}
+
+.validity-line__range {
+  color: #38bdf8 !important;
+  font-family: "Inter Tight", "Montserrat", system-ui, sans-serif !important;
+  font-size: 1.2rem !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.02em !important;
+  text-shadow: 0 0 16px rgba(56, 189, 248, 0.3) !important;
+}
+
+/* Nút Đổi ngày: Vuông góc, màu Electric Blue thể thao */
+.sdp-btn {
+  border-radius: 0 !important;
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
+  border: 1px solid #38bdf8 !important;
+  color: #ffffff !important;
+  font-family: "Inter Tight", "Montserrat", system-ui, sans-serif !important;
+  font-weight: 800 !important;
+  font-size: 0.85rem !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  padding: 0.5rem 1.15rem !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.45rem !important;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4) !important;
+  transition: all 0.2s ease !important;
+}
+
+.sdp-btn:hover {
+  background: linear-gradient(135deg, #0369a1 0%, #075985 100%) !important;
+  border-color: #7dd3fc !important;
+  box-shadow: 0 6px 18px rgba(2, 132, 199, 0.6) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* ==================== BẢNG LỊCH CHỌN NGÀY (SDP CALENDAR) ====================
+   Mở ra trực tiếp trong luồng thẻ, tự đẩy các nút xuống, không bao giờ rơi ra ngoài */
+.payment-result .sdp-cal,
+.payment-result-page .sdp-cal,
+.sdp-anchor .sdp-cal {
+  position: static !important;
+  display: block !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  margin: 1.25rem 0 0 0 !important;
+  border-radius: 0 !important;
+  border: 1px solid rgba(56, 189, 248, 0.35) !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6) !important;
+  background: #080d16 !important;
+  padding: 1.5rem !important;
+  color: #ffffff !important;
+  text-align: center !important;
+}
+
+.payment-result .sdp-cal[hidden],
+.payment-result-page .sdp-cal[hidden],
+.sdp-anchor .sdp-cal[hidden] {
+  display: none !important;
+}
+
+.sdp-cal__title {
+  font-family: "Inter Tight", sans-serif !important;
+  font-size: 1.05rem !important;
+  font-weight: 800 !important;
+  color: #ffffff !important;
+  margin: 0 0 0.35rem 0 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+}
+
+.sdp-cal__sub {
+  font-size: 0.85rem !important;
+  color: #94adc5 !important;
+  margin: 0 0 1rem 0 !important;
+}
+
+.sdp-cal__sub b {
+  color: #38bdf8 !important;
+}
+
+.sdp-cal__grid {
+  display: grid !important;
+  grid-template-columns: repeat(7, 1fr) !important;
+  gap: 0.4rem !important;
+  margin-bottom: 1rem !important;
+}
+
+.sdp-cal__dow {
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  color: #64748b !important;
+  text-align: center !important;
+  padding: 0.25rem 0 !important;
+}
+
+.sdp-cal__day {
+  border-radius: 0 !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+  font-family: "Inter Tight", system-ui, sans-serif !important;
+  font-weight: 700 !important;
+  font-size: 0.9rem !important;
+  height: 38px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+.sdp-cal__day:hover:not(:disabled) {
+  background: rgba(56, 189, 248, 0.2) !important;
+  border-color: #38bdf8 !important;
+}
+
+.sdp-cal__day.is-selected {
+  background: #0284c7 !important;
+  border-color: #38bdf8 !important;
+  color: #ffffff !important;
+  font-weight: 900 !important;
+  box-shadow: 0 0 12px rgba(2, 132, 199, 0.6) !important;
+}
+
+.sdp-cal__day:disabled {
+  opacity: 0.3 !important;
+  cursor: not-allowed !important;
+  background: transparent !important;
+  border-color: rgba(255, 255, 255, 0.04) !important;
+  color: #64748b !important;
+}
+
+/* Nút Lưu ngày bắt đầu */
+.sdp-cal__save {
+  border-radius: 0 !important;
+  width: 100% !important;
+  height: 44px !important;
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
+  border: 1px solid #38bdf8 !important;
+  color: #ffffff !important;
+  font-family: "Inter Tight", sans-serif !important;
+  font-size: 0.9rem !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  cursor: pointer !important;
+  box-shadow: 0 4px 16px rgba(2, 132, 199, 0.45) !important;
+  transition: all 0.2s ease !important;
+}
+
+.sdp-cal__save:hover:not(:disabled) {
+  background: linear-gradient(135deg, #0369a1 0%, #075985 100%) !important;
+  border-color: #7dd3fc !important;
+  box-shadow: 0 6px 20px rgba(2, 132, 199, 0.65) !important;
+  transform: translateY(-2px) !important;
+}
+
+.sdp-cal__save:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.sdp-cal__note {
+  font-size: 0.8rem !important;
+  color: #64748b !important;
+  margin: 0.5rem 0 0 0 !important;
+}
+
+.sdp-cal__error {
+  color: #f87171 !important;
+  font-size: 0.82rem !important;
+  margin: 0.35rem 0 0 0 !important;
+}
+
+/* Các nút điều hướng dưới cùng */
+.payment-result .btn-row {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 0.75rem !important;
+  justify-content: center !important;
+  margin-top: 0.5rem !important;
+}
+
+.payment-result .btn-outline {
+  border-radius: 0 !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  color: #e2e8f0 !important;
+  font-family: "Inter", system-ui, sans-serif !important;
+  font-weight: 600 !important;
+  font-size: 0.88rem !important;
+  padding: 0.6rem 1.15rem !important;
+  text-decoration: none !important;
+  transition: all 0.15s ease !important;
+}
+
+.payment-result .btn-outline:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: #38bdf8 !important;
+  color: #38bdf8 !important;
+  transform: translateY(-2px) !important;
+}
+
+/* ==================== TRIỆT TIÊU TOÀN BỘ BO GÓC ==================== */
+.payment-result,
+.payment-result *,
+.payment-result dl,
+.payment-result .validity-line,
+.payment-result .sdp-btn,
+.payment-result .sdp-cal,
+.payment-result .sdp-cal__day,
+.payment-result .sdp-cal__save,
+.payment-result .btn-outline {
+  border-radius: 0 !important;
+}
+
+/* ==================== BẢO VỆ TOPBAR ==================== */
+.topbar .theme-toggle,
+.top-right .theme-toggle,
+.theme-toggle {
+  border-radius: 999px !important;
+}
+.theme-toggle__track {
+  border-radius: 999px !important;
+}
+.theme-toggle__knob {
+  border-radius: 50% !important;
+}
+.topbar .tb-user,
+.top-right .tb-user,
+.tb-user {
+  border-radius: 999px !important;
+}

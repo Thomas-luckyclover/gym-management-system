@@ -1,0 +1,12 @@
+/* Nền chung cho /pt/* và /customer/*; head.jspf chỉ nạp file này ở hai zone.
+   Dashboard có nền riêng; các trang còn lại dùng nền đại dương theo token --pt-bg
+   (tối mặc định, sáng khi bật công tắc) để chữ luôn đủ tương phản. */
+body:not(.pt-dashboard-page):not(.customer-weather-page) {
+  background: var(--ink-ground);
+}
+
+/* Để lộ nền trang qua lớp layout, giữ nguyên nền riêng của từng card. */
+body .app,
+body .main {
+  background: transparent;
+}

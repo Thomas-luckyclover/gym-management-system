@@ -1,0 +1,517 @@
+package com.gms.dto;
+
+import com.gms.util.DateTimeUtil;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Dữ liệu hiển thị trên Customer Dashboard (UC-41, SRS 9.1.1), biến JSP "dashboard".
+ *
+ *   Ai tạo?   CustomerDashboardService.getDashboard (CustomerDashboardServlet gọi) — DAO đọc, Service gom 1 lần.
+ *   Ai in?    customer/dashboard.jsp (+ _schedule-header.jspf hiện tên/mã khách ở topbar).
+ *   Bảng đọc: Customers + Persons (hồ sơ), Subscriptions (+ tên gói, FreezeRecords khi bảo lưu),
+ *             Sessions + TimeSlots + Persons (5 buổi PT sắp tới). Banner do Service tính từ các dữ liệu trên.
+ *
+ * DAO đọc dữ liệu nền; Service gắn thêm lịch tuần, PT và bộ chọn ngày trước khi JSP hiển thị.
+ * DAO chỉ đọc trạng thái đang lưu; Dashboard không tự tính lại trạng thái (GBR-14).
+ *
+ * @author Nguyen Tuan Minh
+ */
+public class CustomerDashboardView {
+
+    // Service tạo đủ 7 ngày; DAO đọc PT từ các gói thuộc hội viên đang đăng nhập.
+    private List<ScheduleDay> scheduleDays = List.of();
+    private List<TrainerContact> trainers = List.of();
+    // Service chọn các gói chưa hết hạn cho panel; subscriptions gốc vẫn dùng kiểm tra/cảnh báo.
+    private List<SubscriptionRow> visibleSubscriptions = List.of();
+
+    public List<SubscriptionRow> getVisibleSubscriptions() { return visibleSubscriptions; }
+    public void setVisibleSubscriptions(List<SubscriptionRow> visibleSubscriptions) {
+        this.visibleSubscriptions = visibleSubscriptions;
+    }
+
+    public List<ScheduleDay> getScheduleDays() { return scheduleDays; }
+    public void setScheduleDays(List<ScheduleDay> scheduleDays) { this.scheduleDays = scheduleDays; }
+    public List<TrainerContact> getTrainers() { return trainers; }
+    public void setTrainers(List<TrainerContact> trainers) { this.trainers = trainers; }
+
+    /** Một ngày lịch PT: Service gom từ các buổi DAO đọc; JSP hiển thị và JS chọn ngày. */
+    public static class ScheduleDay {
+        private final LocalDate date;
+        private final boolean isToday;
+        private final List<UpcomingSessionRow> sessions;
+
+        public ScheduleDay(LocalDate date, boolean isToday, List<UpcomingSessionRow> sessions) {
+            this.date = date;
+            this.isToday = isToday;
+            this.sessions = sessions;
+        }
+
+        public LocalDate getDate() { return date; }
+        // GETTER TỰ TÍNH — không có field/setter "dateLabel"; = date dạng "dd/MM"; JSP: customer/dashboard.jsp:174
+        public String getDateLabel() {
+            return date.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM"));
+        }
+        public boolean isToday() { return isToday; }
+        public List<UpcomingSessionRow> getSessions() { return sessions; }
+        // GETTER TỰ TÍNH — không có field/setter "dayLabel"; = "Hôm nay" hoặc tên thứ của date; JSP: customer/dashboard.jsp:172
+        public String getDayLabel() {
+            if (isToday) {
+                return "Hôm nay";
+            }
+            return date.getDayOfWeek().getDisplayName(java.time.format.TextStyle.FULL,
+                    java.util.Locale.forLanguageTag("vi-VN"));
+        }
+    }
+
+    /** DAO đọc một PT phụ trách gói còn hiệu lực; dùng chung ZaloUtil, không gọi API ngoài. */
+    public static class TrainerContact {
+        private final int employeeId;
+        private final String fullName;
+        private final String phone;
+        private final int subscriptionId;
+        // Service gắn các gói của đúng PT bằng SubscriptionId; JSP hiện tên và số buổi còn lại.
+        private final List<SubscriptionRow> packages = new ArrayList<>();
+
+        public TrainerContact(int employeeId, String fullName, String phone, int subscriptionId) {
+            this.employeeId = employeeId;
+            this.fullName = fullName;
+            this.phone = phone;
+            this.subscriptionId = subscriptionId;
+        }
+
+        public int getSubscriptionId() { return subscriptionId; }
+        public List<SubscriptionRow> getPackages() { return packages; }
+        public int getEmployeeId() { return employeeId; }
+        public String getFullName() { return fullName; }
+        public String getPhone() { return phone; }
+        // GETTER TỰ TÍNH — không có field/setter "zaloUrl"; = ZaloUtil.toUrl(phone); JSP: customer/dashboard.jsp:266 …
+        public String getZaloUrl() { return com.gms.util.ZaloUtil.toUrl(phone); }
+        // GETTER TỰ TÍNH — không có field/setter "phoneUrl"; = "tel:" + số trong phone, trống → null; JSP: customer/dashboard.jsp:263 …
+        public String getPhoneUrl() {
+            if (phone == null || phone.isBlank()) {
+                return null;
+            }
+            return "tel:" + phone.replaceAll("[^0-9+]", "");
+        }
+    }
+
+    // ===== Thông tin hồ sơ (DAO: Customers + Persons) =====
+    private final String fullName;         // Persons.FullName
+    private final String avatar;           // Persons.Avatar; null thì JSP hiện initials
+    private final String customerCode;     // Customers.CustomerCode
+    private final String customerStatus;   // Customers.Status (New | Active | Frozen | Expired)
+
+    // DAO: CustomerDashboardDAO.canUseGymToday — có Subscriptions Membership/DayPass Active phủ hôm nay, không bảo lưu.
+    private final boolean canUseGym;
+
+    // DAO: CustomerDashboardDAO — Subscriptions (+ tên gói); mỗi dòng là 1 gói đang dùng / chưa bắt đầu.
+    private final List<SubscriptionRow> subscriptions;
+
+    // ===== Buổi PT sắp tới (DAO: Sessions + TimeSlots + Persons tên PT) =====
+    // [CHỐT-D3]: 5 buổi Scheduled gần nhất từ bây giờ.
+    private final List<UpcomingSessionRow> upcomingSessions;
+
+    // ===== Banners cảnh báo (Service tính — [CHỐT-D1], không đọc bảng riêng) =====
+    private final List<BannerItem> banners;
+
+    // ===== Chuyên cần (mở rộng ngoài SRS, tính trong CustomerDashboardService) =====
+
+    private final AttendanceView attendance;
+
+    // ===== Thông báo cho chuông (Notifications + NotificationRecipients) =====
+
+    private final List<NotificationRow> notifications;
+    private final int unreadNotificationCount;
+
+    // ===== Trạng thái thẻ gói tập: ACTIVE | EXPIRING | FROZEN | EXPIRED | NONE (do Service tính) =====
+
+    private final String membershipCardState;
+
+    // ===== Constructor =====
+
+    public CustomerDashboardView(
+            String fullName,
+            String avatar,
+            String customerCode,
+            String customerStatus,
+            boolean canUseGym,
+            List<SubscriptionRow> subscriptions,
+            List<UpcomingSessionRow> upcomingSessions,
+            List<BannerItem> banners,
+            AttendanceView attendance,
+            List<NotificationRow> notifications,
+            int unreadNotificationCount,
+            String membershipCardState) {
+
+        this.fullName = fullName;
+        this.avatar = avatar;
+        this.customerCode = customerCode;
+        this.customerStatus = customerStatus;
+        this.canUseGym = canUseGym;
+        this.subscriptions = subscriptions;
+        this.upcomingSessions = upcomingSessions;
+        this.banners = banners;
+        this.attendance = attendance;
+        this.notifications = notifications;
+        this.unreadNotificationCount = unreadNotificationCount;
+        this.membershipCardState = membershipCardState;
+    }
+
+    // ===== Getters =====
+
+    public String getFullName() { return fullName; }
+    public String getAvatar() { return avatar; }
+    public String getCustomerCode() { return customerCode; }
+    public String getCustomerStatus() { return customerStatus; }
+    public boolean isCanUseGym() { return canUseGym; }
+    public List<SubscriptionRow> getSubscriptions() { return subscriptions; }
+    public List<UpcomingSessionRow> getUpcomingSessions() { return upcomingSessions; }
+    public List<BannerItem> getBanners() { return banners; }
+    public AttendanceView getAttendance() { return attendance; }
+    public List<NotificationRow> getNotifications() { return notifications; }
+    public int getUnreadNotificationCount() { return unreadNotificationCount; }
+    public String getMembershipCardState() { return membershipCardState; }
+
+    // ===== Helper methods cho JSP =====
+
+    /**
+     * Tìm gói Membership (hoặc DayPass) đang Active để hiện trên Hero card.
+     * @return gói tập chính đang active, hoặc null nếu không có.
+     */
+    // Ô "Đổi ngày" trên thẻ Gói tập; null khi gói không đổi được hoặc không phải Membership.
+    private StartDatePicker startPicker;
+
+    public StartDatePicker getStartPicker() {
+        return startPicker;
+    }
+
+    public void setStartPicker(StartDatePicker startPicker) {
+        this.startPicker = startPicker;
+    }
+
+    // GETTER TỰ TÍNH — không có field/setter "activeMembership"; = gói tập đầu tiên (không phải PT) có displayStatus Active; JSP: customer/dashboard.jsp:101 …
+    public SubscriptionRow getActiveMembership() {
+        if (subscriptions == null) return null;
+        for (SubscriptionRow sub : subscriptions) {
+            if (!sub.isPtPackage() && "Active".equals(sub.getDisplayStatus())) {
+                return sub;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Kiểm tra khách có banner nào loại "danger" (đỏ) không — dùng để tô viền hero card.
+     */
+    public boolean hasAnyDangerBanner() {
+        if (banners == null) return false;
+        for (BannerItem b : banners) {
+            if ("danger".equals(b.getLevel())) return true;
+        }
+        return false;
+    }
+
+
+    public static class SubscriptionRow {
+
+        // DAO đọc bảng Subscriptions (+ Packages.PackageName / Orders.PackageNameSnapshot cho tên gói).
+        private final int subscriptionId;          // Subscriptions.SubscriptionId
+        private final String subscriptionType;     // Subscriptions.SubscriptionType: Membership | DayPass | PTSingle | PTCouple | SingleSession
+        private final String packageName;          // tên gói lúc mua
+        private final LocalDate startDate;         // Subscriptions.StartDate
+        private final LocalDate endDate;           // Subscriptions.EndDate (ngày cuối còn dùng, GBR-03)
+        private final String status;               // Subscriptions.Status: Active | Frozen | Pending | ...
+        // Service đối chiếu ngày để trình bày khi JOB chưa cập nhật DB; không thay đổi status đã lưu.
+        private String displayStatus;
+
+        // --- Chỉ có với gói PT (DBR-53, [CHỐT-D2]) ---
+        private final Integer totalSessions;       // tổng số buổi của gói (chỉ gói PT)
+        private final Integer remainingSessions;   // số buổi còn lại
+
+        // --- Bảo lưu nếu Frozen (DBR-51) ---
+        private final LocalDate freezeStart;       // FreezeRecords.StartDate — ngày bắt đầu bảo lưu
+        private final LocalDate freezeEnd;         // FreezeRecords.EndDate — ngày hết bảo lưu
+
+        // --- Thông tin đơn lúc mua, hiện trong khung "Chi tiết gói" (DBR-50: chép mô tả và quyền lợi lúc bán) ---
+        private final String orderCode;
+        private final String packageDescription;
+
+        /** PT phụ trách, chỉ có với gói PT. */
+        private final String ptName;
+
+        /** Số lần bảo lưu đã dùng và hạn mức lúc bán (chỉ gói tập; hạn mức có thể null). */
+        private final Integer freezeUsed;
+        private final Integer maxFreezes;
+
+        public SubscriptionRow(
+                int subscriptionId,
+                String subscriptionType,
+                String packageName,
+                LocalDate startDate,
+                LocalDate endDate,
+                String status,
+                Integer totalSessions,
+                Integer remainingSessions,
+                LocalDate freezeStart,
+                LocalDate freezeEnd,
+                String orderCode,
+                String packageDescription,
+                String ptName,
+                Integer freezeUsed,
+                Integer maxFreezes) {
+
+            this.subscriptionId = subscriptionId;
+            this.subscriptionType = subscriptionType;
+            this.packageName = packageName;
+            this.startDate = startDate;
+            this.endDate = endDate;
+            this.status = status;
+            this.displayStatus = status;
+            this.totalSessions = totalSessions;
+            this.remainingSessions = remainingSessions;
+            this.freezeStart = freezeStart;
+            this.freezeEnd = freezeEnd;
+            this.orderCode = orderCode;
+            this.packageDescription = packageDescription;
+            this.ptName = ptName;
+            this.freezeUsed = freezeUsed;
+            this.maxFreezes = maxFreezes;
+        }
+
+        public int getSubscriptionId() { return subscriptionId; }
+        public String getSubscriptionType() { return subscriptionType; }
+        public String getPackageName() { return packageName; }
+        public LocalDate getStartDate() { return startDate; }
+        public LocalDate getEndDate() { return endDate; }
+        public String getStatus() { return status; }
+        public String getDisplayStatus() { return displayStatus; }
+        public void setDisplayStatus(String displayStatus) { this.displayStatus = displayStatus; }
+        // GETTER TỰ TÍNH — không có field/setter "expiredForDisplay"; = displayStatus == "Expired"; JSP: customer/dashboard.jsp:219
+        public boolean isExpiredForDisplay() { return "Expired".equals(displayStatus); }
+        public Integer getTotalSessions() { return totalSessions; }
+        public Integer getRemainingSessions() { return remainingSessions; }
+        public LocalDate getFreezeStart() { return freezeStart; }
+        public LocalDate getFreezeEnd() { return freezeEnd; }
+        public String getOrderCode() { return orderCode; }
+        public String getPackageDescription() { return packageDescription; }
+        public String getPtName() { return ptName; }
+        public Integer getFreezeUsed() { return freezeUsed; }
+        public Integer getMaxFreezes() { return maxFreezes; }
+
+        /** Gói PT (PTSingle / PTCouple / SingleSession). */
+        // GETTER TỰ TÍNH — không có field/setter "ptPackage"; = subscriptionType là PTSingle, PTCouple hoặc SingleSession; JSP: customer/dashboard.jsp:210 …
+        public boolean isPtPackage() {
+            return "PTSingle".equals(subscriptionType)
+                    || "PTCouple".equals(subscriptionType)
+                    || "SingleSession".equals(subscriptionType);
+        }
+
+        /** Gói chưa bắt đầu (nối tiếp, DBR-52): startDate > today. */
+        // GETTER TỰ TÍNH — không có field/setter "pending"; = startDate sau hôm nay; JSP: customer/dashboard.jsp:223
+        public boolean isPending() {
+            return startDate != null && startDate.isAfter(DateTimeUtil.today());
+        }
+
+        /**
+         * Số ngày còn lại tính từ hôm nay đến ngày kết thúc (GBR-03: endDate là ngày cuối còn dùng).
+         * Trả về 0 nếu đã hết hạn hoặc thông tin thiếu.
+         */
+        // GETTER TỰ TÍNH — không có field/setter "daysRemaining"; = số ngày từ hôm nay tới endDate (tính cả hôm nay), không âm; JSP: customer/dashboard.jsp:101 …
+        public long getDaysRemaining() {
+            if (endDate == null) return 0;
+            long days = ChronoUnit.DAYS.between(DateTimeUtil.today(), endDate) + 1;
+            return Math.max(days, 0);
+        }
+
+        /**
+         * Nhãn trạng thái gói tiếng Việt (GBR-01).
+         */
+        // GETTER TỰ TÍNH — không có field/setter "statusLabel"; = displayStatus đổi sang chữ tiếng Việt; JSP: customer/dashboard.jsp:214
+        public String getStatusLabel() {
+            if (displayStatus == null) return "";
+            switch (displayStatus) {
+                case "Active":    return "Đang dùng";
+                case "Frozen":    return "Đang bảo lưu";
+                case "Pending":   return "Chưa bắt đầu";
+                case "Expired":   return "Hết hạn";
+                case "Cancelled": return "Đã hủy";
+                case "Used":      return "Đã dùng";
+                case "Completed": return "Hoàn thành";
+                default:          return status;
+            }
+        }
+    }
+
+    /**
+     * Một buổi PT sắp tới ([CHỐT-D3]).
+     */
+    public static class UpcomingSessionRow {
+
+        // DAO đọc: Sessions + TimeSlots (ngày/giờ) + Persons (tên PT) + tên gói.
+        private final int sessionId;               // Sessions.SessionId
+        private final LocalDate slotDate;          // TimeSlots.SlotDate
+        private final LocalTime startTime;         // TimeSlots.StartTime
+        private final LocalTime endTime;           // TimeSlots.EndTime
+        private final String ptName;               // Persons.FullName của PT dạy buổi này
+
+        /** Tên gói (VD: "Gói PT cá nhân 10 buổi"). */
+        private final String packageName;
+        // Service tính: buổi này khách chưa có Membership/DayPass phủ ngày → tô nhãn "Chưa có gói tập".
+        private final boolean missingMembership;
+
+        public UpcomingSessionRow(
+                int sessionId,
+                LocalDate slotDate,
+                LocalTime startTime,
+                LocalTime endTime,
+                String ptName,
+                String packageName,
+                boolean missingMembership) {
+
+            this.sessionId = sessionId;
+            this.slotDate = slotDate;
+            this.startTime = startTime;
+            this.endTime = endTime;
+            this.ptName = ptName;
+            this.packageName = packageName;
+            this.missingMembership = missingMembership;
+        }
+
+        public int getSessionId() { return sessionId; }
+        public LocalDate getSlotDate() { return slotDate; }
+        public LocalTime getStartTime() { return startTime; }
+        public LocalTime getEndTime() { return endTime; }
+        public String getPtName() { return ptName; }
+        public String getPackageName() { return packageName; }
+        public boolean isMissingMembership() { return missingMembership; }
+
+    }
+
+    /**
+     * Một banner cảnh báo ([CHỐT-D1]).
+     * Màu: "danger" (đỏ) hoặc "warning" (vàng) theo GBR-28.
+     */
+    public static class BannerItem {
+        private final String level;
+        private final String message;
+        /** Loại banner: FROZEN / EXPIRED / EXPIRING / MISSING_MEMBERSHIP / PENDING_ORDER. */
+        private final String type;
+        /** Tên gói chốt trong đơn hàng, dùng khi JSP hiển thị banner chờ thanh toán. */
+        private final String packageName;
+
+        /** Mã đơn để nút tiếp tục thanh toán mở đúng checkout. */
+        private final Integer orderId;
+
+        public BannerItem(String level, String message, String type) {
+            this(level, message, type, null);
+        }
+
+        public BannerItem(String level, String message, String type, String packageName) {
+            this(level, message, type, packageName, null);
+        }
+
+        public BannerItem(String level, String message, String type, String packageName, Integer orderId) {
+            this.level = level;
+            this.message = message;
+            this.type = type;
+            this.packageName = packageName;
+            this.orderId = orderId;
+        }
+
+        public String getLevel() { return level; }
+        public String getMessage() { return message; }
+        public String getType() { return type; }
+        public String getPackageName() { return packageName; }
+        public Integer getOrderId() { return orderId; }
+    }
+
+    /**
+     * Chuyên cần của tháng hiện tại (mở rộng ngoài SRS).
+     * Mọi con số do CustomerDashboardService tính sẵn; JSP chỉ in ra.
+     */
+    public static class AttendanceView {
+        private final int recordStreak;
+        private final int thisMonthCount;
+        private final int lastMonthCount;
+        private final boolean checkedInToday;
+        /** Service đặt true khi chuỗi đủ dài để chào bằng màn "chuỗi tập"; Servlet chỉ thêm điều kiện "một lần mỗi lần đăng nhập". */
+        private final boolean streakIntroEligible;
+        private final String monthLabel;
+        private final int leadingBlanks;
+        private final List<CalendarCell> cells;
+
+        public AttendanceView(int recordStreak,
+                int thisMonthCount, int lastMonthCount, boolean checkedInToday,
+                boolean streakIntroEligible, String monthLabel, int leadingBlanks, List<CalendarCell> cells) {
+            this.recordStreak = recordStreak;
+            this.thisMonthCount = thisMonthCount;
+            this.lastMonthCount = lastMonthCount;
+            this.checkedInToday = checkedInToday;
+            this.streakIntroEligible = streakIntroEligible;
+            this.monthLabel = monthLabel;
+            this.leadingBlanks = leadingBlanks;
+            this.cells = cells;
+        }
+
+        public int getRecordStreak() { return recordStreak; }
+        public int getThisMonthCount() { return thisMonthCount; }
+        public int getLastMonthCount() { return lastMonthCount; }
+        public boolean isCheckedInToday() { return checkedInToday; }
+        public boolean isStreakIntroEligible() { return streakIntroEligible; }
+        public String getMonthLabel() { return monthLabel; }
+        public int getLeadingBlanks() { return leadingBlanks; }
+        public List<CalendarCell> getCells() { return cells; }
+
+    }
+
+    /**
+     * Một ô ngày trong lịch tháng.
+     * state: checked (đã check-in) | closed (phòng đóng cửa / bảo lưu) | missed | future.
+     */
+    public static class CalendarCell {
+        private final int day;
+        private final String state;
+        private final boolean today;
+
+        public CalendarCell(int day, String state, boolean today) {
+            this.day = day;
+            this.state = state;
+            this.today = today;
+        }
+
+        public int getDay() { return day; }
+        public String getState() { return state; }
+        public boolean isToday() { return today; }
+    }
+
+    /**
+     * Một thông báo trong chuông (bảng Notifications, GBR-34: có trạng thái đã đọc).
+     */
+    public static class NotificationRow {
+        private final int notificationId;
+        private final String title;
+        private final String content;
+        private final LocalDateTime sentAt;
+        private final boolean read;
+
+        public NotificationRow(int notificationId, String title, String content,
+                LocalDateTime sentAt, boolean read) {
+            this.notificationId = notificationId;
+            this.title = title;
+            this.content = content;
+            this.sentAt = sentAt;
+            this.read = read;
+        }
+
+        public int getNotificationId() { return notificationId; }
+        public String getTitle() { return title; }
+        public String getContent() { return content; }
+        public LocalDateTime getSentAt() { return sentAt; }
+        public boolean isRead() { return read; }
+    }
+}

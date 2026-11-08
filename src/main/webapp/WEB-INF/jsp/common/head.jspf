@@ -11,22 +11,51 @@
   Thứ tự nạp CSS 3 lớp (không đảo): tokens.css → common.css → CSS riêng của trang.
   JS: common.js nạp trước, JS riêng của trang nạp sau (cả 2 đều defer).
   Mỗi JSP vẫn phải tự khai báo ở dòng đầu: <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+  Sửa common.css / common.js thì tăng số ?v= bên dưới để trình duyệt không dùng bản cũ trong cache.
 --%>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <%-- common.js đọc thẻ này (hàm getContextPath) để ghép URL AJAX đúng khi app chạy dưới /gms --%>
 <meta name="context-path" content="${pageContext.request.contextPath}">
+<%-- CSRF token của phiên (LoginServlet tạo lúc đăng nhập). common.js đọc thẻ này để tự gắn ô ẩn csrfToken vào mọi form POST
+     và mọi postData; Servlet kiểm bằng RequestUtil.isValidCsrfToken / rejectInvalidCsrf. Chưa đăng nhập thì không in. --%>
+<c:if test="${not empty sessionScope.csrfToken}">
+<meta name="csrf-token" content="<c:out value='${sessionScope.csrfToken}' />">
+</c:if>
+<c:if test="${not empty sessionScope.avatar}">
+<meta name="user-avatar" content="${pageContext.request.contextPath}${sessionScope.avatar}">
+</c:if>
+<c:if test="${not empty sessionScope.displayName}">
+<meta name="user-display-name" content="<c:out value='${sessionScope.displayName}' />">
+</c:if>
 
-<%-- Font: Montserrat (tiêu đề, số liệu) · Inter (nội dung khu Guest/Hội viên/Nhân viên)
-     · Work Sans + Be Vietnam Pro (khu Manager/Admin) — khớp token --font-* trong tokens.css --%>
+<%-- Bộ chữ: Inter Tight (tiêu đề) + Inter (nội dung) + JetBrains Mono (chữ phụ: ngày, mã, nhãn); đều có dấu tiếng Việt. --%>
+<%-- Chế độ Tối (mặc định, bảng màu cũ) / Sáng (Arena). Công tắc ở topbar (common.js) lưu "gms-theme" = "dark" | "light".
+     Áp ngay trước khi vẽ để không nháy: gắn data-theme="dark" trừ khi người dùng đã chọn sáng. --%>
+<script>var gmsTheme=null;try{gmsTheme=localStorage.getItem("gms-theme");}catch(e){}if(gmsTheme!=="light"){document.documentElement.setAttribute("data-theme","dark");}</script>
+<%-- Chế độ nhẹ: máy ít nhân CPU / ít RAM / bật tiết kiệm dữ liệu thì tắt nền động + kính mờ; người dùng chọn lại được bằng nút "Tạm dừng hiệu ứng" --%>
+<script>try{var gmsFx=localStorage.getItem("gms-fx"),gmsNav=navigator,gmsWeak=(gmsNav.hardwareConcurrency&&gmsNav.hardwareConcurrency<=2)||(gmsNav.deviceMemory&&gmsNav.deviceMemory<=2)||(gmsNav.connection&&gmsNav.connection.saveData);if(gmsFx==="lite"||(gmsFx!=="full"&&gmsWeak)){document.documentElement.classList.add("gms-lite");}}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&family=Work+Sans:wght@400;500;600;700&family=Be+Vietnam+Pro:wght@600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="icon" type="image/svg+xml" href="${pageContext.request.contextPath}/images/brand/super-gym-mark.svg?v=20261014p">
+<meta name="theme-color" content="#050D19">
 
 <%-- Icon Font Awesome (cùng bản với prototype) — dùng <i class="fa-solid fa-..."></i> --%>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/js/all.min.js" crossorigin="anonymous" defer></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css">
 
-<link rel="stylesheet" href="${pageContext.request.contextPath}/css/tokens.css">
-<link rel="stylesheet" href="${pageContext.request.contextPath}/css/common.css">
-<script src="${pageContext.request.contextPath}/js/common.js" defer></script>
+<link rel="stylesheet" href="${pageContext.request.contextPath}/css/tokens.css?v=20261106auth">
+<link rel="stylesheet" href="${pageContext.request.contextPath}/css/common.css?v=20261031hint">
+<link rel="stylesheet" href="${pageContext.request.contextPath}/css/brand-system.css?v=20261106auth">
+<script src="${pageContext.request.contextPath}/js/common.js?v=20261106blur" defer></script>
+<script src="${pageContext.request.contextPath}/js/icons.js?v=3" defer></script>
+<%-- Chuông thông báo dùng chung cho mọi vai trò đăng nhập có quyền nhận thông báo (SRS 11.2) --%>
+<c:if test="${not empty sessionScope.role or not empty sessionScope.accountId or not empty sessionScope.account}">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css?v=20261106_v2">
+    <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js?v=20261106_v2" defer></script>
+</c:if>
+<%-- Nạp nền cho cả URL Servlet lẫn đường dẫn JSP sau khi forward, không tác động role khác. --%>
+<c:if test="${pageContext.request.requestURI.contains('/customer/') or pageContext.request.requestURI.contains('/pt/')}">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pt-customer-zone.css?v=20261014p">
+</c:if>

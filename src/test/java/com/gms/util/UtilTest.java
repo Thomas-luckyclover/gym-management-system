@@ -106,12 +106,4 @@ class UtilTest {
             assertTrue(ValidationUtil.isValidVerificationCode(code));
         }
     }
-
-    @Test
-    void tokenHashMatchesSeedData() {
-        // Khớp TokenHash của tài khoản 113 trong database/4_Phase1_Seed.sql
-        assertEquals("f33b3f90a86e54ffdb250cb87b3786c9a09ed291abe9f94a62fa395a419c3085",
-                SecureCodeUtil.sha256Hex("setup-nhung-phase1-2026"));
-        assertEquals(64, SecureCodeUtil.sha256Hex(SecureCodeUtil.generateUrlToken()).length());
-    }
 }

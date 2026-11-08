@@ -16,7 +16,7 @@
 //   6.  Đếm ngược (GBR-27) .......... startCountdown, stopCountdown, bindCountdowns
 //   7.  Danh sách (GBR-18, 20, 21) .. changeUrlParams, bindPageSizeSelects, bindClearFiltersButtons,
 //                                     bindAutoSubmitSelects, renderEmptyState
-//   8.  Tab & vùng bật/tắt .......... bindTabs, bindToggleButtons
+//   8.  Tab & vùng bật/tắt .......... bindTabs, bindToggleButtons, bindCollapseGroups
 //   9.  AJAX ........................ sendAjaxRequest, getJson, postData, submitFormAjax
 //   10. Định dạng (GBR-01, 29) ...... formatMoney, formatDate, formatTime, formatDateTime, formatCountdown,
 //                                     maskEmail, formatPhoneDisplay
@@ -45,6 +45,7 @@
 //   select[data-auto-submit]               đổi lựa chọn là gửi form lọc — bindAutoSubmitSelects()
 //   [role="tablist"] [data-tab] + [data-tab-panel]   tab — bindTabs()
 //   [data-toggle-target="idVùng"]          nút mở/đóng 1 vùng (menu mobile, sidebar) — bindToggleButtons()
+//   [data-collapse-group]                  nhóm rèm <details data-collapse-item> + nút Mở tất cả / Thu gọn — bindCollapseGroups()
 // =====================================================================
 
 // ===== Hằng số =====
@@ -90,35 +91,211 @@ const AJAX_HEADER_VALUE = "XMLHttpRequest";
 // Câu thông báo — bản sao của constant/Messages.java (SRS III.5). Sửa câu chữ thì sửa cả 2 nơi.
 // %s / %d được thay bằng formatMessage(mẫu, [giá trị...])
 const MESSAGES = {
+    // EN: No results found. Try different keywords or clear some filters.
     MSG01_NO_RESULT: "Không tìm thấy kết quả. Hãy thử từ khóa khác hoặc bỏ bớt bộ lọc.",
-    MSG02_EMPTY_LIST: "Chưa có %s nào.",
+    // EN: No %s yet.
+    MSG02_EMPTY_LIST: "Chưa có %s.",
+    // EN: No data in the selected time range.
     MSG03_NO_DATA_IN_RANGE: "Không có dữ liệu trong khoảng thời gian đã chọn.",
+    // EN: The system is busy. Please try again in a few minutes.
     MSG04_SYSTEM_BUSY: "Hệ thống đang bận. Vui lòng thử lại sau ít phút.",
+    // EN: Connection lost. Check your network and try again.
     MSG05_CONNECTION_LOST: "Mất kết nối. Hãy kiểm tra mạng và thử lại.",
+    // EN: Your session has expired. Please sign in again.
     MSG06_SESSION_EXPIRED: "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
+    // EN: You do not have permission to access this function.
     MSG07_NO_PERMISSION: "Bạn không có quyền truy cập chức năng này.",
+    // EN: This %s could not be found.
+    MSG08_NOT_FOUND: "Không tìm thấy %s.",
+    // EN: %s is required.
     MSG09_REQUIRED: "%s là bắt buộc.",
+    // EN: Exceed max length of %d.
     MSG10_MAX_LENGTH: "Vượt quá độ dài tối đa %d ký tự.",
+    // EN: Invalid email format.
     MSG11_INVALID_EMAIL: "Email không đúng định dạng.",
-    MSG13_INVALID_PHONE: "Số điện thoại phải gồm 10 chữ số và bắt đầu bằng 0.",
+    // EN: This email is already used by another account.
+    MSG12_EMAIL_USED: "Email này đã được tài khoản khác sử dụng.",
+    // EN: Phone number must be 10 digits, start with 0 and use a valid Vietnamese carrier prefix.
+    MSG13_INVALID_PHONE: "Số điện thoại phải gồm 10 chữ số, bắt đầu bằng 0 và có đầu số nhà mạng Việt Nam hợp lệ.",
+    // EN: This phone number already belongs to another profile.
+    MSG14_PHONE_USED: "Số điện thoại này đã thuộc về một hồ sơ khác.",
+    // EN: Date of birth cannot be in the future.
     MSG15_DOB_IN_FUTURE: "Ngày sinh không được ở tương lai.",
+    // EN: The start date must be on or before the end date.
     MSG16_DATE_RANGE_REVERSED: "Ngày bắt đầu phải trước hoặc bằng ngày kết thúc.",
+    // EN: Enter a number greater than 0.
     MSG17_POSITIVE_NUMBER: "Nhập một số lớn hơn 0.",
+    // EN: Only dates from %s onwards can be selected.
     MSG18_DATE_TOO_EARLY: "Chỉ được chọn ngày từ %s trở đi.",
+    // EN: Be more specific, at least %d characters.
     MSG19_TOO_SHORT: "Vui lòng ghi cụ thể hơn, tối thiểu %d ký tự.",
+    // EN: Only JPG or PNG images up to %s are accepted.
     MSG20_INVALID_IMAGE: "Chỉ chấp nhận ảnh JPG hoặc PNG, tối đa %s.",
+    // EN: Please select %s.
     MSG21_SELECT_REQUIRED: "Vui lòng chọn %s.",
+    // EN: This record was just updated by someone else. Reload before saving.
+    MSG22_CONCURRENT_EDIT: "Bản ghi này vừa được người khác cập nhật. Hãy tải lại trước khi lưu.",
+    // EN: Changes saved.
     MSG23_SAVED: "Đã lưu thay đổi.",
+    // EN: There is nothing to save.
     MSG24_NOTHING_TO_SAVE: "Không có thay đổi nào để lưu.",
+    // EN: %s added.
+    MSG25_CREATED: "Đã thêm %s.",
+    // EN: %s deleted.
+    MSG26_DELETED: "Đã xóa %s.",
+    // EN: Delete %s? This action cannot be undone.
     MSG27_CONFIRM_DELETE: "Xóa %s? Thao tác này không thể hoàn tác.",
-    MSG28_UNSAVED_CHANGES: "Thay đổi của bạn chưa được lưu. Rời trang bây giờ sẽ mất các thay đổi này.",
-    MSG39_IDENTIFIER_REQUIRED: "Nhập email hoặc số điện thoại.",
+    // EN: Your changes have not been saved. Leaving now will discard them.
+    MSG28_UNSAVED_CHANGES: "Thay đổi của bạn chưa được lưu. Rời trang lúc này sẽ mất các thay đổi.",
+    // EN: Cannot delete: %s still refers to it. Deactivate it instead.
+    MSG29_STILL_REFERENCED: "Không thể xóa: %s vẫn đang tham chiếu tới mục này. Hãy ngừng hoạt động thay vì xóa.",
+    // EN: %s deactivated.
+    MSG30_DEACTIVATED: "Đã ngừng hoạt động %s.",
+    // EN: %s reactivated.
+    MSG31_REACTIVATED: "Đã kích hoạt lại %s.",
+    // EN: %s downloaded.
+    MSG32_EXPORTED: "Đã tải xuống %s.",
+    // EN: Incorrect email, phone number or password. You have %d attempts left.
+    MSG33_WRONG_CREDENTIALS_ATTEMPTS_LEFT: "Email, số điện thoại hoặc mật khẩu không đúng. Bạn còn %d lần thử.",
+    // EN: Incorrect email, phone number or password. Please check again.
+    MSG34_WRONG_CREDENTIALS_STAFF: "Email, số điện thoại hoặc mật khẩu không đúng. Vui lòng kiểm tra lại.",
+    // EN: Account locked for %d minutes after too many failed attempts. Try again in %s.
+    MSG35_ACCOUNT_TEMP_LOCKED: "Tài khoản bị khóa %d phút do nhập sai quá nhiều lần. Thử lại sau %s.",
+    // EN: The lock has expired. You can sign in again.
+    MSG36_LOCK_EXPIRED: "Đã hết thời gian khóa. Bạn có thể đăng nhập lại.",
+    // EN: This account cannot be used to sign in. Please contact an administrator.
+    MSG37_ACCOUNT_INACTIVE: "Tài khoản này không thể đăng nhập. Vui lòng liên hệ quản trị viên.",
+    // EN: This account has no password yet. Please use Forgot password to set your password
+    // EN: Enter your email or phone number.
+    MSG39_IDENTIFIER_REQUIRED: "Nhập email hoặc số điện thoại của bạn.",
+    // EN: Signed out.
+    MSG40_SIGNED_OUT: "Đã đăng xuất.",
+    // EN: No account found with this email.
+    MSG41_EMAIL_NOT_FOUND: "Không tìm thấy tài khoản với email này.",
+    // EN: A code has been sent to %s. It is valid for %d minutes.
+    MSG42_CODE_SENT: "Mã đã được gửi tới %s. Mã có hiệu lực trong %d phút.",
+    // EN: Incorrect code. Check again or press Resend code.
+    MSG43_WRONG_CODE: "Mã không đúng. Hãy kiểm tra lại hoặc bấm Gửi lại mã.",
+    // EN: This code has expired. Press Resend code to get a new one.
+    MSG44_CODE_EXPIRED: "Mã đã hết hạn. Bấm Gửi lại mã để nhận mã mới.",
+    // EN: A new verification code has been sent.
+    MSG45_CODE_RESENT: "Đã gửi mã xác thực mới.",
+    // EN: Password must be at least %d characters.
     MSG46_PASSWORD_TOO_SHORT: "Mật khẩu phải có ít nhất %d ký tự.",
-    MSG47_PASSWORD_MISMATCH: "Mật khẩu xác nhận không khớp.",
-    EXTRA_PASSWORD_RULE: "Mật khẩu phải dài %d–%d ký tự, gồm cả chữ và số.",
-    EXTRA_FULL_NAME_RULE: "Họ tên chỉ gồm chữ cái, khoảng trắng, dấu nháy đơn hoặc gạch nối.",
-    EXTRA_CODE_FORMAT: "Mã xác thực gồm đúng 6 chữ số.",
-    EXTRA_DOB_TOO_OLD: "Ngày sinh không hợp lệ (tuổi không quá %d)."
+    // EN: The passwords do not match.
+    MSG47_PASSWORD_MISMATCH: "Mật khẩu nhập lại không khớp.",
+    // EN: The new password must differ from the current one.
+    MSG48_PASSWORD_SAME_AS_OLD: "Mật khẩu mới phải khác mật khẩu hiện tại.",
+    // EN: Password changed. All your other sessions have been signed out.
+    MSG49_PASSWORD_CHANGED: "Đã đổi mật khẩu. Các phiên đăng nhập khác của bạn đã bị đăng xuất.",
+    // EN: Phone number accepted. Please fill in your registration details.
+    MSG50_PHONE_ACCEPTED: "Số điện thoại hợp lệ. Vui lòng điền thông tin đăng ký.",
+    // EN: This phone number already has an account. Please sign in or use Forgot password.
+    MSG51_PHONE_HAS_ACCOUNT: "Số điện thoại này đã có tài khoản. Vui lòng đăng nhập hoặc dùng Quên mật khẩu.",
+    // EN: This phone number is registered with a different email (%s). Use that email, or visit the front desk to have it updated.
+    MSG52_PHONE_DIFFERENT_EMAIL: "Số điện thoại này đã đăng ký với email khác (%s). Hãy dùng email đó, hoặc đến quầy lễ tân để cập nhật.",
+    // EN: Your profile has no email on file, so it cannot be activated online. Please visit the front desk to add one.
+    MSG53_PROFILE_NO_EMAIL: "Hồ sơ của bạn chưa có email nên không thể kích hoạt trực tuyến. Vui lòng đến quầy lễ tân để bổ sung.",
+    // EN: Your account has been created. Please sign in.
+    MSG54_ACCOUNT_CREATED: "Đã tạo tài khoản. Vui lòng đăng nhập.",
+    // EN: A verification code has been sent to the new email address.
+    MSG55_EMAIL_CHANGE_CODE_SENT: "Mã xác thực đã được gửi tới địa chỉ email mới.",
+    // EN: Sign-in email updated. We notified the old address and signed out your other sessions.
+    MSG56_EMAIL_CHANGED: "Đã cập nhật email đăng nhập. Chúng tôi đã thông báo tới email cũ và đăng xuất các phiên khác của bạn.",
+    // EN: Phone number updated.
+    MSG57_PHONE_CHANGED: "Đã cập nhật số điện thoại.",
+    // EN: Profile picture updated.
+    MSG58_AVATAR_CHANGED: "Đã cập nhật ảnh đại diện.",
+    // EN: All other devices have been signed out.
+    MSG59_OTHER_DEVICES_SIGNED_OUT: "Đã đăng xuất khỏi tất cả thiết bị khác.",
+    // EN: This information is updated by the front desk. Please bring your ID to the counter.
+    MSG60_UPDATED_BY_FRONT_DESK: "Thông tin này do lễ tân cập nhật. Vui lòng mang giấy tờ tùy thân đến quầy.",
+    // EN: Too many attempts. Verification for this email is locked for %d minutes. Try again in %s.
+    MSG61_VERIFICATION_LOCKED: "Thử quá nhiều lần. Xác thực cho email này bị khóa %d phút. Thử lại sau %s.",
+    // EN: You have %d attempt(s) left to enter the code.
+    MSG62_CODE_ATTEMPTS_LEFT: "Bạn còn %d lần nhập mã.",
+    // EN: One more wrong entry will lock verification for this email for %d minutes.
+    MSG63_CODE_LAST_ATTEMPT: "Nhập sai thêm một lần nữa sẽ khóa xác thực cho email này trong %d phút.",
+    // EN: You can request %d more code(s) within 60 minutes.
+    MSG64_CODE_RESENDS_LEFT: "Bạn còn có thể yêu cầu %d mã nữa trong 60 phút.",
+    // EN: No code requests left. Requesting another code will lock verification for %d minutes.
+    MSG65_CODE_RESEND_WILL_LOCK: "Đã hết lượt yêu cầu mã. Yêu cầu thêm sẽ khóa xác thực trong %d phút.",
+    // EN: Password must be %d–%d characters and contain both letters and digits.
+    MSG66_PASSWORD_RULE: "Mật khẩu phải dài %d–%d ký tự và có cả chữ lẫn số.",
+    // EN: Full name may contain only letters, spaces, apostrophes or hyphens.
+    MSG67_FULL_NAME_RULE: "Họ tên chỉ được chứa chữ cái, khoảng trắng, dấu nháy đơn hoặc dấu gạch nối.",
+    // EN: The verification code must be exactly 6 digits.
+    MSG68_CODE_FORMAT: "Mã xác thực phải gồm đúng 6 chữ số.",
+    // EN: Invalid date of birth (age must not exceed %d).
+    MSG69_DOB_TOO_OLD: "Ngày sinh không hợp lệ (tuổi không được vượt quá %d).",
+    // EN: Please wait %d more seconds before resending the code.
+    MSG70_CODE_RESEND_TOO_SOON: "Vui lòng chờ thêm %d giây trước khi gửi lại mã.",
+    // EN: The current password is incorrect.
+    MSG71_CURRENT_PASSWORD_WRONG: "Mật khẩu hiện tại không đúng.",
+    // EN: Full name must be %d–%d characters.
+    MSG72_FULL_NAME_LENGTH: "Họ tên phải dài %d–%d ký tự.",
+    // EN: This post is no longer available.
+    MSG73_POST_UNAVAILABLE: "Bài viết này không còn khả dụng.",
+    // EN: Choose the role you want to work in.
+    MSG74_CHOOSE_ROLE: "Chọn vai trò bạn muốn làm việc.",
+    // EN: You are now working as %s.
+    MSG75_ROLE_SWITCHED: "Bạn đang làm việc với vai trò %s.",
+    // EN: You cannot perform this action on your own customer profile. Please ask another colleague.
+    MSG76_STAFF_OWN_CUSTOMER_PROFILE: "Bạn không thể thao tác trên hồ sơ khách hàng của chính mình. Vui lòng nhờ đồng nghiệp khác.",
+    // EN: Submission deadline passed. Leave on %s had to be submitted before %s on the previous day.
+    MSG77_LEAVE_SUBMISSION_DEADLINE: "Đã quá hạn nộp. Đơn nghỉ ngày %s phải nộp trước %s của ngày hôm trước.",
+    // EN: You still have %d scheduled session(s) in this period. Reschedule, transfer or cancel them before submitting the request.
+    MSG78_LEAVE_BLOCKED_BY_SESSIONS: "Bạn còn %d buổi dạy trùng lịch nghỉ. Xem lịch và liên hệ quản lý để giải quyết trước khi gửi đơn.",
+    // EN: Cannot approve: the %s shift on %s would have fewer than %d %s(s) on duty.
+    MSG79_LEAVE_BREAKS_MIN_STAFFING: "Không thể duyệt: ca %s ngày %s sẽ có ít hơn %d %s trực.",
+    // EN: %s needs a valid membership package before a PT package can be sold.
+    MSG81_PT_REQUIRES_MEMBERSHIP: "%s cần có gói hội viên còn hiệu lực trước khi mua gói PT.",
+    // EN: PT services are available only to customers aged %d or older.
+    MSG82_PT_MIN_AGE: "Dịch vụ PT chỉ dành cho khách từ %d tuổi trở lên.",
+    // EN: Check-in refused: the customer has no valid membership package or day pass today.
+    MSG83_CHECKIN_NO_PACKAGE: "Từ chối check-in: hôm nay khách không có gói hội viên hoặc vé ngày hợp lệ.",
+    // EN: This day pass has already been used.
+    MSG84_DAY_PASS_USED: "Vé ngày này đã được sử dụng.",
+    // EN: This voucher cannot be applied: %s.
+    MSG85_VOUCHER_INVALID: "Không thể áp dụng voucher này: %s.",
+    // EN: The voucher cannot be changed while a payment is in progress.
+    MSG86_VOUCHER_PAYMENT_PENDING: "Không thể đổi voucher khi đang xử lý thanh toán.",
+    // EN: Cannot close the shift: %d counter order(s) are still Pending.
+    MSG87_CLOSE_SHIFT_PENDING_ORDERS: "Không thể đóng ca: còn %d đơn tại quầy đang chờ thanh toán.",
+    // EN: This is the last active Admin account. It cannot be locked, demoted or set to Resigned.
+    MSG88_LAST_ACTIVE_ADMIN: "Đây là tài khoản Admin hoạt động cuối cùng. Không thể khóa, hạ quyền hoặc chuyển sang Đã nghỉ việc.",
+    // EN: The position cannot be changed while unfinished work remains: %s.
+    MSG89_POSITION_CHANGE_UNFINISHED: "Không thể đổi vị trí khi còn công việc chưa hoàn thành: %s.",
+    // EN: This session has already started or is no longer scheduled, so it cannot be changed.
+    MSG91_SESSION_CANNOT_CHANGE: "Buổi tập đã bắt đầu hoặc không còn ở trạng thái đã xếp lịch, nên không thể thay đổi.",
+    // EN: The customer has no valid membership package on %s. Please choose another date.
+    MSG92_NO_MEMBERSHIP_ON_DATE: "Khách không có gói hội viên hợp lệ vào ngày %s. Vui lòng chọn ngày khác.",
+    // EN: This information is updated by the Manager.
+    MSG93_UPDATED_BY_MANAGER: "Thông tin này do Quản lý cập nhật.",
+    // EN: Only the Admin can change this information.
+    MSG94_ONLY_ADMIN_CAN_CHANGE: "Chỉ Admin mới có thể thay đổi thông tin này.",
+    // EN: Your password has been reset and all sessions have been signed out. Please sign in.
+    MSG95_PASSWORD_RESET_COMPLETED: "Đã đặt lại mật khẩu và đăng xuất mọi phiên. Vui lòng đăng nhập.",
+    // EN: Deletion request sent to the Manager for approval.
+    MSG96_DELETION_REQUEST_SENT: "Đã gửi yêu cầu xóa tới Quản lý để duyệt.",
+    // EN: This order can only be cancelled during the open shift that created it.
+    MSG97_CANCEL_ORDER_OUTSIDE_SHIFT: "Chỉ có thể hủy đơn này trong ca đang mở đã tạo đơn.",
+    // EN: The payment deadline has passed and the order was cancelled. Please create a new order.
+    MSG98_ONLINE_ORDER_DEADLINE_PASSED: "Đã quá hạn thanh toán và đơn đã bị hủy. Vui lòng tạo đơn mới.",
+    // EN: This package cannot be frozen: %s.
+    MSG99_FREEZE_REFUSED: "Không thể bảo lưu gói này: %s.",
+    // EN: A freeze can last at most %d month(s) and must end by %s.
+    MSG100_FREEZE_LIMIT: "Bảo lưu tối đa %d tháng và phải kết thúc trước ngày %s.",
+    // EN: This profile already has a pending deletion request.
+    MSG101_PROFILE_PENDING_DELETION: "Hồ sơ này đã có yêu cầu xóa đang chờ duyệt.",
+    // EN: This person already has an active staff record.
+    MSG102_STAFF_ALREADY_EXISTS: "Người này đã có hồ sơ nhân viên đang hoạt động.",
+    // EN: This slot has just been taken. Please choose another slot.
+    MSG103_SLOT_ALREADY_TAKEN: "Khung giờ này vừa được người khác chọn. Vui lòng chọn khung giờ khác.",
+    // EN: This slot overlaps an existing slot (%s–%s).
+    MSG104_SLOT_OVERLAPS: "Khung giờ này trùng với khung giờ đã có (%s–%s).",
+    // EN: This action is outside the allowed time window.
+    MSG105_ACTION_OUTSIDE_WINDOW: "Thao tác này nằm ngoài khung thời gian cho phép."
 };
 
 // Hộp thoại xác nhận đang mở (chỉ mở 1 cái tại 1 thời điểm)
@@ -143,8 +320,13 @@ function initCommon() {
     bindPasswordToggles();
     bindTabs();
     bindToggleButtons();
+    bindCollapseGroups();
     bindConfirmButtons();
     bindCountdowns();
+    bindArticleImageFallbacks();
+    bindHintBoxes();
+    syncHeaderUserAvatar();
+    bindCsrfToForms();
 
     // B3
     bindPageSizeSelects();
@@ -159,6 +341,152 @@ function initCommon() {
     const unsavedForms = document.querySelectorAll("form[data-unsaved-warning]");
     for (const form of unsavedForms) {
         bindUnsavedChangesWarning(form);
+    }
+}
+
+// Đồng bộ avatar người dùng trên header từ session / meta tag
+function syncHeaderUserAvatar() {
+    const avatarMeta = document.querySelector('meta[name="user-avatar"]');
+    const avatarUrl = avatarMeta ? avatarMeta.getAttribute("content") : null;
+    const userContainers = document.querySelectorAll(".tb-user, .guest-account, .pt-top-actions .pt-user-badge, .pt-header-user");
+    if (!userContainers.length) {
+        return;
+    }
+    for (const container of userContainers) {
+        if (avatarUrl && avatarUrl.trim() !== "") {
+            let img = container.querySelector("img.avatar, img.pt-user-avatar, img.tb-avatar");
+            const initialSpan = container.querySelector("span.avatar, span.pt-user-avatar, span.tb-avatar, i.fa-user");
+            if (!img) {
+                img = document.createElement("img");
+                img.className = "avatar";
+                img.alt = "Avatar";
+                img.style.objectFit = "cover";
+                img.onerror = function() {
+                    this.style.display = "none";
+                    if (initialSpan) { initialSpan.style.display = ""; }
+                };
+                if (initialSpan) {
+                    initialSpan.parentNode.insertBefore(img, initialSpan);
+                } else {
+                    container.insertBefore(img, container.firstChild);
+                }
+            }
+            img.src = avatarUrl;
+            img.style.display = "";
+            if (initialSpan) {
+                initialSpan.style.display = "none";
+            }
+        }
+    }
+}
+
+// HintBox chung từ PT Dashboard: chạm để mở/đóng, Escape hoặc bấm ngoài để đóng.
+// DOM: .pt-info > .pt-info-trigger + .pt-info-popover, dùng ở mọi zone.
+function bindHintBoxes() {
+    const hints = document.querySelectorAll(".pt-info");
+    // Hộp mở ra dùng position: fixed (toạ độ màn hình) nên KHÔNG bị cột cuộn nào cắt mất;
+    // canh phải theo nút i, luôn nằm trong mép màn hình, thiếu chỗ bên dưới thì lật lên trên.
+    const EDGE = 12;   // khoảng cách tối thiểu tới mép màn hình (px)
+    const GAP = 8;     // khoảng cách giữa nút i và hộp (px)
+    function positionHint(hint) {
+        const popover = hint.querySelector(".pt-info-popover");
+        if (!popover) { return; }
+        const compact = hint.closest(".my-bookings-page") !== null;
+        for (const prop of ["position", "top", "left", "right", "bottom"]) { popover.style.removeProperty(prop); }
+        if (!compact && window.matchMedia("(max-width: 700px)").matches) {
+            return;   // mobile: CSS đã cho hộp nằm cố định ở đáy màn hình
+        }
+        const trigger = hint.querySelector(".pt-info-trigger") || hint;
+        const bounds = trigger.getBoundingClientRect();
+        const viewportWidth = document.documentElement.clientWidth;
+        const viewportHeight = document.documentElement.clientHeight;
+
+        // B1: chuyển sang fixed ở (0,0) rồi đo — bù lệch nếu tổ tiên có transform/backdrop-filter (vd topbar)
+        popover.style.position = "fixed";
+        popover.style.right = "auto";
+        popover.style.bottom = "auto";
+        popover.style.left = "0px";
+        popover.style.top = "0px";
+        const origin = popover.getBoundingClientRect();
+        const width = origin.width;
+        const height = origin.height;
+
+        // B2: canh phải theo nút i, kẹp trong màn hình
+        const left = Math.max(EDGE, Math.min(compact ? bounds.left : bounds.right - width, viewportWidth - width - EDGE));
+        // B3: ưu tiên bên dưới nút; không đủ chỗ mà bên trên rộng hơn thì đặt lên trên
+        let top = bounds.bottom + GAP;
+        if (top + height > viewportHeight - EDGE && bounds.top - GAP - height >= EDGE) {
+            top = bounds.top - GAP - height;
+        }
+        popover.style.left = (left - origin.left) + "px";
+        popover.style.top = (Math.max(EDGE, Math.min(top, viewportHeight - height - EDGE)) - origin.top) + "px";
+    }
+    // Cuộn / đổi cỡ cửa sổ khi hộp đang mở → đặt lại vị trí theo nút i
+    function repositionVisibleHints() {
+        for (const hint of hints) {
+            if (hint.matches(".is-open, :hover, :focus-within")) { positionHint(hint); }
+        }
+    }
+    window.addEventListener("scroll", repositionVisibleHints, { capture: true, passive: true });
+    window.addEventListener("resize", repositionVisibleHints);
+    function closeHint(hint) {
+        hint.classList.remove("is-open");
+        hint.classList.add("is-dismissed");
+        const trigger = hint.querySelector(".pt-info-trigger");
+        if (trigger) { trigger.setAttribute("aria-expanded", "false"); }
+    }
+    for (const hint of hints) {
+        const trigger = hint.querySelector(".pt-info-trigger");
+        if (!trigger) { continue; }
+        trigger.setAttribute("aria-expanded", "false");
+        hint.addEventListener("pointerenter", function () { positionHint(hint); });
+        hint.addEventListener("focusin", function () { positionHint(hint); });
+        trigger.addEventListener("click", function () {
+            const wasOpen = hint.classList.contains("is-open");
+            for (const other of hints) { closeHint(other); }
+            if (!wasOpen) {
+                positionHint(hint);
+                hint.classList.remove("is-dismissed");
+                hint.classList.add("is-open");
+                trigger.setAttribute("aria-expanded", "true");
+            }
+        });
+        hint.addEventListener("pointerleave", function () {
+            if (!hint.classList.contains("is-open")) {
+                hint.classList.remove("is-dismissed");
+            }
+        });
+        hint.addEventListener("keydown", function (event) {
+            if (event.key === "Escape") {
+                closeHint(hint);
+                trigger.focus();
+            }
+        });
+    }
+    document.addEventListener("click", function (event) {
+        for (const hint of hints) {
+            if (!hint.contains(event.target)) { closeHint(hint); }
+        }
+    });
+}
+
+// Ảnh bài viết ở homepage/blog: dùng ảnh tĩnh thật khi URL bìa lỗi, không lặp error vô hạn.
+// JSP nối bằng img[data-image-fallback]; ảnh đã lỗi trước DOMContentLoaded cũng được xử lý.
+function bindArticleImageFallbacks() {
+    const images = document.querySelectorAll("img[data-image-fallback]");
+    for (const image of images) {
+        function useFallback() {
+            if (image.dataset.fallbackUsed === "true") {
+                image.hidden = true;
+                return;
+            }
+            image.dataset.fallbackUsed = "true";
+            image.src = image.dataset.imageFallback;
+        }
+        image.addEventListener("error", useFallback);
+        if (image.complete && image.naturalWidth === 0) {
+            useFallback();
+        }
     }
 }
 
@@ -475,6 +803,17 @@ function bindConfirmButtons() {
         trigger.addEventListener("click", function (event) {
             event.preventDefault();
 
+            // UX Guard: If the enclosing form requires validation (data-validate),
+            // validate all fields before opening the confirmation dialog.
+            // This prevents opening unnecessary confirm modals when required fields
+            // (e.g. rejection reasons or acceptance notes) are invalid or empty.
+            const form = trigger.closest("form");
+            if (form !== null && form.dataset.validate !== undefined) {
+                if (!validateForm(form)) {
+                    return;
+                }
+            }
+
             let dialogTitle = trigger.dataset.confirmTitle;
             if (dialogTitle === undefined) {
                 dialogTitle = "Xác nhận thao tác";
@@ -482,10 +821,13 @@ function bindConfirmButtons() {
             const reasonName = trigger.dataset.confirmReasonName;
             const needsReason = reasonName !== undefined;
 
+            const isDanger = trigger.dataset.confirmDanger !== "false";
+
             openConfirmDialog({
                 title: dialogTitle,
                 message: trigger.dataset.confirmMessage,
                 confirmText: trigger.dataset.confirmText,
+                isDanger: isDanger,
                 requireReason: needsReason,
                 onConfirm: function (reason) {
                     // B3
@@ -545,7 +887,7 @@ function showFieldError(input, message) {
 
     // B2
     const errorElement = getFieldErrorElement(input);
-    input.setAttribute("aria-describedby", errorElement.id);
+    toggleDescribedBy(input, errorElement.id, true);
 
     // B3
     errorElement.innerHTML = '<i class="fa-solid fa-circle-xmark" aria-hidden="true"></i>';
@@ -561,10 +903,27 @@ function clearFieldError(input) {
     input.removeAttribute("aria-invalid");
 
     const errorId = input.id + "Error";
+    toggleDescribedBy(input, errorId, false);
     const errorElement = document.getElementById(errorId);
     if (errorElement !== null) {
         errorElement.hidden = true;
         errorElement.textContent = "";
+    }
+}
+
+// Thêm (on = true) hoặc bỏ 1 id trong aria-describedby, GIỮ các id khác (vd id dòng gợi ý dưới ô)
+// → trình đọc màn hình đọc cả gợi ý lẫn lỗi. VD "emailHint" + lỗi → "emailHint emailError".
+function toggleDescribedBy(input, id, on) {
+    const ids = (input.getAttribute("aria-describedby") || "").split(" ").filter(function (x) {
+        return x !== "" && x !== id;
+    });
+    if (on) {
+        ids.push(id);
+    }
+    if (ids.length > 0) {
+        input.setAttribute("aria-describedby", ids.join(" "));
+    } else {
+        input.removeAttribute("aria-describedby");
     }
 }
 
@@ -661,11 +1020,14 @@ function validateField(input) {
     }
 
     // B5: kiểm tra độ dài
-    const hasMaxLength = input.maxLength > 0;
-    if (hasMaxLength && value.length > input.maxLength) {
-        return formatMessage(MESSAGES.MSG10_MAX_LENGTH, [input.maxLength]);
+    // Check both custom dataset attributes (data-min-length / data-max-length) and native HTML attributes.
+    // Using dataset attributes allows custom validation and styled error labels without triggering
+    // unwanted native browser constraint validation tooltips.
+    const maxLength = Number(input.dataset.maxLength) || (input.maxLength > 0 ? input.maxLength : 0);
+    if (maxLength > 0 && value.length > maxLength) {
+        return formatMessage(MESSAGES.MSG10_MAX_LENGTH, [maxLength]);
     }
-    const minLength = Number(input.dataset.minLength);
+    const minLength = Number(input.dataset.minLength) || (input.minLength > 0 ? input.minLength : 0);
     if (minLength > 0 && value.length < minLength) {
         return formatMessage(MESSAGES.MSG19_TOO_SHORT, [minLength]);
     }
@@ -706,16 +1068,16 @@ function getRuleErrorMessage(rule, value) {
         return formatMessage(MESSAGES.MSG46_PASSWORD_TOO_SHORT, [PASSWORD_MIN_LENGTH]);
     }
     if (rule === "password" && !isValidPassword(value)) {
-        return formatMessage(MESSAGES.EXTRA_PASSWORD_RULE, [PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH]);
+        return formatMessage(MESSAGES.MSG66_PASSWORD_RULE, [PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH]);
     }
     if (rule === "fullName" && value.length < FULL_NAME_MIN_LENGTH) {
         return formatMessage(MESSAGES.MSG19_TOO_SHORT, [FULL_NAME_MIN_LENGTH]);
     }
     if (rule === "fullName" && !isValidFullName(value)) {
-        return MESSAGES.EXTRA_FULL_NAME_RULE;
+        return MESSAGES.MSG67_FULL_NAME_RULE;
     }
     if (rule === "verificationCode" && !isValidVerificationCode(value)) {
-        return MESSAGES.EXTRA_CODE_FORMAT;
+        return MESSAGES.MSG68_CODE_FORMAT;
     }
     if (rule === "reason") {
         return getReasonErrorMessage(value);
@@ -736,7 +1098,7 @@ function getDateOfBirthErrorMessage(isoDate) {
         return MESSAGES.MSG15_DOB_IN_FUTURE;
     }
     if (!isValidDateOfBirth(isoDate)) {
-        return formatMessage(MESSAGES.EXTRA_DOB_TOO_OLD, [MAX_AGE_YEARS]);
+        return formatMessage(MESSAGES.MSG69_DOB_TOO_OLD, [MAX_AGE_YEARS]);
     }
     return "";
 }
@@ -814,12 +1176,27 @@ function bindFieldValidation(form) {
     // Tắt bong bóng kiểm tra mặc định của trình duyệt, dùng thông báo tiếng Việt của hệ thống
     form.noValidate = true;
 
+    // Ô có lỗi do SERVER in sẵn (ô báo lỗi đang hiện) → đánh dấu "invalid" ngay khi mở trang,
+    // để khách sửa ô là lỗi tự mất TRONG LÚC GÕ. Nếu đợi tới lúc rời ô thì dòng lỗi biến mất đúng lúc
+    // nhấn chuột vào nút gửi → nút bị đẩy lên → cú bấm trượt khỏi nút, phải bấm lần 2.
+    for (const field of getValidatableFields(form)) {
+        const serverError = document.getElementById(field.id + "Error");
+        if (serverError !== null && !serverError.hidden && serverError.textContent.trim() !== "") {
+            field.classList.add("invalid");
+            field.setAttribute("aria-invalid", "true");
+        }
+    }
+
+    // Rời ô: chỉ kiểm tra ô ĐÃ GÕ GÌ ĐÓ. Ô còn trống (chưa gõ) thì im lặng — lỗi "… là bắt buộc"
+    // chỉ hiện khi bấm nút gửi (validateForm). Tránh cảnh vừa mở trang (autofocus) bấm ra ngoài / bấm con mắt
+    // là đỏ cả form dù khách chưa kịp gõ.
     form.addEventListener("focusout", function (event) {
         const field = event.target;
         const isFormField = field.matches("input, select, textarea");
-        if (isFormField) {
-            checkFieldAndShowError(field);
+        if (!isFormField || isUntouchedEmptyField(field)) {
+            return;
         }
+        checkFieldAndShowError(field);
     });
 
     form.addEventListener("input", function (event) {
@@ -827,7 +1204,25 @@ function bindFieldValidation(form) {
         if (field.classList.contains("invalid")) {
             checkFieldAndShowError(field);
         }
+        // Đổi ô gốc (VD Mật khẩu) khi ô "Nhập lại" đang báo lệch → kiểm lại ô "Nhập lại" để lỗi tự mất khi đã khớp
+        const matchFields = form.querySelectorAll('[data-match="' + field.id + '"]');
+        for (const matchField of matchFields) {
+            if (matchField.classList.contains("invalid")) {
+                checkFieldAndShowError(matchField);
+            }
+        }
     });
+}
+
+// Ô chưa gõ gì và chưa bị báo lỗi → true (rời ô thì không báo "bắt buộc"; ô checkbox chưa tích cũng tính là trống)
+function isUntouchedEmptyField(field) {
+    if (field.classList.contains("invalid")) {
+        return false;
+    }
+    if (field.type === "checkbox" || field.type === "radio") {
+        return !field.checked;
+    }
+    return isBlank(field.value);
 }
 
 // Gắn kiểm tra cho form gửi THƯỜNG (POST về Servlet, có thuộc tính data-validate) — initCommon tự gọi
@@ -861,27 +1256,63 @@ function bindFormValidation(form) {
 
 // ----- 4.3 Nút đang xử lý (GBR-22: khóa nút gửi trong lúc chờ server) -----
 
+// Hình loading của nút: Pumpy navy, bụng kem và xoáy navy; bàn tay tròn ngắn, đẩy quả tạ to hơn người.
+// SVG tĩnh (không chứa dữ liệu người dùng); CSS ở common.css mục "Loading Pumpy đẩy tạ".
+const PUMPY_PUSH_SVG =
+    '<svg class="btn-pumpy" viewBox="0 0 100 35" aria-hidden="true" focusable="false">'
+    + '<g class="bp-dust"><circle cx="5" cy="31" r="1.6"/><circle cx="2" cy="29" r="1.1"/></g>'
+    + '<g class="bp-db">'
+    + '<rect x="51" y="15" width="28" height="5" rx="1.5" fill="#91A7BE" stroke="#141414" stroke-width="1.4"/>'
+    + '<rect x="46" y="4" width="6" height="27" rx="2" fill="#203D60" stroke="#141414" stroke-width="1.4"/>'
+    + '<rect x="78" y="4" width="6" height="27" rx="2" fill="#203D60" stroke="#141414" stroke-width="1.4"/>'
+    + '<rect x="33" y="1" width="13" height="33" rx="3" fill="#203D60" stroke="#141414" stroke-width="1.6"/>'
+    + '<rect x="84" y="1" width="13" height="33" rx="3" fill="#203D60" stroke="#141414" stroke-width="1.6"/>'
+    + '<rect x="38" y="5" width="2.2" height="25" rx="1" fill="#294F78"/>'
+    + '<rect x="89.5" y="5" width="2.2" height="25" rx="1" fill="#294F78"/>'
+    + '</g>'
+    + '<g class="bp-pumpy">'
+    + '<g class="bp-foot bp-foot--back"><ellipse cx="11" cy="31" rx="4" ry="2.4" fill="#294F78" stroke="#141414" stroke-width="1.4"/></g>'
+    + '<path d="M9 12 L9.5 5 L14 9 Z M27 11 L25.5 4.5 L21.5 8.5 Z" fill="#294F78" stroke="#141414" stroke-width="1.3" stroke-linejoin="round"/>'
+    + '<ellipse cx="18" cy="19" rx="11" ry="10" fill="#294F78" stroke="#141414" stroke-width="1.6"/>'
+    + '<circle cx="29.5" cy="16" r="3.4" fill="#294F78" stroke="#141414" stroke-width="1.2"/>'
+    + '<circle cx="30" cy="22" r="3.4" fill="#294F78" stroke="#141414" stroke-width="1.2"/>'
+    + '<path d="M17 15 L19.5 16.5 L17 18 M24.5 15 L22 16.5 L24.5 18" fill="none" stroke="#141414" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>'
+    + '<path d="M18.5 22 H24" stroke="#141414" stroke-width="1.6" stroke-linecap="round"/>'
+    + '<ellipse cx="18" cy="26" rx="4" ry="3.4" fill="#F2FBF8"/>'
+    + '<path d="M17.4 25.6 a1 1 0 1 1 1 1 a2 2 0 1 1 -2 -2" fill="none" stroke="#24496E" stroke-width="0.8" stroke-linecap="round"/>'
+    + '<g class="bp-foot bp-foot--front"><ellipse cx="20" cy="31" rx="4" ry="2.4" fill="#294F78" stroke="#141414" stroke-width="1.4"/></g>'
+    + '</g>'
+    + '<g class="bp-sweat"><path d="M9 7 q-2 -3 0 -5 q2 2 0 5z"/><path d="M5 12 q-2 -2.5 0 -4.5 q2 2 0 4.5z"/></g>'
+    + '</svg>';
+
 // Bật/tắt trạng thái "đang xử lý" cho 1 nút
 // Luồng xử lý:
-// B1 (bật): nhớ chữ gốc vào data-original-text, khóa nút, đổi chữ thành "Đang xử lý…", thêm class is-loading (CSS vẽ vòng xoay)
-// B2 (tắt): trả lại chữ gốc, mở khóa nút
+// B1 (bật): nhớ nội dung gốc của nút (cả icon), khóa nút, thay bằng Pumpy đẩy tạ + "Đang xử lý…", thêm class is-loading
+// B2 (tắt): trả lại nội dung gốc, mở khóa nút
+const buttonOriginalHtml = new WeakMap();
+
 function setButtonLoading(button, isLoading) {
     if (isLoading) {
-        // B1
-        if (button.dataset.originalText === undefined) {
-            button.dataset.originalText = button.textContent.trim();
+        // B1: đang loading rồi thì thôi (tránh 2 nơi cùng bật)
+        if (button.classList.contains("is-loading")) {
+            return;
         }
+        buttonOriginalHtml.set(button, button.innerHTML);
         button.disabled = true;
         button.classList.add("is-loading");
         button.setAttribute("aria-busy", "true");
-        button.textContent = "Đang xử lý…";
+        // B1.1: hình Pumpy (chuỗi tĩnh) rồi chữ thường qua textContent
+        button.innerHTML = '<span class="btn-pumpy-capsule" aria-hidden="true">' + PUMPY_PUSH_SVG + '</span>';
+        const label = document.createElement("span");
+        label.textContent = "Đang xử lý…";
+        button.appendChild(label);
         return;
     }
 
     // B2
-    if (button.dataset.originalText !== undefined) {
-        button.textContent = button.dataset.originalText;
-        delete button.dataset.originalText;
+    if (buttonOriginalHtml.has(button)) {
+        button.innerHTML = buttonOriginalHtml.get(button);
+        buttonOriginalHtml.delete(button);
     }
     button.disabled = false;
     button.classList.remove("is-loading");
@@ -964,6 +1395,51 @@ function handleLeavePageLinkClick(event) {
     });
 }
 
+// ===== CSRF TOKEN =====
+// Token của phiên nằm ở <meta name="csrf-token"> (common/head.jspf, chỉ có khi đã đăng nhập).
+// Gắn vào mọi form POST (cả form tạo sau khi tải trang: gắn lúc bấm gửi) và mọi postData — các trang không phải tự làm.
+
+// Đọc token; chưa đăng nhập → "" (không gắn gì)
+function getCsrfToken() {
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    return meta === null ? "" : meta.getAttribute("content") || "";
+}
+
+// Thêm csrfToken vào FormData / URLSearchParams nếu chưa có
+function addCsrfToken(body) {
+    const token = getCsrfToken();
+    if (token === "" || typeof body.has !== "function" || body.has("csrfToken")) {
+        return;
+    }
+    body.append("csrfToken", token);
+}
+
+// Thêm ô ẩn csrfToken vào 1 form POST nếu form chưa có
+function ensureCsrfInput(form) {
+    const token = getCsrfToken();
+    const isPost = (form.getAttribute("method") || "").toLowerCase() === "post";
+    if (token === "" || !isPost || form.querySelector('input[name="csrfToken"]') !== null) {
+        return;
+    }
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = "csrfToken";
+    input.value = token;
+    form.appendChild(input);
+}
+
+// B1: gắn cho mọi form POST đang có trên trang; B2: form tạo sau (hộp thoại, JS) → gắn ngay lúc gửi
+function bindCsrfToForms() {
+    for (const form of document.querySelectorAll("form")) {
+        ensureCsrfInput(form);
+    }
+    document.addEventListener("submit", function (event) {
+        if (event.target instanceof HTMLFormElement) {
+            ensureCsrfInput(event.target);
+        }
+    }, true);
+}
+
 // ===== 5. HIỆN/ẨN MẬT KHẨU (GBR-30) =====
 
 // Gắn nút con mắt cho ô mật khẩu — initCommon tự gọi
@@ -977,30 +1453,33 @@ function handleLeavePageLinkClick(event) {
 // B1: tìm mọi nút có data-password-toggle (giá trị = id của ô mật khẩu)
 // B2: bấm → đổi type password ↔ text, đổi icon mắt mở/mắt gạch, cập nhật aria-label cho trình đọc màn hình
 function bindPasswordToggles() {
-    // B1
-    const toggleButtons = document.querySelectorAll("[data-password-toggle]");
+    document.addEventListener("click", function (event) {
+        // Không bắt [data-toggle-target]: thuộc tính đó dành cho nút mở/đóng vùng (menu mobile) — bindToggleButtons()
+        const button = event.target.closest("[data-password-toggle], [data-pw-toggle]");
+        if (!button) {
+            return;
+        }
 
-    for (const button of toggleButtons) {
-        // B2
-        button.addEventListener("click", function () {
-            const input = document.getElementById(button.dataset.passwordToggle);
-            if (input === null) {
-                return;
-            }
-            const isHidden = input.type === "password";
-            if (isHidden) {
-                input.type = "text";
-                button.innerHTML = '<i class="fa-solid fa-eye-slash" aria-hidden="true"></i>';
-                button.setAttribute("aria-label", "Ẩn mật khẩu");
-                button.setAttribute("aria-pressed", "true");
-            } else {
-                input.type = "password";
-                button.innerHTML = '<i class="fa-solid fa-eye" aria-hidden="true"></i>';
-                button.setAttribute("aria-label", "Hiện mật khẩu");
-                button.setAttribute("aria-pressed", "false");
-            }
-        });
-    }
+        const targetId = button.dataset.passwordToggle || button.dataset.pwToggle;
+        const input = document.getElementById(targetId);
+        if (!(input instanceof HTMLInputElement)) {
+            return;
+        }
+
+        event.preventDefault();
+
+        const isHidden = input.type === "password";
+        input.type = isHidden ? "text" : "password";
+
+        // Luôn thay bằng thẻ <i> MỚI, không sửa class của thẻ cũ: icons.js đã đổi thẻ cũ thành SVG con mắt
+        // (đánh dấu data-icon-done) nên đổi class không vẽ lại hình → trước đây icon biến mất sau lần bấm đầu.
+        // Thẻ mới được MutationObserver của icons.js bắt và vẽ SVG mắt mở / mắt gạch.
+        button.innerHTML = isHidden
+            ? '<i class="fa-solid fa-eye-slash" aria-hidden="true"></i>'
+            : '<i class="fa-solid fa-eye" aria-hidden="true"></i>';
+
+        button.setAttribute("aria-label", isHidden ? "Ẩn mật khẩu" : "Hiện mật khẩu");
+    });
 }
 
 // ===== 6. ĐẾM NGƯỢC mm:ss (GBR-27: hạn thanh toán, giữ slot, mã xác thực, khóa tạm) =====
@@ -1222,7 +1701,76 @@ function bindToggleButtons() {
                 isOpen = !target.hidden;
             }
             button.setAttribute("aria-expanded", String(isOpen));
+            if (target.id === "mobileNav") {
+                button.setAttribute("aria-label", isOpen ? "Đóng menu" : "Mở menu");
+            }
         });
+        if (button.dataset.toggleTarget === "mobileNav") {
+            const mobileNav = document.getElementById("mobileNav");
+            if (!mobileNav) { continue; }
+            function closeGuestMenu() {
+                mobileNav.hidden = true;
+                button.setAttribute("aria-expanded", "false");
+                button.setAttribute("aria-label", "Mở menu");
+            }
+            mobileNav.addEventListener("click", function (event) {
+                if (event.target.closest("a[href]")) { closeGuestMenu(); }
+            });
+            document.addEventListener("keydown", function (event) {
+                if (event.key === "Escape" && !mobileNav.hidden) {
+                    closeGuestMenu();
+                    button.focus();
+                }
+            });
+            window.matchMedia("(max-width: 1080px)").addEventListener("change", closeGuestMenu);
+        }
+    }
+}
+
+// Gắn nút Mở tất cả / Thu gọn cho một nhóm rèm <details> (VD: lịch theo ngày) — initCommon tự gọi
+// VD HTML:
+//   <div data-collapse-group>
+//     <div data-collapse-controls hidden>
+//       <button type="button" data-collapse-expand>Mở tất cả</button>
+//       <button type="button" data-collapse-reset>Thu gọn</button>
+//     </div>
+//     <details data-collapse-item data-default-open open>Hôm nay…</details>
+//     <details data-collapse-item>Ngày khác…</details>
+//   </div>
+// data-default-open đánh dấu rèm mở khi vào trang (VD hôm nay); Thu gọn quay về đúng trạng thái đó.
+// Mỗi rèm vẫn tự mở/đóng bằng <details>, tắt JS vẫn dùng được; JS chỉ thêm hai nút cho cả nhóm.
+// Luồng xử lý:
+// B1: với mỗi nhóm, lấy các rèm; nhóm chỉ có 1 rèm thì không cần hai nút
+// B2: hiện thanh nút; Mở tất cả mở mọi rèm, Thu gọn chỉ giữ rèm có data-default-open
+function bindCollapseGroups() {
+    const groups = document.querySelectorAll("[data-collapse-group]");
+
+    for (const group of groups) {
+        // B1
+        const items = group.querySelectorAll("details[data-collapse-item]");
+        const controls = group.querySelector("[data-collapse-controls]");
+        if (controls === null || items.length < 2) {
+            continue;
+        }
+
+        // B2
+        controls.hidden = false;
+        const expandButton = controls.querySelector("[data-collapse-expand]");
+        const resetButton = controls.querySelector("[data-collapse-reset]");
+        if (expandButton !== null) {
+            expandButton.addEventListener("click", function () {
+                for (const item of items) {
+                    item.open = true;
+                }
+            });
+        }
+        if (resetButton !== null) {
+            resetButton.addEventListener("click", function () {
+                for (const item of items) {
+                    item.open = item.hasAttribute("data-default-open");
+                }
+            });
+        }
     }
 }
 
@@ -1267,6 +1815,13 @@ async function sendAjaxRequest(method, url, data) {
         } else {
             requestOptions.body = toUrlSearchParams(data);
         }
+    }
+    // CSRF: mọi request ghi dữ liệu mang theo token của phiên (Servlet kiểm bằng RequestUtil.isValidCsrfToken).
+    if (upperMethod !== "GET") {
+        if (!requestOptions.body) {
+            requestOptions.body = new URLSearchParams();
+        }
+        addCsrfToken(requestOptions.body);
     }
 
     // B2: gửi request; lỗi mạng (không tới được server) → MSG05
@@ -1744,7 +2299,926 @@ function normalizeSearchText(text) {
     const lowerText = String(text).toLowerCase();
     const withoutD = lowerText.replace(/đ/g, "d");
     const decomposed = withoutD.normalize("NFD");
-    const withoutMarks = decomposed.replace(/[̀-ͯ]/g, "");
+    const withoutMarks = decomposed.replace(/[\u0300-\u036f]/g, "");
     const singleSpaced = withoutMarks.replace(/\s+/g, " ");
     return singleSpaced.trim();
 }
+
+// =====================================================================
+// HIỆU ỨNG GIAO DIỆN KHU NỘI BỘ (body.dock) — CSS ở common.css mục 12
+// Mọi hiệu ứng tự tắt khi người dùng bật "Reduce motion".
+// =====================================================================
+
+function prefersReducedMotion() {
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+// Sidebar thu gọn ở mọi màn hình; mở bằng tay nắm, đóng bằng Escape hoặc nền ngoài.
+// DOM: #dock (layout-<vai-trò>.jspf), #dockHandle, .sidebar
+function initDock() {
+    const dock = document.getElementById("dock");
+    const dockHandle = document.getElementById("dockHandle");
+    if (!dock || !dockHandle) {
+        return;
+    }
+
+    const sidebar = dock.querySelector(".sidebar");
+    const backdrop = dock.querySelector(".dock-backdrop");
+    const main = document.querySelector(".dock .main");
+
+    // B1: đồng bộ trạng thái mở, inert và aria; nội dung không bị menu che khi menu đóng.
+    function setDockOpen(isOpen) {
+        dock.classList.toggle("is-open", isOpen);
+        document.body.classList.toggle("nav-open", isOpen);
+        dockHandle.setAttribute("aria-expanded", String(isOpen));
+        dockHandle.setAttribute("aria-label", isOpen ? "Đóng menu điều hướng" : "Mở menu điều hướng");
+        dockHandle.setAttribute("title", isOpen ? "Đóng menu" : "Mở menu");
+        if (sidebar) {
+            sidebar.inert = !isOpen;
+        }
+        if (main) {
+            main.inert = isOpen;
+        }
+    }
+
+    dockHandle.addEventListener("click", function () {
+        setDockOpen(!dock.classList.contains("is-open"));
+    });
+    setDockOpen(false);
+    if (backdrop) {
+        backdrop.addEventListener("click", function () {
+            setDockOpen(false);
+            dockHandle.focus();
+        });
+    }
+
+    // Click ngoài đóng menu ở mọi kích thước màn hình.
+    document.addEventListener("pointerdown", function (event) {
+        if (dock.classList.contains("is-open") && !dock.contains(event.target)) {
+            setDockOpen(false);
+            dockHandle.focus();
+        }
+    });
+
+    // B2: Escape đóng menu và trả focus về tay nắm
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape" && dock.classList.contains("is-open")) {
+            setDockOpen(false);
+            dockHandle.focus();
+        }
+    });
+
+    // B3: giữ focus trong menu đang mở, kết thúc bằng tay nắm đóng menu.
+    dock.addEventListener("keydown", function (event) {
+        if (!dock.classList.contains("is-open") || event.key !== "Tab") {
+            return;
+        }
+        const focusable = dock.querySelectorAll('a[href], button:not([disabled]):not([tabindex="-1"]), input:not([disabled])');
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault();
+            last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault();
+            first.focus();
+        }
+    });
+    if (sidebar) {
+        sidebar.addEventListener("click", function (event) {
+            if (event.target.closest("a[href]")) {
+                setDockOpen(false);
+            }
+        });
+        // Chặn cuộn nối sang trang ở hai đầu menu, kể cả menu ngắn không tràn.
+        sidebar.addEventListener("wheel", function (event) {
+            if (event.ctrlKey || event.deltaY === 0) {
+                return;
+            }
+            const atTop = sidebar.scrollTop <= 0;
+            const atBottom = sidebar.scrollTop + sidebar.clientHeight >= sidebar.scrollHeight - 1;
+            if ((event.deltaY < 0 && atTop) || (event.deltaY > 0 && atBottom)) {
+                event.preventDefault();
+            }
+        }, { passive: false });
+        // B4: ánh sáng nhẹ đi theo con trỏ trên nền menu, không thay đổi bố cục.
+        sidebar.addEventListener("pointermove", function (event) {
+            if (prefersReducedMotion()) {
+                return;
+            }
+            const rect = sidebar.getBoundingClientRect();
+            sidebar.style.setProperty("--mx", (event.clientX - rect.left) + "px");
+            sidebar.style.setProperty("--my", (event.clientY - rect.top + sidebar.scrollTop) + "px");
+        });
+    }
+}
+
+// Số lật kiểu bảng điểm: chỉ lật ký tự khác giá trị cũ, hàng đơn vị lật trước.
+// Dùng: <span data-flip>1.248</span>; đổi giá trị bằng setFlipValue(el, "1.252").
+function setFlipValue(element, text) {
+    const oldText = element.dataset.flipValue || "";
+    element.dataset.flipValue = text;
+    element.setAttribute("aria-label", text);
+    element.textContent = "";
+
+    for (let i = 0; i < text.length; i++) {
+        const span = document.createElement("span");
+        span.className = "flip-char";
+        span.setAttribute("aria-hidden", "true");
+        span.textContent = text.charAt(i);
+        // Ký tự không phải số (., đ, %, khoảng trắng) không đóng ô lật
+        if (!/[0-9]/.test(text.charAt(i))) {
+            span.classList.add("is-symbol");
+        }
+
+        // So từ bên phải để số có độ dài khác nhau vẫn khớp hàng
+        const oldChar = oldText.charAt(oldText.length - text.length + i);
+        if (oldText !== "" && oldChar !== text.charAt(i) && !prefersReducedMotion()) {
+            span.classList.add("is-flipping");
+            span.style.animationDelay = ((text.length - i) * 35) + "ms";
+        }
+        element.appendChild(span);
+    }
+}
+
+// Khi tải trang: lật nhẹ các chữ số thật, không hiển thị số liệu giả trong lúc chờ.
+function initFlipNumbers() {
+    const items = document.querySelectorAll(".dock [data-flip]");
+    for (let i = 0; i < items.length; i++) {
+        const finalText = items[i].textContent.trim();
+        if (prefersReducedMotion()) {
+            setFlipValue(items[i], finalText);
+            continue;
+        }
+        setFlipValue(items[i], finalText);
+        const digits = items[i].querySelectorAll(".flip-char:not(.is-symbol)");
+        for (let j = 0; j < digits.length; j++) {
+            digits[j].classList.add("is-flipping");
+            digits[j].style.animationDelay = Math.min(i * 45 + j * 20, 350) + "ms";
+        }
+    }
+}
+
+// Đếm số từ 0 khi tải trang. Giá trị thật nằm sẵn trong HTML (tắt JS vẫn đúng).
+// Dùng: <b data-count>1.248</b> — giữ nguyên dấu chấm/phẩy kiểu Việt Nam.
+function initCountUp() {
+    if (prefersReducedMotion()) {
+        return;
+    }
+    const items = document.querySelectorAll(".dock [data-count]");
+    for (let i = 0; i < items.length; i++) {
+        animateCount(items[i]);
+    }
+}
+
+function animateCount(element) {
+    const original = element.textContent.trim();
+    // B1: tách phần số (bỏ dấu chấm nghìn, đổi phẩy thập phân) và phần chữ đi kèm
+    const match = original.match(/^([\d.]+)(,(\d+))?(.*)$/);
+    if (!match) {
+        return;
+    }
+    const integerPart = Number(match[1].replace(/\./g, ""));
+    const decimals = match[3] ? match[3].length : 0;
+    const target = integerPart + (decimals > 0 ? Number("0." + match[3]) : 0);
+    const suffix = match[4] || "";
+    if (!Number.isFinite(target) || target === 0) {
+        return;
+    }
+
+    // B2: chạy từ 0 tới đích trong 800ms, chậm dần ở cuối
+    element.setAttribute("aria-label", original);
+    const start = performance.now();
+    function draw(now) {
+        const progress = Math.min((now - start) / 800, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const value = target * eased;
+        element.textContent = value.toLocaleString("vi-VN", {
+            minimumFractionDigits: decimals,
+            maximumFractionDigits: decimals
+        }) + suffix;
+        if (progress < 1) {
+            requestAnimationFrame(draw);
+        } else {
+            element.textContent = original;
+        }
+    }
+    requestAnimationFrame(draw);
+}
+
+// Nghiêng 3D nhẹ theo con trỏ (chỉ chuột, không áp cho cảm ứng).
+// Dùng: <div class="card" data-tilt>...</div>
+function initTilt() {
+    if (prefersReducedMotion() || !window.matchMedia("(hover: hover)").matches) {
+        return;
+    }
+    const cards = document.querySelectorAll(".dock [data-tilt]");
+    for (let i = 0; i < cards.length; i++) {
+        attachTilt(cards[i]);
+    }
+}
+
+function attachTilt(card) {
+    card.addEventListener("pointermove", function (event) {
+        const rect = card.getBoundingClientRect();
+        const x = (event.clientX - rect.left) / rect.width;
+        const y = (event.clientY - rect.top) / rect.height;
+        // x,y trong [0,1] → góc trong [-4°, 4°]
+        card.style.setProperty("--tilt-y", ((x - 0.5) * 8).toFixed(2) + "deg");
+        card.style.setProperty("--tilt-x", ((0.5 - y) * 8).toFixed(2) + "deg");
+        card.style.setProperty("--sx", (x * 100).toFixed(1) + "%");
+        card.style.setProperty("--sy", (y * 100).toFixed(1) + "%");
+        card.classList.add("is-tilting");
+    });
+    card.addEventListener("pointerleave", function () {
+        card.style.setProperty("--tilt-x", "0deg");
+        card.style.setProperty("--tilt-y", "0deg");
+        card.classList.remove("is-tilting");
+    });
+}
+
+// Hiện dần các khối [data-reveal] theo thứ tự, mỗi khối cách nhau 70ms.
+function initReveal() {
+    const blocks = document.querySelectorAll(".dock [data-reveal]");
+    if (blocks.length === 0 || prefersReducedMotion()) {
+        return;
+    }
+    document.body.classList.add("has-reveal");
+    requestAnimationFrame(function () {
+        for (let i = 0; i < blocks.length; i++) {
+            setTimeout(function () {
+                blocks[i].classList.add("is-revealed");
+            }, 60 + i * 70);
+        }
+    });
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    if (!document.body.classList.contains("dock")) {
+        return;
+    }
+    initDock();
+    initAccountAvatarStatus();
+    initFlipNumbers();
+    initCountUp();
+    initTilt();
+    initReveal();
+    initDashboardMotionToggle();
+});
+
+// Nút trong .wx-gym-panel tạm dừng gym/canvas/icon; hai script cảnh đọc lớp trên body.
+function initDashboardMotionToggle() {
+    const button = document.querySelector("[data-dashboard-motion-toggle]");
+    if (!button) {
+        return;
+    }
+    const label = button.querySelector("span");
+    const icon = button.querySelector("path");
+    if (prefersReducedMotion()) {
+        document.body.classList.add("dashboard-motion-paused");
+        button.setAttribute("aria-pressed", "true");
+        button.setAttribute("aria-label", "Hiệu ứng đã tắt theo tùy chọn giảm chuyển động");
+        button.disabled = true;
+        label.textContent = "Hiệu ứng đã tắt";
+        return;
+    }
+    // Máy yếu đã tự vào chế độ nhẹ (gms-lite): mở trang ở trạng thái tạm dừng luôn
+    if (document.documentElement.classList.contains("gms-lite")) {
+        document.body.classList.add("dashboard-motion-paused");
+        button.setAttribute("aria-pressed", "true");
+        label.textContent = "Tiếp tục hiệu ứng";
+        button.setAttribute("aria-label", label.textContent);
+        icon.setAttribute("d", "m8 5 11 7-11 7z");
+    }
+    button.addEventListener("click", function () {
+        const paused = document.body.classList.toggle("dashboard-motion-paused");
+        // Cùng lúc bật/tắt chế độ nhẹ cho cả nền kính thủy cung, và nhớ lựa chọn cho các trang sau
+        document.documentElement.classList.toggle("gms-lite", paused);
+        try {
+            localStorage.setItem("gms-fx", paused ? "lite" : "full");
+        } catch (error) {
+            // Trình duyệt chặn lưu trữ: chỉ áp cho trang này
+        }
+        button.setAttribute("aria-pressed", String(paused));
+        label.textContent = paused ? "Tiếp tục hiệu ứng" : "Tạm dừng hiệu ứng";
+        button.setAttribute("aria-label", label.textContent);
+        icon.setAttribute("d", paused ? "m8 5 11 7-11 7z" : "M8 5v14M16 5v14");
+        document.dispatchEvent(new Event("dashboardmotionchange"));
+    });
+}
+
+// Một lớp bọc chung cho cả ảnh và chữ viết tắt; chấm trạng thái không bị ảnh cắt.
+function initAccountAvatarStatus() {
+    document.querySelectorAll(".dock .tb-user .avatar").forEach(function (avatar) {
+        if (avatar.parentElement.classList.contains("tb-avatar")) { return; }
+        const wrapper = document.createElement("span");
+        wrapper.className = "tb-avatar";
+        avatar.before(wrapper);
+        wrapper.appendChild(avatar);
+    });
+}
+
+// Bạt dùng chung PT/Customer Dashboard: cuốn lên khi cuộn xuống, thả xuống khi cuộn lên.
+// DOM: .pt-awning (pt/_awning.jspf); CSS: awning.css + base.css đọc class is-retracted trên <body>.
+document.addEventListener("DOMContentLoaded", function () {
+    const page = document.querySelector(".pt-dashboard-page, .customer-weather-page");
+    const awning = document.querySelector(".pt-awning");
+    if (!page || !awning) {
+        return;
+    }
+    let lastScrollY = window.scrollY;
+    let frameQueued = false;
+    function updateAwning() {
+        const currentScrollY = window.scrollY;
+        if (currentScrollY <= 80 || currentScrollY < lastScrollY) {
+            page.classList.remove("is-retracted");
+        } else if (currentScrollY > lastScrollY) {
+            page.classList.add("is-retracted");
+        }
+        lastScrollY = currentScrollY;
+        frameQueued = false;
+    }
+    window.addEventListener("scroll", function () {
+        if (!frameQueued) {
+            frameQueued = true;
+            window.requestAnimationFrame(updateAwning);
+        }
+    }, {passive: true});
+});
+
+// Đồng hồ LED trên bảng phòng tập (pt/_awning.jspf): giờ:phút theo máy, cập nhật mỗi giây
+document.addEventListener("DOMContentLoaded", function () {
+    const clock = document.querySelector("[data-gym-clock]");
+    if (!clock) {
+        return;
+    }
+    const parts = clock.childNodes;
+    function update() {
+        const now = new Date();
+        const hours = String(now.getHours()).padStart(2, "0");
+        const minutes = String(now.getMinutes()).padStart(2, "0");
+        parts[0].nodeValue = hours;
+        parts[2].nodeValue = minutes;
+        clock.setAttribute("aria-label", "Bây giờ là " + hours + " giờ " + minutes);
+    }
+    update();
+    setInterval(update, 1000);
+
+    // Mẹo tập / câu động lực trên bảng LED: đổi mỗi 8 giây, mờ dần khi chuyển câu
+    const tip = document.querySelector("[data-gym-tip]");
+    if (!tip || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        return;
+    }
+    const tips = [
+        "Khởi động 5–10 phút trước khi vào mức tạ nặng.",
+        "Uống khoảng 500 ml nước trước buổi tập 1–2 tiếng.",
+        "Form chuẩn trước, tăng tạ sau.",
+        "Nghỉ 60–90 giây giữa các hiệp để tăng cơ.",
+        "Ngủ đủ 7–8 tiếng: cơ bắp lớn lên khi bạn nghỉ.",
+        "Ăn đủ đạm: khoảng 1,6 g mỗi kg cân nặng mỗi ngày.",
+        "Tăng tạ từ từ, khoảng 5–10% mỗi tuần.",
+        "Giãn cơ 5 phút sau buổi tập để đỡ đau mỏi.",
+        "Kỷ luật đưa bạn đi xa hơn cảm hứng.",
+        "Mỗi buổi tập là một bước gần hơn tới mục tiêu.",
+        "Không cần hoàn hảo, chỉ cần đều đặn.",
+        "Thở ra khi đẩy hoặc kéo tạ, hít vào khi hạ tạ."
+    ];
+    let tipIndex = 0;
+    setInterval(function () {
+        if (document.hidden) {
+            return;
+        }
+        tip.classList.add("is-fading");
+        setTimeout(function () {
+            tipIndex = (tipIndex + 1) % tips.length;
+            tip.textContent = tips[tipIndex];
+            tip.classList.remove("is-fading");
+        }, 400);
+    }, 8000);
+});
+
+// Nhiệt độ đã có sẵn trong HTML; JS chỉ cho số chạy nhanh khi không bật Reduce motion.
+document.addEventListener("DOMContentLoaded", function () {
+    const temperature = document.querySelector("[data-weather-temperature]");
+    if (!temperature || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        return;
+    }
+    const target = Number(temperature.dataset.weatherTemperature);
+    if (!Number.isFinite(target)) {
+        return;
+    }
+    temperature.setAttribute("aria-label", target + " độ C");
+    const start = performance.now();
+    function drawTemperature(now) {
+        const progress = Math.min((now - start) / 700, 1);
+        temperature.textContent = Math.round(target * progress) + "°";
+        if (progress < 1) {
+            requestAnimationFrame(drawTemperature);
+        }
+    }
+    requestAnimationFrame(drawTemperature);
+});
+
+// =====================================================================
+// TÌM NHANH (Ctrl/⌘ + K) — khu nội bộ. Danh sách màn lấy từ menu sidebar (.nav-link) của khu đang mở,
+// nên mỗi vai trò tự có đúng các màn của mình. Gõ để lọc (không dấu), ↑/↓ chọn, Enter mở, Esc đóng.
+// CSS: common.css mục "Tìm nhanh". Dùng <dialog> gốc của trình duyệt (bẫy focus + Esc sẵn có).
+// =====================================================================
+document.addEventListener("DOMContentLoaded", function () {
+    if (!document.body.classList.contains("dock")) {
+        return;
+    }
+    const links = document.querySelectorAll(".dock .sidebar .nav-link[href]");
+    const items = [];
+    for (let i = 0; i < links.length; i++) {
+        const href = links[i].getAttribute("href");
+        const label = links[i].textContent.trim();
+        // Bỏ mục chưa có màn (href="#") và mục trống
+        if (href && href !== "#" && label) {
+            items.push({ label: label, href: href, key: normalizeSearchText(label) });
+        }
+    }
+    if (items.length === 0) {
+        return;
+    }
+
+    // B1: dựng hộp thoại một lần
+    const dialog = document.createElement("dialog");
+    dialog.className = "cmdk";
+    dialog.setAttribute("aria-label", "Tìm nhanh màn hình");
+    dialog.innerHTML =
+        '<div class="cmdk-box">'
+        + '<input class="cmdk-input" type="search" placeholder="Tìm màn hình… (ví dụ: lich, voucher)" aria-label="Tìm màn hình" autocomplete="off">'
+        + '<ul class="cmdk-list" role="listbox"></ul>'
+        + '<p class="cmdk-foot"><kbd>↑</kbd><kbd>↓</kbd> chọn · <kbd>Enter</kbd> mở · <kbd>Esc</kbd> đóng</p>'
+        + '</div>';
+    document.body.appendChild(dialog);
+    const input = dialog.querySelector(".cmdk-input");
+    const list = dialog.querySelector(".cmdk-list");
+    let matches = items;
+    let active = 0;
+
+    // B2: vẽ danh sách theo từ khóa
+    function render() {
+        const query = normalizeSearchText(input.value.trim());
+        matches = [];
+        for (let i = 0; i < items.length; i++) {
+            if (query === "" || items[i].key.indexOf(query) !== -1) {
+                matches.push(items[i]);
+            }
+        }
+        if (active >= matches.length) {
+            active = 0;
+        }
+        list.textContent = "";
+        if (matches.length === 0) {
+            const empty = document.createElement("li");
+            empty.className = "cmdk-empty";
+            empty.textContent = "Không có màn nào khớp.";
+            list.appendChild(empty);
+            return;
+        }
+        for (let i = 0; i < matches.length; i++) {
+            const li = document.createElement("li");
+            li.className = "cmdk-item" + (i === active ? " is-active" : "");
+            li.setAttribute("role", "option");
+            li.setAttribute("aria-selected", i === active ? "true" : "false");
+            li.textContent = matches[i].label;
+            li.dataset.index = String(i);
+            list.appendChild(li);
+        }
+    }
+
+    function open() {
+        input.value = "";
+        active = 0;
+        render();
+        dialog.showModal();
+        input.focus();
+    }
+
+    function go(index) {
+        if (matches[index]) {
+            window.location.href = matches[index].href;
+        }
+    }
+
+    // B3: phím tắt mở hộp
+    document.addEventListener("keydown", function (event) {
+        if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+            event.preventDefault();
+            if (dialog.open) {
+                dialog.close();
+            } else {
+                open();
+            }
+        }
+    });
+
+    input.addEventListener("input", function () {
+        active = 0;
+        render();
+    });
+
+    // B4: điều hướng bằng bàn phím trong hộp
+    input.addEventListener("keydown", function (event) {
+        if (event.key === "ArrowDown") {
+            event.preventDefault();
+            active = (active + 1) % Math.max(matches.length, 1);
+            render();
+        } else if (event.key === "ArrowUp") {
+            event.preventDefault();
+            active = (active - 1 + matches.length) % Math.max(matches.length, 1);
+            render();
+        } else if (event.key === "Enter") {
+            event.preventDefault();
+            go(active);
+        }
+    });
+
+    list.addEventListener("click", function (event) {
+        const item = event.target.closest(".cmdk-item");
+        if (item) {
+            go(Number(item.dataset.index));
+        }
+    });
+
+    // Bấm ra ngoài hộp (vùng nền) thì đóng
+    dialog.addEventListener("click", function (event) {
+        if (event.target === dialog) {
+            dialog.close();
+        }
+    });
+});
+
+
+// =====================================================================
+// LOADING PUMPY CHO MỌI NÚT GỬI FORM — cả trang khách, đăng nhập và khu nội bộ.
+// Form nào gửi thật về server (không bị chặn) thì nút vừa bấm hiện Pumpy đẩy tạ cho tới khi trang mới tải xong.
+// Bỏ qua: form bị chặn gửi (sai dữ liệu, AJAX tự lo), nút không phải .btn (link-btn), nút có data-no-loading,
+// form mở tab mới (target="_blank").
+// =====================================================================
+document.addEventListener("submit", function (event) {
+    // B1: form đã bị chặn (kiểm tra sai / AJAX) → không làm gì
+    if (event.defaultPrevented) {
+        return;
+    }
+    const form = event.target;
+    if (form.getAttribute("target") === "_blank") {
+        return;
+    }
+
+    // B2: tìm nút vừa bấm; gửi bằng Enter thì lấy nút submit đầu tiên của form
+    let button = event.submitter;
+    if (button === null || button === undefined) {
+        button = form.querySelector('button[type="submit"], button:not([type])');
+    }
+    if (button === null || !button.classList.contains("btn") || button.hasAttribute("data-no-loading")) {
+        return;
+    }
+
+    // B3: bật sau 1 nhịp để trình duyệt kịp gửi name/value của nút (nút disabled sẽ không được gửi)
+    setTimeout(function () {
+        setButtonLoading(button, true);
+    }, 0);
+});
+
+// Bấm Quay lại (trình duyệt lấy trang từ bộ nhớ đệm) → trả các nút đang loading về bình thường
+window.addEventListener("pageshow", function (event) {
+    if (!event.persisted) {
+        return;
+    }
+    const buttons = document.querySelectorAll(".btn.is-loading");
+    for (let i = 0; i < buttons.length; i++) {
+        setButtonLoading(buttons[i], false);
+    }
+});
+
+
+// =====================================================================
+// CHỌN NHANH KHOẢNG NGÀY — [data-range-presets data-from="#id" data-to="#id"], nút [data-range="7|30|month"]
+// Điền "Từ ngày / Đến ngày" rồi gửi form luôn, đỡ phải chọn lịch 2 lần.
+// =====================================================================
+document.addEventListener("click", function (event) {
+    const chip = event.target.closest("[data-range-presets] [data-range]");
+    if (!chip) {
+        return;
+    }
+    const group = chip.closest("[data-range-presets]");
+    const fromInput = document.querySelector(group.dataset.from);
+    const toInput = document.querySelector(group.dataset.to);
+    if (!fromInput || !toInput) {
+        return;
+    }
+    // B1: tính khoảng ngày theo giờ máy
+    const today = new Date();
+    let start = new Date(today);
+    if (chip.dataset.range === "month") {
+        start = new Date(today.getFullYear(), today.getMonth(), 1);
+    } else {
+        start.setDate(today.getDate() - Number(chip.dataset.range) + 1);
+    }
+    function iso(date) {
+        return date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0");
+    }
+    // B2: điền và gửi form (vẫn qua kiểm tra form + loading Pumpy như bấm nút Xem)
+    fromInput.value = iso(start);
+    toInput.value = iso(today);
+    if (fromInput.form && fromInput.form.requestSubmit) {
+        fromInput.form.requestSubmit();
+    }
+});
+
+
+// =====================================================================
+// LỊCH DẠY PT: đánh dấu buổi "Đang diễn ra" và buổi sắp tới "Còn N phút" (trong 60 phút)
+// Đọc data-start / data-end (yyyy-MM-ddTHH:mm) trên .pt-schedule-session; cập nhật mỗi 30 giây.
+// =====================================================================
+document.addEventListener("DOMContentLoaded", function () {
+    const sessions = document.querySelectorAll(".pt-schedule-session[data-start]");
+    if (!sessions.length) {
+        return;
+    }
+    function update() {
+        const now = Date.now();
+        for (let i = 0; i < sessions.length; i++) {
+            const item = sessions[i];
+            const start = new Date(item.dataset.start).getTime();
+            const end = new Date(item.dataset.end).getTime();
+            let label = "";
+            if (now >= start && now < end) {
+                label = "Đang diễn ra";
+            } else if (start > now && start - now <= 60 * 60 * 1000) {
+                label = "Còn " + Math.ceil((start - now) / 60000) + " phút";
+            }
+            item.classList.toggle("is-live", label === "Đang diễn ra");
+            let badge = item.querySelector(".pt-session-when");
+            if (!label) {
+                if (badge) {
+                    badge.remove();
+                }
+                continue;
+            }
+            if (!badge) {
+                badge = document.createElement("span");
+                badge.className = "pt-session-when";
+                item.querySelector(".pt-session-time").appendChild(badge); // nằm trong ô giờ, không chiếm một cột của lưới
+            }
+            badge.textContent = label;
+        }
+    }
+    update();
+    setInterval(update, 30000);
+});
+
+
+// =====================================================================
+// GIAO DIỆN SÁNG / TỐI (khôi phục 25/10) — công tắc [data-theme-toggle] trên topbar mọi màn nội bộ.
+// Tối là mặc định: <html data-theme="dark"> (head.jspf gắn sẵn). Sáng (Arena): <html> không có data-theme.
+// Lựa chọn lưu localStorage "gms-theme"; head.jspf đọc lại trước khi vẽ nên không nháy.
+// =====================================================================
+document.addEventListener("DOMContentLoaded", function () {
+    const root = document.documentElement;
+    // B0: màn nội bộ chưa có công tắc → tự gắn vào đầu khối bên phải của topbar (trước chuông, tài khoản)
+    if (document.body.classList.contains("dock") && !document.querySelector("[data-theme-toggle]")) {
+        const topbar = document.querySelector(".topbar");
+        if (topbar) {
+            const slot = topbar.querySelector(".top-right, .pt-top-actions") || topbar;
+            const toggle = document.createElement("button");
+            toggle.type = "button";
+            toggle.className = "theme-toggle";
+            toggle.setAttribute("data-theme-toggle", "");
+            toggle.innerHTML = '<span class="theme-toggle__track" aria-hidden="true"><span class="theme-toggle__knob"></span></span>'
+                + '<span class="theme-toggle__label">Sáng</span>';
+            slot.insertBefore(toggle, slot === topbar ? null : slot.firstChild);
+        }
+    }
+    const buttons = document.querySelectorAll("[data-theme-toggle]");
+    if (!buttons.length) {
+        return;
+    }
+
+    function isDark() {
+        return root.getAttribute("data-theme") === "dark";
+    }
+
+    // B1: chữ, trạng thái gạt và nhãn đọc màn hình theo chế độ hiện tại (aria-pressed = đang sáng)
+    function paint() {
+        const dark = isDark();
+        buttons.forEach(function (button) {
+            button.setAttribute("aria-pressed", dark ? "false" : "true");
+            const label = button.querySelector(".theme-toggle__label");
+            if (label) {
+                label.textContent = dark ? "Tối" : "Sáng";
+            }
+            button.setAttribute("aria-label", dark ? "Đang ở nền tối. Chuyển sang nền sáng" : "Đang ở nền sáng. Chuyển sang nền tối");
+        });
+    }
+
+    // B2: bấm → đổi chế độ và ghi nhớ
+    buttons.forEach(function (button) {
+        button.addEventListener("click", function () {
+            const next = isDark() ? "light" : "dark";
+            if (next === "dark") {
+                root.setAttribute("data-theme", "dark");
+            } else {
+                root.removeAttribute("data-theme");
+            }
+            try {
+                localStorage.setItem("gms-theme", next);
+            } catch (error) {
+                // Trình duyệt chặn lưu trữ: vẫn đổi được trong lần xem này
+            }
+            paint();
+        });
+    });
+    paint();
+});
+
+
+// =====================================================================
+// NÂNG CẤP 2026-10-13: biểu đồ màu thương hiệu + đường xu hướng, số đếm lên, Pumpy theo ngữ cảnh
+// =====================================================================
+document.addEventListener("DOMContentLoaded", function () {
+    // B0: Đồng bộ ảnh đại diện ở Header/Topbar với cơ sở dữ liệu
+    (function syncHeaderUserAvatar() {
+        const metaAvatar = document.querySelector('meta[name="user-avatar"]');
+        const avatarUrl = metaAvatar ? metaAvatar.getAttribute("content") : null;
+        if (!avatarUrl) {
+            return;
+        }
+        const userContainers = document.querySelectorAll(".tb-user, .guest-account");
+        userContainers.forEach(function (container) {
+            const avatarEl = container.querySelector(".avatar, .pt-user-avatar, .guest-account__avatar");
+            if (!avatarEl) {
+                return;
+            }
+            if (avatarEl.tagName === "IMG") {
+                if (avatarEl.getAttribute("src") !== avatarUrl) {
+                    avatarEl.src = avatarUrl;
+                }
+                return;
+            }
+            const existingImg = container.querySelector("img.avatar");
+            if (existingImg) {
+                existingImg.src = avatarUrl;
+                existingImg.style.display = "";
+                avatarEl.style.display = "none";
+                return;
+            }
+            const img = document.createElement("img");
+            img.className = avatarEl.className;
+            img.src = avatarUrl;
+            img.alt = "Ảnh đại diện";
+            img.style.objectFit = "cover";
+            img.onerror = function () {
+                img.style.display = "none";
+                avatarEl.style.display = "";
+            };
+            avatarEl.style.display = "none";
+            avatarEl.parentNode.insertBefore(img, avatarEl);
+        });
+    })();
+
+    const calm = prefersReducedMotion() || document.documentElement.classList.contains("gms-lite");
+
+    // B1: biểu đồ cột — đánh dấu cột cao nhất; vẽ đường xu hướng từ các cột vào ô dẫn đầu của bảng điểm
+    document.querySelectorAll(".bars").forEach(function (bars) {
+        const items = Array.prototype.slice.call(bars.querySelectorAll(".bar"));
+        const values = items.map(function (bar) {
+            return parseFloat(bar.style.getPropertyValue("--percent")) || 0;
+        });
+        if (!values.length) {
+            return;
+        }
+        const max = Math.max.apply(null, values);
+        if (max > 0) {
+            items[values.indexOf(max)].classList.add("is-max");
+        }
+        const lead = document.querySelector(".scoreboard .stat.is-lead");
+        if (!lead || values.length < 2 || lead.querySelector(".stat-spark")) {
+            return;
+        }
+        const width = 200;
+        const height = 34;
+        const top = Math.max(max, 1);
+        const points = values.map(function (value, index) {
+            return [index * width / (values.length - 1), height - 3 - (value / top) * (height - 6)];
+        });
+        const line = points.map(function (point, index) {
+            return (index ? "L" : "M") + point[0].toFixed(1) + " " + point[1].toFixed(1);
+        }).join(" ");
+        const last = points[points.length - 1];
+        // Màu vùng dưới đường xu hướng theo chế độ: sáng = xanh cobalt nhạt, tối = aqua như giao diện cũ
+        const darkMode = document.documentElement.getAttribute("data-theme") === "dark";
+        const sparkColor = darkMode ? "#2BD4DE" : "#2E63B5";
+        const sparkOpacity = darkMode ? ".35" : ".18";
+        const svg = '<svg class="stat-spark" viewBox="0 0 ' + width + " " + height + '" preserveAspectRatio="none" aria-hidden="true">'
+            + '<defs><linearGradient id="gmsSparkFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + sparkColor + '" stop-opacity="' + sparkOpacity + '"/><stop offset="1" stop-color="' + sparkColor + '" stop-opacity="0"/></linearGradient></defs>'
+            + '<path class="area" d="' + line + " L" + width + " " + height + " L0 " + height + ' Z"/>'
+            + '<path class="line" d="' + line + '" vector-effect="non-scaling-stroke"/>'
+            + '<circle cx="' + last[0].toFixed(1) + '" cy="' + last[1].toFixed(1) + '" r="3"/></svg>';
+        lead.insertAdjacentHTML("beforeend", svg);
+    });
+
+    // B2: số liệu đếm lên khi mở trang (giữ nguyên định dạng: dấu chấm hàng nghìn, phần thập phân, đơn vị)
+    if (!calm) {
+        const targets = document.querySelectorAll(".pt-pulse dd, .pt-summary-stat strong, .pt-summary-money strong, .dock .stat-value:not([data-flip]), .dock .metric-value:not([data-flip])");
+        targets.forEach(function (el) {
+            if (el.children.length || el.hasAttribute("data-count")) {
+                return;
+            }
+            const text = el.textContent;
+            const match = text.match(/\d[\d.]*(,\d+)?/);
+            if (!match || /\d:\d/.test(text)) {
+                return;
+            }
+            const raw = match[0];
+            const decimals = match[1] ? match[1].length - 1 : 0;
+            const target = parseFloat(raw.replace(/\./g, "").replace(",", "."));
+            if (!isFinite(target) || target === 0) {
+                return;
+            }
+            const format = function (value) {
+                return value.toLocaleString("vi-VN", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+            };
+            const start = performance.now();
+            const duration = 900;
+            function step(now) {
+                const t = Math.min(1, (now - start) / duration);
+                const eased = 1 - Math.pow(1 - t, 3);
+                el.textContent = text.replace(raw, t < 1 ? format(target * eased) : raw);
+                if (t < 1) {
+                    requestAnimationFrame(step);
+                }
+            }
+            requestAnimationFrame(step);
+        });
+    }
+
+    // B3: trạng thái rỗng nói về lịch / buổi tập → Pumpy nằm nghỉ cạnh quả tạ (images/pumpy/relax.svg)
+    document.querySelectorAll(".dock .empty-state").forEach(function (box) {
+        if (/lịch|buổi|đánh giá|yêu cầu/i.test(box.textContent)) {
+            box.classList.add("empty-state--relax");
+        }
+    });
+});
+
+// =====================================================================
+// 13. Lightbox xem ảnh trực tiếp trên trang (GBR - Mở ngay tại trang, không mở tab mới)
+// =====================================================================
+window.openImageLightbox = function(imageUrl, title) {
+    if (!imageUrl) return;
+    let overlay = document.getElementById("gmsImageLightbox");
+    if (!overlay) {
+        overlay = document.createElement("div");
+        overlay.id = "gmsImageLightbox";
+        overlay.className = "gms-lightbox-overlay";
+        overlay.innerHTML = 
+            '<div class="gms-lightbox-backdrop"></div>' +
+            '<div class="gms-lightbox-content" role="dialog" aria-modal="true" aria-label="Xem ảnh phóng to">' +
+                '<button type="button" class="gms-lightbox-close" title="Đóng (Esc)" aria-label="Đóng">&times;</button>' +
+                '<div class="gms-lightbox-img-wrapper">' +
+                    '<img class="gms-lightbox-img" src="" alt="Ảnh phóng to" />' +
+                '</div>' +
+                '<div class="gms-lightbox-caption"></div>' +
+            '</div>';
+        document.body.appendChild(overlay);
+
+        const closeLightbox = function() {
+            overlay.classList.remove("active");
+            document.body.classList.remove("gms-lightbox-open");
+        };
+
+        overlay.querySelector(".gms-lightbox-close").addEventListener("click", closeLightbox);
+        overlay.querySelector(".gms-lightbox-backdrop").addEventListener("click", closeLightbox);
+        document.addEventListener("keydown", function(e) {
+            if (e.key === "Escape" && overlay.classList.contains("active")) {
+                closeLightbox();
+            }
+        });
+    }
+
+    const img = overlay.querySelector(".gms-lightbox-img");
+    const caption = overlay.querySelector(".gms-lightbox-caption");
+    img.src = imageUrl;
+    caption.textContent = title || "";
+    caption.style.display = title ? "block" : "none";
+
+    overlay.classList.add("active");
+    document.body.classList.add("gms-lightbox-open");
+};
+
+// Global click delegation cho các thẻ ảnh xem phóng to
+document.addEventListener("click", function(e) {
+    const trigger = e.target.closest("[data-lightbox-image], .image-lightbox-trigger, .maintenance-image-thumb-card, .incident-image-thumb-card");
+    if (trigger) {
+        e.preventDefault();
+        const src = trigger.getAttribute("data-lightbox-image") || trigger.getAttribute("href") || (trigger.querySelector("img") ? trigger.querySelector("img").src : null);
+        const title = trigger.getAttribute("data-lightbox-title") || trigger.getAttribute("title") || (trigger.querySelector("img") ? trigger.querySelector("img").alt : "");
+        if (src && !src.startsWith("#")) {
+            window.openImageLightbox(src, title);
+        }
+    }
+});
+

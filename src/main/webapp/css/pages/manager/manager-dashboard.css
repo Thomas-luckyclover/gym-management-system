@@ -1,0 +1,509 @@
+@charset "UTF-8";
+/* =====================================================================
+   manager-dashboard.css — Báo cáo vận hành & doanh thu (/manager/dashboard)
+   Khung dock/topbar ở common.css mục 11; hiệu ứng data-count/data-reveal/data-tooltip ở mục 12.
+   Bố cục: dải ghi chú + bộ lọc → bảng điểm 6 ô → biểu đồ cột → 2 bảng (gói có làn chạy, hoa hồng PT).
+   ===================================================================== */
+
+.dock .content {
+  display: grid;
+  gap: var(--space-5);
+  align-content: start;
+}
+
+/* ===== Ghi chú + bộ lọc ===== */
+.page-intro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.page-intro p {
+  margin: 0;
+  max-width: 52ch;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-soft);
+}
+
+.report-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3);
+}
+
+.report-filter .field {
+  margin: 0;
+}
+
+.report-filter input[type="date"] {
+  min-height: var(--control-height-md);
+  accent-color: var(--color-primary);
+}
+
+.report-filter .btn[aria-disabled="true"] {
+  opacity: var(--opacity-disabled);
+  pointer-events: none;
+}
+
+#reportRangeError {
+  margin-top: calc(-1 * var(--space-3));
+}
+
+/* ===== Card chung ===== */
+.report-card {
+  min-width: 0;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.report-pad {
+  padding: var(--space-5);
+}
+
+.report-card h2,
+.report-card-title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-tight);
+  color: var(--color-text);
+}
+
+.report-card-title {
+  padding: var(--space-4) var(--space-5) var(--space-3);
+}
+
+.report-sub {
+  margin: var(--space-1) 0 var(--space-4);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-soft);
+}
+
+.report-empty {
+  padding: var(--space-8) var(--space-5);
+  text-align: center;
+  color: var(--color-text-soft);
+  font-weight: var(--font-weight-medium);
+}
+
+/* ===== Bảng điểm 6 chỉ số =====
+   Flex xuống hàng: ô rộng tối thiểu 180px (đủ 6 ô một hàng ở màn 1280), không đủ chỗ thì tự xuống hàng
+   và các ô hàng dưới giãn ra lấp kín. Vạch chia là khe 1px để lộ nền vạch, đúng ở mọi cách xếp hàng. */
+.report-stats.scoreboard {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--border-width);
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  background: var(--color-board-line);
+  box-shadow: var(--shadow-lift);
+}
+
+.scoreboard .stat {
+  flex: 1 1 180px;
+  min-width: 0;
+  padding: var(--space-4-5) var(--space-4) var(--space-4);
+  border: 0;
+  border-radius: 0;
+  background: var(--color-board);
+  box-shadow: none;
+  color: var(--color-text);
+  /* Cỡ số co theo bề rộng ô (đơn vị cqi bên dưới) */
+  container-type: inline-size;
+}
+
+
+.scoreboard .stat.is-lead {
+  background: var(--color-primary);
+  border-right-color: transparent;
+}
+
+.scoreboard .stat-label {
+  /* Chừa sẵn 2 dòng: nhãn dài xuống dòng thì số của mọi ô vẫn thẳng một hàng */
+  min-height: 2lh;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-muted);
+}
+
+.scoreboard .stat.is-lead .stat-label,
+.scoreboard .stat.is-lead .stat-note {
+  color: color-mix(in srgb, var(--color-on-primary) 82%, transparent);
+}
+
+.scoreboard .stat-value {
+  margin-top: var(--space-1-5);
+  font-family: var(--font-heading);
+  /* 11cqi: số tiền dài nhất (9 chữ số + dấu chấm + đ) vẫn vừa ô 200px, không bị cắt */
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-extrabold);
+  letter-spacing: var(--letter-spacing-tight);
+  line-height: var(--line-height-none);
+  color: var(--color-text);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.scoreboard .stat-note {
+  margin-top: var(--space-2);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+/* ===== Biểu đồ cột ===== */
+.chart {
+  display: grid;
+  grid-template-rows: auto auto;
+}
+
+.chart-plot {
+  position: relative;
+  height: calc(var(--space-12) * 3.4);
+  margin-left: var(--space-10);
+  border-left: var(--border-width) solid var(--color-border-strong);
+  border-bottom: var(--border-width) solid var(--color-border-strong);
+}
+
+.grid-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--percent) * 1%);
+  border-top: var(--border-width) dashed var(--color-border);
+}
+
+.grid-line span {
+  position: absolute;
+  right: calc(100% + var(--space-2));
+  transform: translateY(-50%);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.bars {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-1-5);
+  padding: 0 var(--space-2);
+}
+
+/* Cột mọc từ đáy lên khi tải trang */
+.bar {
+  flex: 1;
+  min-width: var(--space-1);
+  height: calc(var(--percent) * 1%);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  background: color-mix(in srgb, var(--color-text-muted) 45%, var(--color-surface));
+  transform-origin: bottom;
+  animation: bar-grow var(--duration-grow) var(--ease-out-expo) both;
+  transition: background var(--duration-fast) var(--ease-standard), opacity var(--duration-fast) var(--ease-standard);
+  outline-offset: var(--space-0-5);
+}
+
+.bar:nth-child(3n + 2) { animation-delay: 60ms; }
+.bar:nth-child(3n) { animation-delay: 120ms; }
+
+.bar:hover,
+.bar:focus-visible {
+  background: var(--color-text-soft);
+}
+
+.bar.bar-last {
+  background: var(--color-primary);
+}
+
+.bars:hover .bar:not(:hover) {
+  opacity: 0.55;
+}
+
+@keyframes bar-grow {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+
+.x-labels {
+  display: flex;
+  gap: var(--space-1-5);
+  margin-left: var(--space-10);
+  padding: var(--space-1-5) var(--space-2) 0;
+}
+
+.x-labels span {
+  flex: 1;
+  min-width: var(--space-1);
+  /* Nhãn đã được lọc thưa từ Servlet: cho tràn sang ô trống bên cạnh, không cắt */
+  overflow: visible;
+  white-space: nowrap;
+  text-align: center;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+/* ===== Hai bảng ===== */
+.report-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-5);
+}
+
+.report-grid .report-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.report-table-wrap {
+  overflow-x: auto;
+}
+
+.report-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-md);
+}
+
+.report-table th {
+  padding: var(--space-2-5) var(--space-4);
+  border-bottom: var(--border-width) solid var(--color-border-strong);
+  background: var(--color-surface-muted);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  text-align: left;
+  color: var(--color-text-soft);
+  white-space: nowrap;
+}
+
+.report-table td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: var(--border-width) solid var(--color-border);
+  white-space: nowrap;
+}
+
+.report-table tbody tr {
+  transition: background var(--duration-fast) var(--ease-standard);
+}
+
+.report-table tbody tr:hover {
+  background: var(--color-primary-tint);
+}
+
+.report-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.report-table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.report-table .muted,
+.muted {
+  color: var(--color-text-muted);
+}
+
+.rank {
+  display: inline-grid;
+  place-items: center;
+  width: var(--space-5);
+  height: var(--space-5);
+  margin-right: var(--space-2);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-muted);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-extrabold);
+}
+
+.report-table tbody tr:first-child .rank {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+/* Làn chạy: mặt đường màu chủ đạo, vạch đích ca-rô, chấm chạy tới tỉ lệ doanh thu */
+.lane-col {
+  width: 34%;
+  min-width: calc(var(--space-12) * 1.6);
+}
+
+.lane {
+  position: relative;
+  display: block;
+  height: var(--space-3-5);
+  border-radius: var(--radius-sm);
+  background:
+    repeating-conic-gradient(var(--color-surface) 0 25%, var(--color-text) 0 50%) right / var(--space-1-5) var(--space-1-5) no-repeat,
+    var(--color-primary);
+  background-size: var(--space-1-5) var(--space-1-5), auto;
+}
+
+.lane::before {
+  content: "";
+  position: absolute;
+  left: var(--space-1-5);
+  right: var(--space-3);
+  top: 50%;
+  border-top: var(--border-width) dashed color-mix(in srgb, var(--color-surface) 55%, transparent);
+}
+
+.lane-runner {
+  position: absolute;
+  top: 50%;
+  left: calc(var(--space-1) + (100% - var(--space-5)) * var(--pct, 0) / 100);
+  width: var(--space-2-5);
+  height: var(--space-2-5);
+  border-radius: var(--radius-circle);
+  background: var(--brand-aqua-soft);
+  box-shadow: 0 0 0 var(--space-0-5) var(--brand-ocean-deep);
+  transform: translateY(-50%);
+  animation: lane-run var(--duration-run) var(--ease-out-expo) both;
+}
+
+.report-table tbody tr:first-child .lane-runner {
+  background: var(--brand-ink);
+  box-shadow: 0 0 0 var(--space-0-5) var(--brand-sunset-hi);
+}
+
+@keyframes lane-run {
+  from { left: var(--space-1); }
+}
+
+.report-foot {
+  margin: auto 0 0;
+  padding: var(--space-3) var(--space-5);
+  border-top: var(--border-width) solid var(--color-border);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 1080px) {
+  .report-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .scoreboard .stat {
+    flex-basis: 150px;
+  }
+
+  .report-filter,
+  .report-filter .field {
+    width: 100%;
+  }
+
+  .report-filter .btn {
+    flex: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bar,
+  .lane-runner {
+    animation: none;
+  }
+}
+
+/* So sánh với kỳ trước dưới mỗi ô (manager/_stat-delta.jspf): xanh tăng, đỏ giảm, xám không so được */
+.scoreboard .stat-delta {
+  margin-top: var(--space-1-5);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-muted);
+}
+
+.scoreboard .stat-delta.is-up { color: var(--color-success-ink); }
+.scoreboard .stat-delta.is-down { color: var(--color-danger-ink); }
+.dock .scoreboard .stat.is-lead .stat-delta { color: var(--color-board-text); }
+.dock .scoreboard .stat.is-lead .stat-delta.is-up { color: var(--color-board-up); }
+.dock .scoreboard .stat.is-lead .stat-delta.is-down { color: var(--brand-sunset-hi); }
+
+
+/* Sáu chỉ số chia ba cột: số tiền dài và nhãn cùng một nhịp đọc. */
+.dock .scoreboard .stat { padding: var(--space-5); }
+.dock .scoreboard .stat-label { min-height: auto; }
+.dock .scoreboard .stat-value { margin-top: var(--space-3); line-height: var(--line-height-snug); }
+@media (max-width: 767px) {
+  .report-stats.scoreboard { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dock .scoreboard .stat { padding: var(--space-4); }
+  .dock .scoreboard .stat-value { font-size: var(--font-size-xl); }
+}
+@media (max-width: 380px) {
+  .report-stats.scoreboard { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ===== Biểu đồ màu thương hiệu (2026-10-13) =====
+   Cột aqua đậm dần lên đỉnh, cột cao nhất cam hoàng hôn (common.js gắn .is-max), trục chữ mono,
+   rê chuột/Tab: hộp số tiền nổi trên cột. Ô doanh thu có đường xu hướng nhỏ vẽ từ chính các cột. */
+.bar {
+  border-radius: 6px 6px 2px 2px;
+  background: var(--zone-cobalt-500);
+  box-shadow: none;
+}
+.bar.is-max { background: var(--zone-accent); box-shadow: none; }
+.bar.bar-last:not(.is-max) { background: var(--zone-cobalt-600); }
+.bar:hover,
+.bar:focus-visible { filter: brightness(1.2); background: var(--zone-cobalt-800); }
+.bar.is-max:hover,
+.bar.is-max:focus-visible { background: var(--zone-accent-hover); }
+.bars:hover .bar:not(:hover) { opacity: 0.45; }
+.grid-line { border-top-color: rgba(127, 230, 236, 0.1); }
+.grid-line span,
+.x-labels span { font-family: var(--font-brand-mono); font-size: 0.72rem; letter-spacing: 0.04em; color: var(--pt-muted); }
+.chart-plot { border-left-color: rgba(127, 230, 236, 0.2); border-bottom-color: rgba(127, 230, 236, 0.2); overflow: visible; }
+
+/* Hộp số tiền khi rê / focus cột (thay tooltip chung, luôn nổi trên cột) */
+.bars .bar[data-tooltip] { position: relative; }
+.bars .bar[data-tooltip]::before {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 10px);
+  z-index: 5;
+  padding: 6px 10px;
+  border: 1px solid rgba(127, 230, 236, 0.3);
+  border-radius: 8px;
+  background: #0C1D33;
+  color: #EAF4F6;
+  font-family: var(--font-brand-mono);
+  font-size: 0.75rem;
+  white-space: nowrap;
+  transform: translate(-50%, 4px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 150ms, transform 150ms;
+}
+.bars .bar[data-tooltip]:hover::before,
+.bars .bar[data-tooltip]:focus-visible::before { opacity: 1; transform: translate(-50%, 0); }
+
+/* Đường xu hướng nhỏ trong ô số liệu */
+.stat-spark { display: block; width: 100%; height: 34px; margin-top: var(--space-2); overflow: visible; }
+.stat-spark path.line { fill: none; stroke: var(--zone-cobalt-500); stroke-width: 1.75; stroke-linejoin: round; stroke-linecap: round; }
+.stat-spark path.area { fill: url(#gmsSparkFill); stroke: none; }
+.stat-spark circle { fill: var(--zone-accent); stroke: #FFFFFF; stroke-width: 1.5; }
+
+/* Chế độ tối (giao diện cũ, khôi phục 25/10): cột aqua/cam có độ sáng như trước 24/10 */
+html:where([data-theme="dark"]) body.dock .bar {
+  background: linear-gradient(180deg, #7FE6EC 0%, #2BD4DE 30%, #0E6E82 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+html:where([data-theme="dark"]) body.dock .bar.is-max { background: linear-gradient(180deg, #FFB27A 0%, #FF7A3D 35%, #C2410C 100%); box-shadow: 0 0 24px -6px rgba(242, 92, 27, 0.7); }
+html:where([data-theme="dark"]) body.dock .bar.bar-last:not(.is-max) { background: linear-gradient(180deg, #BFF3F5 0%, #7FE6EC 40%, #0E6E82 100%); }
+html:where([data-theme="dark"]) body.dock .bar:hover,
+html:where([data-theme="dark"]) body.dock .bar:focus-visible { background: linear-gradient(180deg, #BFF3F5 0%, #2BD4DE 40%, #0E6E82 100%); }
+html:where([data-theme="dark"]) body.dock .bar.is-max:hover,
+html:where([data-theme="dark"]) body.dock .bar.is-max:focus-visible { background: linear-gradient(180deg, #FFD2AE 0%, #FF7A3D 40%, #C2410C 100%); }
+html:where([data-theme="dark"]) body.dock .bars .bar[data-tooltip]::before { background: rgba(2, 14, 20, 0.94); }
+html:where([data-theme="dark"]) body.dock .stat-spark path.line { stroke: #7FE6EC; }
+html:where([data-theme="dark"]) body.dock .stat-spark circle { fill: #FF7A3D; stroke: #04212B; }

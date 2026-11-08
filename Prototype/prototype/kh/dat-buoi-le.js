@@ -4,7 +4,7 @@
 (function () {
   /* slot đã kín của từng PT, theo thứ trong tuần (0 = Thứ 2) */
   const BUSY = {
-    'Hoàng Long':     { 0: ['08:00', '19:00'], 2: ['19:00'], 4: ['08:00', '10:00'], 5: ['06:00'] },
+    'Hoàng Long':     { 0: ['08:00'], 1: ['19:00'], 2: ['19:00'], 3: ['19:00'], 4: ['18:00'], 5: ['08:00'] },
     'Phạm Thu Trang': { 1: ['06:00', '18:00'], 3: ['14:00'], 5: ['16:00', '18:00'], 6: ['19:00'] },
     'Đỗ Minh Khoa':   { 0: ['06:00', '14:00'], 2: ['18:00', '20:00'], 4: ['16:00'], 6: ['19:00'] },
     'Vũ Hải Yến':     { 1: ['10:00'], 3: ['20:00'], 5: ['06:00', '08:00'], 6: ['08:00', '14:00'] },
@@ -28,7 +28,7 @@
       picked = text;
       document.querySelector('[data-summary-slot]').textContent = text;
       bookBtn.disabled = false;
-      bookBtn.textContent = 'Thanh toán 550.000đ';
+      bookBtn.textContent = 'Thanh toán 450.000đ';
     },
   });
 
@@ -93,21 +93,21 @@
     renderPts();
   });
 
-  /* Slot chỉ được giữ SAU KHI thanh toán thành công — hủy giữa chừng
-     thì slot nhả lại cho người khác. */
+  /* Bấm thanh toán là tạo đơn Pending và slot chuyển Held (P-09 = 20 phút).
+     Thanh toán thành công thì Booked; hủy giữa chừng thì slot vẫn Held đến hết hạn rồi tự nhả. */
   bookBtn.addEventListener('click', () => {
     openGateway({
       order: 'DH-2026-1205',
-      amount: '550.000đ',
+      amount: '450.000đ',
       onDone(result) {
         if (result !== 'success') {
-          showToast('warning', 'Chưa thanh toán nên slot chưa được giữ.');
+          showToast('warning', 'Chưa thanh toán. Slot vẫn được giữ đến khi hết hạn thanh toán (20 phút) rồi tự nhả.');
           return;
         }
         document.querySelector('[data-done-slot]').textContent = picked;
         document.querySelector('[data-done-pt]').textContent = ptOf();
         showStep('done');
-        showToast('success', 'Thanh toán thành công. Slot đã được giữ.');
+        showToast('success', 'Thanh toán thành công. Slot đã được đặt.');
       },
     });
   });

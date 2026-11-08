@@ -11,7 +11,12 @@ import java.sql.SQLException;
  * Người phụ trách gợi ý: TV1 (xem docs/team-plan.md).
  * TODO: gọi Service tương ứng trong run(); job KHÔNG tự viết SQL.
  */
+import com.gms.service.PaymentMaintenanceService;
+import java.sql.SQLException;
+
 public class CancelOverdueOnlineOrdersJob implements BackgroundJob {
+
+    private final PaymentMaintenanceService service = new PaymentMaintenanceService();
 
     @Override
     public String getName() {
@@ -20,6 +25,6 @@ public class CancelOverdueOnlineOrdersJob implements BackgroundJob {
 
     @Override
     public void run() throws SQLException {
-        // TODO(JOB-05): gọi Service xử lý, VD: new XxxService().runJob();
+        service.cancelOverdueOnlineOrders();
     }
 }

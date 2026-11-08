@@ -1,12 +1,16 @@
 package com.gms.constant;
 
+import java.time.LocalTime;
 import java.util.List;
 
 /**
- * Hằng số cố định của hệ thống — những giá trị SRS chốt "Fixed by design" hoặc quy ước giao diện chung.
+ * Hằng số cố định của hệ thống — những giá trị SRS chốt "Fixed by design" hoặc
+ * quy ước giao diện chung.
  *
- * KHÔNG đặt ở đây các tham số P-01…P-20 (SRS System Parameters): các giá trị đó Manager sửa được
- * trên màn 4.1.2, nên phải đọc từ bảng SystemConfig trong DB qua Service, không hard-code.
+ * KHÔNG đặt ở đây các tham số P-01…P-20 (SRS System Parameters): các giá trị đó
+ * Manager sửa được
+ * trên màn 4.1.2, nên phải đọc từ bảng SystemConfig trong DB qua Service, không
+ * hard-code.
  */
 public final class AppConstants {
 
@@ -18,7 +22,8 @@ public final class AppConstants {
     /** Các lựa chọn số dòng mỗi trang được phép. */
     public static final List<Integer> PAGE_SIZE_OPTIONS = List.of(10, 20, 50);
 
-    // ===== Giá trị cố định theo thiết kế (SRS System Parameters — "Fixed by design") =====
+    // ===== Giá trị cố định theo thiết kế (SRS System Parameters — "Fixed by
+    // design") =====
 
     /** Mỗi đơn hàng chỉ áp được 1 voucher. */
     public static final int MAX_VOUCHER_PER_ORDER = 1;
@@ -26,20 +31,35 @@ public final class AppConstants {
     /** Mỗi ngày có đúng 2 ca: sáng và chiều. */
     public static final int SHIFTS_PER_DAY = 2;
 
-    // ===== Giá trị cấu hình triển khai, không có màn hình sửa (SRS System Parameters — "Not configurable") =====
+    // ===== Giá trị cấu hình triển khai, không có màn hình sửa (SRS System
+    // Parameters — "Not configurable") =====
 
-    /** Link thanh toán online có hiệu lực 5 phút (không bao giờ vượt hạn thanh toán của đơn). */
+    /**
+     * Link thanh toán online có hiệu lực 5 phút (không bao giờ vượt hạn thanh toán
+     * của đơn).
+     */
     public static final int PAYMENT_LINK_VALID_MINUTES = 5;
 
     /** Khoảng cách tối thiểu giữa 2 lần yêu cầu gửi mã xác thực. */
     public static final int CODE_RESEND_GAP_SECONDS = 60;
+
+    /** CBR-94: đếm số lần xin mã trong khoảng thời gian này (60 phút); xin tới lần thứ 5 thì khóa. */
+    public static final int CODE_REQUEST_WINDOW_MINUTES = 60;
+
+    // ===== Liên hệ phòng tập (giống chân trang công khai guest-footer.jspf) =====
+
+    /** Hotline quầy lễ tân — hiển thị. */
+    public static final String GYM_HOTLINE = "1900 6868";
+
+    /** Hotline cho href="tel:" (chỉ chữ số). */
+    public static final String GYM_HOTLINE_TEL = "19006868";
 
     // ===== Độ dài/định dạng dữ liệu (DBR-01 … DBR-15) =====
 
     public static final int FULL_NAME_MIN_LENGTH = 2;
     public static final int FULL_NAME_MAX_LENGTH = 50;
 
-    /** DBR-02: 8–64 ký tự (SRS 1.2.2 đang ghi 6–64 — xem docs/notes.md, chờ nhóm chốt). */
+    /** DBR-02: 8–64 ký tự */
     public static final int PASSWORD_MIN_LENGTH = 8;
     public static final int PASSWORD_MAX_LENGTH = 64;
 
@@ -49,10 +69,22 @@ public final class AppConstants {
     public static final int REASON_MAX_LENGTH = 500;
     public static final int MAX_AGE_YEARS = 100;
 
+    
     /** DBR-08: ảnh JPG/PNG tối đa 5 MB, tối đa 2000 x 2000 px. */
     public static final long IMAGE_MAX_BYTES = 5L * 1024 * 1024;
     public static final int IMAGE_MAX_DIMENSION_PX = 2000;
 
-    private AppConstants() {
+    /**
+     * Mốc chia ca sáng / ca chiều — dùng chung cho ca lễ tân, đơn nghỉ của PT và khung giờ PT.
+     * Khung / buổi BẮT ĐẦU trước 13:00 thuộc ca sáng (05:30–13:00), từ 13:00 thuộc ca chiều (13:00–22:00).
+     * SRS chỉ nói "mỗi ngày mở cửa tự chia ca sáng và ca chiều" (UC-11, CBR-104), không nêu giờ chia:
+     * nhóm chốt 13:00 ngày 31/10/2026 cho khớp giờ mở / đóng ca lễ tân (docs/notes.md).
+     */
+    public static final LocalTime AFTERNOON_SHIFT_START = LocalTime.of(13, 0);
+
+    /** Cùng mốc trên, dạng chữ để ghép vào câu SQL so với cột TIME (TimeSlots.StartTime). */
+    public static final String AFTERNOON_SHIFT_START_SQL = "'13:00:00'";
+
+    private AppConstants() { // để chặn constructor tự tạo mặc định
     }
 }

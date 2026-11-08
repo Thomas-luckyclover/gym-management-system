@@ -1,0 +1,628 @@
+/* =====================================================================
+   Checkout Page Stylesheet — SUPER GYM
+   Thiết kế chuẩn Iron Athletic:
+   - Màu nền thẻ: Tối liền mạch (#0d1522), viền tinh tế rgba(255, 255, 255, 0.12)
+   - Đệm lề rộng rãi (padding: 2.25rem 2.5rem), phân cấp chữ rõ ràng, không dính sát lề
+   - KHÔNG bo góc trên nội dung (border-radius: 0 !important)
+   - Giữ nguyên bo góc viên thuốc tròn trên topbar (.tb-user, .theme-toggle)
+   - Nút thanh toán: Vàng hổ phách (Amber #f59e0b) thể thao rực lửa, chữ đen đậm, nổi bật
+   - Đồng bộ hoàn hảo giữa Light Mode và Dark Mode
+   ===================================================================== */
+
+/* 1. LAYOUT & CONTAINER CHÍNH */
+.checkout-page .content {
+  padding: 2rem 2.5rem 5rem !important;
+  max-width: 1180px !important;
+  margin-inline: auto !important;
+  box-sizing: border-box !important;
+}
+
+/* Nút quay lại */
+.checkout-back {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  margin-bottom: 1.5rem !important;
+  color: #38bdf8 !important;
+  font-family: "Inter", system-ui, sans-serif !important;
+  font-size: 0.92rem !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6) !important;
+  transition: color 0.15s ease, transform 0.15s ease !important;
+}
+
+.checkout-back:hover {
+  color: #7dd3fc !important;
+  transform: translateX(-3px) !important;
+  text-decoration: underline !important;
+}
+
+/* Tiêu đề trang */
+.checkout-heading {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  gap: 1.25rem !important;
+  margin-bottom: 2rem !important;
+}
+
+.checkout-heading h1 {
+  margin: 0 0 0.4rem 0 !important;
+  font-family: "Inter Tight", "Montserrat", system-ui, sans-serif !important;
+  font-size: 1.85rem !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: -0.01em !important;
+  color: #ffffff !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6) !important;
+}
+
+.checkout-heading p {
+  margin: 0 !important;
+  color: #94adc5 !important;
+  font-family: "Inter", system-ui, sans-serif !important;
+  font-size: 0.95rem !important;
+  font-weight: 400 !important;
+}
+
+/* Đồng hồ đếm ngược */
+.checkout-clock {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.6rem !important;
+  background: rgba(245, 158, 11, 0.15) !important;
+  border: 1px solid rgba(245, 158, 11, 0.4) !important;
+  color: #fcd34d !important;
+  padding: 0.6rem 1.25rem !important;
+  font-family: "Inter", system-ui, sans-serif !important;
+  font-size: 0.9rem !important;
+  font-weight: 700 !important;
+  border-radius: 0 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Lưới 2 cột song song cân đối */
+.checkout-grid {
+  display: grid !important;
+  grid-template-columns: 1.08fr 0.92fr !important;
+  gap: 2.25rem !important;
+  align-items: stretch !important;
+}
+
+/* Card bao quanh - Vuông góc 100%, đệm lề rộng rãi, phân cấp rõ rệt */
+.checkout-card {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+  height: 100% !important;
+  padding: 2.25rem 2.5rem !important;
+  background: #0d1522 !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #f1f5f9 !important;
+  border-radius: 0 !important;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6) !important;
+  box-sizing: border-box !important;
+  gap: 1.5rem !important;
+}
+
+/* Tiêu đề mỗi thẻ (GÓI TẬP CỦA BẠN, TÓM TẮT THANH TOÁN) */
+.checkout-card h2 {
+  margin: 0 !important;
+  padding-bottom: 0.85rem !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  font-family: "Inter Tight", "Montserrat", system-ui, sans-serif !important;
+  font-size: 1.25rem !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
+  color: #ffffff !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.65rem !important;
+}
+
+/* Banner gói tập */
+.checkout-banner {
+  position: relative !important;
+  overflow: hidden !important;
+  padding: 1.75rem 2rem !important;
+  background: #05080f !important;
+  border: 1px solid rgba(56, 189, 248, 0.3) !important;
+  border-radius: 0 !important;
+  margin: 0 !important;
+}
+
+.checkout-banner::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  background: url("../../../images/packages/art-dumbbell.png") right center / contain no-repeat !important;
+  opacity: 0.85 !important;
+  pointer-events: none !important;
+}
+
+.checkout-banner::after {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  background: linear-gradient(90deg, #05080f 30%, rgba(5, 8, 15, 0.5) 70%, transparent 100%) !important;
+  pointer-events: none !important;
+}
+
+.checkout-banner__brand {
+  position: relative !important;
+  z-index: 2 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  font-family: "Inter Tight", "Montserrat", system-ui, sans-serif !important;
+  font-size: 0.8rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.12em !important;
+  color: #38bdf8 !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.checkout-banner h3 {
+  position: relative !important;
+  z-index: 2 !important;
+  margin: 0 !important;
+  font-family: "Inter Tight", "Montserrat", system-ui, sans-serif !important;
+  font-size: 1.65rem !important;
+  font-weight: 900 !important;
+  font-style: italic !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.02em !important;
+  color: #ffffff !important;
+  line-height: 1.25 !important;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8) !important;
+}
+
+/* Mô tả ngắn gói tập */
+.checkout-muted {
+  margin: 0 !important;
+  padding: 0 0.25rem !important;
+  color: #94adc5 !important;
+  font-family: "Inter", system-ui, sans-serif !important;
+  font-size: 0.92rem !important;
+  line-height: 1.5 !important;
+}
+
+/* Danh sách quyền lợi dạng badge/list thể thao */
+.checkout-benefits {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.75rem !important;
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.checkout-benefits li {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.85rem !important;
+  padding: 0.85rem 1.15rem !important;
+  background: rgba(16, 185, 129, 0.08) !important;
+  border: 1px solid rgba(16, 185, 129, 0.22) !important;
+  border-radius: 0 !important;
+  color: #f1f5f9 !important;
+  font-family: "Inter", system-ui, sans-serif !important;
+  font-size: 0.92rem !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+}
+
+.checkout-benefits li i {
+  color: #10b981 !important;
+  font-size: 1.05rem !important;
+  flex-shrink: 0 !important;
+}
+
+/* Thông tin khách hàng & mã đơn - Đóng khung gọn gàng ở đáy */
+.checkout-details {
+  margin-top: auto !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  gap: 1.25rem !important;
+  padding: 1.25rem 1.5rem !important;
+  background: rgba(15, 23, 42, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 0 !important;
+}
+
+.checkout-details div {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.25rem !important;
+}
+
+.checkout-details div span {
+  color: #64748b !important;
+  font-family: "Inter", system-ui, sans-serif !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+}
+
+.checkout-details div strong {
+  color: #ffffff !important;
+  font-family: "Inter", system-ui, sans-serif !important;
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+}
+
+/* Badge trạng thái */
+.checkout-details .badge {
+  border-radius: 0 !important;
+  padding: 0.4rem 0.85rem !important;
+  font-size: 0.82rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+}
+
+.badge-warning {
+  background: rgba(245, 158, 11, 0.15) !important;
+  border: 1px solid rgba(245, 158, 11, 0.4) !important;
+  color: #fcd34d !important;
+}
+
+/* 2. CỘT PHẢI: TÓM TẮT THANH TOÁN */
+.checkout-prices {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.85rem !important;
+  margin: 0 !important;
+  padding: 1.25rem 1.5rem !important;
+  background: rgba(15, 23, 42, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 0 !important;
+}
+
+.checkout-prices div {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+}
+
+.checkout-prices dt {
+  color: #94adc5 !important;
+  font-family: "Inter", system-ui, sans-serif !important;
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+}
+
+.checkout-prices dd {
+  margin: 0 !important;
+  color: #ffffff !important;
+  font-family: "Inter Tight", "Montserrat", system-ui, sans-serif !important;
+  font-size: 1.2rem !important;
+  font-weight: 800 !important;
+}
+
+.checkout-discount {
+  color: #10b981 !important;
+  font-weight: 800 !important;
+}
+
+/* Khối nhập mã giảm giá */
+.checkout-voucher {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.5rem !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.checkout-voucher label {
+  color: #cbd5e1 !important;
+  font-family: "Inter", system-ui, sans-serif !important;
+  font-size: 0.85rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
+}
+
+.checkout-voucher__input {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  background: rgba(0, 0, 0, 0.4) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  border-radius: 0 !important;
+  height: 48px !important;
+  padding-right: 0.6rem !important;
+  box-sizing: border-box !important;
+  transition: border-color 0.15s ease, background 0.15s ease !important;
+}
+
+.checkout-voucher__input:focus-within {
+  border-color: #38bdf8 !important;
+  background: rgba(0, 0, 0, 0.55) !important;
+  outline: none !important;
+}
+
+.checkout-voucher input[type="text"] {
+  flex: 1 !important;
+  height: 100% !important;
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+  color: #ffffff !important;
+  font-family: "Inter", system-ui, sans-serif !important;
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  padding: 0 1rem !important;
+}
+
+.checkout-voucher input[type="text"]::placeholder {
+  color: #64748b !important;
+  font-weight: 400 !important;
+}
+
+.checkout-voucher__input button#voucherClear,
+.checkout-voucher__input button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: #ffffff !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  border-radius: 0 !important;
+  cursor: pointer !important;
+}
+
+.checkout-voucher__input button:hover {
+  background: rgba(255, 255, 255, 0.25) !important;
+}
+
+.checkout-voucher__input i {
+  color: #10b981 !important;
+  font-size: 1.1rem !important;
+  margin-right: 0.45rem !important;
+}
+
+.checkout-voucher__status {
+  margin: 0.25rem 0 0 0 !important;
+  font-family: "Inter", system-ui, sans-serif !important;
+  font-size: 0.85rem !important;
+  line-height: 1.4 !important;
+}
+
+.checkout-voucher__status[data-state="success"] {
+  color: #10b981 !important;
+}
+
+.checkout-voucher__status[data-state="error"] {
+  color: #f87171 !important;
+}
+
+/* Khối tổng thanh toán - Nổi bật, rộng rãi, tương phản cao */
+.checkout-total {
+  border: 1px solid rgba(56, 189, 248, 0.3) !important;
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.5) 0%, rgba(15, 23, 42, 0.85) 100%) !important;
+  padding: 1.5rem 1.75rem !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+}
+
+.checkout-total div {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: baseline !important;
+  margin-bottom: 0.65rem !important;
+}
+
+.checkout-total div span {
+  color: #ffffff !important;
+  font-family: "Inter Tight", "Montserrat", system-ui, sans-serif !important;
+  font-size: 1.1rem !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+}
+
+.checkout-total strong {
+  color: #38bdf8 !important;
+  font-family: "Inter Tight", "Montserrat", system-ui, sans-serif !important;
+  font-size: 2.15rem !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.01em !important;
+  text-shadow: 0 0 25px rgba(56, 189, 248, 0.4) !important;
+}
+
+.checkout-total p {
+  margin: 0.25rem 0 !important;
+  text-align: right !important;
+  color: #94adc5 !important;
+  font-family: "Inter", system-ui, sans-serif !important;
+  font-size: 0.85rem !important;
+}
+
+.checkout-total p span {
+  color: #cbd5e1 !important;
+  font-weight: 600 !important;
+}
+
+/* NÚT TIẾN HÀNH THANH TOÁN - CHUẨN AMBER THỂ THAO RỰC LỬA, CHỮ ĐẬM SẮC NÉT, VUÔNG VỨC 100% */
+html body.dock .content button.checkout-pay,
+html body.dock .content .checkout-pay,
+.checkout-page .checkout-pay,
+.checkout-pay {
+  width: 100% !important;
+  height: 52px !important;
+  min-height: 52px !important;
+  padding: 0 1.75rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.75rem !important;
+  background: #f59e0b !important;
+  border: 1px solid #fbbf24 !important;
+  color: #0b111a !important;
+  font-family: "Inter Tight", "Montserrat", system-ui, sans-serif !important;
+  font-size: 1rem !important;
+  font-weight: 900 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  border-radius: 0 !important;
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.35) !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+html body.dock .content button.checkout-pay:hover:not(:disabled),
+html body.dock .content .checkout-pay:hover:not(:disabled),
+.checkout-page .checkout-pay:hover:not(:disabled),
+.checkout-pay:hover:not(:disabled) {
+  background: #d97706 !important;
+  border-color: #f59e0b !important;
+  box-shadow: 0 8px 25px rgba(245, 158, 11, 0.5) !important;
+  transform: translateY(-2px) !important;
+}
+
+html body.dock .content button.checkout-pay:disabled,
+.checkout-pay:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+/* Logo & chứng nhận thanh toán */
+.checkout-provider {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  margin: 0 !important;
+  padding-top: 0.5rem !important;
+}
+
+.checkout-provider img {
+  height: 32px !important;
+  width: auto !important;
+}
+
+.checkout-provider p {
+  margin: 0 !important;
+  color: #64748b !important;
+  font-family: "Inter", system-ui, sans-serif !important;
+  font-size: 0.82rem !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.4rem !important;
+}
+
+.checkout-provider p i {
+  color: #38bdf8 !important;
+}
+
+/* Dòng lưu ý dưới cùng */
+.checkout-footer {
+  text-align: center !important;
+  color: #94adc5 !important;
+  font-family: "Inter", system-ui, sans-serif !important;
+  font-size: 0.88rem !important;
+  margin-top: 2rem !important;
+}
+
+/* ==================== TRIỆT TIÊU TOÀN BỘ BO GÓC TRÊN MÀN CHECKOUT ==================== */
+.checkout-page,
+.checkout-page *,
+.checkout-page .checkout-card,
+.checkout-page .checkout-banner,
+.checkout-page .checkout-clock,
+.checkout-page .checkout-voucher__input,
+.checkout-page .checkout-voucher input,
+.checkout-page .checkout-voucher button,
+.checkout-page .checkout-pay,
+.checkout-page .checkout-benefits li,
+.checkout-page .checkout-details,
+.checkout-page .checkout-prices,
+.checkout-page .checkout-total,
+.checkout-page .badge {
+  border-radius: 0 !important;
+}
+
+/* ==================== ĐẢM BẢO KHÔNG BỊ TRẮNG CARD TRONG BẤT KỲ THEME NÀO ==================== */
+html:not([data-theme="dark"]) .checkout-card,
+html[data-theme="dark"] .checkout-card,
+body.dock .checkout-card {
+  background: #0d1522 !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #f1f5f9 !important;
+}
+
+html:not([data-theme="dark"]) .checkout-heading h1,
+html[data-theme="dark"] .checkout-heading h1 {
+  color: #ffffff !important;
+}
+
+html:not([data-theme="dark"]) .checkout-heading p,
+html[data-theme="dark"] .checkout-heading p {
+  color: #94adc5 !important;
+}
+
+html:not([data-theme="dark"]) .checkout-back,
+html[data-theme="dark"] .checkout-back {
+  color: #38bdf8 !important;
+}
+
+/* Responsive cho thiết bị di động và tablet */
+@media (max-width: 900px) {
+  .checkout-page .content {
+    padding: 1.25rem 1rem 3.5rem !important;
+  }
+  .checkout-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem !important;
+  }
+  .checkout-card {
+    padding: 1.5rem !important;
+    gap: 1.25rem !important;
+  }
+  .checkout-heading h1 {
+    font-size: 1.5rem !important;
+  }
+  .checkout-banner {
+    padding: 1.25rem !important;
+  }
+  .checkout-banner h3 {
+    font-size: 1.35rem !important;
+  }
+  .checkout-total strong {
+    font-size: 1.65rem !important;
+  }
+}
+
+/* GIU NGUYEN NUT SANG TOI VA THONG TIN USER BO GOC TREN TOPBAR */
+.topbar .theme-toggle,
+.top-right .theme-toggle,
+.theme-toggle {
+  border-radius: 999px !important;
+}
+.theme-toggle__track {
+  border-radius: 999px !important;
+}
+.theme-toggle__knob {
+  border-radius: 50% !important;
+}
+.topbar .tb-user,
+.top-right .tb-user,
+.tb-user {
+  border-radius: 999px !important;
+}
