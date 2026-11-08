@@ -17,11 +17,18 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 
 /**
- * MÀN GÓI CỦA TÔI (khách) — GET /customer/bookings[?package=<SubscriptionId>|single]
- * Chỉ có doGet (màn chỉ xem, không có form POST).
- *   header:   CustomerDashboardService.getDashboard → CustomerDashboardView → attribute "dashboard" (mã khách, quyền vào gym hôm nay)
- *   nội dung: MyBookingService.getMyBookings → ServiceResult<MyBookingView> → attribute "booking" (lỗi → "bookingError")
- *   → forward /WEB-INF/jsp/customer/my-bookings.jsp
+ * SERVLET MÀN GÓI CỦA TÔI (khách) — /customer/bookings[?package=<SubscriptionId>|single] (UC-35 xem gói PT / buổi lẻ).
+ *
+ * VIỆC CỦA SERVLET: đọc tham số → gọi Service → đặt attribute → forward JSP. Màn chỉ xem, không có form POST.
+ * TRƯỚC SERVLET: CustomerAreaFilter chặn vai trò khác.
+ *
+ *   URL                                          Servlet gọi                                         Kết quả
+ *   GET  /customer/bookings                       doGet → myBookingService.getMyBookings              forward my-bookings.jsp ("booking")
+ *   GET  /customer/bookings?package=<Id>|single   như trên, chọn gói đang xem / buổi lẻ                như trên
+ *   (cùng lần GET)                                loadHeader → CustomerDashboardService.getDashboard  "dashboard": mã khách, quyền vào gym hôm nay
+ *
+ * BỐ CỤC FILE — mỗi HÀM CHÍNH đứng trước, các hàm phụ của nó nằm ngay bên dưới:
+ *   HÀM CHÍNH 1  doGet   dựng cả màn   → getAccountId, loadHeader, loadBookings, setPageInfo
  */
 @WebServlet("/customer/bookings")
 public class MyBookingServlet extends HttpServlet {
@@ -31,31 +38,42 @@ public class MyBookingServlet extends HttpServlet {
     private final CustomerDashboardService dashboardService = new CustomerDashboardService();
     private final MyBookingService bookingService = new MyBookingService();
 
-    // GET /customer/bookings: dựng cả màn.
+
+
+    // ============================================================================================================
+    // HÀM CHÍNH 1. doGet — dựng cả màn Gói của tôi
+    //   Ai gọi: menu "Gói của tôi", link từ Dashboard khách  ·  Ra: forward my-bookings.jsp
+    //   Hàm phụ ngay dưới, theo thứ tự doGet gọi: getAccountId → loadHeader → loadBookings → setPageInfo
+    // ============================================================================================================
+
+    /**
+     * HÀM CHÍNH 1 — dựng cả màn Gói của tôi.
+     *   Ai gọi: menu "Gói của tôi", link từ Dashboard khách
+     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // B1: chưa đăng nhập → /login (đăng nhập xong quay lại đúng trang này)
+        // B1: chưa đăng nhập → về trang đăng nhập
         Integer accountId = getAccountId(request);
         if (accountId == null) {
             RequestUtil.redirect(request, response, "/login?returnUrl=" + PAGE_URL);
             return;
         }
 
-        // B2: dữ liệu khung "Vào phòng tập" + mã khách → "dashboard"
+        // B2: khung "Vào phòng tập" + mã khách
         loadHeader(request, accountId);
-        // B3: dữ liệu gói / buổi → "booking" (hoặc "bookingError")
+
+        // B3: gói và buổi tập
         loadBookings(request, accountId);
-        // B4: tô menu "Gói của tôi" + class giao diện
+
+        // B4: tô menu
         setPageInfo(request);
 
-        // B5: hiện my-bookings.jsp
+        // B5: hiện trang
         RequestUtil.forward(request, response, VIEW);
     }
 
-    /**
-     * HÀM PHỤ — AccountId trong session; null = chưa đăng nhập.
-     */
+    /** HÀM PHỤ (doGet B1) — AccountId trong session; null = chưa đăng nhập. */
     private Integer getAccountId(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         return session == null ? null : (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);

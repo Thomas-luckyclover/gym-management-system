@@ -53,7 +53,6 @@ import java.util.logging.Logger;
  * DTO TRẢ VỀ: ExerciseLibraryView (biến JSP "library") — xem PHỤ LỤC ở cuối file.
  */
 public class ExerciseLibraryService {
-
     // ================================================================================================================
     // HẰNG SỐ + BIẾN DÙNG CHUNG
     // ================================================================================================================
@@ -148,8 +147,7 @@ public class ExerciseLibraryService {
     // Client gọi API wger. KHÔNG tạo tại chỗ mà để constructor gán → thay được từ bên ngoài (test truyền client giả).
     private final WgerClient wgerClient;
 
-    /** Constructor app thật dùng (Servlet gọi new ExerciseLibraryService()) → tạo WgerClient thật rồi chuyển sang constructor dưới. 
-     */
+    /** Constructor app thật dùng (Servlet gọi new ExerciseLibraryService()) → tạo WgerClient thật rồi chuyển sang constructor dưới. */
     public ExerciseLibraryService() {
         this(new WgerClient());
     }
@@ -158,53 +156,45 @@ public class ExerciseLibraryService {
      * Constructor nhận WgerClient từ ngoài (dependency injection qua constructor).
      * Không ghi public → chỉ cùng package (file test) gọi được; test truyền client giả để không gọi wger thật qua mạng.
      * (Hiện chưa có test nào dùng — chuẩn bị sẵn để test syncIfNeeded.)
-        Dependency injection (DI), tạm dịch “tiêm phụ thuộc”, nghĩa là: một class không tự tạo thứ nó cần dùng, mà nhận thứ đó từ bên ngoài đưa vào.
-        Phụ thuộc (dependency): thứ một class cần để làm việc. ExerciseLibraryService cần WgerClient để gọi wger, nên WgerClient là phụ thuộc của nó.
-        Tiêm (injection): đưa phụ thuộc đó vào từ bên ngoài, thường qua constructor.
+     *
+     * Dependency injection (DI), tạm dịch "tiêm phụ thuộc": một class không tự tạo thứ nó cần dùng, mà nhận thứ đó từ bên ngoài đưa vào.
+     *   Phụ thuộc (dependency): thứ một class cần để làm việc — ExerciseLibraryService cần WgerClient để gọi wger.
+     *   Tiêm (injection): đưa phụ thuộc đó vào từ bên ngoài, thường qua constructor.
      */
     ExerciseLibraryService(WgerClient wgerClient) {
         this.wgerClient = wgerClient;
     }
 
-    // ================================================================================================================
-    // PHẦN 1. HÀM CHÍNH — getPage
-    //   Ai gọi: ExerciseLibraryServlet.doGet  ·  Hàm phụ: syncIfNeeded (PHẦN 2) + các hàm static ở PHẦN 3
-    // ================================================================================================================
+
 
     /**
-     * HÀM CHÍNH — mở trang thư viện, lọc, tìm, đổi trang (mọi thao tác đều là GET cùng URL, thêm tham số).
-     *   AI GỌI   ExerciseLibraryServlet.doGet
-     *   VÀO      accountId (từ session, KHÔNG lấy từ URL) · isPt (URL bắt đầu /pt/, PtAreaFilter đã kiểm vai trò)
-     *            · q, category, equipment, sort, page = CHỮ THÔ trên URL (Service tự làm sạch, giá trị lạ → mặc định)
-     *            · now = giờ Việt Nam (DateTimeUtil.now())
-     *   RA       ok(view)  → màn khóa (khách chưa đủ quyền, view.access ≠ OPEN) HOẶC thư viện đầy đủ
-     *            fail(MSG306) → thư viện còn trống mà wger lỗi · fail(MSG04) → lỗi DB
-     *   BƯỚC     B1 kiểm quyền (chỉ khách) → bị khóa thì return luôn, không gọi wger, không đọc bài
-     *            B2 đồng bộ wger nếu bảng quá 1 ngày (lỗi → giữ bản cũ + cảnh báo)
-     *            B3 đọc bộ lọc trên URL
-     *            B4 đếm + lấy đúng 1 trang (12 bài) ở SQL, điền nhãn tiếng Việt, gán ảnh minh họa
-     *            B5 dữ liệu cho bộ lọc (chip nhóm cơ, ô dụng cụ, ô sắp xếp) + tổng số bài
+     * HÀM CHÍNH 1 — mở trang thư viện, lọc, tìm, đổi trang (mọi thao tác là GET cùng URL).
+     *   Ai gọi: ExerciseLibraryServlet.doGet
+     *   Trả về: ok(view) — màn khóa nếu khách chưa có gói mở khóa · lỗi khi thư viện trống / lỗi hệ thống
      */
-    public ServiceResult<ExerciseLibraryView> getPage(int accountId, boolean isPt, String q, String category,
-            String equipment, String sort, String page, LocalDateTime now) {
+    public ServiceResult<ExerciseLibraryView> getPage(
+            int accountId,
+            boolean isPt,
+            String q,
+            String category,
+            String equipment,
+            String sort,
+            String page,
+            LocalDateTime now) {
         try {
             ExerciseLibraryView view = new ExerciseLibraryView();
             view.setPt(isPt);                                    // JSP: PT thì bỏ nút "Xem các gói"
 
-            // ============================================================
-            // B1: KIỂM THẺ Ở CỬA — chỉ kiểm khách, PT vào thẳng.
-            //   Chỉ return sớm khi: là khách VÀ không phải OPEN. Khách OPEN đi tiếp B2 giống PT.
-            //   Bị khóa vẫn trả ok (màn khóa là màn bình thường, không phải lỗi đỏ).
-            // ============================================================
+            // B1: khách phải có gói mở khóa thư viện (PT vào thẳng)
             if (!isPt) {
-                // 1.1 Lấy hết các gói (có đặc quyền thư viện) khách này đứng tên hoặc đi kèm gói đôi, bỏ gói Cancelled.
+                // Các gói có đặc quyền của khách
                 List<Period> periods = libraryDAO.findUnlockPeriods(accountId);
-                // 1.2 Hôm nay có gói nào dùng được không (Active/Frozen + hôm nay trong khoảng ngày)? có → gói đó, không → null.
+                // Hôm nay có gói nào dùng được không
                 Period decided = decideAccess(periods, now.toLocalDate());
-                // 1.3 Xếp khách vào 1 trong 4 loại: OPEN / NOT_STARTED / EXPIRED / NEVER.
+                // Xếp loại: mở / chưa tới ngày / hết hạn / chưa mua
                 Access access = accessOf(decided, periods, now.toLocalDate());
                 if (access != Access.OPEN) {
-                    // 1.4 Dựng màn khóa rồi DỪNG.
+                    // Chưa mở → dựng màn khóa rồi dừng
                     view.setAccess(access);                                              // JSP: library.open = false → khối màn khóa
                     view.setLockDate(lockDateOf(access, periods, now.toLocalDate()));    // ngày hết hạn / ngày bắt đầu (ghép vào câu)
                     view.setLockMessage(lockMessage(access, view.getLockDate()));        // câu giải thích theo từng loại
@@ -213,66 +203,46 @@ public class ExerciseLibraryService {
                 }
             }
 
-            // ============================================================
-            // B2: ĐẢM BẢO CÓ DỮ LIỆU BÀI TẬP.
-            //   Coi syncIfNeeded như hộp đen:
-            //     + dữ liệu còn mới (chưa quá 1 ngày) → không làm gì;
-            //     + dữ liệu cũ → gọi wger tải lại, ghi lại cả bảng Exercises;
-            //     + gọi wger lỗi → giữ bản cũ.
-            //   Trả về lần tải THÀNH CÔNG gần nhất; null = bảng trống VÀ vừa gọi wger cũng lỗi.
-            // ============================================================
+            // B2: dữ liệu quá 1 ngày → tải lại từ wger (lỗi thì giữ bản cũ)
             LocalDateTime lastSynced = syncIfNeeded(now);
             if (lastSynced == null) {
-                // Không có bài nào để hiện (thường chỉ gặp lúc mới cài app mà wger đang lỗi) → khung đỏ + nút Tải lại.
+                // Thư viện trống và wger lỗi → báo lỗi
                 return ServiceResult.fail(Messages.MSG306_EXERCISE_LIBRARY_UNAVAILABLE);
             }
-            // "05/11/2026 09:00" → JSP in "823 bài · cập nhật 05/11/2026 09:00".
             view.setSyncedAtText(DateTimeUtil.formatDateTime(lastSynced));
-            // stale (dữ liệu cũ) = lần thử tải gần nhất LỖI  VÀ  dữ liệu đang hiện đã quá 1 ngày
-            //   → JSP thêm "Chưa cập nhật được từ wger, đang hiện dữ liệu lúc …".
+            // Lần tải gần nhất lỗi và dữ liệu đã cũ → hiện cảnh báo
             view.setStale(lastFailureAt != null && needsSync(lastSynced, now));
 
-            // ============================================================
-            // B3: ĐỌC BỘ LỌC TRÊN URL (giá trị lạ → bỏ lọc / mặc định, không báo lỗi).
-            // ============================================================
+            // B3: đọc bộ lọc trên URL (giá trị lạ → bỏ lọc)
             String query = cleanQuery(q);                         // ô tìm tên: bỏ khoảng trắng thừa, rỗng → null, > 50 ký tự → cắt
             Integer categoryId = parseCategory(category);         // chỉ nhận 8 mã nhóm cơ, lạ → null
             Integer equipmentId = parseEquipment(equipment);      // chỉ nhận 12 mã dụng cụ, lạ → null
             String sortKey = parseSort(sort);                     // chỉ "image" hoặc "name"
-            // Không gõ → null (DAO không thêm điều kiện tên). Có gõ → "%chữ%" (SqlUtil escape % _ [ để gõ gì tìm đúng cái đó).
             String namePattern = query == null ? null : SqlUtil.toContainsPattern(query);
-            // Giá trị đã làm sạch → JSP điền lại vào form + ghép link chip / phân trang.
             view.setQuery(query);
             view.setCategoryId(categoryId);
             view.setEquipmentId(equipmentId);
             view.setSort(sortKey);
 
-            // ============================================================
-            // B4: ĐẾM + LẤY 1 TRANG (12 bài).
-            //   SQL chỉ trả đúng 12 bài của trang đang xem (OFFSET … FETCH), không lấy hết rồi cắt trong Java.
-            //   Ví dụ 25 bài, xem trang 3: totalPages = 3, offset = 24 → lấy bài thứ 25.
-            // ============================================================
-
-            // 4.1 Tổng số bài khớp bộ lọc (mọi trang). SQL: SELECT COUNT(*) FROM Exercises WHERE … (buildWhere)
+            // B4: đếm bài khớp lọc rồi lấy đúng 1 trang (12 bài)
             int total = libraryDAO.countFiltered(namePattern, categoryId, equipmentId);
-            // 4.2 Số trang = làm tròn LÊN (total ÷ 12); 0 bài vẫn là 1 trang. 25 bài → (25 + 11) / 12 = 3.
             int totalPages = totalPages(total);
-            // 4.3 Trang đang xem: ?page= sai / < 1 → 1, rồi KẸP không vượt trang cuối (?page=999 khi có 3 trang → 3).
+            // Trang sai → 1, quá trang cuối → trang cuối
             int pageNumber = Math.min(parsePage(page), totalPages);
-            // 4.4 Bỏ qua bao nhiêu bài trước trang này: trang 1 → 0 · trang 2 → 12 · trang 3 → 24.
             int offset = (pageNumber - 1) * PAGE_SIZE;
-            // 4.5 Lấy đúng 12 bài: cùng bộ lọc + ORDER BY cố định (whitelist) + OFFSET ? ROWS FETCH NEXT ? ROWS ONLY.
-            List<ExerciseItem> items = libraryDAO.findPage(namePattern, categoryId, equipmentId,
-                    orderByOf(sortKey), offset, PAGE_SIZE);
-            // 4.6 Đổi MÃ → CHỮ tiếng Việt cho từng bài: 11 → "Ngực" · [1, 8] → "Thanh đòn, Ghế tập" · cơ chính.
+            List<ExerciseItem> items = libraryDAO.findPage(
+                    namePattern,
+                    categoryId,
+                    equipmentId,
+                    orderByOf(sortKey),
+                    offset,
+                    PAGE_SIZE);
+            // Đổi mã → chữ tiếng Việt (nhóm cơ, dụng cụ)
             for (ExerciseItem item : items) {
                 fillLabels(item);
             }
-            // 4.7 Bài wger KHÔNG có ảnh → ảnh minh họa trong kho 194 ảnh của dự án (free-exercise-db, public domain):
-            //     khớp đúng tên động tác trước, không có thì ảnh cùng nhóm cơ; 12 bài trên 1 trang không trùng ảnh.
-            //     Bài đã có ảnh wger thì giữ nguyên.
-            ExerciseImagePool.assign(items); // phát ảnh minh họa cho những bài wger không có ảnh” trên 12 bài của trang đang xem
-            // 4.8 Đưa kết quả vào view.
+            // Bài không có ảnh → gán ảnh minh họa (không trùng trong trang)
+            ExerciseImagePool.assign(items);
             view.setItems(items);                                 // lưới thẻ bài
             view.setTotal(total);                                 // "Tìm thấy 25 bài"
             view.setPage(pageNumber);                             // nút trang đang sáng
@@ -280,24 +250,20 @@ public class ExerciseLibraryService {
             view.setFirstIndex(total == 0 ? 0 : offset + 1);      // "Hiện 13–24 / 25": STT bài đầu trang (0 bài → 0)
             view.setLastIndex(offset + items.size());             //                    STT bài cuối trang
 
-            // ============================================================
-            // B5: DỮ LIỆU CHO BỘ LỌC + TỔNG SỐ BÀI.
-            // ============================================================
-            // 5.1 Tổng số bài cả thư viện, KHÔNG tính bộ lọc → "823 bài · cập nhật …".
+            // B5: dữ liệu cho bộ lọc: tổng số bài, chip nhóm cơ, dụng cụ, sắp xếp
             view.setLibraryTotal(libraryDAO.countAll());
-            // 5.2 8 chip nhóm cơ kèm số bài ("Ngực 78"). SQL: SELECT CategoryId, COUNT(*) … GROUP BY CategoryId
             view.setCategories(categoryOptions(libraryDAO.countByCategory(), categoryId));
-            // 5.3 12 dụng cụ cho ô chọn (từ EQUIPMENT_LABELS, không đọc DB).
             view.setEquipments(equipmentOptions(equipmentId));
-            // 5.4 2 cách sắp xếp: "Tên A → Z" / "Có hình trước".
             view.setSorts(sortOptions(sortKey));
             return ServiceResult.ok(view);
         } catch (SQLException exception) {
-            // Lỗi DB ở bất kỳ bước nào → "Hệ thống đang bận" (MSG04), JSP hiện khung đỏ.
+            // Lỗi DB → báo hệ thống đang bận
             exception.printStackTrace();
             return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
         }
     }
+
+
 
     // ================================================================================================================
     // PHẦN 2. ĐỒNG BỘ wger → bảng Exercises
@@ -319,26 +285,23 @@ public class ExerciseLibraryService {
      *   LỖI LIÊN TỤC  cứ 5 phút, người mở trang kế tiếp thử lại 1 lần; giữa các lần thử luôn hiện bản tốt gần nhất + cảnh báo.
      */
     LocalDateTime syncIfNeeded(LocalDateTime now) throws SQLException {
-        // Bước 1–2: kiểm nhanh, chưa khóa.
+        // B1: còn mới, hoặc vừa lỗi chưa quá 5 phút → không tải
         LocalDateTime lastSynced = libraryDAO.findLastSyncedAt();
         if (!needsSync(lastSynced, now) || !canRetry(lastFailureAt, now)) {
             return lastSynced;
         }
 
-        // Bước 3: nhiều người mở trang cùng lúc → chỉ 1 request gọi wger; người sau vào thấy đã có kết quả thì ra ngay.
-        //   Người sau KHÔNG bị từ chối, chỉ xếp hàng lần lượt; ngoài đoạn này cả trang vẫn chạy song song.
+        // B2: nhiều người mở cùng lúc → chỉ 1 người tải, người sau chờ rồi dùng kết quả
         synchronized (SYNC_LOCK) {
             lastSynced = libraryDAO.findLastSyncedAt();
             if (!needsSync(lastSynced, now) || !canRetry(lastFailureAt, now)) {
                 return lastSynced;
             }
             try {
-                // Bước 4: tải hết bài từ API (chưa đụng DB). Lỗi mạng / quá 20s / HTTP ≠ 200 / JSON sai → WgerUnavailableException.
+                // B3: tải hết bài từ wger
                 List<ExerciseItem> items = wgerClient.fetchAll();
 
-                // Bước 5: xóa bản cũ + ghi bản mới trong 1 transaction (cùng 1 connection, tắt autoCommit).
-                //   Xóa hết rồi ghi lại → thêm / sửa / xóa bên wger đều theo về. Bảng không có khóa ngoại, ExerciseId lấy từ wger
-                //   (không tự tăng) → xóa an toàn, mã không đổi, bảng không phình.
+                // B4: xóa bản cũ + ghi bản mới trong 1 transaction
                 try (Connection connection = DBContext.getConnection()) {
                     connection.setAutoCommit(false);
                     try {
@@ -350,17 +313,20 @@ public class ExerciseLibraryService {
                         throw exception;
                     }
                 }
-                // Bước 6: thành công → xóa mốc lỗi (hết cảnh báo "dữ liệu cũ").
+
+                // B5: thành công → xóa mốc lỗi
                 lastFailureAt = null;
                 return now;
             } catch (WgerUnavailableException | SQLException exception) {
-                // Bước 7: 1 catch bắt cả lỗi wger (bước 4) lẫn lỗi DB (bước 5, đã rollback).
+                // Lỗi wger hoặc DB → ghi log, nhớ mốc lỗi, giữ bản cũ
                 LOGGER.log(Level.WARNING, "Không đồng bộ được Thư viện bài tập từ wger.", exception);
                 lastFailureAt = now;                                    // 5 phút tới không thử lại
                 return lastSynced;                                      // giờ của bản cũ (bảng trống → null → MSG306)
             }
         }
     }
+
+
 
     // ================================================================================================================
     // PHẦN 3. HÀM PHỤ TÍNH TOÁN — static, KHÔNG đọc DB (ExerciseLibraryServiceTest gọi thẳng, truyền dữ liệu giả)
@@ -555,7 +521,11 @@ public class ExerciseLibraryService {
         for (Map.Entry<Integer, String> entry : CATEGORY_LABELS.entrySet()) {
             int count = counts.getOrDefault(entry.getKey(), 0);
             boolean isSelected = entry.getKey().equals(selected);
-            options.add(new Option(String.valueOf(entry.getKey()), entry.getValue(), count, isSelected));
+            options.add(new Option(
+                    String.valueOf(entry.getKey()),
+                    entry.getValue(),
+                    count,
+                    isSelected));
         }
         return options;
     }
@@ -565,7 +535,11 @@ public class ExerciseLibraryService {
         List<Option> options = new ArrayList<>();
         for (Map.Entry<Integer, String> entry : EQUIPMENT_LABELS.entrySet()) {
             boolean isSelected = entry.getKey().equals(selected);
-            options.add(new Option(String.valueOf(entry.getKey()), entry.getValue(), -1, isSelected));
+            options.add(new Option(
+                    String.valueOf(entry.getKey()),
+                    entry.getValue(),
+                    -1,
+                    isSelected));
         }
         return options;
     }
@@ -573,8 +547,16 @@ public class ExerciseLibraryService {
     /** HÀM PHỤ (getPage B5.4) — 2 cách sắp xếp cho ô chọn. */
     static List<Option> sortOptions(String selected) {
         List<Option> options = new ArrayList<>();
-        options.add(new Option(SORT_NAME, "Tên A → Z", -1, SORT_NAME.equals(selected)));
-        options.add(new Option(SORT_IMAGE, "Có hình trước", -1, SORT_IMAGE.equals(selected)));
+        options.add(new Option(
+                SORT_NAME,
+                "Tên A → Z",
+                -1,
+                SORT_NAME.equals(selected)));
+        options.add(new Option(
+                SORT_IMAGE,
+                "Có hình trước",
+                -1,
+                SORT_IMAGE.equals(selected)));
         return options;
     }
 

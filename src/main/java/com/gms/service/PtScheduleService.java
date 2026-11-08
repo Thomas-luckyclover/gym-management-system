@@ -28,36 +28,66 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * MÀN LỊCH DẠY — dựng lịch tuần (getWeek) và Công bố / gỡ khung rảnh (publish).
- * Hàm static dùng chung: parseOpeningHours (P-19), isOnLeave (khung trùng ca nghỉ), weekStartOf — PtSaleService, PtSessionHandle dùng lại.
+ * SERVICE MÀN LỊCH DẠY PT — /pt/schedule: dựng lịch tuần (getWeek) và Công bố / gỡ khung rảnh (publish).
+ *
+ * AI GỌI SERVICE NÀY?  PtScheduleServlet (getWeek, publish, parseDate). Hàm static dùng lại ở màn khác:
+ *                      parseOpeningHours, isOnLeave, weekStartOf → PtSaleService, PtSessionHandleService.
+ * SERVICE GỌI AI?      PtScheduleDAO (PT, buổi, khung, đơn nghỉ, ngày giờ đặc biệt, ghi TimeSlots) · SystemConfigService (P-06, P-19).
+ *
+ * BỐ CỤC FILE — mỗi HÀM CHÍNH đứng trước, các hàm phụ của nó nằm ngay bên dưới:
+ *   HÀM CHÍNH 1  getWeek   dựng lịch 1 tuần (T2 → CN)        → buildEmptyWeek, buildDay, dayName, buildLeaveLabel, buildLeaveDetails,
+ *                                                              isActiveLeave, setAddRange, merge, fillWeek, assignLanes, closeCluster,
+ *                                                              classify, sessionLabel
+ *   HÀM CHÍNH 2  publish   nút "Công bố": thêm + gỡ khung     → publishInTransaction, parseRemoveIds, buildDrafts, validateDrafts
+ *   DÙNG CHUNG             isOnLeave, parseDate, weekStartOf, parseOpeningHours, endHour, minuteOfDay, roundUpTo15, roundDownTo15
+ *
+ * LUẬT QUAN TRỌNG
+ *   - Đơn nghỉ CHỜ DUYỆT cũng khóa khung trống trùng ca (isActiveLeave); buổi đã có khách không tự hủy, chỉ báo "trùng ca nghỉ".
+ *   - Công bố là 1 transaction: 1 khung lỗi → không lưu khung nào. Khóa dòng PT trước khi ghi (2 tab cùng ghi phải xếp hàng).
+ *   - Khung đã gỡ (Withdrawn) đúng giờ được mở lại thay vì thêm dòng mới.
+ *   - Các hàm static (buildEmptyWeek, classify, assignLanes, validateDrafts…) không đọc DB → test gọi thẳng.
  */
 public class PtScheduleService {
     private final PtScheduleDAO scheduleDAO = new PtScheduleDAO();
     private final SystemConfigService configService = new SystemConfigService();
 
-    // Dựng lịch 1 tuần (T2 → CN) chứa ngày anyDay. Trả về: ok(PtScheduleWeek) | fail(MSG07 không phải PT, MSG04 lỗi).
+
+
+    // ============================================================================================================
+    // HÀM CHÍNH 1. getWeek — dựng lịch 1 tuần (T2 → CN) chứa ngày đang xem
+    //   Ai gọi: PtScheduleServlet.loadWeek  ·  Ra: PtScheduleWeek → JSP biến "week"
+    //   Hàm phụ ngay dưới, theo thứ tự getWeek gọi:
+    //     buildEmptyWeek → buildDay → dayName · buildLeaveLabel / buildLeaveDetails → isActiveLeave · setAddRange
+    //     merge (2 bản) → fillWeek → classify → sessionLabel · assignLanes → closeCluster
+    // ============================================================================================================
+
+    /**
+     * HÀM CHÍNH 1 — dựng lịch 1 tuần (T2 → CN) chứa ngày đang xem.
+     *   Ai gọi: PtScheduleServlet.loadWeek
+     *   Trả về: ok(PtScheduleWeek) | lỗi (không phải PT / lỗi hệ thống)
+     */
     public ServiceResult<PtScheduleWeek> getWeek(int accountId, LocalDate anyDay, LocalDateTime now) {
         try {
-            // B1: tài khoản → EmployeeId của PT đang làm (PtScheduleDAO.findPtEmployeeId); không phải → MSG07
+            // B1: tài khoản phải là PT đang làm
             Integer ptId = scheduleDAO.findPtEmployeeId(accountId);
             if (ptId == null) {
                 return ServiceResult.fail(Messages.MSG07_NO_PERMISSION);
             }
 
-            // B2: khoảng tuần thứ Hai → Chủ nhật; đọc P-06 (thời lượng buổi) + P-19 (giờ mở cửa)
+            // B2: tìm thứ Hai → Chủ nhật, đọc thời lượng buổi + giờ mở cửa
             LocalDate monday = weekStartOf(anyDay);
             LocalDate sunday = monday.plusDays(6);
 
             int minutes = configService.getInt(SystemConfigService.SESSION_DURATION_MINUTES);
             LocalTime[] hours = parseOpeningHours(configService.getString(SystemConfigService.OPENING_HOURS));
 
-            // B3: đọc DB (PtScheduleDAO): buổi có khách · khung Free/Held · đơn nghỉ · ngày giờ đặc biệt
+            // B3: đọc buổi có khách, khung trống, đơn nghỉ, ngày giờ đặc biệt
             List<PtScheduleItem> sessions = scheduleDAO.findSessions(ptId, monday, sunday);
             List<PtScheduleItem> openSlots = scheduleDAO.findOpenSlots(ptId, monday, sunday);
             List<LeaveInfo> leaves = scheduleDAO.findLeaves(ptId, monday, sunday);
             List<HourException> exceptions = scheduleDAO.findHourExceptions(monday, sunday);
 
-            // B4: 7 ngày rỗng (giờ mở cửa, phòng nghỉ, nhãn nghỉ phép, khoảng được thêm khung) — buildEmptyWeek
+            // B4: dựng 7 ngày rỗng
             PtScheduleWeek week = buildEmptyWeek(
                     monday,
                     now,
@@ -67,7 +97,7 @@ public class PtScheduleService {
                     hours[0],
                     hours[1]);
 
-            // B5: gộp buổi + khung, xếp theo giờ → phân loại từng ô và xếp vào đúng ngày (fillWeek)
+            // B5: gộp buổi + khung rồi xếp vào từng ngày
             List<PtScheduleItem> allItems = merge(sessions, openSlots, now);
 
             fillWeek(
@@ -87,17 +117,22 @@ public class PtScheduleService {
     /**
      * HÀM PHỤ (getWeek B4) — tuần chưa có ô: ngày đầu/cuối, tuần trước/sau, trục giờ, 7 PtScheduleDay.
      */
-    static PtScheduleWeek buildEmptyWeek(LocalDate monday, LocalDateTime now,
-            List<HourException> exceptions, List<LeaveInfo> leaves, int sessionMinutes,
-            LocalTime open, LocalTime close) {
-        // B1: cấu hình P-06 / P-19 sai → báo lỗi (Service trả MSG04)
+    static PtScheduleWeek buildEmptyWeek(
+            LocalDate monday,
+            LocalDateTime now,
+            List<HourException> exceptions,
+            List<LeaveInfo> leaves,
+            int sessionMinutes,
+            LocalTime open,
+            LocalTime close) {
+        // B1: cấu hình giờ sai → báo lỗi
         boolean badDuration = sessionMinutes <= 0;
         boolean badHours = !close.isAfter(open);
         if (badDuration || badHours) {
             throw new IllegalStateException("Cấu hình lịch dạy không hợp lệ");
         }
 
-        // B2: thông tin tuần + trục giờ mặc định theo P-19
+        // B2: thông tin tuần + trục giờ mặc định
         PtScheduleWeek week = new PtScheduleWeek();
         week.setWeekStart(monday);
         week.setWeekEnd(monday.plusDays(6));
@@ -108,7 +143,7 @@ public class PtScheduleService {
         week.setAxisStartHour(open.getHour());
         week.setAxisEndHour(endHour(close));
 
-        // B3: 7 ngày: buildDay (giờ ngày đó) · nhãn + chi tiết nghỉ phép · khoảng được thêm khung (setAddRange); nới trục giờ theo từng ngày
+        // B3: dựng từng ngày: giờ mở cửa, nghỉ phép, khoảng được thêm khung
         List<PtScheduleDay> days = new ArrayList<>();
         for (int i = 0; i < 7; i++) {
             PtScheduleDay day = buildDay(
@@ -136,8 +171,12 @@ public class PtScheduleService {
      * HÀM PHỤ (buildEmptyWeek, validateDrafts) — 1 ngày: tên thứ, hôm nay / đã qua, giờ mở cửa theo P-19;
      * ngày có OperatingHourExceptions → đổi giờ hoặc "Phòng nghỉ" cả ngày. Giờ ngoại lệ sai → lỗi.
      */
-    static PtScheduleDay buildDay(LocalDate date, LocalDate today, LocalTime open,
-            LocalTime close, List<HourException> exceptions) {
+    static PtScheduleDay buildDay(
+            LocalDate date,
+            LocalDate today,
+            LocalTime open,
+            LocalTime close,
+            List<HourException> exceptions) {
         PtScheduleDay day = new PtScheduleDay();
         day.setDate(date);
         day.setDayName(dayName(date));
@@ -167,6 +206,15 @@ public class PtScheduleService {
         return day;
     }
 
+    /** HÀM PHỤ (buildDay) — "Thứ 2" … "Chủ nhật". */
+    private static String dayName(LocalDate date) {
+        DayOfWeek dayOfWeek = date.getDayOfWeek();
+        if (dayOfWeek == DayOfWeek.SUNDAY) {
+            return "Chủ nhật";
+        }
+        return "Thứ " + (dayOfWeek.getValue() + 1);
+    }
+
     /**
      * HÀM PHỤ (buildEmptyWeek) — "Nghỉ phép ca sáng · chờ duyệt; …" cho các đơn Pending/Approved của ngày. "" = không nghỉ.
      */
@@ -193,13 +241,6 @@ public class PtScheduleService {
     }
 
     /**
-     * HÀM PHỤ — đơn nghỉ còn hiệu lực = Pending hoặc Approved (đơn chờ duyệt cũng khóa khung).
-     */
-    private static boolean isActiveLeave(LeaveInfo leave) {
-        return "Pending".equals(leave.getStatus()) || "Approved".equals(leave.getStatus());
-    }
-
-    /**
      * HÀM PHỤ (buildEmptyWeek) — nhãn + "Lý do: …" của từng đơn, hiện khi mở chi tiết nghỉ phép.
      */
     static String buildLeaveDetails(LocalDate date, List<LeaveInfo> leaves) {
@@ -212,6 +253,11 @@ public class PtScheduleService {
             }
         }
         return String.join("\n\n", details);
+    }
+
+    /** HÀM PHỤ (buildLeaveLabel, buildLeaveDetails, isOnLeave) — đơn nghỉ còn hiệu lực = Pending hoặc Approved (đơn chờ duyệt cũng khóa khung). */
+    private static boolean isActiveLeave(LeaveInfo leave) {
+        return "Pending".equals(leave.getStatus()) || "Approved".equals(leave.getStatus());
     }
 
     /**
@@ -314,6 +360,7 @@ public class PtScheduleService {
 
             item.setStartMinute(minuteOfDay(item.getStartTime()) - axisStartMinute);
 
+            // Ô chồng giờ → chỉ cụm đó chia làn, ô khác vẫn rộng đủ cột
             for (PtScheduleDay day : week.getDays()) {
                 if (day.getDate().equals(item.getSlotDate())) {
                     day.getItems().add(item);
@@ -334,71 +381,6 @@ public class PtScheduleService {
     }
 
     /**
-     * HÀM PHỤ (fillWeek) — xếp làn cho các ô CHỒNG GIỜ trong 1 ngày, giống Google Calendar.
-     * Input: ô của 1 ngày. Output: mỗi ô có lane (làn thứ mấy) + laneCount (cụm có mấy làn) → JSP in --lane / --lanes.
-     *
-     * Ví dụ 1 ngày: 07:00–08:30 · 19:00–20:30 · 20:00–21:30
-     *   Cụm 1 = {07:00}            → 1 làn  → ô 07:00 rộng đủ cột
-     *   Cụm 2 = {19:00, 20:00}     → 2 làn  → 19:00 ở làn 0 (nửa trái), 20:00 ở làn 1 (nửa phải)
-     * Trước đây cột ngày là CSS grid tự thêm cột khi có ô chồng → MỌI ô trong ngày bị co (lỗi "1 cái co là tất cả co").
-     *
-     * B1: xếp ô theo giờ bắt đầu; cùng giờ thì ô đang chiếm giờ (khung trống / buổi Scheduled) đứng trước,
-     *     buổi đã hủy / vắng / check-in (chỉ để xem) dạt sang phải.
-     * B2: duyệt từng ô; ô bắt đầu khi cụm hiện tại đã kết thúc → chốt số làn cho cụm cũ, mở cụm mới.
-     * B3: đặt ô vào làn đầu tiên đã trống (làn kết thúc trước giờ bắt đầu ô); hết làn trống → mở làn mới.
-     * B4: chốt cụm cuối.
-     */
-    static void assignLanes(List<PtScheduleItem> items) {
-        // B1
-        List<PtScheduleItem> sorted = new ArrayList<>(items);
-        sorted.sort(Comparator.comparing(PtScheduleItem::getStartTime)
-                .thenComparing(item -> item.isBlocking() ? 0 : 1));
-
-        List<PtScheduleItem> cluster = new ArrayList<>();   // các ô của cụm đang xét
-        List<LocalTime> laneEnds = new ArrayList<>();       // giờ kết thúc ô cuối của từng làn trong cụm
-        LocalTime clusterEnd = null;                        // giờ kết thúc muộn nhất của cụm
-
-        for (PtScheduleItem item : sorted) {
-            // B2
-            boolean startsNewCluster = clusterEnd != null && !item.getStartTime().isBefore(clusterEnd);
-            if (startsNewCluster) {
-                closeCluster(cluster, laneEnds.size());
-                cluster.clear();
-                laneEnds.clear();
-                clusterEnd = null;
-            }
-
-            // B3
-            int lane = -1;
-            for (int i = 0; i < laneEnds.size(); i++) {
-                if (!laneEnds.get(i).isAfter(item.getStartTime())) {
-                    lane = i;
-                    break;
-                }
-            }
-            if (lane < 0) {
-                lane = laneEnds.size();
-                laneEnds.add(item.getEndTime());
-            } else {
-                laneEnds.set(lane, item.getEndTime());
-            }
-            item.setLane(lane);
-            cluster.add(item);
-            clusterEnd = clusterEnd == null || item.getEndTime().isAfter(clusterEnd) ? item.getEndTime() : clusterEnd;
-        }
-
-        // B4
-        closeCluster(cluster, laneEnds.size());
-    }
-
-    /** HÀM PHỤ (assignLanes) — ghi số làn của cụm vào mọi ô trong cụm (cụm rỗng thì thôi). */
-    private static void closeCluster(List<PtScheduleItem> cluster, int laneCount) {
-        for (PtScheduleItem item : cluster) {
-            item.setLaneCount(Math.max(1, laneCount));
-        }
-    }
-
-    /**
      * HÀM PHỤ (fillWeek) — quyết định 1 ô hiện thế nào:
      */
     static void classify(PtScheduleItem item, List<LeaveInfo> leaves, LocalDateTime now) {
@@ -414,7 +396,7 @@ public class PtScheduleService {
 
         boolean notStarted = start.isAfter(now);
 
-        // B1: có buổi → "booked", nhãn theo trạng thái buổi; Scheduled chưa bắt đầu → được bấm Xử lý (canHandle)
+        // B1: có buổi → ô "có khách"; buổi sắp tới thì bấm được để xử lý
         if (item.getSessionId() != null) {
             item.setKind("booked");
             item.setStatusLabel(sessionLabel(
@@ -427,14 +409,14 @@ public class PtScheduleService {
             return;
         }
 
-        // B2: khung đang giữ cho đơn tại quầy (Bán gói PT) → "held", "Đang giữ · đơn chờ thanh toán"
+        // B2: khung đang giữ cho đơn tại quầy → ô "đang giữ"
         if ("Held".equalsIgnoreCase(item.getKind())) {
             item.setKind("held");
             item.setStatusLabel("Đang giữ · đơn chờ thanh toán");
             return;
         }
 
-        // B3: khung trống trùng ca nghỉ → "locked", "Đã duyệt nghỉ" | "Chờ duyệt nghỉ"
+        // B3: khung trống trùng ca nghỉ → ô "tạm khóa"
         if (isOnLeave(item, leaves)) {
             item.setKind("locked");
             boolean approved = leaves.stream().anyMatch(leave -> "Approved".equals(leave.getStatus())
@@ -443,7 +425,7 @@ public class PtScheduleService {
             return;
         }
 
-        // B4: còn lại → "free", "Còn trống"; chưa bắt đầu → được tích Gỡ (canRemove)
+        // B4: còn lại → ô "còn trống"; chưa tới giờ thì gỡ được
         item.setKind("free");
         item.setStatusLabel("Còn trống");
         item.setCanRemove(notStarted);
@@ -453,8 +435,11 @@ public class PtScheduleService {
      * HÀM PHỤ (classify B1) — Scheduled: "Sắp tới" | "Đang diễn ra" | "Chưa chốt" (đã hết giờ, chờ JOB-04);
      * còn lại: "Đã check-in" | "Vắng" | "Đã hủy".
      */
-    private static String sessionLabel(PtScheduleItem item, LocalDateTime start,
-            LocalDateTime end, LocalDateTime now) {
+    private static String sessionLabel(
+            PtScheduleItem item,
+            LocalDateTime start,
+            LocalDateTime end,
+            LocalDateTime now) {
         Session.Status status = Session.Status.fromDbValue(item.getSessionStatus());
         if (status == null) {
             throw new IllegalStateException("Trạng thái buổi không hợp lệ: " + item.getSessionId());
@@ -479,31 +464,91 @@ public class PtScheduleService {
     }
 
     /**
-     * HÀM PHỤ (dùng chung) — khung có trùng đơn nghỉ không: FullDay · Morning (bắt đầu trước 13:00) · Afternoon (từ 13:00).
+     * HÀM PHỤ (fillWeek) — xếp làn cho các ô CHỒNG GIỜ trong 1 ngày, giống Google Calendar.
+     * Input: ô của 1 ngày. Output: mỗi ô có lane (làn thứ mấy) + laneCount (cụm có mấy làn) → JSP in --lane / --lanes.
+     *
+     * Ví dụ 1 ngày: 07:00–08:30 · 19:00–20:30 · 20:00–21:30
+     *   Cụm 1 = {07:00}            → 1 làn  → ô 07:00 rộng đủ cột
+     *   Cụm 2 = {19:00, 20:00}     → 2 làn  → 19:00 ở làn 0 (nửa trái), 20:00 ở làn 1 (nửa phải)
+     * Trước đây cột ngày là CSS grid tự thêm cột khi có ô chồng → MỌI ô trong ngày bị co (lỗi "1 cái co là tất cả co").
+     *
+     * B1: xếp ô theo giờ bắt đầu; cùng giờ thì ô đang chiếm giờ (khung trống / buổi Scheduled) đứng trước,
+     *     buổi đã hủy / vắng / check-in (chỉ để xem) dạt sang phải.
+     * B2: duyệt từng ô; ô bắt đầu khi cụm hiện tại đã kết thúc → chốt số làn cho cụm cũ, mở cụm mới.
+     * B3: đặt ô vào làn đầu tiên đã trống (làn kết thúc trước giờ bắt đầu ô); hết làn trống → mở làn mới.
+     * B4: chốt cụm cuối.
      */
-    static boolean isOnLeave(PtScheduleItem item, List<LeaveInfo> leaves) {
-        boolean morning = item.getStartTime().isBefore(AppConstants.AFTERNOON_SHIFT_START);
+    static void assignLanes(List<PtScheduleItem> items) {
+        // B1: xếp ô theo giờ bắt đầu
+        List<PtScheduleItem> sorted = new ArrayList<>(items);
+        sorted.sort(Comparator.comparing(PtScheduleItem::getStartTime)
+                .thenComparing(item -> item.isBlocking() ? 0 : 1));
 
-        for (LeaveInfo leave : leaves) {
-            boolean sameDay = item.getSlotDate().equals(leave.getLeaveDate());
-            if (!sameDay || !isActiveLeave(leave)) {
-                continue;
+        List<PtScheduleItem> cluster = new ArrayList<>();   // các ô của cụm đang xét
+        List<LocalTime> laneEnds = new ArrayList<>();       // giờ kết thúc ô cuối của từng làn trong cụm
+        LocalTime clusterEnd = null;                        // giờ kết thúc muộn nhất của cụm
+
+        for (PtScheduleItem item : sorted) {
+            // B2: ô không chồng cụm cũ → chốt cụm cũ, mở cụm mới
+            boolean startsNewCluster = clusterEnd != null && !item.getStartTime().isBefore(clusterEnd);
+            if (startsNewCluster) {
+                closeCluster(cluster, laneEnds.size());
+                cluster.clear();
+                laneEnds.clear();
+                clusterEnd = null;
             }
 
-            boolean fullDay = "FullDay".equals(leave.getShiftType());
-            boolean morningLeave = "Morning".equals(leave.getShiftType()) && morning;
-            boolean afternoonLeave = "Afternoon".equals(leave.getShiftType()) && !morning;
-            if (fullDay || morningLeave || afternoonLeave) {
-                return true;
+            // B3: đặt ô vào làn trống đầu tiên
+            int lane = -1;
+            for (int i = 0; i < laneEnds.size(); i++) {
+                if (!laneEnds.get(i).isAfter(item.getStartTime())) {
+                    lane = i;
+                    break;
+                }
             }
+            if (lane < 0) {
+                lane = laneEnds.size();
+                laneEnds.add(item.getEndTime());
+            } else {
+                laneEnds.set(lane, item.getEndTime());
+            }
+            item.setLane(lane);
+            cluster.add(item);
+            clusterEnd = clusterEnd == null || item.getEndTime().isAfter(clusterEnd) ? item.getEndTime() : clusterEnd;
         }
-        return false;
+
+        // B4: chốt cụm cuối cùng
+        closeCluster(cluster, laneEnds.size());
     }
 
-    // Nút "Công bố": thêm khung nháp + gỡ khung đã tích, TẤT CẢ trong 1 transaction (lỗi 1 khung → không lưu gì).
-    public ServiceResult<Integer> publish(int accountId, String[] dates, String[] starts, String[] removeIds,
-            int expectedMinutes, LocalDateTime now) {
-        // B1: không có gì để lưu / mảng ngày giờ lệch nhau → MSG320
+    /** HÀM PHỤ (assignLanes) — ghi số làn của cụm vào mọi ô trong cụm (cụm rỗng thì thôi). */
+    private static void closeCluster(List<PtScheduleItem> cluster, int laneCount) {
+        for (PtScheduleItem item : cluster) {
+            item.setLaneCount(Math.max(1, laneCount));
+        }
+    }
+
+
+
+    // ============================================================================================================
+    // HÀM CHÍNH 2. publish — nút "Công bố": thêm khung nháp + gỡ khung đã tích, TẤT CẢ trong 1 transaction
+    //   Ai gọi: PtScheduleServlet.doPost (fetch từ schedule.js)  ·  Ra: số khung đã đổi + câu thông báo
+    //   Hàm phụ ngay dưới: publishInTransaction → parseRemoveIds · buildDrafts · validateDrafts
+    // ============================================================================================================
+
+    /**
+     * HÀM CHÍNH 2 — nút "Công bố": thêm khung nháp + gỡ khung đã tích, tất cả trong 1 transaction.
+     *   Ai gọi: PtScheduleServlet.doPost
+     *   Trả về: ok(số khung đã đổi) | câu lỗi (1 khung sai → không lưu gì)
+     */
+    public ServiceResult<Integer> publish(
+            int accountId,
+            String[] dates,
+            String[] starts,
+            String[] removeIds,
+            int expectedMinutes,
+            LocalDateTime now) {
+        // B1: không có gì để lưu → báo lỗi
         boolean hasDrafts = dates != null && dates.length > 0;
         boolean hasRemovals = removeIds != null && removeIds.length > 0;
         boolean pairsBroken = hasDrafts && (starts == null || dates.length != starts.length);
@@ -512,11 +557,17 @@ public class PtScheduleService {
         }
 
         try (Connection connection = DBContext.getConnection()) {
-            // B2: mở transaction → publishInTransaction; ok → commit, fail / lỗi → rollback
+            // B2: mở transaction → ghi hết; lỗi → hủy hết
             connection.setAutoCommit(false);
             try {
-                ServiceResult<Integer> result = publishInTransaction(connection, accountId, dates, starts,
-                        removeIds, expectedMinutes, now);
+                ServiceResult<Integer> result = publishInTransaction(
+                        connection,
+                        accountId,
+                        dates,
+                        starts,
+                        removeIds,
+                        expectedMinutes,
+                        now);
                 if (result.isSuccess()) {
                     connection.commit();
                 } else {
@@ -529,7 +580,7 @@ public class PtScheduleService {
                 throw exception;
             }
 
-        // Lỗi do dữ liệu (khung trùng, đã qua giờ…) → trả đúng câu lỗi cho PT
+        // Khung sai (trùng, đã qua giờ…) → trả đúng câu lỗi cho PT
         } catch (IllegalArgumentException exception) {
             return ServiceResult.fail(exception.getMessage());
 
@@ -542,15 +593,21 @@ public class PtScheduleService {
     /**
      * HÀM PHỤ (publish B2) — các bước ghi trong transaction.
      */
-    ServiceResult<Integer> publishInTransaction(Connection connection, int accountId, String[] dates,
-            String[] starts, String[] removeIds, int expectedMinutes, LocalDateTime now) throws SQLException {
-        // B1: KHÓA dòng PT (Employees UPDLOCK) → 2 tab / 2 lễ tân cùng ghi lịch PT này phải xếp hàng; không phải PT → MSG07
+    ServiceResult<Integer> publishInTransaction(
+            Connection connection,
+            int accountId,
+            String[] dates,
+            String[] starts,
+            String[] removeIds,
+            int expectedMinutes,
+            LocalDateTime now) throws SQLException {
+        // B1: khóa dòng PT (2 tab cùng ghi phải chờ nhau)
         Integer ptId = scheduleDAO.lockPtForPublish(connection, accountId);
         if (ptId == null) {
             return ServiceResult.fail(Messages.MSG07_NO_PERMISSION);
         }
 
-        // B2: khóa P-06, P-19 (không cho Admin đổi giữa chừng); P-06 khác lúc mở trang → MSG321 (tải lại trang)
+        // B2: khóa cấu hình giờ; thời lượng buổi đổi giữa chừng → bảo tải lại
         scheduleDAO.lockScheduleConfigs(connection);
 
         int minutes = configService.getInt(SystemConfigService.SESSION_DURATION_MINUTES);
@@ -562,7 +619,7 @@ public class PtScheduleService {
             return ServiceResult.fail(Messages.MSG321_PT_DURATION_CHANGED);
         }
 
-        // B3: gỡ khung đã tích: TimeSlots Free → Withdrawn (withdrawFreeSlot); 1 khung không gỡ được (vừa có khách giữ / đã tới giờ) → lỗi cả lượt
+        // B3: gỡ khung đã tích (1 khung không gỡ được → hủy cả lượt)
         List<Integer> slotIds = parseRemoveIds(removeIds);
         for (int slotId : slotIds) {
             boolean withdrawn = scheduleDAO.withdrawFreeSlot(
@@ -576,13 +633,13 @@ public class PtScheduleService {
             }
         }
 
-        // B4: chỉ gỡ → xong (MSG322 "Đã gỡ N khung")
+        // B4: chỉ gỡ → xong
         boolean onlyRemovals = dates == null || dates.length == 0;
         if (onlyRemovals) {
             return ServiceResult.ok(slotIds.size(), String.format(Messages.MSG322_PT_SLOTS_REMOVED, slotIds.size()));
         }
 
-        // B5: đọc khung nháp (buildDrafts) → đọc ngày đặc biệt, đơn nghỉ, khung hiện có (khóa) → kiểm từng khung (validateDrafts)
+        // B5: đọc khung nháp rồi kiểm từng khung
         List<PtSlotDraft> drafts = buildDrafts(dates, starts, minutes);
         LocalDate fromDate = drafts.get(0).getSlotDate();
         LocalDate toDate = drafts.get(drafts.size() - 1).getSlotDate();
@@ -605,12 +662,12 @@ public class PtScheduleService {
                 hours,
                 now);
 
-        // B6: ghi từng khung: có khung Withdrawn đúng giờ → mở lại Free; không → INSERT TimeSlots Free (insertOrReopenSlot)
+        // B6: ghi từng khung (có khung đã gỡ đúng giờ → mở lại)
         for (PtSlotDraft draft : drafts) {
             scheduleDAO.insertOrReopenSlot(connection, ptId, draft);
         }
 
-        // B7: câu thông báo "Đã công bố N khung giờ[, gỡ M khung giờ]."
+        // B7: câu báo kết quả
         String message = "Đã công bố " + drafts.size() + " khung giờ";
         if (slotIds.isEmpty()) {
             message = message + ".";
@@ -683,20 +740,25 @@ public class PtScheduleService {
     /**
      * HÀM PHỤ (publishInTransaction B5) — kiểm từng khung nháp, sai ở đâu báo đúng "dd/MM HH:mm: lý do":
      */
-    static void validateDrafts(List<PtSlotDraft> drafts, List<PtScheduleItem> existing, List<LeaveInfo> leaves,
-            List<HourException> exceptions, LocalTime[] hours, LocalDateTime now) {
+    static void validateDrafts(
+            List<PtSlotDraft> drafts,
+            List<PtScheduleItem> existing,
+            List<LeaveInfo> leaves,
+            List<HourException> exceptions,
+            LocalTime[] hours,
+            LocalDateTime now) {
         PtSlotDraft previous = null;
 
         for (PtSlotDraft draft : drafts) {
             String label = DateTimeUtil.formatDate(draft.getSlotDate()) + " " + DateTimeUtil.formatTime(draft.getStartTime());
 
-            // B1: giờ bắt đầu đã qua
+            // B1: đã qua giờ
             boolean started = !draft.getSlotDate().atTime(draft.getStartTime()).isAfter(now);
             if (started) {
                 throw new IllegalArgumentException(label + ": giờ bắt đầu đã qua.");
             }
 
-            // B2: phòng nghỉ / ngoài giờ mở cửa ngày đó
+            // B2: phòng nghỉ / ngoài giờ mở cửa
             PtScheduleDay day = buildDay(
                     draft.getSlotDate(),
                     now.toLocalDate(),
@@ -718,13 +780,13 @@ public class PtScheduleService {
                 throw new IllegalArgumentException(label + ": trùng ca nghỉ phép.");
             }
 
-            // B4: chồng lên khung nháp trước đó (danh sách đã xếp)
+            // B4: chồng khung nháp trước đó
             boolean sameDayAsPrevious = previous != null && previous.getSlotDate().equals(draft.getSlotDate());
             if (sameDayAsPrevious && previous.getEndTime().isAfter(draft.getStartTime())) {
                 throw new IllegalArgumentException(label + ": trùng một khung khác trong danh sách nháp.");
             }
 
-            // B5: chồng lên khung đã có (khung Withdrawn cùng giờ bắt đầu mà khác thời lượng → không mở lại được)
+            // B5: chồng khung đã có
             for (PtScheduleItem slot : existing) {
                 if (!slot.getSlotDate().equals(draft.getSlotDate())) {
                     continue;
@@ -751,19 +813,36 @@ public class PtScheduleService {
         }
     }
 
+
+
+    // ============================================================================================================
+    // DÙNG CHUNG — ca nghỉ, ngày tuần, giờ mở cửa P-19, đổi giờ ↔ phút (một số hàm public cho Servlet / Service khác)
+    // ============================================================================================================
+
     /**
-     * HÀM PHỤ — "Thứ 2" … "Chủ nhật".
+     * HÀM PHỤ (dùng chung: fillWeek, classify, validateDrafts, PtSaleService, PtSessionHandleService) — khung có trùng đơn nghỉ không: FullDay · Morning (bắt đầu trước 13:00) · Afternoon (từ 13:00).
      */
-    private static String dayName(LocalDate date) {
-        DayOfWeek dayOfWeek = date.getDayOfWeek();
-        if (dayOfWeek == DayOfWeek.SUNDAY) {
-            return "Chủ nhật";
+    static boolean isOnLeave(PtScheduleItem item, List<LeaveInfo> leaves) {
+        boolean morning = item.getStartTime().isBefore(AppConstants.AFTERNOON_SHIFT_START);
+
+        for (LeaveInfo leave : leaves) {
+            boolean sameDay = item.getSlotDate().equals(leave.getLeaveDate());
+            if (!sameDay || !isActiveLeave(leave)) {
+                continue;
+            }
+
+            boolean fullDay = "FullDay".equals(leave.getShiftType());
+            boolean morningLeave = "Morning".equals(leave.getShiftType()) && morning;
+            boolean afternoonLeave = "Afternoon".equals(leave.getShiftType()) && !morning;
+            if (fullDay || morningLeave || afternoonLeave) {
+                return true;
+            }
         }
-        return "Thứ " + (dayOfWeek.getValue() + 1);
+        return false;
     }
 
     /**
-     * HÀM PHỤ (Servlet loadWeek) — ?date= → LocalDate; trống / sai định dạng → hôm nay.
+     * HÀM PHỤ (PtScheduleServlet.loadWeek) — ?date= → LocalDate; trống / sai định dạng → hôm nay.
      * (2 dòng minusWeeks / plusDays bên dưới không dùng kết quả — thừa, không ảnh hưởng.)
      */
     public static LocalDate parseDate(String value, LocalDate today) {
@@ -784,9 +863,7 @@ public class PtScheduleService {
         }
     }
 
-    /**
-     * HÀM PHỤ — thứ Hai của tuần chứa date.
-     */
+    /** HÀM PHỤ (dùng chung: getWeek, buildEmptyWeek, parseDate, PtSaleService) — thứ Hai của tuần chứa date. */
     public static LocalDate weekStartOf(LocalDate date) {
         return date.with(DayOfWeek.MONDAY);
     }
@@ -808,31 +885,23 @@ public class PtScheduleService {
         return new LocalTime[]{open, close};
     }
 
-    /**
-     * HÀM PHỤ — giờ làm tròn lên (21:30 → 22) để trục giờ chứa trọn khung.
-     */
+    /** HÀM PHỤ (buildEmptyWeek, fillWeek) — giờ làm tròn lên (21:30 → 22) để trục giờ chứa trọn khung. */
     private static int endHour(LocalTime time) {
         boolean hasMinutes = time.getMinute() > 0 || time.getSecond() > 0;
         return hasMinutes ? time.getHour() + 1 : time.getHour();
     }
 
-    /**
-     * HÀM PHỤ — LocalTime → số phút từ 00:00.
-     */
+    /** HÀM PHỤ (setAddRange, fillWeek, classify) — LocalTime → số phút từ 00:00. */
     private static int minuteOfDay(LocalTime time) {
         return time.toSecondOfDay() / 60;
     }
 
-    /**
-     * HÀM PHỤ — làm tròn LÊN mốc 15 phút.
-     */
+    /** HÀM PHỤ (setAddRange) — làm tròn LÊN mốc 15 phút. */
     private static int roundUpTo15(int minute) {
         return (minute + 14) / 15 * 15;
     }
 
-    /**
-     * HÀM PHỤ — làm tròn XUỐNG mốc 15 phút.
-     */
+    /** HÀM PHỤ (setAddRange) — làm tròn XUỐNG mốc 15 phút. */
     private static int roundDownTo15(int minute) {
         return Math.floorDiv(minute, 15) * 15;
     }
