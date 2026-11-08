@@ -678,7 +678,7 @@ Không phụ thuộc số gói DB; flex-basis lấy đúng chiều rộng sau kh
   border-top: var(--border-width) solid var(--brand-line);
 }
 
-.cine-coach__sessions {
+.cine-coach__years {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
@@ -690,7 +690,7 @@ Không phụ thuộc số gói DB; flex-basis lấy đúng chiều rộng sau kh
   font-weight: var(--font-weight-bold);
 }
 
-.cine-coach__sessions span {
+.cine-coach__years span {
   font-family: var(--font-body);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-regular);
@@ -703,7 +703,7 @@ Không phụ thuộc số gói DB; flex-basis lấy đúng chiều rộng sau kh
   line-height: var(--line-height-snug);
 }
 
-.cine-coach__role, .cine-coach__exp {
+.cine-coach__role {
   margin: var(--space-2) 0;
   color: var(--brand-muted);
   font-size: var(--font-size-sm);
