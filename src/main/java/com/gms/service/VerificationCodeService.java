@@ -112,8 +112,8 @@ public class VerificationCodeService {
             // Nếu lần xin này là lần thứ 5 → khóa email luôn, không gửi.
             // VD: đã gửi 4 mã (sentCount = 4) → 4 + 1 = 5 ≥ 5 → khóa
             LocalDateTime windowStart = now.minusMinutes(AppConstants.CODE_REQUEST_WINDOW_MINUTES);
-            int sentCount = verificationCodeDAO.countCodesSentSince(email, windowStart);
-            boolean isTooManyRequests = sentCount + 1 >= maxAttempts;
+            int sentCount = verificationCodeDAO.countCodesSentSince(email, windowStart); // đếm số lần xin mã
+            boolean isTooManyRequests = sentCount + 1 >= maxAttempts; // nếu số lần xin mã = 4 + 1 >= 5 thì khóa
             if (isTooManyRequests) {
                 // Ghi giờ khóa vào dòng mã gần nhất → lần sau B2 (findLockedUntil) sẽ thấy và
                 // chặn
