@@ -555,15 +555,7 @@ public class ManagerTransactionService {
                 return ServiceResult.ok(data);
 
             } else {
-                // Fallback khi Sandbox tráº£ mÃ£ 99 hoáº·c seed data:
-                // Äá»‘i soÃ¡t dá»¯ liá»‡u theo CSDL ná»™i bá»™ Ä‘á»ƒ Manager cÃ³ sá»‘ liá»‡u Ä‘á»‘i chiáº¿u vÃ  tá»± Ä‘á»™ng Ä‘iá»n tiá»n hoÃ n
-                data.put("success", true);
-                data.put("statusLabel", "Thành công (Đối soát hệ thống)");
-                data.put("amount", tx.getAmount());
-                data.put("orderAmount", tx.getAmount());
-                data.put("bankCode", "NCB / VNPAY");
-                data.put("payDate", tx.getCreatedAt() != null ? DateTimeUtil.formatDateTime(tx.getCreatedAt()) : "---");
-                return ServiceResult.ok(data);
+                return ServiceResult.fail("Cổng API VNPay chưa mở tra cứu cho tài khoản Sandbox này. Vui lòng mở cổng VNPay Merchant Portal để tra cứu.");
             }
 
         } catch (Exception e) {

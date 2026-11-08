@@ -515,8 +515,12 @@
                         <div class="tx-kv"><span>Khách hàng</span><b id="txrCustomer">---</b></div>
                         <div class="tx-kv"><span>Số tiền đơn</span><b id="txrOrderAmount">---</b></div>
                         <div class="tx-kv">
-                            <span>VNPay thực thu</span>
-                            <span><b id="txrGatewayAmount">Chưa tra cứu</b> <button type="button" class="btn btn-outline btn-sm" id="txrLookupBtn">Tra cứu</button></span>
+                            <span>Đối soát cổng VNPay</span>
+                            <span>
+                                <a href="https://sandbox.vnpayment.vn/merchantv2/" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm" style="display:inline-flex;align-items:center;gap:6px;" title="Mở cổng VNPay Merchant Portal để kiểm tra thực tế">
+                                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Mở VNPay Merchant Portal
+                                </a>
+                            </span>
                         </div>
 
                         <div>

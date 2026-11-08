@@ -290,7 +290,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     ? '<span class="tx-ref">' + esc(att.gatewayReference || "---") + "</span>"
                     : esc(att.receiverName || "---") + (order.shiftId ? " · Ca #" + order.shiftId : "");
             const action = isGateway && att.gatewayReference
-                    ? '<button type="button" class="btn btn-outline btn-sm btn-lookup" data-transaction-id="' + att.transactionId + '">Tra cứu</button>'
+                    ? '<a href="https://sandbox.vnpayment.vn/merchantv2/" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm" style="display:inline-flex;align-items:center;gap:6px;" title="Mở cổng VNPay Merchant Portal để tra cứu"><i class="fa-solid fa-arrow-up-right-from-square"></i> Tra cứu trên VNPay</a>'
                     : "";
 
             const tr = document.createElement("tr");
@@ -310,7 +310,7 @@ document.addEventListener("DOMContentLoaded", function () {
         $("txdLookup").innerHTML = "";
 
         $("txdNote").textContent = isOnline
-                ? "Số tiền khách thực trả có thể khác số tiền đơn. Bấm “Tra cứu” để xem số VNPay thực thu."
+                ? "Số tiền khách thực trả có thể khác số tiền đơn. Bấm “Tra cứu trên VNPay” để đối soát số thực thu trên cổng VNPay."
                 : (counterMethod === "Chuyển khoản"
                         ? "Chuyển khoản tại quầy do lễ tân bấm xác nhận đã nhận. Hệ thống không lưu mã giao dịch ngân hàng."
                         : "");
@@ -385,7 +385,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 + '<div class="tx-kv"><span>Trạng thái tại VNPay</span>' + badge(d.success ? "badge-success" : "badge-neutral", d.statusLabel || "---") + "</div>"
                 + '<div class="tx-kv"><span>Số tiền VNPay thực thu</span><b>' + money(d.amount) + "</b></div>"
                 + '<div class="tx-kv"><span>So với đơn ' + money(d.orderAmount) + "</span>" + diffBadge + "</div>"
-                + '<div class="tx-kv"><span>Ngân hàng · Thời điểm trả</span><b>' + esc((d.bankCode || "---") + " · " + (d.payDate || "---")) + "</b></div>";
+                + '<div class="tx-kv"><span>Ngân hàng · Thời điểm trả</span><b>' + esc((d.bankCode || "---") + " · " + (d.payDate || "---")) + "</b></div>"
+                + '<div style="margin-top:10px;text-align:right;"><a href="https://sandbox.vnpayment.vn/merchantv2/" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm" style="display:inline-flex;align-items:center;gap:6px;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Mở cổng VNPay Merchant Portal</a></div>';
     }
 
     // ===== 5. POPUP XÁC NHẬN HOÀN TIỀN =====
@@ -426,8 +427,8 @@ document.addEventListener("DOMContentLoaded", function () {
         $("txrOrder").textContent = (ctx.orderCode || "---") + (ctx.packageName ? " · " + ctx.packageName : "");
         $("txrCustomer").textContent = (ctx.customer || "Khách hàng") + (ctx.phone ? " · " + ctx.phone : "");
         $("txrOrderAmount").textContent = money(ctx.amount);
-        $("txrGatewayAmount").textContent = "Chưa tra cứu";
-        $("txrAmountHint").innerHTML = "<span>Mặc định là số tiền đơn. Tra cứu VNPay để lấy số thực thu.</span>";
+        if ($("txrGatewayAmount")) $("txrGatewayAmount").textContent = "Chưa tra cứu";
+        $("txrAmountHint").innerHTML = "<span>Mặc định là số tiền đơn. Đối soát trên VNPay để xác nhận số tiền thực tế trước khi hoàn.</span>";
         setAmountText(ctx.amount);
         noteInput.value = "";
         $("txrNoteCount").textContent = "0/" + MAX_NOTE;
@@ -443,16 +444,18 @@ document.addEventListener("DOMContentLoaded", function () {
         amountInput.focus();
     }
 
-    $("txrLookupBtn").addEventListener("click", function () {
-        if (!refundCtx) {
-            return;
-        }
-        runLookup(refundCtx.transactionId, $("txrLookupBtn")).then(function (result) {
-            if (result) {
-                applyLookupToRefund(result.data);
+    if ($("txrLookupBtn")) {
+        $("txrLookupBtn").addEventListener("click", function () {
+            if (!refundCtx) {
+                return;
             }
+            runLookup(refundCtx.transactionId, $("txrLookupBtn")).then(function (result) {
+                if (result) {
+                    applyLookupToRefund(result.data);
+                }
+            });
         });
-    });
+    }
 
     amountInput.addEventListener("input", function () {
         setAmountText(amountInput.value);

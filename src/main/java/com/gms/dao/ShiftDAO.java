@@ -666,7 +666,21 @@ public class ShiftDAO {
      * @throws SQLException khi truy vấn lỗi
      */
     public int confirmBankTransfer(Connection conn, int orderId, int employeeId, LocalDateTime completedAt) throws SQLException {
-        // B1: Cập nhật giao dịch chuyển khoản sang Success
+        // B1: Cập nhật Order sang Paid trước để khóa đơn, chặn tranh chấp đồng thời (CBR-77, CS-19)
+        String updateOrderSql = "UPDATE Orders SET Status = 'Paid', PaidAt = ? WHERE OrderId = ? AND Status = 'Pending'";
+        int rowsUpdated;
+        try (PreparedStatement orderStmt = conn.prepareStatement(updateOrderSql)) {
+            orderStmt.setTimestamp(1, Timestamp.valueOf(completedAt));
+            orderStmt.setInt(2, orderId);
+            rowsUpdated = orderStmt.executeUpdate();
+        }
+
+        // Nếu đơn không còn ở trạng thái Pending (đã được xác nhận hoặc hủy trước đó) -> dừng ngay
+        if (rowsUpdated == 0) {
+            return 0;
+        }
+
+        // B2: Cập nhật giao dịch chuyển khoản sang Success
         String updateTxSql = """
                 UPDATE Transactions 
                 SET Status = 'Success', ReceivedByEmployeeId = ?, CompletedAt = ? 
@@ -680,7 +694,7 @@ public class ShiftDAO {
             txUpdated = txStmt.executeUpdate();
         }
 
-        // B1.1: Nếu đơn chưa có bản ghi Transaction nào thì tạo mới giao dịch Success
+        // B2.1: Nếu đơn chưa có bản ghi Transaction nào thì tạo mới giao dịch Success
         if (txUpdated == 0) {
             String insertTxSql = """
                     INSERT INTO Transactions (OrderId, Amount, PaymentMethod, ReceivedByEmployeeId, Status, CreatedAt, CompletedAt)
@@ -696,13 +710,50 @@ public class ShiftDAO {
             }
         }
 
-        // B2: Cập nhật Order sang Paid
-        String updateOrderSql = "UPDATE Orders SET Status = 'Paid', PaidAt = ? WHERE OrderId = ? AND Status = 'Pending'";
-        try (PreparedStatement orderStmt = conn.prepareStatement(updateOrderSql)) {
-            orderStmt.setTimestamp(1, Timestamp.valueOf(completedAt));
-            orderStmt.setInt(2, orderId);
-            return orderStmt.executeUpdate();
+        // B3: Cấp thẻ tập (Subscription) cho hội viên nếu chưa có (CS-16)
+        String checkSubSql = "SELECT 1 FROM Subscriptions WHERE OrderId = ?";
+        boolean hasSub = false;
+        try (PreparedStatement checkStmt = conn.prepareStatement(checkSubSql)) {
+            checkStmt.setInt(1, orderId);
+            try (ResultSet rs = checkStmt.executeQuery()) {
+                hasSub = rs.next();
+            }
         }
+
+        if (!hasSub) {
+            String insertSubSql = """
+                    INSERT INTO Subscriptions (OrderId, CustomerId, SubscriptionType, StartDate, EndDate, MaxFreezesSnapshot, Status)
+                    SELECT o.OrderId, o.HolderCustomerId, p.PackageType, CAST(? AS DATE),
+                           CASE WHEN p.PackageType = 'DayPass' THEN CAST(? AS DATE)
+                                ELSE DATEADD(MONTH, ISNULL(p.DurationValue, 1), CAST(? AS DATE)) END,
+                           CASE WHEN p.PackageType = 'Membership' THEN 2 ELSE NULL END,
+                           'Active'
+                    FROM Orders o
+                    JOIN Packages p ON p.PackageId = o.PackageId
+                    WHERE o.OrderId = ?
+                    """;
+            try (PreparedStatement insertSubStmt = conn.prepareStatement(insertSubSql)) {
+                insertSubStmt.setTimestamp(1, Timestamp.valueOf(completedAt));
+                insertSubStmt.setTimestamp(2, Timestamp.valueOf(completedAt));
+                insertSubStmt.setTimestamp(3, Timestamp.valueOf(completedAt));
+                insertSubStmt.setInt(4, orderId);
+                insertSubStmt.executeUpdate();
+            }
+
+            // Kích hoạt khách hàng New / Expired sang Active (CBR-01, CBR-02)
+            String activateCustSql = """
+                    UPDATE Customers 
+                    SET Status = 'Active' 
+                    WHERE CustomerId = (SELECT HolderCustomerId FROM Orders WHERE OrderId = ?)
+                      AND Status IN ('New', 'Expired')
+                    """;
+            try (PreparedStatement actStmt = conn.prepareStatement(activateCustSql)) {
+                actStmt.setInt(1, orderId);
+                actStmt.executeUpdate();
+            }
+        }
+
+        return rowsUpdated;
     }
 
     /**
