@@ -1,0 +1,123 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Phiếu thu dịch vụ — Super Gym Lễ tân</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/js/all.min.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../customer.css">
+</head>
+<body class="cust staff">
+<div id="toastRoot"></div>
+<div id="modalRoot"></div>
+
+<!-- 7.1.4 — Phiếu thu dịch vụ tại quầy · L3 · UC-20 (kết quả của bước 4 luồng chính; đổi ngày bắt đầu CBR-119) -->
+<div class="cust-shell" id="custShell">
+
+  <div class="cust-dock" id="custDock">
+    <aside class="cust-sidebar">
+      <a class="cust-brand" href="check-in.html">
+        <b>Super Gym</b><span>Lễ tân</span>
+      </a>
+      <nav class="cust-nav">
+        <h4>Tại quầy</h4>
+        <a href="check-in.html"><i class="fa-solid fa-door-open"></i>Check-in</a>
+        <a href="ban-hang.html" aria-current="page"><i class="fa-solid fa-cart-shopping"></i>Bán hàng</a>
+        <a href="ban-goi-pt.html"><i class="fa-solid fa-user-check"></i>Bán gói PT</a>
+        <a href="ca-lam-viec.html"><i class="fa-solid fa-cash-register"></i>Ca làm việc</a>
+        <h4>Hội viên</h4>
+        <a href="hoi-vien.html"><i class="fa-solid fa-user-group"></i>Hồ sơ khách</a>
+        <a href="bao-luu.html"><i class="fa-solid fa-circle-pause"></i>Bảo lưu</a>
+        <h4>Cơ sở vật chất</h4>
+        <a href="co-so-vat-chat.html"><i class="fa-solid fa-boxes-stacked"></i>Báo hỏng thiết bị</a>
+        <a href="bao-tri.html"><i class="fa-solid fa-screwdriver-wrench"></i>Yêu cầu bảo trì</a>
+        <h4>Cá nhân</h4>
+        <a href="nghi-phep.html"><i class="fa-solid fa-plane-departure"></i>Nghỉ phép</a>
+        <a href="tai-khoan.html"><i class="fa-solid fa-user-gear"></i>Cài đặt tài khoản</a>
+        <a href="../chon-vai-tro.html"><i class="fa-solid fa-repeat"></i>Đổi vai trò</a>
+      </nav>
+      <div class="cust-sidebar-foot">
+        <a href="../dang-nhap.html"><i class="fa-solid fa-arrow-right-from-bracket"></i>Đăng xuất</a>
+      </div>
+    </aside>
+    <button class="cust-handle" type="button" id="dockHandle"
+            aria-label="Mở menu điều hướng" aria-expanded="false" aria-controls="custDock">
+      <i class="fa-solid fa-chevron-right"></i>
+    </button>
+  </div>
+
+  <div class="cust-main">
+    <header class="cust-topbar">
+      <div>
+        <h1>Phiếu thu dịch vụ</h1>
+      </div>
+      <div class="cust-topbar-actions">
+        <a class="badge badge-ok" href="ca-lam-viec.html" id="shiftChip"><i class="fa-solid fa-circle-check"></i> Ca chiều 20/09 đang mở</a>
+        <a class="cust-user" href="tai-khoan.html" title="Cài đặt tài khoản">
+          <span class="avatar">NH</span>
+          <span class="cust-user-text">
+            <b>Nguyễn Thị Hoa</b>
+            <span>Lễ tân · NV-0042</span>
+          </span>
+        </a>
+      </div>
+    </header>
+
+    <main class="cust-content">
+      <div id="rcEmpty" class="alert-banner info" hidden>
+        <span><i class="fa-solid fa-circle-info"></i> Chưa có đơn nào vừa kết. Vào <a href="ban-hang.html">Bán hàng</a> để tạo đơn.</span>
+      </div>
+      <div id="rcWrap" hidden style="max-width:560px;margin:0 auto">
+        <div class="alert-banner ok no-print" style="margin-bottom:var(--space-4)">
+          <span><i class="fa-solid fa-circle-check"></i> <b>Giao dịch hoàn tất!</b> Đã ghi nhận thanh toán và kích hoạt gói tập thành công trên hệ thống.</span>
+        </div>
+        <section class="panel" id="rcPaper">
+          <div style="text-align:center;margin-bottom:var(--space-3)">
+            <h3 style="margin:0">SUPER GYM FITNESS</h3>
+            <span class="muted">Phiếu thu dịch vụ tại quầy</span>
+          </div>
+          <dl class="sum-list">
+            <div><dt>Mã đơn hàng:</dt><dd class="tabular" id="rcCode">—</dd></div>
+            <div><dt>Thời gian thu:</dt><dd class="tabular" id="rcTime">—</dd></div>
+            <div><dt>Lễ tân thu tiền:</dt><dd>Nguyễn Thị Hoa</dd></div>
+            <div><dt>Hình thức:</dt><dd id="rcPay">—</dd></div>
+            <div id="rcRefRow" hidden><dt>Mã tham chiếu:</dt><dd class="tabular" id="rcRef">—</dd></div>
+            <div><dt>Hội viên:</dt><dd id="rcCust">—</dd></div>
+            <div><dt>Mã KH / SĐT:</dt><dd class="tabular" id="rcCode2">—</dd></div>
+            <div><dt>Gói đăng ký:</dt><dd id="rcPkg">—</dd></div>
+            <div><dt>Hiệu lực gói:</dt><dd>
+              <span class="tabular" id="rcRange">—</span>
+              <button class="btn btn-sm btn-ghost no-print" type="button" id="rcChange" title="Đổi ngày bắt đầu gói"><i class="fa-solid fa-calendar-days"></i> Đổi ngày</button>
+            </dd></div>
+            <div id="rcVoucherRow" hidden><dt id="rcVoucher">Giảm giá:</dt><dd class="tabular" id="rcOff">—</dd></div>
+            <div class="sum-total"><dt>TỔNG ĐÃ THU:</dt><dd class="tabular" id="rcTotal">—</dd></div>
+          </dl>
+          <div id="rcStartForm" class="no-print" hidden style="margin-top:var(--space-3)">
+            <label class="field"><span class="field-label">Ngày bắt đầu mới</span><input id="rcDate" type="date"></label>
+            <p class="muted" id="rcDateHint"></p>
+            <p id="rcDateErr" hidden style="color:#c0392b"></p>
+            <div style="display:flex;gap:var(--space-2)">
+              <button class="btn btn-primary btn-sm" type="button" id="rcSave">Lưu</button>
+              <button class="btn btn-ghost btn-sm" type="button" id="rcCancel">Hủy</button>
+            </div>
+          </div>
+          <p class="muted" id="rcLock" hidden style="margin-top:var(--space-2)"></p>
+          <p class="muted" style="text-align:center;margin-top:var(--space-4)">Cảm ơn quý khách đã đồng hành cùng Super Gym!<br>Vui lòng giữ phiếu thu để đối chiếu khi cần thiết.</p>
+        </section>
+        <div class="no-print" style="display:flex;gap:var(--space-2);justify-content:center;margin-top:var(--space-4)">
+          <button class="btn btn-outline" type="button" id="rcPrint"><i class="fa-solid fa-print"></i> In phiếu thu</button>
+          <a class="btn btn-primary" href="ban-hang.html">Bán đơn mới</a>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="../app.js"></script>
+<script src="../kh/customer.js"></script>
+<script src="bien-nhan.js"></script>
+</body>
+</html>

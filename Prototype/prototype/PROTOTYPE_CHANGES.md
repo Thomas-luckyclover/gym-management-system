@@ -155,3 +155,21 @@
 ---
 
 **Last Updated**: 2026-09-23 12:24 PM
+
+---
+
+## Bổ sung (phần mua gói, UC-20 / UC-26) - bám theo các màn thật
+
+### Bán hàng tại quầy (`lt/ban-hang.html`) - dựng lại thành 3 bước như hệ thống
+- Bước 1 / 3: Chọn gói cho khách. Bước 2 / 3: Chọn khách (tìm theo tên, SĐT, mã KH; "+ Tạo hồ sơ"). Bước 3 / 3: Xác nhận đơn hàng & Thu tiền.
+- Tạo hồ sơ: chọn loại hồ sơ "Tự sở hữu" (có email, tài khoản và mật khẩu tạm) hoặc "Phụ thuộc" (người giám hộ: tên, quan hệ, SĐT); loại hồ sơ không đổi sau khi tạo.
+- Ngày bắt đầu (CBR-119): Gói Ngày luôn bắt đầu hôm nay. Gói tập: "Kích hoạt ngay hôm nay" hoặc, nếu khách còn gói đang dùng, "Kích hoạt nối tiếp sau gói hiện tại"; hoặc "Hẹn ngày kích hoạt khác" trong 7 ngày kể từ ngày sớm nhất.
+- Thanh toán: "Tiền mặt" hoặc "Chuyển khoản / Quẹt thẻ POS". Chuyển khoản có ô mã tham chiếu (không bắt buộc, tối đa 50 ký tự) và ô "Xác nhận thu tiền tại quầy" bắt buộc tick (CBR-77, MSG326).
+
+### Phiếu thu dịch vụ (`lt/bien-nhan.html`) - **TẠO MỚI**
+- Hiện sau khi xác nhận thu tiền. Trường: Mã đơn hàng, Thời gian thu, Lễ tân thu tiền, Hình thức, Hội viên, Mã KH / SĐT, Gói đăng ký, Hiệu lực gói (từ → đến), Giảm giá, TỔNG ĐÃ THU.
+- Nút "Đổi ngày" cạnh Hiệu lực gói: chỉ gói tập, một lần, trong 7 ngày; ngày hết hạn tính lại theo thời hạn gói. Gói Ngày và buổi PT lẻ không đổi được.
+- Nút: In phiếu thu, Bán đơn mới.
+
+### Giao dịch toàn hệ thống (`Manager/gms_manager_mockup_v24.html`)
+- Hộp "Xác nhận hoàn tiền" của đơn online: thêm liên kết mở VNPay Merchant Portal để đối soát (hệ thống không còn gọi QueryDR).
