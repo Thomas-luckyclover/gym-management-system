@@ -317,6 +317,15 @@ public class AccountDAO {
     }
 
     /**
+     * Tìm tài khoản theo PersonId.
+     */
+    public Account findByPersonId(int personId) throws SQLException {
+        try (Connection conn = DBContext.getConnection()) {
+            return findByPersonId(conn, personId);
+        }
+    }
+
+    /**
      * Tìm tài khoản theo PersonId trong transaction.
      */
     public Account findByPersonId(Connection conn, int personId) throws SQLException {
