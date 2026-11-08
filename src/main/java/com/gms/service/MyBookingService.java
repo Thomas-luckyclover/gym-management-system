@@ -29,8 +29,21 @@ import java.util.Set;
 import java.util.TreeMap;
 
 /**
- * MÀN GÓI CỦA TÔI — dựng MyBookingView cho MyBookingServlet.
- * Đọc DB qua MyPtSessionDAO (gói, buổi — dùng chung với màn Lịch tập) và MyBookingDAO (lịch sử dời buổi).
+ * SERVICE MÀN GÓI CỦA TÔI (khách) — /customer/bookings: dựng MyBookingView (gói PT đang xem hoặc buổi lẻ).
+ *
+ * AI GỌI SERVICE NÀY?  Chỉ MyBookingServlet.loadBookings.
+ * SERVICE GỌI AI?      MyPtSessionDAO (gói, buổi — dùng chung với màn Lịch tập) · MyBookingDAO (lịch sử dời buổi)
+ *                      · MyPtSessionService.fillDisplay (nhãn / lý do từng buổi) · SystemConfigService (hotline, giờ mở cửa P-19).
+ *
+ * BỐ CỤC FILE — mỗi HÀM CHÍNH đứng trước, các hàm phụ của nó nằm ngay bên dưới:
+ *   HÀM CHÍNH 1  getMyBookings   dựng cả màn   → fillPackage, countRecentSingles, pickPackage, countSessions, buildWatchList,
+ *                                                groupByReason, fillPackageDetail, applyWeekTemplate, summarize, moveNote,
+ *                                                markWeeks, orderSingles, chooseCta, fillCounterInfo
+ *
+ * LUẬT QUAN TRỌNG
+ *   - Màn chỉ xem: không ghi DB. Trạng thái buổi tính lúc đọc (fillDisplay), không chờ JOB.
+ *   - "Lịch cố định" suy ra từ chính các buổi của gói (giờ chiếm đa số mỗi thứ), không lưu riêng trong DB.
+ *   - Các hàm static (pickPackage, countSessions, applyWeekTemplate, chooseCta…) không đọc DB → test gọi thẳng.
  */
 public class MyBookingService {
     // ?package=single → xem buổi lẻ thay vì 1 gói.
@@ -57,10 +70,24 @@ public class MyBookingService {
     private final MyPtSessionService sessionService = new MyPtSessionService();
     private final SystemConfigService systemConfigService = new SystemConfigService();
 
-    // Dựng dữ liệu cả màn. Trả về: ok(MyBookingView) | fail(MSG07 không phải khách, MSG04 lỗi DB).
+
+
+    // ============================================================================================================
+    // HÀM CHÍNH 1. getMyBookings — dựng dữ liệu cả màn Gói của tôi
+    //   Ai gọi: MyBookingServlet.loadBookings  ·  Ra: MyBookingView → JSP biến "booking"
+    //   Hàm phụ ngay dưới, theo thứ tự getMyBookings gọi:
+    //     fillPackage (B2) · countRecentSingles (B3) · pickPackage (B4) · countSessions → buildWatchList → groupByReason (B6)
+    //     fillPackageDetail → applyWeekTemplate → summarize · moveNote · markWeeks (B7) · orderSingles (B7) · chooseCta → fillCounterInfo (B8)
+    // ============================================================================================================
+
+    /**
+     * HÀM CHÍNH 1 — dựng dữ liệu cả màn Gói của tôi.
+     *   Ai gọi: MyBookingServlet.loadBookings
+     *   Trả về: ok(MyBookingView) | lỗi (không phải khách / lỗi hệ thống)
+     */
     public ServiceResult<MyBookingView> getMyBookings(int accountId, String packageKey, LocalDateTime now) {
         try {
-            // B1: tài khoản → CustomerId (không phải khách → MSG07); ghi thứ hôm nay để tô ô "hôm nay"
+            // B1: tài khoản phải là khách
             Integer customerId = sessionService.findCustomerId(accountId);
             if (customerId == null) {
                 return ServiceResult.fail(Messages.MSG07_NO_PERMISSION);
@@ -68,8 +95,7 @@ public class MyBookingService {
             MyBookingView view = new MyBookingView();
             view.setTodayWeekday(now.getDayOfWeek().getValue());
 
-            // B2: MyPtSessionDAO.findMyPackages → mọi gói PT của khách (đứng tên hoặc tập cùng)
-            //     fillPackage điền nhãn / Zalo / người tập cùng → chia 2 tab: Đang tập | Đã kết thúc
+            // B2: mọi gói PT của khách, chia 2 tab Đang tập / Đã kết thúc
             for (MyPtPackageView p : sessionDAO.findMyPackages(customerId, now.toLocalDate())) {
                 fillPackage(p, customerId);
                 if (p.isActive()) {
@@ -79,12 +105,12 @@ public class MyBookingService {
                 }
             }
 
-            // B3: MyPtSessionDAO.findSingleSessions → buổi lẻ: đếm tổng + đếm 30 ngày gần đây (cho gợi ý mua gói PT)
+            // B3: buổi lẻ: đếm tổng + 30 ngày gần đây
             List<MyPtSessionRow> singles = sessionDAO.findSingleSessions(customerId);
             view.setSingleSessionCount(singles.size());
             view.setRecentSingleCount(countRecentSingles(singles, now.toLocalDate()));
 
-            // B4: chọn gói đang xem theo ?package= (pickPackage); không có gói thì xem buổi lẻ; không có gì → trả view rỗng
+            // B4: chọn gói đang xem (hoặc buổi lẻ)
             MyPtPackageView selected = pickPackage(view, packageKey);
             List<MyPtSessionRow> sessions;
             if (selected != null) {
@@ -97,14 +123,15 @@ public class MyBookingService {
                 sessions = singles;
             }
 
-            // B5: MyPtSessionService.fillDisplay → mỗi buổi: statusKey / statusLabel / lý do / cảnh báo thiếu gói gym
+            // B5: trạng thái + lý do của từng buổi
             sessionService.fillDisplay(sessions, customerId, now);
-            // B6: đếm buổi theo trạng thái + tìm "Buổi tới" (countSessions) → danh sách "Cần để ý" (buildWatchList, groupByReason)
+
+            // B6: đếm buổi, tìm "Buổi tới", gom danh sách "Cần để ý"
             countSessions(view, sessions, now);
             view.setWatchList(buildWatchList(sessions));
             view.setWatchGroups(groupByReason(view.getWatchList()));
 
-            // B7: xem gói → Lịch cố định + buổi khác giờ + số ngày còn lại (fillPackageDetail); xem buổi lẻ → sắp tới trước, đã qua sau (orderSingles)
+            // B7: xem gói → lịch cố định · xem buổi lẻ → sắp tới trước
             if (selected != null) {
                 fillPackageDetail(
                         view,
@@ -116,7 +143,7 @@ public class MyBookingService {
                 view.setSessions(orderSingles(sessions, now));
             }
 
-            // B8: chọn khung gợi ý (chooseCta) + điền hotline / giờ mở cửa nếu gợi ý ra quầy (fillCounterInfo)
+            // B8: chọn khung gợi ý (gia hạn, mua gói gym…)
             view.setCtaKind(chooseCta(view, sessions));
             fillCounterInfo(view);
             return ServiceResult.ok(view);
@@ -215,9 +242,7 @@ public class MyBookingService {
         }
     }
 
-    /**
-     * HÀM PHỤ (B6, chooseCta) — buổi sắp tới bị cảnh báo VÌ chưa có gói gym / vé ngày. Trả về: danh sách buổi.
-     */
+    /** HÀM PHỤ (getMyBookings B6, chooseCta) — buổi sắp tới bị cảnh báo VÌ chưa có gói gym / vé ngày. Trả về: danh sách buổi. */
     static List<MyPtSessionRow> buildWatchList(List<MyPtSessionRow> sessions) {
         List<MyPtSessionRow> warn = new ArrayList<>();
         for (MyPtSessionRow s : sessions) {
@@ -228,9 +253,7 @@ public class MyBookingService {
         return warn;
     }
 
-    /**
-     * HÀM PHỤ (B6) — gom buổi cùng trạng thái + cùng lý do thành 1 nhóm (SessionGroup) cho khung "Cần để ý".
-     */
+    /** HÀM PHỤ (getMyBookings B6) — gom buổi cùng trạng thái + cùng lý do thành 1 nhóm (SessionGroup) cho khung "Cần để ý". */
     static List<SessionGroup> groupByReason(List<MyPtSessionRow> sessions) {
         Map<String, SessionGroup> groups = new LinkedHashMap<>();
         for (MyPtSessionRow s : sessions) {
@@ -244,12 +267,15 @@ public class MyBookingService {
     /**
      * HÀM PHỤ (getMyBookings B7, khi xem 1 gói) — lịch cố định, ghi chú buổi khác giờ, vạch ngăn tuần, số ngày còn lại.
      */
-    private void fillPackageDetail(MyBookingView view, MyPtPackageView selected,
-            List<MyPtSessionRow> sessions, LocalDate today) throws SQLException {
-        // B1: tìm giờ cố định từng thứ (applyWeekTemplate)
+    private void fillPackageDetail(
+            MyBookingView view,
+            MyPtPackageView selected,
+            List<MyPtSessionRow> sessions,
+            LocalDate today) throws SQLException {
+        // B1: tìm giờ cố định từng thứ
         applyWeekTemplate(view, sessions);
 
-        // B2: có buổi khác giờ → MyBookingDAO.findMoves (SessionMoveLogs) → ghi chú "PT dời lịch · thay buổi …"
+        // B2: buổi khác giờ → ghi chú ai dời, thay buổi nào
         if (!view.getOffPattern().isEmpty()) {
             Map<Integer, SessionMoveInfo> moves = bookingDAO.findMoves(selected.getSubscriptionId());
             for (MyPtSessionRow row : view.getOffPattern()) {
@@ -257,7 +283,7 @@ public class MyBookingService {
             }
         }
 
-        // B3: đánh dấu buổi đầu mỗi tuần (vạch ngăn trong dải chấm) + số ngày tới hết gói
+        // B3: vạch ngăn tuần + số ngày còn lại
         markWeeks(sessions);
         view.setDaysLeft(Math.max(0, ChronoUnit.DAYS.between(today, selected.getEndDate())));
     }
@@ -266,7 +292,7 @@ public class MyBookingService {
      * HÀM PHỤ (fillPackageDetail B1) — "Lịch cố định" T2–T6 từ chính các buổi của gói.
      */
     static void applyWeekTemplate(MyBookingView view, List<MyPtSessionRow> sessions) {
-        // B1: đếm mỗi thứ (T2–T6) mỗi giờ có mấy buổi
+        // B1: đếm mỗi thứ, mỗi giờ có mấy buổi
         List<TreeMap<LocalTime, Integer>> perDay = new ArrayList<>();
         for (int i = 0; i < 5; i++) {
             perDay.add(new TreeMap<>());
@@ -280,7 +306,7 @@ public class MyBookingService {
             }
         }
 
-        // B2: mỗi thứ: giờ chiếm ĐA SỐ (≥ 1/2 số buổi, ít nhất 2 buổi hoặc chỉ có 1 buổi) = giờ cố định
+        // B2: giờ chiếm đa số của mỗi thứ = giờ cố định
         LocalTime[] fixed = new LocalTime[5];
         int[] fixedCount = new int[5];
         boolean[] hasSessions = new boolean[5];
@@ -319,7 +345,7 @@ public class MyBookingService {
             }
         }
 
-        // B4: tạo 5 ô WeekdaySlot: main (giờ chính) · odd (giờ cố định khác) · mixed (có buổi, không cố định) · none
+        // B4: dựng 5 ô T2–T6
         List<WeekdaySlot> template = new ArrayList<>();
         for (int d = 0; d < 5; d++) {
             String kind;
@@ -328,13 +354,17 @@ public class MyBookingService {
             } else {
                 kind = hasSessions[d] ? WeekdaySlot.KIND_MIXED : WeekdaySlot.KIND_NONE;
             }
-            template.add(new WeekdaySlot(WEEKDAY_SHORT[d], kind, fixed[d],
-                    fixed[d] == null ? null : endOf.get(fixed[d]), fixedCount[d]));
+            template.add(new WeekdaySlot(
+                    WEEKDAY_SHORT[d],
+                    kind,
+                    fixed[d],
+                    fixed[d] == null ? null : endOf.get(fixed[d]),
+                    fixedCount[d]));
         }
         view.setWeekTemplate(template);
         view.setTemplateSummary(summarize(fixed));
 
-        // B5: chia buổi: đúng giờ cố định (đếm templateCount) | khác giờ → offPattern
+        // B5: chia buổi: đúng giờ cố định / khác giờ
         int onPattern = 0;
         List<MyPtSessionRow> off = new ArrayList<>();
         for (MyPtSessionRow s : sessions) {
