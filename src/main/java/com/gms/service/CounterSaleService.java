@@ -923,7 +923,7 @@ public class CounterSaleService {
         if (canShowSaving) {
             long savedPerMonth = oneMonthPrice - monthlyPrice;
             if (savedPerMonth > 0) {
-                savingPercent = (int) (savedPerMonth * 100 / oneMonthPrice);
+                savingPercent = (int) Math.round((double) savedPerMonth * 100.0 / oneMonthPrice);
             }
         }
 
