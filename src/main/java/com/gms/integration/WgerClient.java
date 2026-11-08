@@ -87,6 +87,7 @@ public class WgerClient {
         int pages = 0;
         while (url != null && pages < MAX_PAGES) {
             String json = get(httpClient, url);
+            // parsePage => parseExercise chuyển chuỗi JSON thô về Object Java
             url = parsePage(json, all);
             pages++;
         }
@@ -99,6 +100,7 @@ public class WgerClient {
     }
 
     /** Gửi 1 GET; mã khác 200 hoặc lỗi mạng đều đổi thành WgerUnavailableException. */
+    // String chứa JSON, tí nữa sẽ 
     private String get(HttpClient httpClient, String url) throws WgerUnavailableException {
         HttpRequest request = HttpRequest.newBuilder(URI.create(url))
                 .timeout(TIMEOUT)
@@ -106,6 +108,11 @@ public class WgerClient {
                 .GET()
                 .build();
         try {
+            
+            // Gọi và nhận về API
+            // LÝ THUYẾT: Thường trình duyệt gửi request đến Server, khi gọi API thì ngược lại, App phải tự đóng vai trò như CLIENT - HttpClient gửi request đến 1 bên thứ 3 và nhận phản hồi
+            // gửi bằng httpClient.send tới server bên thứ 3 (wger) và nhận HttpResponse (mã trạng thái + JSON).
+            // URL KHÔNG đọc từ DB: trang đầu = hằng FIRST_PAGE_URL, các trang sau = link "next" wger trả về.
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
             if (response.statusCode() != 200) {
                 throw new WgerUnavailableException("wger trả HTTP " + response.statusCode() + ".", null);
@@ -157,6 +164,7 @@ public class WgerClient {
     }
 
     /** 1 phần tử results → ExerciseItem; thiếu tên tiếng Anh hoặc nhóm cơ → null (bỏ qua bài đó). */
+    // Hàm này nhận vào JSON và trả về Object ExerciseItem
     static ExerciseItem parseExercise(JsonObject node) {
         // B1: tên + mô tả tiếng Anh (language = 2).
         JsonObject english = null;

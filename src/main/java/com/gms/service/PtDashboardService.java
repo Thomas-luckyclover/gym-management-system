@@ -9,7 +9,6 @@ import com.gms.dto.PtAssignedPackageView;
 import com.gms.dto.PtAttentionView;
 import com.gms.dto.PtClientPackageView;
 import com.gms.dto.PtCommissionSummaryView;
-import com.gms.dto.PtRatingView;
 import com.gms.dto.PtScheduleDayView;
 import com.gms.dto.PtSessionView;
 import com.gms.dto.ServiceResult;
@@ -18,102 +17,47 @@ import com.gms.entity.Employee;
 import com.gms.entity.Package;
 import com.gms.entity.Session;
 import com.gms.util.DateTimeUtil;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
 /**
- * SERVICE CỦA TRANG TỔNG QUAN PT — /pt/dashboard (UC-32).
- *
- * Mỗi khối trên trang có 1 HÀM CHÍNH riêng; PtDashboardServlet gọi lần lượt từng hàm.
- * Một khối lỗi không làm hỏng khối khác (mỗi hàm trả ServiceResult riêng).
- *
- *   0. MÃ NHÂN VIÊN    getPtEmployeeCode     "NV-0015" dưới tên PT ở đầu trang
- *   1. LỊCH 7 NGÀY     getSchedule           dải 7 ngày, từ hôm nay
- *   2. CẦN CHÚ Ý       getAttentionItems     buổi rơi vào ngày nghỉ, khách thiếu membership / đang bảo lưu
- *   3. KHÁCH PHỤ TRÁCH getAssignedPackages   danh sách gói PT + SĐT + Zalo, gắn cảnh báo ở khối 2
- *   4. KẾT QUẢ THÁNG   getCommissionSummary  3 ô tiền + thanh tỷ lệ kết quả
- *   5. ĐÁNH GIÁ        getRating             điểm tháng (chưa có màn gọi, xem ghi chú ở hàm)
- *   6. DÙNG CHUNG      findWorkingPt, typeLabel
- *
- * Quy tắc quyền (GBR-10): mọi hàm chính đều bắt đầu bằng findWorkingPt(accountId).
- * accountId luôn lấy từ session, không bao giờ lấy mã PT từ URL → PT chỉ xem được dữ liệu của mình.
- *
- * THAM SỐ CẤU HÌNH (giá trị hiện tại — đổi ở đâu)
- *   SCHEDULE_DAYS  = 7    dải lịch hiện 7 ngày: hôm nay → hôm nay + 6          (hằng số dưới đây)
- *   ATTENTION_DAYS = 14   "Cần chú ý" xét buổi trong 14 ngày tới               (hằng số dưới đây)
- *   P-22           = 3    cần ≥ 3 khách đánh giá mới hiện điểm trung bình PT  (bảng SystemConfigs)
- *   Tỷ lệ hoa hồng của PT đọc từ Employees.CommissionRate (VD Đinh Công Sơn = 70%); P-11 = 70% chỉ là mặc định cho PT mới.
+ * MÀN PT DASHBOARD — mỗi khối 1 hàm public, Servlet gọi lần lượt. Mọi hàm đều kiểm "đúng là PT đang làm" (findWorkingPt).
  */
 public class PtDashboardService {
-
-    private static final int SCHEDULE_DAYS = 7;    // Lịch hiện 7 ngày: hôm nay → hôm nay + 6
-    private static final int ATTENTION_DAYS = 14;  // Cảnh báo xét 14 ngày: hôm nay → hôm nay + 13
+    // Lịch dạy: hôm nay + 6 ngày · Cần chú ý: xét 14 ngày tới.
+    private static final int SCHEDULE_DAYS = 7;
+    private static final int ATTENTION_DAYS = 14;
 
     private final AccountDAO accountDAO = new AccountDAO();
     private final EmployeeDAO employeeDAO = new EmployeeDAO();
     private final PtDashboardDAO dashboardDAO = new PtDashboardDAO();
-    private final SystemConfigService systemConfigService = new SystemConfigService();
 
-
-    // =================================================================================================
-    // 0. MÃ NHÂN VIÊN
-    // =================================================================================================
-
-    /**
-     * HÀM CHÍNH — PtDashboardServlet và PtScheduleServlet gọi khi mở trang, để hiện "NV-0015" dưới tên PT.
-     */
-    public ServiceResult<String> getPtEmployeeCode(int accountId) {
-        try {
-            // B1: tìm hồ sơ PT đang làm việc của tài khoản này.
-            Employee pt = findWorkingPt(accountId);
-            if (pt == null) {
-                return ServiceResult.fail(Messages.MSG07_NO_PERMISSION);
-            }
-
-            // B2: trả mã nhân viên.
-            return ServiceResult.ok(pt.getEmployeeCode());
-
-        } catch (SQLException exception) {
-            exception.printStackTrace();
-            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
-        }
-    }
-
-
-    // =================================================================================================
-    // 1. LỊCH 7 NGÀY
-    // =================================================================================================
-
-    /**
-     * HÀM CHÍNH — PtDashboardServlet.loadBlocks gọi ở B1 khi PT mở trang.
-     * Trả đúng 7 ngày (kể cả ngày không có buổi), mỗi ngày chứa các buổi của ngày đó.
-     */
+    // Khối "Lịch dạy của bạn": 7 ngày, mỗi ngày các buổi của PT.
     public ServiceResult<List<PtScheduleDayView>> getSchedule(int accountId) {
         try {
-            // B1: kiểm tra quyền.
+            // B1: tài khoản → PT đang làm (findWorkingPt); không phải → MSG07
             Employee pt = findWorkingPt(accountId);
             if (pt == null) {
                 return ServiceResult.fail(Messages.MSG07_NO_PERMISSION);
             }
 
-            // B2: DAO đọc các buổi từ hôm nay đến hôm nay + 6, rồi gắn chữ hiển thị cho từng buổi.
-            //     Lấy "now" 1 lần để mọi buổi được so cùng một thời điểm.
             LocalDateTime now = DateTimeUtil.now();
             LocalDate today = now.toLocalDate();
+            // B2: PtDashboardDAO.findSessions: mọi buổi của PT từ hôm nay tới 6 ngày sau → List<PtSessionView>
             List<PtSessionView> sessions = dashboardDAO.findSessions(
                     pt.getEmployeeId(), today, today.plusDays(SCHEDULE_DAYS - 1));
 
+            // B3: mỗi buổi điền nhãn loại gói, nhãn trạng thái, có nút "Xử lý buổi" không (prepareSessionDisplay)
             for (PtSessionView session : sessions) {
                 prepareSessionDisplay(session, now);
             }
 
-            // B3: tạo 7 ngày. Mỗi ngày nhặt ra các buổi có cùng ngày.
+            // B4: chia buổi vào 7 ngày → 7 PtScheduleDayView (ngày, "Hôm nay"/"Thứ…", buổi của ngày)
             List<PtScheduleDayView> days = new ArrayList<>();
 
             for (int i = 0; i < SCHEDULE_DAYS; i++) {
@@ -126,7 +70,11 @@ public class PtDashboardService {
                     }
                 }
 
-                days.add(new PtScheduleDayView(date, buildDayLabel(date, today), date.equals(today), sessionsOfDay));
+                days.add(new PtScheduleDayView(
+                        date,
+                        buildDayLabel(date, today),
+                        date.equals(today),
+                        sessionsOfDay));
             }
 
             return ServiceResult.ok(days);
@@ -138,25 +86,23 @@ public class PtDashboardService {
     }
 
     /**
-     * HÀM PHỤ — gọi ở B2 của getSchedule, mỗi buổi 1 lần.
-     * Gắn chữ tiếng Việt lên buổi DAO đã đọc (loại gói, trạng thái, lý do vắng) và quyết định nút "Xử lý buổi".
-     * Không ghi gì xuống DB.
+     * HÀM PHỤ (getSchedule B3) — điền phần hiển thị cho 1 buổi.
      */
     void prepareSessionDisplay(PtSessionView session, LocalDateTime now) throws SQLException {
-        // B1: chặn dữ liệu sai — buổi hôm nay / tương lai không thể đã "Vắng" (JOB-04 chỉ chốt sau ngày tập).
+        // B1: dữ liệu sai (buổi hôm nay / tương lai mà đã Vắng) → báo lỗi khối
         if (session.getStatus() == Session.Status.MISSED
                 && !session.getSlotDate().isBefore(now.toLocalDate())) {
             throw new SQLException("Buổi hôm nay hoặc tương lai đã bị chốt vắng, SessionId=" + session.getSessionId());
         }
 
-        // B2: loại gói → "PT cá nhân" / "PT đôi" / "Buổi lẻ". Không phải gói PT → dữ liệu sai, báo lỗi.
+        // B2: nhãn loại gói "PT cá nhân" | "PT đôi" | "Buổi lẻ"
         String typeLabel = typeLabel(session.getSubscriptionType());
         if (typeLabel == null) {
             throw new SQLException("Loại gói không hợp lệ cho buổi PT, SessionId=" + session.getSessionId());
         }
         session.setSubscriptionTypeLabel(typeLabel);
 
-        // B3: trạng thái → chữ + màu badge.
+        // B3: nhãn + màu huy hiệu trạng thái
         switch (session.getStatus()) {
             case SCHEDULED -> {
                 session.setStatusLabel("Đã lên lịch");
@@ -176,7 +122,7 @@ public class PtDashboardService {
             }
         }
 
-        // B4: chỉ buổi Vắng mới có dòng lý do.
+        // B4: lý do vắng (chỉ khi Missed)
         session.setMissedReasonLabel(null);
         if (session.getStatus() == Session.Status.MISSED && session.getMissedReason() != null) {
             session.setMissedReasonLabel(switch (session.getMissedReason()) {
@@ -186,13 +132,13 @@ public class PtDashboardService {
             });
         }
 
-        // B5: nút "Xử lý buổi" chỉ bật khi buổi còn Scheduled và chưa tới giờ bắt đầu (BR-69).
+        // B5: canOpenActions = buổi Scheduled chưa tới giờ → hiện nút "Xử lý buổi"
         LocalDateTime startsAt = LocalDateTime.of(session.getSlotDate(), session.getStartTime());
         session.setCanOpenActions(session.getStatus() == Session.Status.SCHEDULED && startsAt.isAfter(now));
     }
 
     /**
-     * HÀM PHỤ — gọi ở B3 của getSchedule. Ngày đầu là "Hôm nay", các ngày sau là "Thứ Hai"… "Chủ Nhật".
+     * HÀM PHỤ (getSchedule B4) — "Hôm nay" hoặc "Thứ Hai" … "Chủ Nhật".
      */
     private String buildDayLabel(LocalDate date, LocalDate today) {
         if (date.equals(today)) {
@@ -209,100 +155,105 @@ public class PtDashboardService {
         };
     }
 
-
-    // =================================================================================================
-    // 2. CẦN CHÚ Ý — cảnh báo trong 14 ngày tới
-    // =================================================================================================
-    //   Thứ tự gọi:  getAttentionItems
-    //                  ├─ B3  buildClosedDayItem         (mỗi buổi rơi vào ngày phòng nghỉ → 1 thẻ "Dời buổi")
-    //                  └─ B4  buildAttentionItems
-    //                           ├─ B1  selectAttentionPackages   (bỏ khách ổn, gom ngày trùng vấn đề)
-    //                           └─ B2  buildAttentionItem        (tạo 1 thẻ cảnh báo)
-    //                                    └─ B2  findPartnerPackage   (gói đôi: xem người còn lại)
-    //
-    //   Khách thiếu membership KHÔNG cần PT bấm gì: JOB-08 tự nhắc khách trước buổi 1 ngày.
-
-    /**
-     * HÀM CHÍNH — PtDashboardServlet.loadBlocks gọi ở B2 khi PT mở trang.
-     * Trả danh sách cảnh báo: thẻ ngày nghỉ đứng trước, thẻ membership / bảo lưu đứng sau. Rỗng = không có gì cần chú ý.
-     */
+    // Khối "Cần chú ý" (14 ngày tới): buổi rơi lúc phòng đóng + khách không vào gym được ngày có buổi.
     public ServiceResult<List<PtAttentionView>> getAttentionItems(int accountId) {
         try {
-            // B1: kiểm tra quyền.
+            // B1: kiểm PT đang làm
             Employee pt = findWorkingPt(accountId);
             if (pt == null) {
                 return ServiceResult.fail(Messages.MSG07_NO_PERMISSION);
             }
 
-            // B2: khoảng xét = hôm nay → hôm nay + 13.
             LocalDateTime now = DateTimeUtil.now();
             LocalDate today = now.toLocalDate();
             LocalDate toDate = today.plusDays(ATTENTION_DAYS - 1);
 
-            // B3: buổi rơi vào ngày phòng nghỉ cả ngày → mỗi buổi 1 thẻ (PT phải dời).
+            // B2: PtDashboardDAO.findClosedDaySessions → buổi Scheduled rơi lúc phòng đóng (nghỉ cả ngày / ngoài giờ, cùng luật JOB-04) → việc "closedDay" (cần Dời buổi)
             List<PtAttentionView> items = new ArrayList<>();
             for (PtDashboardDAO.ClosedDaySession row : dashboardDAO.findClosedDaySessions(pt.getEmployeeId(), today, toDate)) {
                 items.add(buildClosedDayItem(row));
             }
 
-            // B4: khách thiếu membership / đang bảo lưu vào ngày tập → thêm sau thẻ ngày nghỉ.
-            List<PtClientPackageView> clientPackages = dashboardDAO.findClientPackages(pt.getEmployeeId(), today, toDate, now);
-            items.addAll(buildAttentionItems(clientPackages, today));
+            // B3: PtDashboardDAO.findClientPackages → khách × gói × ngày có buổi + quyền vào gym → lọc dòng có vấn đề (buildAttentionItems)
+            List<PtClientPackageView> clientPackages = dashboardDAO.findClientPackages(
+                    pt.getEmployeeId(),
+                    today,
+                    toDate,
+                    now);
+            items.addAll(buildAttentionItems(clientPackages));
 
             return ServiceResult.ok(items);
 
         } catch (SQLException exception) {
-            // Lỗi đọc dữ liệu được báo riêng — không giả vờ "không có cảnh báo".
             exception.printStackTrace();
             return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
         }
     }
 
     /**
-     * HÀM PHỤ — gọi ở B3 của getAttentionItems, mỗi buổi ngày nghỉ 1 lần.
-     * Ví dụ: "Buổi 30/10/2026 18:00 rơi vào ngày phòng nghỉ. Dời buổi trước ngày này; …"
-     * static + không đụng DB → test gọi thẳng được (PtAttentionServiceTest).
+     * HÀM PHỤ (getAttentionItems B2) — 1 buổi rơi lúc phòng đóng → việc "closedDay" (nút Dời buổi): tiêu đề + câu theo 3 trường hợp (buildClosedDayTitle, buildClosedDayMessage).
      */
     static PtAttentionView buildClosedDayItem(PtDashboardDAO.ClosedDaySession row) {
-        String when = DateTimeUtil.formatDate(row.slotDate()) + " " + DateTimeUtil.formatTime(row.startTime());
+        return new PtAttentionView(
+                "closedDay",
+                row.sessionId(),
+                row.slotDate(),
+                buildClosedDayTitle(row),
+                buildClosedDayMessage(row),
+                row.subscriptionId(),
+                row.customerName());
+    }
 
-        return new PtAttentionView(row.customerId(), row.subscriptionId(), row.customerName(),
-                row.ptEndDate(), 0, row.slotDate(), null, null, typeLabel(row.subscriptionType()), null,
-                "Ngày phòng nghỉ — cần dời",
-                "Buổi " + when + " rơi vào ngày phòng nghỉ. Dời buổi trước ngày này; nếu không, hệ thống sẽ hủy và không tính hoa hồng.",
-                "closedDay", row.sessionId());
+    /** HÀM PHỤ (buildClosedDayItem) — tiêu đề: nghỉ cả ngày · chưa rõ giờ mở cửa · ngoài giờ mở cửa. */
+    private static String buildClosedDayTitle(PtDashboardDAO.ClosedDaySession row) {
+        if (row.closedAllDay()) {
+            return "Ngày phòng nghỉ — cần dời";
+        }
+        if (row.openTime() == null || row.closeTime() == null) {
+            return "Chưa rõ giờ mở cửa — cần kiểm tra";
+        }
+        return "Ngoài giờ mở cửa — cần dời";
+    }
+
+    /** HÀM PHỤ (buildClosedDayItem) — câu giải thích theo cùng 3 trường hợp với tiêu đề. */
+    private static String buildClosedDayMessage(PtDashboardDAO.ClosedDaySession row) {
+        String date = DateTimeUtil.formatDate(row.slotDate());
+        String start = DateTimeUtil.formatTime(row.startTime());
+        if (row.closedAllDay()) {
+            return "Buổi " + date + " " + start + " rơi vào ngày phòng nghỉ. Dời buổi trước ngày này; nếu không, hệ thống sẽ hủy và không tính hoa hồng.";
+        }
+        if (row.openTime() == null || row.closeTime() == null) {
+            return "Buổi " + date + " " + start + " chưa xác định được giờ mở cửa ngày này. Hệ thống sẽ hủy buổi nếu chưa xử lý.";
+        }
+        return "Buổi " + date + " " + start + "–" + DateTimeUtil.formatTime(row.endTime())
+                + " nằm ngoài giờ mở cửa (" + DateTimeUtil.formatTime(row.openTime()) + "–" + DateTimeUtil.formatTime(row.closeTime())
+                + "). Dời buổi trước ngày này; nếu không, hệ thống sẽ hủy và không tính hoa hồng.";
     }
 
     /**
-     * HÀM PHỤ — gọi ở B4 của getAttentionItems.
-     * Biến dữ liệu thô của DAO (mỗi khách × mỗi ngày tập 1 dòng) thành các thẻ cảnh báo.
+     * HÀM PHỤ (getAttentionItems B3) — chọn dòng có vấn đề (selectAttentionPackages) → mỗi dòng 1 PtAttentionView.
      */
-    List<PtAttentionView> buildAttentionItems(List<PtClientPackageView> clientPackages, LocalDate today) throws SQLException {
-        // B1: chỉ giữ dòng có vấn đề; cùng khách + cùng gói + cùng vấn đề thì giữ ngày gần nhất.
+    List<PtAttentionView> buildAttentionItems(List<PtClientPackageView> clientPackages) throws SQLException {
         List<PtClientPackageView> selected = selectAttentionPackages(clientPackages);
 
-        // B2: mỗi dòng được giữ → 1 thẻ cảnh báo.
         List<PtAttentionView> items = new ArrayList<>();
         for (PtClientPackageView row : selected) {
-            items.add(buildAttentionItem(row, clientPackages, today));
+            items.add(buildAttentionItem(row, clientPackages));
         }
         return items;
     }
 
     /**
-     * HÀM PHỤ — gọi ở B1 của buildAttentionItems.
-     * Ví dụ: khách A thiếu membership 5 ngày (12, 14, 16, 18, 20/10) → chỉ giữ 1 dòng ngày 12/10.
+     * HÀM PHỤ (buildAttentionItems) — bỏ dòng vào gym bình thường; mỗi khách + gói + loại vấn đề chỉ giữ NGÀY SỚM NHẤT.
      */
     private List<PtClientPackageView> selectAttentionPackages(List<PtClientPackageView> clientPackages) {
         List<PtClientPackageView> selected = new ArrayList<>();
 
         for (PtClientPackageView row : clientPackages) {
-            // B1: có membership và không bảo lưu → khách ổn, bỏ qua.
             if (row.isHasMembershipOnSessionDate() && !row.isFrozenOnSessionDate()) {
                 continue;
             }
 
-            // B2: tìm dòng đã giữ có cùng khách + cùng gói + cùng loại vấn đề (bảo lưu hay thiếu membership).
             int sameIndex = -1;
             for (int i = 0; i < selected.size(); i++) {
                 PtClientPackageView kept = selected.get(i);
@@ -314,7 +265,6 @@ public class PtDashboardService {
                 }
             }
 
-            // B3: chưa có → thêm. Đã có → giữ ngày tập sớm hơn (việc cần xử lý trước).
             if (sameIndex == -1) {
                 selected.add(row);
             } else if (row.getSessionDate().isBefore(selected.get(sameIndex).getSessionDate())) {
@@ -325,16 +275,13 @@ public class PtDashboardService {
     }
 
     /**
-     * HÀM PHỤ — gọi ở B2 của buildAttentionItems, mỗi dòng 1 lần.
-     * Tạo 1 thẻ: tiêu đề, lời giải thích, nhãn gói, tình trạng membership.
-     * clientPackages là list ĐẦY ĐỦ (cả người ổn) — cần để xem người còn lại của gói đôi.
+     * HÀM PHỤ (buildAttentionItems) — 1 dòng có vấn đề → PtAttentionView.
      */
-    private PtAttentionView buildAttentionItem(PtClientPackageView row, List<PtClientPackageView> clientPackages,
-            LocalDate today) throws SQLException {
-        // B1: tiêu đề + câu giải thích theo vấn đề.
+    private PtAttentionView buildAttentionItem(PtClientPackageView row, List<PtClientPackageView> clientPackages) throws SQLException {
         String dateText = DateTimeUtil.formatDate(row.getSessionDate());
         String title;
         String message;
+        // B1: tiêu đề + câu: đang bảo lưu → "Membership đang bảo lưu" · không thì → "Cần membership"
         if (row.isFrozenOnSessionDate()) {
             title = "Membership đang bảo lưu";
             message = "Buổi ngày " + dateText + " nằm trong kỳ bảo lưu của khách.";
@@ -343,7 +290,7 @@ public class PtDashboardService {
             message = "Cần membership hợp lệ cho buổi ngày " + dateText + ".";
         }
 
-        // B2: gói đôi → nói thêm người còn lại có dùng được gym ngày đó không.
+        // B2: gói đôi → nói thêm người kia có vào gym được ngày đó không (findPartnerPackage)
         if (row.getPtSubscriptionType() == Package.Type.PT_COUPLE) {
             PtClientPackageView partner = findPartnerPackage(row, clientPackages);
             if (partner == null) {
@@ -356,30 +303,19 @@ public class PtDashboardService {
                     : " " + partner.getCustomerName() + " cũng không dùng được gym vào ngày này; cả hai cần được kiểm tra trước buổi tập.";
         }
 
-        // B3: tình trạng membership (ưu tiên bảo lưu → chưa có → hết hạn → không phủ ngày tập).
-        String membershipLabel;
-        if (row.isFrozenOnSessionDate()) {
-            membershipLabel = "Đang bảo lưu";
-        } else if (row.getMembershipEndDate() == null) {
-            membershipLabel = "Chưa có membership phù hợp";
-        } else if (row.getMembershipEndDate().isBefore(today)) {
-            membershipLabel = "Đã hết hạn";
-        } else {
-            membershipLabel = "Không bao phủ ngày tập";
-        }
-
-        // B4: đóng gói thành DTO cho JSP.
-        return new PtAttentionView(row.getCustomerId(), row.getPtSubscriptionId(),
-                row.getCustomerName(), row.getPtEndDate(),
-                row.getScheduledSessionCount(), row.getSessionDate(),
-                row.getMembershipEndDate(), row.getFreezeEndDate(),
-                typeLabel(row.getPtSubscriptionType()), membershipLabel, title, message,
-                row.isFrozenOnSessionDate() ? "frozen" : "membership", null);
+        // B3: tạo PtAttentionView kind = "frozen" | "membership"
+        return new PtAttentionView(
+                row.isFrozenOnSessionDate() ? "frozen" : "membership",
+                null,
+                row.getSessionDate(),
+                title,
+                message,
+                row.getPtSubscriptionId(),
+                row.getCustomerName());
     }
 
     /**
-     * HÀM PHỤ — gọi ở B2 của buildAttentionItem (chỉ với gói đôi).
-     * Người còn lại = cùng mã gói + cùng ngày tập + khác mã khách. Không tìm theo tên (tên có thể trùng).
+     * HÀM PHỤ (buildAttentionItem B2) — dòng của NGƯỜI KIA cùng gói đôi, cùng ngày. null = thiếu dữ liệu.
      */
     private PtClientPackageView findPartnerPackage(PtClientPackageView row, List<PtClientPackageView> clientPackages) {
         for (PtClientPackageView other : clientPackages) {
@@ -392,32 +328,24 @@ public class PtDashboardService {
         return null;
     }
 
-
-    // =================================================================================================
-    // 3. KHÁCH PHỤ TRÁCH
-    // =================================================================================================
-
-    /**
-     * HÀM CHÍNH — PtDashboardServlet.loadBlocks gọi ở B3, SAU getAttentionItems (cần attentionItems để gắn vào từng khách).
-     * Mỗi gói PT / buổi lẻ = 1 thẻ khách. SĐT và link Zalo do DTO tự tính từ SĐT (PtAssignedPackageView).
-     */
+    // Khối "Khách phụ trách": gói PT PT đang phụ trách + buổi lẻ sắp dạy + mọi gói đang có việc cần chú ý.
     public ServiceResult<List<PtAssignedPackageView>> getAssignedPackages(int accountId, List<PtAttentionView> attentionItems) {
         try {
-            // B1: kiểm tra quyền.
+            // B1: kiểm PT đang làm
             Employee pt = findWorkingPt(accountId);
             if (pt == null) {
                 return ServiceResult.fail(Messages.MSG07_NO_PERMISSION);
             }
 
-            // B2: DAO đọc gói. Truyền thêm mã gói đang có cảnh báo để không sót khách của buổi PT dạy thay.
+            // B2: Id các gói đang có việc cần chú ý (lấy cả gói đó dù không còn thuộc PT)
             List<Integer> attentionPackageIds = attentionItems.stream()
                     .map(PtAttentionView::getPtSubscriptionId)
                     .distinct()
                     .toList();
+            // B3: PtDashboardDAO.findAssignedPackages → List<PtAssignedPackageView>, điền nhãn loại gói
             List<PtAssignedPackageView> packages = dashboardDAO.findAssignedPackages(
                     pt.getEmployeeId(), DateTimeUtil.now(), attentionPackageIds);
 
-            // B3: gắn nhãn loại gói.
             for (PtAssignedPackageView item : packages) {
                 String label = typeLabel(item.getPtSubscriptionType());
                 if (label == null) {
@@ -426,7 +354,7 @@ public class PtDashboardService {
                 item.setPtSubscriptionTypeLabel(label);
             }
 
-            // B4: gắn cảnh báo vào đúng thẻ khách, đưa khách cần xử lý lên đầu.
+            // B4: gắn việc cần chú ý vào đúng khách + xếp khách có việc lên đầu (mergeClientAttention)
             mergeClientAttention(packages, attentionItems);
             return ServiceResult.ok(packages);
 
@@ -437,11 +365,9 @@ public class PtDashboardService {
     }
 
     /**
-     * HÀM PHỤ — gọi ở B4 của getAssignedPackages.
-     * Ghép theo MÃ GÓI (không theo tên). Thứ tự: thẻ có buổi ngày nghỉ → thẻ có cảnh báo khác → khách bình thường.
+     * HÀM PHỤ (getAssignedPackages B4) — mỗi khách nhận các việc cùng gói; xếp: phòng nghỉ (0) → có việc (1) → bình thường (2).
      */
     static void mergeClientAttention(List<PtAssignedPackageView> packages, List<PtAttentionView> items) {
-        // B1: mỗi thẻ khách nhận các cảnh báo cùng SubscriptionId.
         for (PtAssignedPackageView client : packages) {
             client.getAttentionItems().clear();
             for (PtAttentionView item : items) {
@@ -451,36 +377,31 @@ public class PtDashboardService {
             }
         }
 
-        // B2: sắp xếp theo độ ưu tiên (0 = ngày nghỉ, 1 = cảnh báo khác, 2 = bình thường).
         packages.sort(Comparator.comparingInt(PtAssignedPackageView::getAttentionPriority));
     }
 
-
-    // =================================================================================================
-    // 4. KẾT QUẢ THÁNG VÀ HOA HỒNG
-    // =================================================================================================
-
-    /**
-     * HÀM CHÍNH — PtDashboardServlet.loadBlocks gọi ở B4 khi PT mở trang.
-     * DAO đếm buổi + cộng tiền trong tháng; Service thêm tỷ lệ hoa hồng và tính % từng loại kết quả.
-     */
+    // Khối "Kết quả tháng và hoa hồng" của tháng hiện tại.
     public ServiceResult<PtCommissionSummaryView> getCommissionSummary(int accountId) {
+        return getCommissionSummary(accountId, YearMonth.from(DateTimeUtil.today()));
+    }
+
+    // Khối "Kết quả tháng và hoa hồng" của tháng đang xem (?month=), tính theo ngày tập trong tháng đó.
+    public ServiceResult<PtCommissionSummaryView> getCommissionSummary(int accountId, YearMonth month) {
         try {
-            // B1: kiểm tra quyền.
+            // B1: kiểm PT đang làm
             Employee pt = findWorkingPt(accountId);
             if (pt == null) {
                 return ServiceResult.fail(Messages.MSG07_NO_PERMISSION);
             }
 
-            // B2: tháng hiện tại = từ ngày 1 tháng này đến trước ngày 1 tháng sau.
             LocalDateTime now = DateTimeUtil.now();
-            LocalDate monthStart = now.toLocalDate().withDayOfMonth(1);
+            LocalDate monthStart = month.atDay(1);
 
-            // B3: DAO đếm buổi và cộng Sessions.CommissionAmount.
+            // B2: PtDashboardDAO.findCommissionSummary(từ ngày 1 tới ngày 1 tháng sau) → số buổi + tiền theo từng kết quả
             PtCommissionSummaryView summary = dashboardDAO.findCommissionSummary(
                     pt.getEmployeeId(), monthStart, monthStart.plusMonths(1), now);
 
-            // B4: thêm % hoa hồng hiện tại của PT và tính tỷ lệ từng loại kết quả.
+            // B3: tỷ lệ hoa hồng HIỆN TẠI của PT (không phải của tháng đang xem) + tính tổng buổi đã chốt và % từng loại (prepareCommissionSummary)
             summary.setCommissionRate(pt.getCommissionRate());
             prepareCommissionSummary(summary);
             return ServiceResult.ok(summary);
@@ -492,8 +413,7 @@ public class PtDashboardService {
     }
 
     /**
-     * HÀM PHỤ — gọi ở B4 của getCommissionSummary.
-     * Mẫu số = tổng buổi đã có kết quả (kể cả buổi Hủy). Chưa có buổi nào → mọi tỷ lệ = 0.
+     * HÀM PHỤ (getCommissionSummary B3) — tổng = check-in + không check-in + thiếu gym + bảo lưu + hủy; % từng loại (0 buổi → mọi số = 0).
      */
     void prepareCommissionSummary(PtCommissionSummaryView summary) {
         int total = summary.getCheckedInCount()
@@ -516,111 +436,21 @@ public class PtDashboardService {
     }
 
     /**
-     * HÀM PHỤ — gọi trong prepareCommissionSummary. Ví dụ 8/14 buổi → 57,142…% → làm tròn 57,14%.
+     * HÀM PHỤ — count / total × 100, làm tròn 2 chữ số.
      */
     private double percent(int count, int total) {
         return Math.round(count * 100.0 / total * 100.0) / 100.0;
     }
 
-
-    // =================================================================================================
-    // 5. ĐÁNH GIÁ PT
-    // =================================================================================================
-
     /**
-     * HÀM CHÍNH — dành cho khối "Đánh giá tháng". HIỆN CHƯA CÓ Servlet nào gọi (khối này chưa lên giao diện);
-     * phần tính điểm prepareRating đã có test PtRatingServiceTest.
-     */
-    public ServiceResult<PtRatingView> getRating(int accountId) {
-        try {
-            // B1: kiểm tra quyền.
-            Employee pt = findWorkingPt(accountId);
-            if (pt == null) {
-                return ServiceResult.fail(Messages.MSG07_NO_PERMISSION);
-            }
-
-            // B2: DAO đọc tổng sao + số khách chấm trong tháng này.
-            LocalDate ratingMonth = DateTimeUtil.today().withDayOfMonth(1);
-            PtRatingView rating = dashboardDAO.findRatingForMonth(pt.getEmployeeId(), ratingMonth);
-
-            // B3: P-22 = số khách tối thiểu; chưa đủ thì ẩn điểm.
-            int minimumCustomers = systemConfigService.getInt(SystemConfigService.MIN_PT_RATING_CUSTOMERS);
-            prepareRating(rating, minimumCustomers);
-            return ServiceResult.ok(rating);
-
-        } catch (SQLException | IllegalStateException exception) {
-            exception.printStackTrace();
-            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
-        }
-    }
-
-    /**
-     * HÀM PHỤ — gọi ở B3 của getRating. Điểm = tổng sao / số khách, cắt 2 số lẻ (4,999 hiện 4,99, không thành 5,00).
-     */
-    void prepareRating(PtRatingView rating, int minimumCustomers) {
-        if (minimumCustomers < 1) {
-            throw new IllegalStateException("Tham số P-22 phải lớn hơn 0.");
-        }
-
-        int customerCount = rating.getRatingCustomerCount();
-        if (customerCount == 0) {
-            rating.setDisplay(false, null, "Chưa có đánh giá trong tháng này.");
-            return;
-        }
-        if (customerCount < minimumCustomers) {
-            rating.setDisplay(false, null, "Chưa đủ đánh giá để hiện điểm tháng này.");
-            return;
-        }
-
-        BigDecimal average = BigDecimal.valueOf(rating.getRatingTotal())
-                .divide(BigDecimal.valueOf(customerCount), 2, RoundingMode.DOWN);
-        boolean perfectFive = rating.getRatingTotal() == 5L * customerCount;
-        rating.setDisplay(true, average, buildRatingMessage(average, perfectFive));
-    }
-
-    /**
-     * HÀM PHỤ — gọi trong prepareRating. Chọn 1 trong 6 câu động viên theo điểm.
-     */
-    private String buildRatingMessage(BigDecimal average, boolean perfectFive) {
-        if (perfectFive) {
-            return "5 sao trọn vẹn! Vui một nhịp thôi, rồi tiếp tục giữ phong độ nhé.";
-        }
-        if (average.compareTo(BigDecimal.valueOf(4)) > 0) {
-            return "Điểm rất tốt! Cứ giữ sự chỉn chu; đừng để sự chủ quan vào tập thay mình.";
-        }
-        if (average.compareTo(BigDecimal.valueOf(3)) > 0) {
-            return "Đang vào guồng rồi. Chăm thêm những chi tiết nhỏ, khách sẽ cảm nhận được.";
-        }
-        if (average.compareTo(BigDecimal.valueOf(2)) > 0) {
-            return "Đường tiến bộ đâu phải lúc nào cũng thẳng. Lắng nghe, chỉnh từng buổi rồi đi tiếp nhé.";
-        }
-        if (average.compareTo(BigDecimal.ONE) > 0) {
-            return "Hơi hụt nhịp, nhưng chưa hết set. Chỉnh cách hướng dẫn từ góp ý của khách nhé.";
-        }
-        return "Điểm chưa như mong muốn. Đừng nản; mỗi buổi là một cơ hội lấy lại niềm tin.";
-    }
-
-
-    // =================================================================================================
-    // 6. DÙNG CHUNG
-    // =================================================================================================
-
-    /**
-     * HÀM PHỤ DÙNG CHUNG — gọi ở B1 của MỌI hàm chính:
-     * getPtEmployeeCode, getSchedule, getAttentionItems, getAssignedPackages, getCommissionSummary, getRating.
-     *
-     * accountId (từ session) → Accounts → PersonId → Employees.
-     * Trả hồ sơ PT nếu: tài khoản Active  VÀ  nhân viên là PT  VÀ  đang làm việc (GBR-10).
-     * Trả null nếu không đạt → hàm chính trả MSG07 "không có quyền".
+     * HÀM PHỤ (mọi hàm public B1) — tài khoản Active → Employee có Position = PT và Status = Working; không đúng → null.
      */
     private Employee findWorkingPt(int accountId) throws SQLException {
-        // B1: tài khoản phải tồn tại và đang hoạt động.
         Account account = accountDAO.findById(accountId);
         if (account == null || account.getStatus() != Account.Status.ACTIVE) {
             return null;
         }
 
-        // B2: người của tài khoản đó phải là PT đang làm việc.
         Employee employee = employeeDAO.findByPersonId(account.getPersonId());
         if (employee == null
                 || employee.getPosition() != Role.PT
@@ -631,8 +461,7 @@ public class PtDashboardService {
     }
 
     /**
-     * HÀM PHỤ DÙNG CHUNG — loại gói → chữ tiếng Việt. Không phải gói PT → null (hàm gọi tự quyết báo lỗi).
-     * Gọi ở: B2 prepareSessionDisplay, buildClosedDayItem, B4 buildAttentionItem, B3 getAssignedPackages.
+     * HÀM PHỤ — PTSingle → "PT cá nhân" · PTCouple → "PT đôi" · SingleSession → "Buổi lẻ" · khác → null.
      */
     static String typeLabel(Package.Type type) {
         if (type == null) {
@@ -646,3 +475,133 @@ public class PtDashboardService {
         };
     }
 }
+
+
+
+/*
+ * ============================================================================================================
+ * PHỤ LỤC — BẢN ĐỒ DTO MÀN PT DASHBOARD: FIELD NÀO · HÀM NÀO TẠO · ĐI QUA ĐÂU · HIỆN Ở ĐÂU
+ * ============================================================================================================
+ *
+ * A. CÂY GỌI HÀM — GET /pt/dashboard (chỉ có doGet, chỉ ĐỌC DB)
+ *   ?month=yyyy-MM → tháng đang xem (mặc định tháng hiện tại), chỉ khối hoa hồng đổi theo.
+ *
+ *   PtDashboardServlet.doGet
+ *     B2 loadBlocks — mỗi khối 1 hàm Service, kết quả qua putBlock (ok → "xxx" · lỗi → "xxxError"):
+ *        1. getSchedule(accountId)          → DAO.findSessions → prepareSessionDisplay → gom 7 ngày
+ *                                                                               → "scheduleDays"      | "scheduleError"
+ *        2. getAttentionItems(accountId)    → DAO.findClosedDaySessions (phòng đóng: nghỉ cả ngày / ngoài giờ) → buildClosedDayItem
+ *                                           + DAO.findClientPackages → buildAttentionItems
+ *                                               → selectAttentionPackages → buildAttentionItem
+ *                                                                               → "attentionItems"    | "attentionError"
+ *        3. getAssignedPackages(accountId, attentionItems ở bước 2)
+ *                                           → DAO.findAssignedPackages → typeLabel → mergeClientAttention
+ *                                                                               → "assignedPackages"  | "assignedPackagesError"
+ *        4. getCommissionSummary(accountId) → DAO.findCommissionSummary → setCommissionRate → prepareCommissionSummary
+ *                                                                               → "commissionSummary" | "commissionSummaryError"
+ *     B3 loadWeather → WeatherService                                           → "weather" · "weatherType" · "weatherPreview"
+ *     B4 setPageInfo                                                            → "activeNav" · "pageTitle" · "today"
+ *
+ *   Mọi hàm Service B1 đều gọi findWorkingPt: tài khoản Active + Employees.Position = PT + Status = Working; sai → MSG07.
+ *   1 khối lỗi chỉ khối đó hiện chữ đỏ (putBlock), các khối khác vẫn hiện.
+ *
+ * ------------------------------------------------------------------------------------------------------------
+ * B. PtScheduleDayView (phần tử "scheduleDays", biến JSP day) — khối "Lịch dạy 7 ngày"
+ *    Tạo: getSchedule B4 — new PtScheduleDayView(...) cho 7 ngày (hôm nay → +6). Constructor, field final.
+ * ------------------------------------------------------------------------------------------------------------
+ *   slotDate       today.plusDays(i)                          → tab ngày "dd/MM"
+ *   dayLabel       buildDayLabel: "Hôm nay" | "Thứ Hai"…      → tên tab
+ *   today          date.equals(today)  (getter isToday)       → tab mở sẵn + is-today; JSP tìm todayCount / firstToday
+ *   sessions       lọc List<PtSessionView> đúng ngày          → "N buổi" / "Trống" · danh sách buổi trong tab (mục C)
+ *
+ * ------------------------------------------------------------------------------------------------------------
+ * C. PtSessionView (phần tử day.sessions, biến JSP s) — 1 buổi trong tab ngày
+ *    Tạo: PtDashboardDAO.findSessions (constructor) · Điền thêm: getSchedule B3 → prepareSessionDisplay
+ * ------------------------------------------------------------------------------------------------------------
+ *   field                  ai làm                                               hiện ở
+ *   sessionId              DAO ← Sessions.SessionId                             link Xử lý buổi ?handle= · so firstToday
+ *   slotDate               DAO ← TimeSlots.SlotDate                             link ?date= · data-start/data-end
+ *   startTime · endTime    DAO ← TimeSlots                                      "07:00 – 08:00" · dashboard.js tô buổi đang diễn ra
+ *   customerName           DAO ← Persons.FullName người đứng tên                tên khách
+ *   partnerName            DAO ← Persons của PartnerCustomerId (gói đôi)        " & tên người tập cùng"
+ *   subscriptionType       DAO ← Subscriptions.SubscriptionType (enum)          (chỉ để tính nhãn)
+ *   status                 DAO ← Sessions.Status (enum)                         JSP: khác SCHEDULED mới hiện huy hiệu
+ *   missedReason           DAO ← Sessions.MissedReason (enum)                   (chỉ để tính nhãn)
+ *   subscriptionTypeLabel  prepareSessionDisplay B2 = typeLabel(...)            "PT cá nhân" | "PT đôi" | "Buổi lẻ"
+ *   statusLabel            prepareSessionDisplay B3                             chữ huy hiệu "Đã check-in"…
+ *   statusBadgeClass       prepareSessionDisplay B3                             màu huy hiệu badge-success / danger…
+ *   missedReasonLabel      prepareSessionDisplay B4 (chỉ Missed)                in cạnh huy hiệu Vắng
+ *   canOpenActions         prepareSessionDisplay B5 = Scheduled + chưa tới giờ  nút "Xử lý buổi" · chip "Tiếp theo"
+ *   Kiểm dữ liệu hỏng (B1, B2): buổi hôm nay/tương lai mà Missed, hoặc loại gói lạ → ném SQLException → cả khối báo lỗi.
+ *
+ * ------------------------------------------------------------------------------------------------------------
+ * D. PtAttentionView ("attentionItems" và client.attentionItems, biến JSP item) — việc "Cần chú ý" 14 ngày tới
+ *    Tạo bằng constructor ở 2 nơi, field final, không setter:
+ *      kind = "closedDay"              ← buildClosedDayItem(row)  ← DAO.findClosedDaySessions (buổi rơi lúc phòng đóng: nghỉ cả ngày / ngoài giờ, cùng luật JOB-04)
+ *      kind = "frozen" | "membership"  ← buildAttentionItem(row)  ← DAO.findClientPackages, đã lọc qua selectAttentionPackages
+ *                                        (bỏ người vào gym bình thường; mỗi khách + gói + loại vấn đề chỉ giữ NGÀY SỚM NHẤT)
+ * ------------------------------------------------------------------------------------------------------------
+ *   field                    closedDay                       frozen / membership                     hiện ở
+ *   kind                     "closedDay"                     frozen ? "frozen" : "membership"        màu ô (is-closed / is-frozen) · nút Dời buổi
+ *   sessionId                row.sessionId                   null                                    link "Dời buổi" ?handle=
+ *   sessionDate              row.slotDate                    row.sessionDate (ngày sớm nhất)          "buổi dd/MM" · link ?date=
+ *   attentionTitle           "Ngày phòng nghỉ — cần dời" | "Ngoài giờ mở cửa — cần dời" | "Chưa rõ giờ mở cửa — cần kiểm tra"     "Membership đang bảo lưu" | "Cần membership"   chữ đậm
+ *   attentionMessage         theo 3 trường hợp (buildClosedDayMessage)  "Buổi ngày … bảo lưu" / "Cần membership…"
+ *                                                            + gói đôi: câu về người kia (findPartnerPackage)   ghi chú (closedDay hoặc gói đôi)
+ *   ptSubscriptionId         row.subscriptionId              row.ptSubscriptionId                    mergeClientAttention ghép vào đúng khách
+ *   customerName             row.customerName                row.customerName                        "· tên" (khi gói đôi)
+ *   Số ô "Cần chú ý" ở 3 số nhanh = fn:length(attentionItems).
+ *
+ *   (Dữ liệu trung gian PtClientPackageView: DAO.findClientPackages tạo — 1 dòng = khách × gói × ngày có buổi,
+ *    kèm hasMembershipOnSessionDate · frozenOnSessionDate. Không lên JSP.)
+ *
+ * ------------------------------------------------------------------------------------------------------------
+ * E. PtAssignedPackageView (phần tử "assignedPackages", biến JSP client) — khối "Khách phụ trách"
+ *    Tạo: PtDashboardDAO.findAssignedPackages (constructor + 3 setter). Lấy: gói PT còn hạn của PT + buổi lẻ sắp dạy
+ *         + MỌI gói có trong attentionItems (dù không còn thuộc PT).
+ *    Điền thêm: getAssignedPackages B3 (nhãn) · B4 mergeClientAttention (việc cần chú ý + sắp xếp).
+ * ------------------------------------------------------------------------------------------------------------
+ *   customerName · partnerName       DAO constructor ← Persons                      tên khách "& người tập cùng"
+ *   ptSubscriptionType               DAO constructor (enum)                         (chỉ để tính nhãn)
+ *   ptEndDate                        DAO ← Subscriptions.EndDate                    "đến dd/MM/yyyy"
+ *   scheduledSessionCount            DAO ← COUNT buổi Scheduled chưa tới giờ        "còn N buổi"
+ *   ptSubscriptionId                 DAO setter                                     khóa ghép việc cần chú ý
+ *   customerPhone · partnerPhone     DAO setter ← Persons.Phone                     nút gọi điện
+ *   ptSubscriptionTypeLabel          getAssignedPackages B3 = typeLabel(...)        "PT cá nhân · còn N buổi"
+ *   attentionItems                   mergeClientAttention: PtAttentionView cùng ptSubscriptionId   các ô việc cần chú ý (mục D)
+ *   (getter) customerZaloUrl · partnerZaloUrl = ZaloUtil.toUrl(phone)              nút "Zalo"
+ *   (getter) attentionPriority: có closedDay = 0 · có việc khác = 1 · không có = 2 → mergeClientAttention sort: khách có việc lên đầu
+ *
+ * ------------------------------------------------------------------------------------------------------------
+ * F. PtCommissionSummaryView ("commissionSummary", biến JSP cs) — khối "Kết quả tháng và hoa hồng"
+ *    Tạo: PtDashboardDAO.findCommissionSummary (constructor, đếm buổi có NGÀY TẬP trong tháng này).
+ *    Điền thêm: getCommissionSummary B3 setCommissionRate · prepareCommissionSummary → setResolvedStatistics.
+ *    ?month=yyyy-MM → tháng đang xem (mặc định tháng hiện tại); commissionRate vẫn là tỷ lệ HIỆN TẠI.
+ * ------------------------------------------------------------------------------------------------------------
+ *   field                             DAO tính bằng (SUM CASE trong SQL)                         hiện ở
+ *   finalizedCommissionAmount         hoa hồng buổi CheckedIn / Missed                          ô tiền "Đã chốt"
+ *   pendingCommissionAmount           hoa hồng buổi Scheduled ĐÃ hết giờ (chờ JOB-04)           ô "Chờ hệ thống chốt"
+ *   pendingSessionCount               số buổi đó                                                "N buổi vừa kết thúc"
+ *   projectedCommissionAmount         hoa hồng buổi Scheduled CHƯA hết giờ                      ô "Dự kiến"
+ *   projectedSessionCount             số buổi đó                                                "N buổi còn lại trong tháng"
+ *   checkedInCount                    Status = CheckedIn                                        thanh tỷ lệ + "Có check-in N"
+ *   noCheckInCount                    Missed + NoCheckIn                                        "Không check-in N"
+ *   noMembershipCount                 Missed + NoMembership                                     "Thiếu quyền vào gym N"
+ *   membershipFrozenCount             Missed + MembershipFrozen                                 "Đang bảo lưu N"
+ *   cancelledCount                    Status = Cancelled                                        "Đã hủy N"
+ *   commissionRate                    Service ← Employees.CommissionRate (tỷ lệ HIỆN TẠI)       "Tỷ lệ hoa hồng hiện tại: N%"
+ *   resolvedSessionCount              prepareCommissionSummary = tổng 5 loại trên               "N buổi đã chốt" · 0 → "Chưa có buổi nào…"
+ *   checkedInRatePercent … cancelledRatePercent
+ *                                     prepareCommissionSummary = count × 100 / tổng (2 chữ số)  "%" cạnh chú thích
+ *
+ * ------------------------------------------------------------------------------------------------------------
+ * G. Attribute KHÔNG phải DTO của PT
+ * ------------------------------------------------------------------------------------------------------------
+ *   weather           WeatherView (WeatherService, API thời tiết; ?weather= → bản xem thử)  → common/dashboard-weather.jspf
+ *   weatherType       resolveWeatherType → class <body> "weather-sunny|rain|…" (đổi màu nền, tranh)
+ *   weatherPreview    true = đang xem thử → nhãn "Xem trước"
+ *   activeNav · pageTitle · today   setPageInfo → menu sáng "Tổng quan", tiêu đề, ngày trên thanh trên
+ *   JSP tự tính: todayCount (số buổi hôm nay) · firstToday (buổi đầu hôm nay) từ scheduleDays → 3 số nhanh + chip "Tiếp theo"
+ *
+ * ============================================================================================================
+ */

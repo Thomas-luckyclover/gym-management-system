@@ -1,5 +1,6 @@
 package com.gms.dto;
 
+import com.gms.util.ZaloUtil;
 import java.time.LocalDateTime;
 
 /**
@@ -106,6 +107,12 @@ public class CustomerProfileRowView {
         return phone;
     }
 
+    /** JSP dùng số liên hệ do DAO đọc để mở Zalo, cùng cách với dashboard. */
+    // GETTER TỰ TÍNH — không có field/setter "zaloUrl"; = ZaloUtil.toUrl(phone); JSP: receptionist/customer-list.jsp:194 …
+    public String getZaloUrl() {
+        return ZaloUtil.toUrl(phone);
+    }
+
     public String getEmail() {
         return email;
     }
@@ -143,11 +150,13 @@ public class CustomerProfileRowView {
     }
 
 
+    // GETTER TỰ TÍNH — không có field/setter "inactive"; = status == "Inactive"; JSP: receptionist/customer-form.jsp:54 …
     public boolean isInactive() {
         return "Inactive".equalsIgnoreCase(status);
     }
 
     /** Nhãn trạng thái hồ sơ, dùng ở cả danh sách và chi tiết BF-07. */
+    // GETTER TỰ TÍNH — không có field/setter "statusLabel"; = status đổi sang chữ tiếng Việt; JSP: receptionist/customer-form.jsp:87 …
     public String getStatusLabel() {
         if ("New".equals(status)) {
             return "Chưa có gói";
@@ -164,6 +173,7 @@ public class CustomerProfileRowView {
         return "Ngừng hoạt động";
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "statusTone"; = Active → "success", Frozen → "warning", khác → "neutral"; JSP: receptionist/customer-form.jsp:85 …
     public String getStatusTone() {
         if ("Active".equals(status)) {
             return "success";
@@ -174,6 +184,7 @@ public class CustomerProfileRowView {
         return "neutral";
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "customerTypeLabel"; = Dependent → "Phụ thuộc", khác → "Cá nhân"; JSP: receptionist/customer-form.jsp:81 …
     public String getCustomerTypeLabel() {
         if ("Dependent".equals(customerType)) {
             return "Phụ thuộc";

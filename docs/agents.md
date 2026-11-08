@@ -20,14 +20,14 @@ Tài liệu ở `docs/agents.md`, dùng cho cả AI và thành viên nhóm. Đ�
   Job chạy ngầm dùng `ScheduledExecutorService` của JDK — không thêm Quartz.
 - **Database:** SQL / **SQL Server**. Mọi câu truy vấn, tối ưu hóa, thiết kế bảng đều phải tuân theo chuẩn cú pháp T-SQL của SQL Server.
 - **Frontend:** JavaScript, CSS — giữ nguyên theo cấu trúc hiện tại của dự án. **Toàn bộ CSS bắt buộc dùng Design Tokens từ `tokens.css` (CSS Variables), cấm hard-code màu/spacing/font/radius/shadow trực tiếp** — chi tiết đầy đủ ở `frontend-design-pipeline-SWP391-v4.md` (Nguyên tắc nền, mục 9-10) và `shared-library-guide.md`.
-  - File thực tế trong repo: `src/main/webapp/css/tokens.css` (lớp 1) → `src/main/webapp/css/common.css` (lớp 2) → `src/main/webapp/css/pages/<vai-trò>/<màn>.css` (lớp 3); JS dùng chung `src/main/webapp/js/common.js`. Cách dùng: `docs/frontend-shared-usage.md`.
+  - File thực tế trong repo: `src/main/webapp/css/tokens.css` (lớp 1) → `src/main/webapp/css/common.css` (lớp 2) → `src/main/webapp/css/pages/<vai-trò>/<màn>.css` (lớp 3); JS dùng chung `src/main/webapp/js/common.js`.
   - Theme theo vai trò gắn bằng 1 class trên `<body>`: `theme-guest`, `theme-guest-dark`, `theme-member`, `theme-staff`, `theme-manager`, `theme-admin`. Không tự định nghĩa lại màu vai trò trong CSS trang.
   - Mọi trang include `WEB-INF/jsp/common/head.jspf` (trong `<head>`) và `WEB-INF/jsp/common/flash-toast.jspf` (đầu `<body>`).
 - **Bảo mật:** Mật khẩu người dùng bắt buộc phải hash bằng **BCrypt** trước khi lưu vào database. Tuyệt đối không lưu plaintext, không dùng MD5/SHA thường (không có salt) để thay thế.
 
 ## Phần 2: Cấu Trúc Package (Package Structure)
 
-Bảng đầy đủ "file nào đặt ở đâu" + 67 màn → Servlet → URL → JSP: **`docs/project-structure.md`** (AI tra bảng này trước khi tạo file mới).
+Vị trí file: theo cấu trúc package bên dưới và thư mục `src/` hiện có (xem file cùng loại trước khi tạo file mới).
 
 - **Chia package rõ ràng theo layer**, không gộp chung, không đặt sai chỗ:
   ```
@@ -76,7 +76,7 @@ Khi thực hiện bất kỳ nhiệm vụ nào, AI phải đối chiếu và bá
 - **Rule & tham số SRS:** đối chiếu tài liệu luật và quyết định mới trong chat. Bản v25 là nguồn nền; schema hiện tại là v26, đã bỏ P-07 và thêm P-22. Dẫn mã luật đã xác minh, không dùng phiên bản cũ để ghi đè quyết định mới.
 - **Hồ sơ module `docs/handoff/`:** nếu có, đọc file, rule và case test trước khi code. Nếu tài liệu đã chuyển/xóa thì tìm vị trí mới; không tự đoán quyết định nghiệp vụ còn thiếu.
 - **Database:** `database/1_Init_Schema.sql` (schema v26), `database/2_Seed_Data.sql` (sinh từ `database/tools/seeddata.py`), danh mục case + tài khoản test `docs/database/SEED_CASES.md`, thay đổi schema `docs/database/SCHEMA_CHANGES_v25.md`.
-- **Tài liệu dự án khác:** `docs/project-structure.md` (vị trí file), `docs/integration-guide.md` (tích hợp), `docs/frontend-shared-usage.md` (base frontend). Tra tài liệu phân công/Git đang tồn tại; không coi `docs/team-plan.md` đã xóa ở develop là nguồn hiện tại.
+- **Tài liệu dự án khác:** chỉ còn `docs/notes.md` (nhật ký quyết định). Tra tài liệu phân công/Git đang tồn tại; không tự đoán quyết định nghiệp vụ còn thiếu.
 - **`docs/NamingConvention.md`:** quy tắc đặt tên biến/class/method/bảng/cột — file riêng, bắt buộc tuân thủ khi đặt tên.
 - **`docs/codeImplementationBackend.md`:** quy tắc viết code Backend (Java: Entity/DAO/Service/Servlet/Utility) — comment, thụt lề, code style, tối ưu, cấu trúc setter... — file riêng, bắt buộc tuân thủ khi implement.
 - **`docs/codeImplementationFrontend.md`:** quy tắc viết code Frontend (JSP/HTML/CSS/JavaScript) — file riêng, bắt buộc tuân thủ khi implement phần hiển thị/tương tác.

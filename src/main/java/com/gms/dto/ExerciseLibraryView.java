@@ -147,6 +147,7 @@ public class ExerciseLibraryView {
     }
 
     // JSP: true = in lưới thư viện, false = in màn khóa
+    // GETTER TỰ TÍNH — không có field/setter "open"; = access == OPEN; JSP: common/_exercise-library.jspf:31
     public boolean isOpen() {
         return access == Access.OPEN;
     }
@@ -352,6 +353,7 @@ public class ExerciseLibraryView {
     }
 
     // JSP: true khi có lọc → hiện link "Xóa lọc"
+    // GETTER TỰ TÍNH — không có field/setter "filtered"; = có query, categoryId hoặc equipmentId; JSP: common/_exercise-library.jspf:84
     public boolean isFiltered() {
         return query != null || categoryId != null || equipmentId != null;
     }

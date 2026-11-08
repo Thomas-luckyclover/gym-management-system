@@ -1,0 +1,43 @@
+<%@ page pageEncoding="UTF-8" %>
+<%--
+====================================================================================================
+ _schedule-handle-transfer.jspf — TAB CHUYỂN PT của hộp Xử lý buổi
+ Nhúng vào: _schedule-handle.jspf (static include → dùng chung biến chosen, sessionTime, closeUrl, handle, csrfToken, viewDate, view).
+ Dữ liệu: handle.transfer.slots (PtHandleTransferBlock ← PtSessionHandleService.getHandleForm B5): PT khác trống đúng giờ này.
+==================================================================================================== --%>
+
+<%-- ===== BẮT ĐẦU: FORM CHUYỂN PT ===== --%>
+        <%--
+          ===== FORM CHUYỂN PT (action=transfer) → PtSessionHandleService.transfer =====
+          Mỗi PT trống đúng giờ (handle.transfer.slots): radio name="timeSlotId" value = slot.timeSlotId · tên slot.ptName.
+        --%>
+        <form class="pt-handle-panel" data-panel="transfer" method="post" action="${pageContext.request.contextPath}/pt/schedule" novalidate>
+            <input type="hidden" name="csrfToken" value="<c:out value='${csrfToken}' />">
+            <input type="hidden" name="action" value="transfer">
+            <input type="hidden" name="sessionId" value="${handle.sessionId}">
+            <input type="hidden" name="date" value="${viewDate}">
+            <input type="hidden" name="view" value="${view}">
+            <c:choose>
+                <c:when test="${not empty handle.transfer.slots}">
+                    <div class="pt-handle-pts">
+                        <c:forEach var="slot" items="${handle.transfer.slots}">
+                            <label class="pt-handle-pt">
+                                <input type="radio" name="timeSlotId" value="${slot.timeSlotId}">
+                                <span class="pt-handle-avatar" aria-hidden="true"><c:out value="${fn:substring(slot.ptName, 0, 1)}" /></span>
+                                <span><strong><c:out value="${slot.ptName}" /></strong><small>Trống <c:out value="${sessionTime}" /></small></span>
+                            </label>
+                        </c:forEach>
+                    </div>
+                    <p class="pt-handle-effect">Giữ nguyên ngày giờ · khách và PT nhận đều được báo · hoa hồng buổi này thuộc PT nhận.</p>
+                    <div class="pt-handle-actions">
+                        <a class="btn btn-ghost" href="${closeUrl}" data-handle-close>Để sau</a>
+                        <button class="btn btn-primary" type="submit">Chuyển PT</button>
+                    </div>
+                </c:when>
+                <c:otherwise>
+                    <p class="pt-handle-empty">Không PT nào đang trống đúng <c:out value="${sessionTime}" /> ngày này.
+                        Nhờ PT khác công bố khung giờ này, hoặc chọn Dời buổi.</p>
+                </c:otherwise>
+            </c:choose>
+        </form>
+<%-- ===== KẾT THÚC: FORM CHUYỂN PT ===== --%>

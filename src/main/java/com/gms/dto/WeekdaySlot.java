@@ -3,21 +3,28 @@ package com.gms.dto;
 import java.time.LocalTime;
 
 /**
- * 1 ô của "Lịch cố định" (màn Gói của tôi): giờ tập cố định của 1 thứ trong tuần (T2 … T6).
- * MyBookingService.buildWeekTemplate tính từ các buổi thật của gói.
+ * DTO 1 ô THỨ (T2…T6) trong "Lịch cố định" — Service TẠO: MyBookingService.applyWeekTemplate.
+ * JSP đọc: my-bookings.jsp (vòng lặp ${booking.weekTemplate}, biến "d"). isFixed() = có giờ cố định (main / odd).
  */
 public class WeekdaySlot {
+    public static final String KIND_MAIN = "main";
+    public static final String KIND_ODD = "odd";
+    public static final String KIND_MIXED = "mixed";
+    public static final String KIND_NONE = "none";
 
-    public static final String KIND_MAIN = "main";     // thứ này tập đúng giờ chính của gói
-    public static final String KIND_ODD = "odd";       // thứ này cố định nhưng KHÁC giờ chính (VD T4 07:00 khi các thứ khác 18:00)
-    public static final String KIND_MIXED = "mixed";   // có buổi nhưng giờ không cố định → các buổi nằm ở "Buổi khác giờ"
-    public static final String KIND_NONE = "none";     // thứ này không có buổi
+    // ===== IN RA MÀN =====
+    // ← "T2"…"T6" → chữ trên ô
+    private final String dayName;
+    // ← main (giờ cố định chính) | odd (giờ cố định khác giờ chính) | mixed (có buổi nhưng không cố định) | none → class màu ô is-<kind>
+    private final String kind;
+    // ← giờ xuất hiện nhiều nhất của thứ đó → số giờ in đậm
+    private final LocalTime startTime;
+    // ← số buổi đúng giờ đó → "N buổi"
+    private final int count;
 
-    private final String dayName;      // "T2" … "T6"
-    private final String kind;         // main | odd | mixed | none
-    private final LocalTime startTime; // giờ cố định (null nếu mixed / none)
+    // ===== KHÔNG IN RA MÀN =====
+    // ← giờ kết thúc tương ứng (để dành, JSP chưa dùng)
     private final LocalTime endTime;
-    private final int count;           // số buổi của gói rơi đúng giờ cố định ở thứ này
 
     public WeekdaySlot(String dayName, String kind, LocalTime startTime, LocalTime endTime, int count) {
         this.dayName = dayName;
@@ -33,7 +40,7 @@ public class WeekdaySlot {
     public LocalTime getEndTime() { return endTime; }
     public int getCount() { return count; }
 
-    /** Thứ có giờ cố định (main hoặc odd)? */
+    // GETTER TỰ TÍNH — không có field/setter "fixed"; = kind là KIND_MAIN hoặc KIND_ODD; JSP: customer/my-bookings.jsp:324
     public boolean isFixed() {
         return KIND_MAIN.equals(kind) || KIND_ODD.equals(kind);
     }

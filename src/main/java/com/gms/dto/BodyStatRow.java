@@ -28,21 +28,27 @@ public class BodyStatRow {
     // ===== Chữ in sẵn cho bảng (dấu phẩy thập phân kiểu Việt Nam) =====
 
     /** "58,6 kg". */
+    // GETTER TỰ TÍNH — không có field/setter "weightText"; = weightKg đã định dạng + " kg"; JSP: customer/body-stats.jsp:162
     public String getWeightText() { return text(weightKg) + " kg"; }
 
     /** "22,9". */
+    // GETTER TỰ TÍNH — không có field/setter "bmiText"; = bmi đã định dạng; JSP: customer/body-stats.jsp:166
     public String getBmiText() { return text(bmi); }
 
     /** "27,9 %" hoặc "—" khi lần này không đo. */
+    // GETTER TỰ TÍNH — không có field/setter "fatText"; = bodyFatPercent đã định dạng + " %", null → "—"; JSP: customer/body-stats.jsp:168
     public String getFatText() { return bodyFatPercent == null ? "—" : text(bodyFatPercent) + " %"; }
 
     /** "38,3 %" hoặc "—". */
+    // GETTER TỰ TÍNH — không có field/setter "muscleText"; = musclePercent đã định dạng + " %", null → "—"; JSP: customer/body-stats.jsp:170
     public String getMuscleText() { return musclePercent == null ? "—" : text(musclePercent) + " %"; }
 
     /** "73 cm" hoặc "—". */
+    // GETTER TỰ TÍNH — không có field/setter "waistText"; = waistCm đã định dạng + " cm", null → "—"; JSP: customer/body-stats.jsp:172
     public String getWaistText() { return waistCm == null ? "—" : text(waistCm) + " cm"; }
 
     /** "−0,7" / "+0,4" / "±0" / "Lần đầu". */
+    // GETTER TỰ TÍNH — không có field/setter "changeText"; = dấu + số weightChange (0 → "±0"), null → "Lần đầu"; JSP: customer/body-stats.jsp:164
     public String getChangeText() {
         if (weightChange == null) {
             return "Lần đầu";
@@ -52,6 +58,7 @@ public class BodyStatRow {
     }
 
     /** "down" (giảm) | "up" (tăng) | "" — chỉ để tô màu nhẹ, không phán tốt / xấu. */
+    // GETTER TỰ TÍNH — không có field/setter "changeTone"; = weightChange âm → "down", dương → "up", null hoặc 0 → ""; JSP: customer/body-stats.jsp:164
     public String getChangeTone() {
         if (weightChange == null || weightChange.signum() == 0) {
             return "";

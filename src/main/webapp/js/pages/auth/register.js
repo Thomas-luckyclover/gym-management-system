@@ -25,6 +25,9 @@ document.addEventListener("DOMContentLoaded", function () {
     setupClaimPasswordStep();
 });
 
+// Rời ô mà ô vẫn trống → không báo "bắt buộc" (lỗi trống chỉ hiện khi bấm nút gửi).
+// isUntouchedEmptyField nằm ở common.js (dùng chung cho form data-validate).
+
 // ===== Bước 1: Validate SĐT trước khi submit =====
 
 // Gắn validate client-side cho form nhập số điện thoại bước 1
@@ -44,6 +47,9 @@ function setupPhoneStep() {
 
     // Kiểm tra khi rời ô (GBR-17)
     phoneInput.addEventListener("blur", function () {
+        if (isUntouchedEmptyField(phoneInput)) {
+            return;
+        }
         validatePhoneField(phoneInput);
     });
 
@@ -74,22 +80,37 @@ function setupFormStep() {
 
     // Kiểm tra từng ô khi rời ô (GBR-17)
     emailInput.addEventListener("blur", function () {
+        if (isUntouchedEmptyField(emailInput)) {
+            return;
+        }
         validateEmailField(emailInput);
     });
 
     passwordInput.addEventListener("blur", function () {
+        if (isUntouchedEmptyField(passwordInput)) {
+            return;
+        }
         validatePasswordField(passwordInput);
     });
 
     confirmPasswordInput.addEventListener("blur", function () {
+        if (isUntouchedEmptyField(confirmPasswordInput)) {
+            return;
+        }
         validateConfirmPasswordField(passwordInput, confirmPasswordInput);
     });
 
     fullNameInput.addEventListener("blur", function () {
+        if (isUntouchedEmptyField(fullNameInput)) {
+            return;
+        }
         validateFullNameField(fullNameInput);
     });
 
     dobInput.addEventListener("blur", function () {
+        if (isUntouchedEmptyField(dobInput)) {
+            return;
+        }
         validateDobField(dobInput);
     });
 
@@ -126,6 +147,9 @@ function setupClaimEmailStep() {
     const emailInput = document.getElementById("claimEmail");
 
     emailInput.addEventListener("blur", function () {
+        if (isUntouchedEmptyField(emailInput)) {
+            return;
+        }
         validateClaimEmailField(emailInput);
     });
 
@@ -173,10 +197,16 @@ function setupClaimPasswordStep() {
     const confirmPasswordInput = document.getElementById("claimConfirmPassword");
 
     passwordInput.addEventListener("blur", function () {
+        if (isUntouchedEmptyField(passwordInput)) {
+            return;
+        }
         validateClaimPasswordField(passwordInput);
     });
 
     confirmPasswordInput.addEventListener("blur", function () {
+        if (isUntouchedEmptyField(confirmPasswordInput)) {
+            return;
+        }
         validateClaimConfirmPasswordField(passwordInput, confirmPasswordInput);
     });
 

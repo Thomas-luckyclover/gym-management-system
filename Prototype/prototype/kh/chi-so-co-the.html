@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Chỉ số cơ thể — Super Gym</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/js/all.min.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../customer.css">
+</head>
+<body class="cust member">
+<div id="toastRoot"></div>
+<div id="modalRoot"></div>
+
+<!-- #72 — Body Measurements · customer/body-stats.jsp -->
+<div class="cust-shell" id="custShell">
+
+  <!-- Dock điều hướng: thu gọn mặc định, rê vào tay cầm thì trượt ra. -->
+  <div class="cust-dock" id="custDock">
+    <aside class="cust-sidebar">
+      <a class="cust-brand" href="trang-ca-nhan.html">
+        <b>Super Gym</b><span>Khu vực hội viên</span>
+      </a>
+      <nav class="cust-nav">
+        <h4>Tổng quan</h4>
+      <a href="trang-ca-nhan.html"><i class="fa-solid fa-gauge-high"></i>Trang cá nhân</a>
+        <h4>Gói tập</h4>
+      <a href="mua-goi.html"><i class="fa-solid fa-cart-shopping"></i>Mua gói</a>
+      <a href="lich-su-giao-dich.html"><i class="fa-solid fa-receipt"></i>Lịch sử giao dịch</a>
+        <h4>Lịch tập</h4>
+      <a href="lich-cua-toi.html"><i class="fa-solid fa-box-open"></i>Gói của tôi</a>
+      <a href="buoi-pt.html"><i class="fa-solid fa-calendar-check"></i>Lịch của tôi</a>
+      <a href="dat-buoi-le.html"><i class="fa-solid fa-calendar-plus"></i>Đặt buổi lẻ</a>
+      <a href="giao-an.html"><i class="fa-solid fa-clipboard-list"></i>Giáo án của tôi</a>
+      <a href="thu-vien-bai-tap.html"><i class="fa-solid fa-person-running"></i>Thư viện bài tập</a>
+      <a href="chi-so-co-the.html" aria-current="page"><i class="fa-solid fa-weight-scale"></i>Chỉ số cơ thể</a>
+        <h4>Tài khoản</h4>
+      <a href="tai-khoan.html"><i class="fa-solid fa-user-gear"></i>Cài đặt tài khoản</a>
+      <a href="../chon-vai-tro.html"><i class="fa-solid fa-repeat"></i>Đổi vai trò</a>
+        <h4>Hòm thư</h4>
+      <a href="gop-y.html"><i class="fa-solid fa-inbox"></i>Hòm thư góp ý</a>
+      </nav>
+      <div class="cust-sidebar-foot">
+        <a href="../dang-nhap.html"><i class="fa-solid fa-arrow-right-from-bracket"></i>Đăng xuất</a>
+      </div>
+    </aside>
+    <button class="cust-handle" type="button" id="dockHandle"
+            aria-label="Mở menu điều hướng" aria-expanded="false" aria-controls="custDock">
+      <i class="fa-solid fa-chevron-right"></i>
+    </button>
+  </div>
+
+  <div class="cust-main">
+    <header class="cust-topbar">
+      <div>
+        <h1>Chỉ số cơ thể</h1>
+      </div>
+      <div class="cust-topbar-actions">
+        <a class="cust-user" href="tai-khoan.html" title="Cài đặt tài khoản">
+          <span class="avatar">AN</span>
+          <span class="cust-user-text">
+            <b>Nguyễn Minh An</b>
+            <span>KH-0241</span>
+          </span>
+        </a>
+      </div>
+    </header>
+
+    <main class="cust-content">
+
+      <div class="kpi-grid" id="stTiles"></div>
+
+      <div class="split">
+        <div class="col-main">
+          <section class="panel">
+            <div class="panel-head"><h2 id="stChartTitle">Cân nặng</h2></div>
+            <svg id="stChart" viewBox="0 0 640 240" role="img" aria-label="Biểu đồ chỉ số" style="width:100%;height:auto"></svg>
+            <p class="muted" id="stChartEmpty" hidden>Cần ít nhất 2 lần đo có chỉ số này để vẽ biểu đồ.</p>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head"><h2>Lịch sử đo</h2></div>
+            <table class="tx-table">
+              <thead><tr><th>Ngày</th><th>Cân nặng</th><th>Thay đổi</th><th>BMI</th><th>Mỡ</th><th>Cơ</th><th>Vòng eo</th><th>Ghi chú</th><th>Xóa</th></tr></thead>
+              <tbody id="stHistory"></tbody>
+            </table>
+          </section>
+        </div>
+
+        <aside class="col-side">
+          <form class="side-card" id="stForm" novalidate>
+            <span class="section-label">Ghi lần đo</span>
+            <label class="field"><span class="field-label">Ngày đo</span>
+              <input type="date" id="stDate" value="2026-09-20" max="2026-09-20" required>
+              <span class="field-error" id="stDateErr" hidden></span></label>
+            <label class="field"><span class="field-label">Cân nặng (kg) *</span>
+              <input type="text" id="stWeight" inputmode="decimal" placeholder="58,6" required>
+              <span class="field-error" id="stWeightErr" hidden></span></label>
+            <label class="field"><span class="field-label">Chiều cao (cm) *</span>
+              <input type="text" id="stHeight" inputmode="decimal" value="165" placeholder="160" required>
+              <span class="field-error" id="stHeightErr" hidden></span></label>
+            <label class="field"><span class="field-label">Tỷ lệ mỡ (%)</span>
+              <input type="text" id="stFat" inputmode="decimal" placeholder="27,9"></label>
+            <label class="field"><span class="field-label">Tỷ lệ cơ (%)</span>
+              <input type="text" id="stMuscle" inputmode="decimal" placeholder="38,3"></label>
+            <label class="field"><span class="field-label">Vòng eo (cm)</span>
+              <input type="text" id="stWaist" inputmode="decimal" placeholder="73"></label>
+            <label class="field"><span class="field-label">Ghi chú</span>
+              <input type="text" id="stNote" maxlength="200" placeholder="VD: Đo InBody tại phòng"></label>
+            <button class="btn btn-primary btn-block" type="submit">Lưu lần đo</button>
+          </form>
+        </aside>
+      </div>
+    
+    </main>
+  </div>
+</div>
+
+<script src="../app.js"></script>
+<script src="customer.js"></script>
+<script src="chi-so-co-the.js"></script>
+</body>
+</html>

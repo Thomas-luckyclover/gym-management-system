@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 
@@ -78,8 +79,25 @@ public class FreezeMembershipServlet extends HttpServlet {
             return;
         }
 
-        // B3: Lấy từ khóa q và bộ lọc filter người dùng chọn
+        // B3: Xác định tab đang chọn (members hoặc history) để tải dữ liệu và tách độc lập 2 khung tìm kiếm
+        String currentTab = RequestUtil.getTrimmedParam(request, "tab");
+        if (ValidationUtil.isNullOrEmpty(currentTab)) {
+            if (!ValidationUtil.isNullOrEmpty(RequestUtil.getTrimmedParam(request, "hq"))
+                    || !ValidationUtil.isNullOrEmpty(RequestUtil.getTrimmedParam(request, "hfilter"))) {
+                currentTab = "history";
+            } else {
+                currentTab = "members";
+            }
+        }
+        request.setAttribute("currentTab", currentTab);
+
+        // Lấy từ khóa q (Tab 1), hq (Tab 2) và bộ lọc filter người dùng chọn
         String query = RequestUtil.getTrimmedParam(request, "q");
+        String historyQuery = RequestUtil.getTrimmedParam(request, "hq");
+        String historyFilter = RequestUtil.getTrimmedParam(request, "hfilter");
+        if (ValidationUtil.isNullOrEmpty(historyFilter)) {
+            historyFilter = "ALL";
+        }
         String filter = RequestUtil.getTrimmedParam(request, "filter");
         if (ValidationUtil.isNullOrEmpty(filter)) {
             filter = "ALL";
@@ -87,7 +105,7 @@ public class FreezeMembershipServlet extends HttpServlet {
         int page = PaginationUtil.getPageNumber(request); // Lấy số trang hiện tại phục vụ phân trang
         int pageSize = 10; // Phân trang 10 khách mỗi trang để vừa vặn giao diện
 
-        if (!ValidationUtil.isNullOrEmpty(query)) { // Nếu từ khóa tìm kiếm không rỗng
+        if (!ValidationUtil.isNullOrEmpty(query)) { // Nếu từ khóa tìm kiếm hội viên không rỗng
             // Gọi hàm lookupCustomerForFreeze để tra cứu khách hàng và gói tập
             ServiceResult<FreezeCustomerView> lookupResult = freezeService.lookupCustomerForFreeze(query, accountId);
 
@@ -108,15 +126,17 @@ public class FreezeMembershipServlet extends HttpServlet {
         }
         request.setAttribute("currentFilter", filter);
 
-        // B4: Lấy danh sách hội viên & hợp đồng hiển thị ở bảng phong cách GymMaster (có hỗ trợ lọc theo trạng thái)
+        // B4: Lấy danh sách hội viên & hợp đồng hiển thị ở bảng phong cách GymMaster (chỉ lọc theo query và filter của Tab 1)
         PageResult<CustomerMembershipRow> membershipsPage = freezeService.getCustomerMembershipsPage(query, filter, page, pageSize);
         request.setAttribute("membershipsPage", membershipsPage);
         request.setAttribute("customerMemberships", membershipsPage.getItems());
 
-        // B5: Lấy toàn bộ lịch sử các đợt bảo lưu hiển thị ở tab "Lịch sử bảo lưu" (lọc theo từ khóa tìm kiếm)
-        List<FreezeRecordItemView> freezeHistoryList = freezeService.getRecentFreezes(query, 50);
+        // B5: Lấy toàn bộ lịch sử các đợt bảo lưu hiển thị ở tab "Lịch sử bảo lưu" (lọc theo historyQuery và historyFilter của Tab 2)
+        List<FreezeRecordItemView> freezeHistoryList = freezeService.getRecentFreezes(historyQuery, historyFilter, 50);
         request.setAttribute("freezeHistoryList", freezeHistoryList);
         request.setAttribute("recentFreezes", freezeHistoryList); // tương thích ngược
+        request.setAttribute("historyQuery", historyQuery);
+        request.setAttribute("historyFilter", historyFilter);
         request.setAttribute("activeNav", "freeze");
 
         // B6: Chuyển tiếp dữ liệu từ servlet sang jsp để hiển thị giao diện
@@ -193,8 +213,8 @@ public class FreezeMembershipServlet extends HttpServlet {
         LocalDate startDate;
         LocalDate plannedEndDate;
         try {
-            startDate = LocalDate.parse(startDateStr);
-            plannedEndDate = LocalDate.parse(plannedEndDateStr);
+            startDate = parseFlexibleDate(startDateStr);
+            plannedEndDate = parseFlexibleDate(plannedEndDateStr);
         } catch (DateTimeParseException e) {
             RequestUtil.setFlashToast(request, "error", Messages.MSG287_DATE_FORMAT_INVALID);
             RequestUtil.redirect(request, response, redirectUrl);
@@ -248,14 +268,25 @@ public class FreezeMembershipServlet extends HttpServlet {
         }
 
         try {
-            LocalDate startDate = LocalDate.parse(startDateStr);
-            LocalDate plannedEndDate = LocalDate.parse(plannedEndDateStr);
+            LocalDate startDate = parseFlexibleDate(startDateStr);
+            LocalDate plannedEndDate = parseFlexibleDate(plannedEndDateStr);
             List<FreezeSessionImpactView> sessions = freezeService.previewAffectedSessions(customerId, startDate,
                     plannedEndDate);
             JsonUtil.writeJson(response, JsonResponse.success(sessions));
         } catch (DateTimeParseException e) {
             JsonUtil.writeJson(response, JsonResponse.success(List.of()));
         }
+    }
+
+    private LocalDate parseFlexibleDate(String dateStr) {
+        if (dateStr == null || dateStr.trim().isEmpty()) {
+            throw new DateTimeParseException("Date string is empty", "", 0);
+        }
+        dateStr = dateStr.trim();
+        if (dateStr.contains("/")) {
+            return LocalDate.parse(dateStr, DateTimeFormatter.ofPattern("d/M/yyyy"));
+        }
+        return LocalDate.parse(dateStr);
     }
 
     private String buildRedirectUrl(String q, String filter) {

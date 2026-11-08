@@ -17,7 +17,6 @@ import java.util.List;
 public class MonthView {
 
     private final YearMonth month;
-    private final boolean currentMonth;
     private final List<List<Cell>> weeks = new ArrayList<>();
 
     // Số đếm trong tháng (chú thích dưới lưới)
@@ -27,16 +26,15 @@ public class MonthView {
     private int cancelledCount;   // Đã hủy
     private int pendingCount;     // Đang cập nhật
 
-    public MonthView(YearMonth month, LocalDate today) {
+    public MonthView(YearMonth month) {
         this.month = month;
-        this.currentMonth = YearMonth.from(today).equals(month);
     }
 
     public YearMonth getMonth() { return month; }
-    public LocalDate getFirstDay() { return month.atDay(1); }
+    // GETTER TỰ TÍNH — không có field/setter "prevMonth"; = ngày 1 của tháng trước; JSP: customer/my-pt-sessions.jsp:97
     public LocalDate getPrevMonth() { return month.minusMonths(1).atDay(1); }
+    // GETTER TỰ TÍNH — không có field/setter "nextMonth"; = ngày 1 của tháng sau; JSP: customer/my-pt-sessions.jsp:107
     public LocalDate getNextMonth() { return month.plusMonths(1).atDay(1); }
-    public boolean isCurrentMonth() { return currentMonth; }
     public List<List<Cell>> getWeeks() { return weeks; }
 
     public int getUpcomingCount() { return upcomingCount; }

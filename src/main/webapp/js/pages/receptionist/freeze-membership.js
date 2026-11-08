@@ -4,23 +4,178 @@
 document.addEventListener('DOMContentLoaded', function () {
     const startInput = document.getElementById('startDate');
     const endInput = document.getElementById('plannedEndDate');
+    const startDisplay = document.getElementById('startDateDisplay');
+    const endDisplay = document.getElementById('plannedEndDateDisplay');
     const customerIdHidden = document.getElementById('customerIdHidden');
     const pkgEndHidden = document.getElementById('packageEndDateHidden');
 
+    function parseDate(str) {
+        if (!str) return null;
+        const parts = str.split('-');
+        if (parts.length !== 3) return null;
+        const y = parseInt(parts[0], 10);
+        const m = parseInt(parts[1], 10) - 1;
+        const d = parseInt(parts[2], 10);
+        const date = new Date(y, m, d);
+        return isNaN(date.getTime()) ? null : date;
+    }
+
+    function toIsoDate(d) {
+        if (!d || isNaN(d.getTime())) return '';
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+    }
+
+    function parseVietnameseDate(val) {
+        if (!val) return null;
+        val = val.trim();
+        const match = /^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/.exec(val);
+        if (!match) return null;
+        const d = parseInt(match[1], 10);
+        const m = parseInt(match[2], 10);
+        const y = parseInt(match[3], 10);
+        if (y < 1900 || y > 2100 || m < 1 || m > 12 || d < 1 || d > 31) return null;
+        const date = new Date(y, m - 1, d);
+        if (date.getFullYear() !== y || date.getMonth() !== m - 1 || date.getDate() !== d) return null;
+        return {
+            iso: `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`,
+            date: date
+        };
+    }
+
+    function formatVietnameseDate(isoStr) {
+        if (!isoStr) return '';
+        const parts = isoStr.split('-');
+        if (parts.length !== 3) return isoStr;
+        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+
+    function syncDisplayInputs() {
+        if (startDisplay && startInput && startInput.value) {
+            startDisplay.value = formatVietnameseDate(startInput.value);
+        }
+        if (endDisplay && endInput && endInput.value) {
+            endDisplay.value = formatVietnameseDate(endInput.value);
+        }
+    }
+
+    function addMonthsAndDays(baseDate, months, days) {
+        return new Date(baseDate.getFullYear(), baseDate.getMonth() + months, baseDate.getDate() + days);
+    }
+
+    // Tính ngày kết thúc tối đa (tối đa 1 tháng kể từ ngày bắt đầu nhưng không vượt quá hạn gói tập)
+    function calculateMaxAllowedEnd(startIsoStr) {
+        if (!startIsoStr) return '';
+        const startDate = parseDate(startIsoStr);
+        if (!startDate) return '';
+
+        const maxByDuration = addMonthsAndDays(startDate, 1, -1);
+        const maxByDurationStr = toIsoDate(maxByDuration);
+
+        const pkgEndStr = pkgEndHidden ? pkgEndHidden.value : (startInput.max || '');
+        if (pkgEndStr && pkgEndStr < maxByDurationStr) {
+            return pkgEndStr;
+        }
+        return maxByDurationStr;
+    }
+
+    // Cập nhật min, max và hint cho ô Ngày kết thúc dựa trên Ngày bắt đầu
+    function updateEndDateConstraints(isStartChange) {
+        if (!startInput || !endInput || !startInput.value) return;
+
+        const maxAllowedEndStr = calculateMaxAllowedEnd(startInput.value);
+        if (maxAllowedEndStr) {
+            endInput.max = maxAllowedEndStr;
+            const hint = document.getElementById('plannedEndDateHint');
+            if (hint) {
+                hint.textContent = 'Tối đa 1 tháng (đến ngày ' + formatDateStr(maxAllowedEndStr) + ').';
+            }
+        }
+        endInput.min = startInput.value;
+
+        if (isStartChange) {
+            // Khi thay đổi ngày bắt đầu:
+            // Nếu ngày kết thúc chưa có, hoặc trước ngày bắt đầu mới, hoặc vượt quá ngày tối đa cho phép,
+            // hoặc người dùng chưa từng chỉnh sửa thủ công ngày kết thúc:
+            // -> Tự động đưa ngày kết thúc về ngày tối đa 1 tháng (maxAllowedEndStr) thay vì co về 1 ngày!
+            const wasCustomModified = endInput.dataset && endInput.dataset.userModified === 'true';
+            if (!wasCustomModified || !endInput.value || endInput.value < startInput.value || (endInput.max && endInput.value > endInput.max)) {
+                endInput.value = maxAllowedEndStr || startInput.value;
+                if (endInput.dataset) {
+                    endInput.dataset.userModified = 'false';
+                }
+            }
+        }
+    }
+
+    // Xử lý khi Ngày bắt đầu thay đổi (change, blur)
+    function handleStartDateChange() {
+        if (!startInput) return;
+        const pkgEndStr = pkgEndHidden ? pkgEndHidden.value : (startInput.max || '');
+
+        if (startInput.min && startInput.value && startInput.value < startInput.min) {
+            startInput.value = startInput.min;
+        }
+        if (pkgEndStr && startInput.value && startInput.value > pkgEndStr) {
+            startInput.value = pkgEndStr;
+        }
+
+        updateEndDateConstraints(true);
+        syncDisplayInputs();
+        calculateFreezeDays();
+    }
+
+    // Xử lý khi Ngày kết thúc thay đổi (change, blur)
+    function handleEndDateChange() {
+        if (!endInput) return;
+
+        if (endInput.dataset) {
+            endInput.dataset.userModified = 'true';
+        }
+
+        if (startInput && startInput.value && endInput.value && endInput.value < startInput.value) {
+            endInput.value = startInput.value;
+        }
+        if (endInput.max && endInput.value && endInput.value > endInput.max) {
+            endInput.value = endInput.max;
+        }
+
+        syncDisplayInputs();
+        calculateFreezeDays();
+    }
+
+    // Xử lý khi đang gõ phím trên ô input (input event):
+    // KHÔNG can thiệp / clamp giữa chừng để tránh kẹt phím spinbox
+    function handleDateInput() {
+        if (!startInput || !endInput) return;
+        if (!startInput.value || !endInput.value) return;
+
+        // Chỉ tính toán hiển thị nếu cả 2 ngày hợp lệ và trong khoảng hợp lệ
+        if (startInput.value <= endInput.value) {
+            const maxAllowedEndStr = calculateMaxAllowedEnd(startInput.value);
+            if (!maxAllowedEndStr || endInput.value <= maxAllowedEndStr) {
+                calculateFreezeDays();
+            }
+        }
+    }
+
     // 1. Tự động tính toán số ngày bảo lưu và hạn mới khi chọn ngày
     function calculateFreezeDays() {
-        if (!startInput || !endInput || !startInput.value || !endInput.value) return;
+        if (!startInput || !endInput) return;
+        if (!startInput.value || !endInput.value) return;
 
-        const start = new Date(startInput.value + 'T00:00:00');
-        const end = new Date(endInput.value + 'T00:00:00');
+        const start = parseDate(startInput.value);
+        const end = parseDate(endInput.value);
+        if (!start || !end) return;
 
         if (end < start) {
-            endInput.value = startInput.value;
-            return calculateFreezeDays();
+            return;
         }
 
         // Số ngày bảo lưu = (end - start) + 1 ngày
-        const diffDays = Math.round((end - start) / (1000 * 60 * 60 * 24)) + 1;
+        const diffDays = Math.max(1, Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1);
         const displayDays = document.getElementById('displayDaysCount');
         if (displayDays) {
             displayDays.textContent = diffDays + ' ngày';
@@ -28,11 +183,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Tính ngày hết hạn thẻ mới
         if (pkgEndHidden && pkgEndHidden.value) {
-            const pkgEnd = new Date(pkgEndHidden.value + 'T00:00:00');
-            const newExpiry = new Date(pkgEnd.getTime() + (diffDays * 24 * 60 * 60 * 1000));
-            const displayExpiry = document.getElementById('displayNewExpiryDate');
-            if (displayExpiry) {
-                displayExpiry.textContent = formatDate(newExpiry);
+            const pkgEnd = parseDate(pkgEndHidden.value);
+            if (pkgEnd) {
+                const newExpiry = new Date(pkgEnd.getFullYear(), pkgEnd.getMonth(), pkgEnd.getDate() + diffDays);
+                const displayExpiry = document.getElementById('displayNewExpiryDate');
+                if (displayExpiry) {
+                    displayExpiry.textContent = formatDate(newExpiry);
+                }
             }
         }
 
@@ -43,14 +200,110 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     if (startInput && endInput) {
-        startInput.addEventListener('change', calculateFreezeDays);
-        endInput.addEventListener('change', calculateFreezeDays);
+        startInput.addEventListener('change', handleStartDateChange);
+        startInput.addEventListener('blur', handleStartDateChange);
+        startInput.addEventListener('input', handleDateInput);
+
+        endInput.addEventListener('change', handleEndDateChange);
+        endInput.addEventListener('blur', handleEndDateChange);
+        endInput.addEventListener('input', handleDateInput);
+
+        updateEndDateConstraints(false);
+        syncDisplayInputs();
         calculateFreezeDays(); // Tính toán ban đầu
+    }
+
+    // Xử lý ô hiển thị Ngày bắt đầu (định dạng Việt Nam dd/mm/yyyy)
+    if (startDisplay) {
+        startDisplay.addEventListener('change', function () {
+            const parsed = parseVietnameseDate(this.value);
+            if (parsed && startInput) {
+                startInput.value = parsed.iso;
+                handleStartDateChange();
+            } else if (startInput && startInput.value) {
+                this.value = formatVietnameseDate(startInput.value);
+            }
+        });
+        startDisplay.addEventListener('blur', function () {
+            const parsed = parseVietnameseDate(this.value);
+            if (parsed && startInput) {
+                startInput.value = parsed.iso;
+                handleStartDateChange();
+            } else if (startInput && startInput.value) {
+                this.value = formatVietnameseDate(startInput.value);
+            }
+        });
+    }
+
+    // Xử lý ô hiển thị Ngày kết thúc (định dạng Việt Nam dd/mm/yyyy)
+    if (endDisplay) {
+        endDisplay.addEventListener('change', function () {
+            const parsed = parseVietnameseDate(this.value);
+            if (parsed && endInput) {
+                endInput.value = parsed.iso;
+                handleEndDateChange();
+            } else if (endInput && endInput.value) {
+                this.value = formatVietnameseDate(endInput.value);
+            }
+        });
+        endDisplay.addEventListener('blur', function () {
+            const parsed = parseVietnameseDate(this.value);
+            if (parsed && endInput) {
+                endInput.value = parsed.iso;
+                handleEndDateChange();
+            } else if (endInput && endInput.value) {
+                this.value = formatVietnameseDate(endInput.value);
+            }
+        });
+    }
+
+    // Mở lịch popup khi nhấn nút lịch
+    document.querySelectorAll('.freeze-calendar-button').forEach(btn => {
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            const targetId = this.getAttribute('data-picker-target');
+            const picker = document.getElementById(targetId);
+            if (!picker) return;
+            if (typeof picker.showPicker === 'function') {
+                try {
+                    picker.showPicker();
+                } catch (err) {
+                    picker.focus();
+                }
+            } else {
+                picker.focus();
+            }
+        });
+    });
+
+    // Chặn submit form nếu ngày vượt quá giới hạn
+    const formApplyFreeze = document.getElementById('formApplyFreeze');
+    if (formApplyFreeze) {
+        formApplyFreeze.addEventListener('submit', function (e) {
+            const rawStart = startInput ? startInput.value : '';
+            const rawEnd = endInput ? endInput.value : '';
+            const pkgEndStr = pkgEndHidden ? pkgEndHidden.value : (startInput ? (startInput.max || '') : '');
+
+            let hasError = false;
+            if (startInput && startInput.min && rawStart && rawStart < startInput.min) hasError = true;
+            if (pkgEndStr && rawStart && rawStart > pkgEndStr) hasError = true;
+            if (endInput && endInput.max && rawEnd && rawEnd > endInput.max) hasError = true;
+            if (rawStart && rawEnd && rawEnd < rawStart) hasError = true;
+
+            handleStartDateChange();
+            handleEndDateChange();
+
+            if (hasError) {
+                e.preventDefault();
+                return false;
+            }
+        });
     }
 
     // 2. Gửi AJAX lấy danh sách buổi PT bị ảnh hưởng
     function fetchPtSessions(customerId, startDate, endDate) {
-        const url = window.location.pathname + '?action=previewSessions&customerId='
+        if (typeof window === 'undefined' || !window.location || typeof fetch !== 'function') return;
+        const url = (window.location.pathname || '') + '?action=previewSessions&customerId='
             + encodeURIComponent(customerId)
             + '&startDate=' + encodeURIComponent(startDate)
             + '&plannedEndDate=' + encodeURIComponent(endDate);
@@ -129,64 +382,54 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // 4. Quản lý Tabs (Danh sách hội viên & Gói tập vs Lịch sử bảo lưu)
-    const tabButtons = document.querySelectorAll('.freeze-tab-btn');
-    const tabPanes = document.querySelectorAll('.freeze-tab-pane');
+    // 4. Quản lý Tabs: Sử dụng liên kết URL thuần (?tab=members hoặc ?tab=history) để tải lại trang độc lập
 
-    function switchTab(targetId) {
-        if (!targetId) return;
-        tabButtons.forEach(b => {
-            if (b.dataset.target === targetId || b.getAttribute('data-target') === targetId) {
-                b.classList.add('active');
-            } else {
-                b.classList.remove('active');
-            }
-        });
-        tabPanes.forEach(p => {
-            if ('#' + p.id === targetId || p.id === targetId.replace('#', '')) {
-                p.classList.add('active');
-            } else {
-                p.classList.remove('active');
-            }
-        });
+    // 5. Thao tác chỉ thực hiện qua nút trong cột Thao tác (không click cả dòng)
+
+    // 6. Xử lý modal xem chi tiết lý do bảo lưu (chỉ hiển thị nội dung lý do)
+    const reasonModal = document.getElementById('modalViewReason');
+
+    function openReasonModal(btn) {
+        if (!reasonModal) return;
+        const reason = btn.getAttribute('data-reason') || '';
+        const textEl = document.getElementById('reasonModalText');
+
+        if (textEl) {
+            textEl.textContent = reason || '(Không ghi nhận lý do)';
+        }
+
+        reasonModal.classList.add('open');
     }
 
-    tabButtons.forEach(btn => {
-        btn.addEventListener('click', function (e) {
-            e.preventDefault();
-            const targetId = this.dataset.target || this.getAttribute('data-target');
-            switchTab(targetId);
-            if (history.replaceState) {
-                history.replaceState(null, null, targetId);
-            }
-        });
-    });
-
-    if (window.location.hash) {
-        switchTab(window.location.hash);
+    function closeReasonModal() {
+        if (reasonModal) reasonModal.classList.remove('open');
     }
 
-    // 5. Cho phép click vào cả dòng bảng để chọn khách hàng
-    document.querySelectorAll('.gym-table tr[data-href]').forEach(row => {
-        row.addEventListener('click', function (e) {
-            if (e.target.closest('a') || e.target.closest('button') || e.target.closest('input[type="checkbox"]')) return;
-            const href = this.getAttribute('data-href');
-            if (href) window.location.href = href;
-        });
-    });
-
-    // 6. Xử lý mở rộng / thu gọn lý do bảo lưu dài (chống vỡ bảng khi lý do dài tới 400 - 500 ký tự)
-    document.querySelectorAll('.btn-toggle-reason').forEach(btn => {
+    document.querySelectorAll('.btn-view-reason').forEach(btn => {
         btn.addEventListener('click', function (e) {
             e.stopPropagation();
-            const textSpan = this.parentElement.querySelector('.reason-text');
-            if (!textSpan) return;
-            const isExpanded = textSpan.classList.toggle('expanded');
-            this.textContent = isExpanded ? 'Thu gọn' : 'Xem thêm';
+            e.preventDefault();
+            openReasonModal(this);
         });
     });
 
-    // 7. Tự động áp dụng bộ lọc khi thay đổi lựa chọn ở thanh tìm kiếm
+    document.querySelectorAll('[data-close-reason-modal]').forEach(btn => {
+        btn.addEventListener('click', closeReasonModal);
+    });
+
+    if (reasonModal) {
+        reasonModal.addEventListener('click', function (e) {
+            if (e.target === reasonModal) closeReasonModal();
+        });
+    }
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && reasonModal && reasonModal.classList.contains('open')) {
+            closeReasonModal();
+        }
+    });
+
+    // 7. Tự động áp dụng bộ lọc khi thay đổi lựa chọn ở Tab 1
     const filterSelect = document.getElementById('freezeFilterSelect');
     if (filterSelect) {
         filterSelect.addEventListener('change', function () {
@@ -195,14 +438,30 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // 8. Giữ đúng tab #tabHistory khi tìm kiếm
-    const freezeSearchForm = document.getElementById('freezeSearchForm');
-    if (freezeSearchForm) {
-        freezeSearchForm.addEventListener('submit', function () {
-            const activeTab = document.querySelector('.freeze-tab-pane.active');
-            if (activeTab && activeTab.id === 'tabHistory') {
-                freezeSearchForm.action = freezeSearchForm.action.split('#')[0] + '#tabHistory';
-            }
+    // 8. Tự động áp dụng bộ lọc trạng thái khi thay đổi lựa chọn ở Tab 2
+    const historyFilterSelect = document.getElementById('historyFilterSelect');
+    if (historyFilterSelect) {
+        historyFilterSelect.addEventListener('change', function () {
+            const form = document.getElementById('historySearchForm');
+            if (form) form.submit();
+        });
+    }
+
+    // 9. Tìm kiếm nhanh thời gian thực ở Tab 2 (Lịch sử bảo lưu)
+    const historyInput = document.getElementById('historyQueryInput');
+    if (historyInput) {
+        historyInput.addEventListener('input', function () {
+            const val = this.value.trim().toLowerCase();
+            const rows = document.querySelectorAll('#tabHistory .gym-table tbody tr');
+            rows.forEach(r => {
+                if (r.querySelector('td[colspan]')) return;
+                if (!val) {
+                    r.style.display = '';
+                    return;
+                }
+                const text = r.textContent.toLowerCase();
+                r.style.display = text.includes(val) ? '' : 'none';
+            });
         });
     }
 
@@ -222,5 +481,22 @@ document.addEventListener('DOMContentLoaded', function () {
         const div = document.createElement('div');
         div.textContent = str;
         return div.innerHTML;
+    }
+
+    if (typeof window !== 'undefined') {
+        window._freezeMembership = {
+            parseDate,
+            toIsoDate,
+            parseVietnameseDate,
+            formatVietnameseDate,
+            syncDisplayInputs,
+            addMonthsAndDays,
+            calculateMaxAllowedEnd,
+            updateEndDateConstraints,
+            handleStartDateChange,
+            handleEndDateChange,
+            handleDateInput,
+            calculateFreezeDays
+        };
     }
 });

@@ -213,9 +213,10 @@ subscription(o, d_(2026, 10, 16), note='gia hạn trước: bắt đầu ngay sa
 single_session(1, 5, d_(2026, 9, 26), (9, 0), 'Online', dt_(2026, 9, 24, 21, 0))
 o_rep = order(1, PKG['single'], now_(-10), 'Online', status='Cancelled', cancel=('ReplacedByNewOrder', now_(-2), None),
               note='bị thay bằng đơn mới (CBR-41, CBR-71)')
-slot(7, today_d(1), (15, 30), 'Free', check=False)
-o_held = order(1, PKG['single'], now_(-2), 'Online', status='Pending', note='đang giữ slot ngày mai 14:00 (CBR-53)')
-slot(7, today_d(1), (14, 0), 'Held', held_order=o_held, hold_exp=now_(18), check=False)
+slot(7, today_d(1), (15, 30), 'Free')
+o_held = order(1, PKG['single'], now_(-2), 'Online', status='Pending', note='đang giữ slot ngày mai 20:30 (CBR-53)')
+# Khung sống của PT 7 chỉ dùng giờ PT 7 KHÔNG BAO GIỜ có khung ngày cứng (15:30, 20:30) → chạy seed ngày nào cũng không chồng giờ
+slot(7, today_d(1), (20, 30), 'Held', held_order=o_held, hold_exp=now_(18))
 
 # ---- Bích (2): gói 1 tháng hết hạn đúng ngày mốc, đơn sai tiền chờ hoàn, buổi lẻ
 o = order(2, PKG['m1'], dt_(2026, 9, 3, 20, 20), 'Online', voucher=1, fail_first=True)
@@ -317,7 +318,7 @@ o = order(16, PKG['day'], today_dt(0, 8, 10), 'Counter')
 s16 = subscription(o, today_d(), note='gói ngày chưa check-in')
 o = order(16, PKG['single'], today_dt(0, 8, 15), 'Counter', note='bán buổi lẻ hôm nay tại quầy (CBR-54)')
 s16b = subscription(o, today_d(), pt=7)
-sl = slot(7, today_d(), (20, 0), 'Booked', check=False)
+sl = slot(7, today_d(), (20, 30), 'Booked')   # 20:30–22:00: PT 7 có chuỗi 19:00–20:30 ngày thường → không dùng 20:00
 session(s16b, sl, 7, 'Scheduled', 450000)
 order(15, PKG['m1'], today_dt(0, 9, 0), 'Counter', status='Pending', note='chưa thu tiền → chặn chốt ca (CBR-78)')
 o = order(10, PKG['day'], today_dt(0, 6, 40), 'Counter', status='Cancelled',
@@ -409,6 +410,13 @@ for pt, fixed, start, key in extra_pt:
         o = order(cid, PKG[key], datetime.combine(sale, time(10, 30)), 'Counter', method='Transfer')
         pt_package(o, pt, start, fixed, note='khách thường mua gói PT')
         break
+
+# ---- gói PT 82 (khách KH-2005, PT Sơn 15:00) hết hạn sớm ngày 04/11: lúc nạp seed, khối chốt cuối file (JOB-02)
+#      hủy PackageExpired các buổi từ 05/11 và trả khung 15:00 về trống (BF-05 A6, CBR-55)
+_s82 = get('Subscriptions', 82)
+assert _s82['CustomerId'] == 205 and _s82['SubscriptionType'] == 'PTSingle', 'gói 82 phải là gói PT của KH-2005'
+_s82['EndDate'] = d_(2026, 11, 4)
+_s82['_note'] = 'gói PT hết hạn 04/11 → buổi sau đó hủy PackageExpired khi nạp seed (JOB-02, CBR-55)'
 
 # ---- khách vãng lai mua gói ngày rải đều tháng 9 (báo cáo doanh thu có số liệu mỗi ngày)
 WALKIN = [c for i, c in enumerate(BULK) if i % 10 == 9]
@@ -655,7 +663,7 @@ vcode(None, 'yen.doan@gmail.com', 'Claim', '445566', now_(-1), now_(14), note='k
 
 # ============================================================ 13. NHÂN SỰ, THIẾT BỊ
 # BF-05: dữ liệu có cùng cấu trúc với bảng LeaveRequests.
-# Ngày mẫu cố định quanh 26/10/2026 để mở lại được đúng các tình huống đã chốt.
+# Mốc trình bày BF-05: thứ Sáu 06/11/2026, quỹ phép năm 14 ngày.
 def leave_request(employee, leave_type, from_date, to_date, shift, days, reason,
                   status='Pending', reviewer=None, reject_reason=None,
                   submitted=None, reviewed=None, assigned=None, group=None):
@@ -665,68 +673,90 @@ def leave_request(employee, leave_type, from_date, to_date, shift, days, reason,
         Days=days, Reason=reason, Status=status, RejectReason=reject_reason,
         SubmittedAt=submitted, ReviewedAt=reviewed, ReminderSentAt=None, LeaveGroupId=group))
 
-# Bảy đơn gốc: giữ số ngày lịch sử đã xử lý, đơn chờ tính 1 ngày cho mỗi ngày nghỉ.
-leave_request(5, 'Annual', d_(2026, 10, 18), d_(2026, 10, 18), 'Morning', 0.5,
-    'Về quê có việc gia đình',
-    status='Approved', reviewer=2, submitted=dt_(2026, 10, 16, 9, 0), reviewed=dt_(2026, 10, 17, 15, 30), assigned=2)
-leave_request(4, 'Sick', d_(2026, 10, 19), d_(2026, 10, 19), 'Afternoon', 0.5,
-    'Nghỉ khám sức khỏe ca chiều',
-    status='Rejected', reviewer=2, reject_reason='Ca chiều thiếu lễ tân trực quầy, vui lòng đổi ca khác', submitted=dt_(2026, 10, 18, 8, 30), reviewed=dt_(2026, 10, 18, 16, 0), assigned=2)
-leave_request(6, 'Annual', d_(2026, 10, 22), d_(2026, 10, 22), 'Morning', 1.0,
-    'Tham gia hội thảo chuyên môn fitness buổi sáng',
-    submitted=dt_(2026, 10, 20, 8, 30), assigned=2)
-leave_request(3, 'Annual', d_(2026, 10, 23), d_(2026, 10, 24), 'FullDay', 2.0,
-    'Nghỉ phép thường niên cùng gia đình 2 ngày',
-    submitted=dt_(2026, 10, 20, 9, 15), assigned=2)
-leave_request(7, 'Sick', d_(2026, 10, 24), d_(2026, 10, 24), 'Morning', 1.0,
-    'Khám chấn thương cổ tay tại bệnh viện thể thao',
-    submitted=dt_(2026, 10, 20, 10, 0), assigned=2)
-leave_request(9, 'Unpaid', d_(2026, 10, 25), d_(2026, 10, 25), 'Afternoon', 1.0,
-    'Xin nghỉ giải quyết thủ tục giấy tờ hành chính cá nhân',
-    submitted=dt_(2026, 10, 20, 11, 30))
-leave_request(8, 'Annual', d_(2026, 10, 26), d_(2026, 10, 26), 'FullDay', 1.0,
-    'Nghỉ giải quyết việc gia đình đột xuất',
-    submitted=dt_(2026, 10, 20, 13, 45), assigned=2)
+# Mốc demo thứ Sáu 06/11/2026: sắp nghỉ, duyệt muộn và hai đơn cùng đợt.
+leave_request(5, "Annual", d_(2026, 10, 18), d_(2026, 10, 18), "Morning", 0.5,
+    "Về quê có việc gia đình",
+    status="Approved", reviewer=2, submitted=dt_(2026, 10, 16, 9, 0), reviewed=dt_(2026, 10, 17, 15, 30), assigned=2)
+leave_request(4, "Sick", d_(2026, 10, 29), d_(2026, 10, 29), "Afternoon", 0.5,
+    "Nghỉ khám sức khỏe ca chiều",
+    status="Rejected", reviewer=2, reject_reason="Ca chiều thiếu lễ tân trực quầy, vui lòng đổi ca khác", submitted=dt_(2026, 10, 28, 8, 30), reviewed=dt_(2026, 10, 28, 16, 0), assigned=2)
+leave_request(6, "Annual", d_(2026, 11, 4), d_(2026, 11, 4), "Morning", 1,
+    "Tham gia hội thảo chuyên môn fitness buổi sáng",
+    submitted=dt_(2026, 11, 1, 8, 30), assigned=2)
+leave_request(3, "Annual", d_(2026, 11, 9), d_(2026, 11, 10), "FullDay", 2,
+    "Nghỉ phép thường niên cùng gia đình 2 ngày",
+    submitted=dt_(2026, 11, 2, 9, 15), assigned=2)
+leave_request(7, "Unpaid", d_(2026, 11, 10), d_(2026, 11, 10), "Morning", 1,
+    "Xin nghỉ không lương ca sáng để giải quyết việc cá nhân",
+    submitted=dt_(2026, 11, 3, 10, 0), assigned=2)
+leave_request(9, "Unpaid", d_(2026, 11, 11), d_(2026, 11, 11), "Afternoon", 1,
+    "Xin nghỉ giải quyết thủ tục giấy tờ hành chính cá nhân",
+    submitted=dt_(2026, 11, 3, 11, 30))
+leave_request(5, "Annual", d_(2026, 11, 15), d_(2026, 11, 15), "FullDay", 1,
+    "Xin nghỉ theo kế hoạch để giải quyết việc gia đình",
+    submitted=dt_(2026, 11, 3, 13, 45), assigned=2)
+leave_request(9, "Annual", d_(2026, 11, 5), d_(2026, 11, 5), "Morning", 1,
+    "Cần duyệt muộn: ngày nghỉ hôm qua nhưng Manager chưa kịp duyệt.",
+    submitted=dt_(2026, 11, 4, 8, 0))
+leave_request(14, "Annual", d_(2026, 11, 6), d_(2026, 11, 6), "Morning", 1,
+    "Xin nghỉ ca sáng ngày 06/11 để đưa người thân đi khám.",
+    submitted=dt_(2026, 11, 5, 14, 0))
+leave_request(5, "Unpaid", d_(2026, 11, 7), d_(2026, 11, 7), "Morning", 1,
+    "Sắp đến ngày nghỉ: xin nghỉ ngày mai để giải quyết việc cá nhân.",
+    submitted=dt_(2026, 11, 5, 15, 30))
+leave_request(14, "Annual", d_(2026, 11, 2), d_(2026, 11, 2), "Morning", 1,
+    "Đơn đã duyệt: nghỉ giải quyết thủ tục cá nhân.",
+    status="Approved", reviewer=2, submitted=dt_(2026, 10, 30, 8, 0), reviewed=dt_(2026, 10, 31, 8, 0))
+leave_request(5, "Unpaid", d_(2026, 11, 3), d_(2026, 11, 3), "Afternoon", 1,
+    "Đơn từ chối: xin nghỉ để tham gia lớp học cá nhân.",
+    status="Rejected", reviewer=2, reject_reason="Chưa bố trí được người thay ca, vui lòng chọn ngày khác.", submitted=dt_(2026, 11, 1, 8, 30), reviewed=dt_(2026, 11, 1, 9, 0))
+leave_request(6, "Unpaid", d_(2026, 11, 3), d_(2026, 11, 3), "Morning", 1,
+    "Ca nghỉ đã qua nhưng đơn vẫn đang chờ quản lý xác nhận để duyệt muộn.",
+    submitted=dt_(2026, 11, 2, 8, 0))
+leave_request(9, "Annual", d_(2026, 11, 16), d_(2026, 11, 18), "FullDay", 3,
+    "Nghỉ nhiều ngày: về quê dự việc gia đình trong ba ngày.",
+    submitted=dt_(2026, 11, 4, 8, 40))
+leave_request(14, "Unpaid", d_(2026, 11, 18), d_(2026, 12, 2), "FullDay", 15,
+    "Chủ động xin nghỉ không lương 15 ngày, không sử dụng quỹ phép năm.",
+    submitted=dt_(2026, 11, 4, 8, 50))
+leave_request(13, "Annual", d_(2026, 11, 9), d_(2026, 11, 10), "FullDay", 2,
+    "Đợt nghỉ 4 ngày Lý Hoàng Long: phần 1 Phép năm 2 ngày.",
+    submitted=dt_(2026, 11, 4, 9, 0), group="33333333-0524-4620-8000-000000000003")
+leave_request(13, "Unpaid", d_(2026, 11, 11), d_(2026, 11, 12), "FullDay", 2,
+    "Đợt nghỉ 4 ngày Lý Hoàng Long: phần 2 Không lương 2 ngày.",
+    submitted=dt_(2026, 11, 4, 9, 0), group="33333333-0524-4620-8000-000000000003")
+leave_request(3, "Annual", d_(2026, 11, 23), d_(2026, 11, 25), "FullDay", 3,
+    "Phần phép năm đã được duyệt trong đợt 5 ngày.",
+    status="Approved", reviewer=2, submitted=dt_(2026, 11, 4, 9, 0), reviewed=dt_(2026, 11, 4, 10, 0), group="44444444-0524-4620-8000-000000000004")
+leave_request(3, "Unpaid", d_(2026, 11, 26), d_(2026, 11, 27), "FullDay", 2,
+    "Phần không lương bị từ chối trong cùng đợt.",
+    status="Rejected", reviewer=2, reject_reason="Chưa bố trí được nhân sự cho phần không lương.", submitted=dt_(2026, 11, 4, 9, 0), reviewed=dt_(2026, 11, 4, 10, 0), group="44444444-0524-4620-8000-000000000004")
+leave_request(13, "Annual", d_(2026, 8, 16), d_(2026, 8, 27), "FullDay", 12,
+    "Nghỉ phép năm đã được duyệt, còn 2 ngày phép để gửi đợt nghỉ tháng 11.",
+    status="Approved", reviewer=2, submitted=dt_(2026, 8, 15, 9, 0), reviewed=dt_(2026, 8, 15, 10, 0))
+leave_request(3, "Annual", d_(2026, 8, 1), d_(2026, 8, 9), "FullDay", 9,
+    "Nghỉ phép năm đã được duyệt trong tháng 8.",
+    status="Approved", reviewer=2, submitted=dt_(2026, 7, 30, 9, 0), reviewed=dt_(2026, 7, 31, 10, 0))
 
-# Tám mẫu độc lập: sắp nghỉ, một ca, không lương, đã duyệt, từ chối, duyệt muộn, nhiều ngày, thiếu phép.
-leave_request(3, 'Unpaid', d_(2026, 10, 27), d_(2026, 10, 27), 'Morning', 1.0,
-    'Sắp nghỉ: xin nghỉ ca sáng để giải quyết việc gia đình.',
-    submitted=dt_(2026, 10, 26, 8, 0))
-leave_request(5, 'Annual', d_(2026, 10, 28), d_(2026, 10, 28), 'Morning', 1.0,
-    'Phép năm một ca: đưa người thân đi làm thủ tục buổi sáng.',
-    submitted=dt_(2026, 10, 26, 8, 10))
-leave_request(5, 'Unpaid', d_(2026, 11, 1), d_(2026, 11, 1), 'Morning', 1.0,
-    'Chủ động xin nghỉ không lương dù vẫn còn phép năm.',
-    submitted=dt_(2026, 10, 26, 8, 20))
-leave_request(5, 'Annual', d_(2026, 10, 21), d_(2026, 10, 21), 'Morning', 1.0,
-    'Đơn đã duyệt: nghỉ giải quyết thủ tục cá nhân.',
-    status='Approved', reviewer=2, submitted=dt_(2026, 10, 18, 8, 0), reviewed=dt_(2026, 10, 19, 8, 0))
-leave_request(5, 'Unpaid', d_(2026, 10, 30), d_(2026, 10, 30), 'Afternoon', 1.0,
-    'Đơn từ chối: xin nghỉ để tham gia lớp học cá nhân.',
-    status='Rejected', reviewer=2, reject_reason='Chưa bố trí được người thay ca, vui lòng chọn ngày khác.', submitted=dt_(2026, 10, 26, 8, 30), reviewed=dt_(2026, 10, 26, 9, 0))
-leave_request(6, 'Unpaid', d_(2026, 10, 25), d_(2026, 10, 25), 'FullDay', 1.0,
-    'Ngày nghỉ đã qua nhưng đơn vẫn đang chờ xử lý.',
-    submitted=dt_(2026, 10, 23, 8, 0))
-leave_request(9, 'Annual', d_(2026, 11, 3), d_(2026, 11, 5), 'FullDay', 3.0,
-    'Nghỉ nhiều ngày: về quê dự việc gia đình trong ba ngày.',
-    submitted=dt_(2026, 10, 26, 8, 40))
-leave_request(14, 'Annual', d_(2026, 11, 18), d_(2026, 12, 2), 'FullDay', 15.0,
-    'Thiếu phép: xin 15 ngày khi quỹ phép năm được cấu hình 14 ngày.',
-    submitted=dt_(2026, 10, 26, 8, 50))
-
-# Hai cặp cùng đợt nghỉ: A cùng chờ; B phép năm đã duyệt, không lương bị từ chối.
-leave_request(3, 'Annual', d_(2026, 11, 8), d_(2026, 11, 12), 'FullDay', 5.0,
-    'Đợt nghỉ 9 ngày, phần phép năm đang chờ.',
-    submitted=dt_(2026, 10, 26, 9, 0), group='11111111-0524-4620-8000-000000000001')
-leave_request(3, 'Unpaid', d_(2026, 11, 13), d_(2026, 11, 16), 'FullDay', 4.0,
-    'Cùng đợt nghỉ 9 ngày, phần không lương đang chờ.',
-    submitted=dt_(2026, 10, 26, 9, 0), group='11111111-0524-4620-8000-000000000001')
-leave_request(3, 'Annual', d_(2026, 11, 20), d_(2026, 11, 24), 'FullDay', 5.0,
-    'Phần phép năm đã được duyệt trong đợt 9 ngày.',
-    status='Approved', reviewer=2, submitted=dt_(2026, 10, 26, 9, 0), reviewed=dt_(2026, 10, 26, 10, 0), group='22222222-0524-4620-8000-000000000002')
-leave_request(3, 'Unpaid', d_(2026, 11, 25), d_(2026, 11, 28), 'FullDay', 4.0,
-    'Phần không lương bị từ chối trong cùng đợt.',
-    status='Rejected', reviewer=2, reject_reason='Chưa bố trí được nhân sự cho phần không lương.', submitted=dt_(2026, 10, 26, 9, 0), reviewed=dt_(2026, 10, 26, 10, 0), group='22222222-0524-4620-8000-000000000002')
+# PT Long đã chuyển bốn buổi cho PT Sơn trước khi gửi đợt nghỉ 09–12/11.
+for leave_day in (d_(2026, 11, 9), d_(2026, 11, 10), d_(2026, 11, 11), d_(2026, 11, 12)):
+    old_slot = next(row for row in DB['TimeSlots'] if row['PtEmployeeId'] == 13
+                    and row['SlotDate'] == leave_day and row['StartTime'] == time(11, 0))
+    new_slot = next(row for row in DB['TimeSlots'] if row['PtEmployeeId'] == 5
+                    and row['SlotDate'] == leave_day and row['StartTime'] == time(11, 0))
+    moved_session = next(row for row in DB['Sessions'] if row['TimeSlotId'] == old_slot['TimeSlotId']
+                         and row['Status'] == 'Scheduled')
+    assert new_slot['Status'] == 'Free', 'PT Sơn phải trống trước khi nhận buổi'
+    old_slot['Status'] = 'Free'
+    new_slot['Status'] = 'Booked'
+    moved_session['TimeSlotId'] = new_slot['TimeSlotId']
+    moved_session['PtEmployeeId'] = 5
+    moved_session['CommissionAmount'] = round(moved_session['SessionValue'] * pt_rate(5) / 100)
+    add('SessionMoveLogs', dict(SessionId=moved_session['SessionId'], MoveType='PtTransfer',
+        OldTimeSlotId=old_slot['TimeSlotId'], NewTimeSlotId=new_slot['TimeSlotId'],
+        OldPtEmployeeId=13, NewPtEmployeeId=5, RequestedByAccountId=account_of_person(emp_person(13)),
+        Reason='Chuyển buổi cho PT Sơn trước khi gửi đơn nghỉ 09–12/11',
+        MovedAt=dt_(2026, 11, 3, 19, 0)))
 
 FAC = [
     ('Máy chạy bộ Technogym', 'Cardio', 'Khu cardio tầng 1', '/images/facilities/treadmill.jpg', 'máy', 1),
@@ -923,7 +953,6 @@ CFG = [('P-01', '1', 'Số lần bảo lưu tối đa mỗi gói tập (lần)')
        ('P-04', '1D,1M,3M,9M,12M', 'Thời hạn gói tập: D = ngày, M = tháng'),
        ('P-05', '10', 'Tuổi tối thiểu dùng dịch vụ PT'),
        ('P-06', '90', 'Độ dài một buổi PT (phút)'),
-       ('P-08', '3', 'Số lượt đổi buổi mỗi tháng của gói PT (hạn mức gói = P-08 × số tháng)'),
        ('P-09', '20', 'Hạn thanh toán đơn online = thời gian giữ slot (phút)'),
        ('P-10', '10', 'Thuế VAT (%) đã nằm trong giá bán'),
        ('P-11', '70', 'Tỷ lệ hoa hồng mặc định cho PT mới (%)'),
@@ -936,18 +965,18 @@ CFG = [('P-01', '1', 'Số lần bảo lưu tối đa mỗi gói tập (lần)')
        ('P-18', '5', 'Thời gian khóa tạm (phút)'),
        ('P-19', '05:30-22:00', 'Giờ mở cửa mặc định hằng ngày'),
        ('P-21', '1M,2M,3M', 'Thời hạn gói PT (tháng)'),
-       ('P-22', '3', "Số khách tối thiểu để hiện điểm đánh giá trung bình của PT"),
        ('P-23', '14', 'Định mức phép năm demo (ngày/năm)')]
 for k, v, d in CFG:
     add('SystemConfigs', dict(ConfigKey=k, ConfigValue=v, Description=d,
-                             UpdatedAt=dt_(2026, 10, 6, 9) if k == 'P-22' else dt_(2026, 9, 1, 9),
+                             UpdatedAt=dt_(2026, 9, 1, 9),
                              UpdatedByEmployeeId=2), rid=int(k[2:]))
 
 OHE = [(d_(2026, 9, 2), None, None, 1, 'Nghỉ lễ Quốc khánh'),
        (d_(2026, 9, 18), None, None, 1, 'Sự cố điện, nghỉ cả ngày'),
        (d_(2026, 10, 11), time(7, 0), time(18, 0), 0, 'Chủ nhật bảo trì hệ thống nước, mở muộn đóng sớm'),
        (d_(2026, 10, 20), None, None, 1, 'Bảo trì điện toàn tòa nhà'),
-       (d_(2027, 2, 6), None, None, 1, 'Nghỉ Tết Nguyên đán')]
+       (d_(2027, 2, 6), None, None, 1, 'Nghỉ Tết Nguyên đán'),
+       (d_(2026, 11, 4), time(8, 30), time(22, 0), 0, 'Bảo trì hệ thống điện buổi sáng, mở cửa từ 08:30')]
 for d, o_, c_, closed, note in OHE:
     add('OperatingHourExceptions', dict(ApplyDate=d, OpenTime=o_, CloseTime=c_, IsClosedAllDay=closed, Note=note, SetByEmployeeId=2,
                                         CreatedAt=CLOSED.get(d, dt_(2026, 9, 28, 9, 0))))
@@ -979,13 +1008,38 @@ o = order(19, PKG['m1'], dt_(2026, 7, 18, 9, 0), 'Online', status='Cancelled',
           cancel=('InvalidPayment', dt_(2026, 7, 18, 9, 21), 'Số tiền chuyển không khớp số phải trả'),
           refund=('done', dt_(2026, 7, 20, 10, 0), 2, 'Đã chuyển khoản hoàn cho khách'), note='đã hoàn xong')
 
+
+# ============================================================ 17. HỒ SƠ TEST XÓA HỘI VIÊN
+# Mỗi case dùng một hồ sơ riêng; bắt đầu chưa có yêu cầu xóa.
+CM_TEST_PASSWORD_HASH = '$2a$12$ikGqV.UW38VSSAcys/LUl.Z3NTV1DYJ4mOmYpjcdBJoC82xUQ7jkm'
+CM_TEST_CUSTOMERS = [
+    ('06', 'Nguyễn Minh Sáu', 244, 243),
+    ('07', 'Trần Minh Bảy', 245, 244),
+    ('08', 'Lê Minh Tám', 246, 245),
+    ('09', 'Phạm Minh Chín', 247, 246),
+]
+for case_no, full_name, customer_id, account_id in CM_TEST_CUSTOMERS:
+    person_id = 9000 + int(case_no)
+    fixture_note = f'IT-CM-{case_no}: dữ liệu test riêng, mật khẩu GmsTest2026!'
+    G.person(person_id, full_name, d_(2000, 2, 12), f'09099000{case_no}',
+           f'it.cm{case_no}@example.com', dt_(2026, 11, 7, 9, 0), note=fixture_note)
+    G.customer(customer_id, person_id, f'KH-90{case_no}', dt_(2026, 11, 7, 9, 0),
+             status='Active', note=fixture_note)
+    G.account(account_id, person_id, dt_(2026, 11, 7, 9, 0),
+            pw=CM_TEST_PASSWORD_HASH, note=fixture_note)
+    order_id = G.order(customer_id, PKG['m1'], dt_(2026, 11, 7, 9, 0), 'Online',
+                     note=fixture_note)
+    # Giữ mã đơn test tách biệt với đơn của các kịch bản seed cũ.
+    get('Orders', order_id)['OrderCode'] = f'DH-2026-90{case_no}'
+    G.subscription(order_id, d_(2026, 11, 7), end=d_(2026, 12, 7), note=fixture_note)
+
 # ============================================================ 16. SECTION NOTES
 SECTION.update({
     'Persons': 'ID 1–32 dàn nhân vật chính; 101–113 test xác thực; 201–240 khách thường.',
     'Accounts': 'Mật khẩu chung Gms@2026 (TK tạo tại quầy cũng vậy: đóng vai mật khẩu tạm đã gửi email).',
     'Shifts': 'Đủ 2 ca mỗi ngày mở cửa 01/09–02/10 + ca hôm nay (sống).',
     'TimeSlots': 'Lịch PT: slot đã đặt + slot trống công bố dày 05/10–31/10 (có cuối tuần).',
-    'Sessions': 'Trước 05/10 đã có kết quả; từ 05/10 Scheduled.',
+    'Sessions': 'Trước 05/10 đã có kết quả; từ 05/10 sinh Scheduled, buổi trước ngày nạp được chốt ở khối cuối file (JOB-02, JOB-04).',
 })
 
 if __name__ == '__main__':

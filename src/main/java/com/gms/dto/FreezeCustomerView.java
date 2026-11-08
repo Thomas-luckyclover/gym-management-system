@@ -182,10 +182,6 @@ public class FreezeCustomerView {
         return subscriptionStatus;
     }
 
-    public String getPackageStatus() {
-        return subscriptionStatus;
-    }
-
     public void setSubscriptionStatus(String subscriptionStatus) {
         this.subscriptionStatus = subscriptionStatus;
     }
@@ -326,6 +322,7 @@ public class FreezeCustomerView {
         this.canCancelEarly = canCancelEarly;
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "ownProfile"; = trả thẳng field isOwnProfile; JSP: không dùng (chỉ Java/test)
     public boolean isOwnProfile() {
         return isOwnProfile;
     }
@@ -349,4 +346,5 @@ public class FreezeCustomerView {
     public void setFreezeHistory(List<FreezeRecordItemView> freezeHistory) {
         this.freezeHistory = freezeHistory;
     }
+
 }

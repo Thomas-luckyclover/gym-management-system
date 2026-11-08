@@ -4,22 +4,30 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 /**
- * GIỜ MỞ CỬA NGOẠI LỆ của một ngày (bảng OperatingHourExceptions).
- *
- *   Ai tạo?   PtScheduleDAO.findHourExceptions.
- *   Ai dùng?  PtScheduleService.buildDay: ngày có ngoại lệ thì dùng giờ này thay cho P-19.
- *
- * Ví dụ: 01/11 phòng nghỉ → closedAllDay=true, openTime=null, closeTime=null.
+ * DTO 1 NGÀY GIỜ MỞ CỬA ĐẶC BIỆT — DAO TẠO: PtScheduleDAO.findHourExceptions (bảng OperatingHourExceptions).
+ * Không in thẳng: PtScheduleService.buildDay dùng để đổi giờ mở / đóng của ngày hoặc đánh dấu "Phòng nghỉ";
+ * PtSaleService dùng để cảnh báo "Phòng nghỉ ngày này — PT cần dời buổi".
  */
 public class HourException {
+    public HourException(LocalDate applyDate, boolean closedAllDay, LocalTime openTime, LocalTime closeTime) {
+        this.applyDate = applyDate;
+        this.closedAllDay = closedAllDay;
+        this.openTime = openTime;
+        this.closeTime = closeTime;
+    }
 
-    private LocalDate applyDate;     // ngày áp dụng
-    private boolean closedAllDay;    // true = phòng nghỉ cả ngày
-    private LocalTime openTime;      // giờ mở cửa riêng ngày này; null khi nghỉ cả ngày
-    private LocalTime closeTime;     // giờ đóng cửa riêng ngày này; null khi nghỉ cả ngày
+    public HourException() {
+    }
 
-
-    // ===== Getter / Setter: chỉ đọc và gán, không có nghiệp vụ =====
+    // ===== DÙNG ĐỂ TÍNH =====
+    // ← ngày áp dụng
+    private LocalDate applyDate;
+    // ← IsClosedAllDay = 1 → nghỉ cả ngày
+    private boolean closedAllDay;
+    // ← giờ mở cửa riêng ngày đó (null khi nghỉ cả ngày)
+    private LocalTime openTime;
+    // ← giờ đóng cửa riêng ngày đó
+    private LocalTime closeTime;
 
     public LocalDate getApplyDate() { return applyDate; }
     public void setApplyDate(LocalDate applyDate) { this.applyDate = applyDate; }

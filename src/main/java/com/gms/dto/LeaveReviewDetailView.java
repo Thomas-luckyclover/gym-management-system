@@ -79,12 +79,14 @@ public class LeaveReviewDetailView {
         return reviewerName;
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "leaveDatePassed"; = fromDate của đơn trước hôm nay; JSP: manager/leave-request-review.jsp:75 …
     public boolean isLeaveDatePassed() {
         return leaveRequest != null && leaveRequest.getFromDate() != null
                 && leaveRequest.getFromDate().isBefore(DateTimeUtil.today());
     }
 
     /** Chỉ mở xác nhận khi tất cả kiểm tra hiện tại đạt; backend vẫn kiểm tra lại khi POST. */
+    // GETTER TỰ TÍNH — không có field/setter "canApprove"; = canAct, đơn đang chờ và mọi mục kiểm tra đạt; JSP: manager/leave-request-review.jsp:67 …
     public boolean isCanApprove() {
         if (!canAct || leaveRequest == null || !leaveRequest.isPending() || checks.isEmpty()) {
             return false;
@@ -97,6 +99,7 @@ public class LeaveReviewDetailView {
         return true;
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "autoRejected"; = đơn bị từ chối mà không có người duyệt; JSP: manager/leave-request-review.jsp:285
     public boolean isAutoRejected() {
         return leaveRequest != null && leaveRequest.isRejected() && leaveRequest.getReviewedByEmployeeId() == null;
     }

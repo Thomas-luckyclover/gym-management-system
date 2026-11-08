@@ -79,6 +79,7 @@ function initAvatarManagement() {
                 topbarImg.id = "topbarAvatarImg";
                 topbarImg.className = "avatar";
                 topbarImg.alt = "Ảnh đại diện";
+                topbarImg.style.objectFit = "cover";
                 wireImageFallback(topbarImg, tbFallback);
                 tbFallback.parentNode.insertBefore(topbarImg, tbFallback);
             }

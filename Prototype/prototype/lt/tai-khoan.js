@@ -1,146 +1,141 @@
-/* 1.4.1 — Cài đặt tài khoản (Lễ tân).
-   Đổi email phải xác thực bằng mã gửi tới ĐỊA CHỈ MỚI. */
+/* #4 Cài đặt tài khoản — một màn cho mọi vai trò (hồ sơ · mật khẩu).
+   Họ tên, ngày sinh và dữ liệu nhân sự chỉ xem. Đổi email: mã gửi tới email MỚI.
+   Đổi số điện thoại: mã gửi tới email HIỆN TẠI. Mã 6 chữ số, hiệu lực 15 phút (P-15). */
 (function () {
-  const OTP = '246810';
-  const PHONE_RE = /^0\d{9}$/;
+  const USED_EMAILS = ['an.nguyen@email.com', 'hoa.nt@gms.vn', 'long.h@gms.vn', 'trang.pt@gms.vn'];
+  const USED_PHONES = ['0905123456', '0356789012', '0978123456', '0934567890'];
+  const CURRENT = { email: 'hoa.nt@gms.vn', phone: '0356789012' };
+  const CODE_TTL = 15 * 60;
 
-  /* ---------- ảnh đại diện (UC-04, tự đổi) ----------
-     Khác hoàn toàn ảnh check-in của khách: ảnh này là của nhân viên,
-     không ai duyệt, đổi lúc nào cũng được. */
-  document.getElementById('avatarBtn').addEventListener('click', () => {
-    openConfirmModal({
-      title: 'Đổi ảnh đại diện',
-      body: `<p>Ảnh hiện trên thanh trên và trong các ghi nhận thao tác của bạn.</p>
-             <p class="muted">Chọn ảnh rõ mặt, tỉ lệ vuông, dưới 2MB.</p>`,
-      confirmLabel: 'Chọn ảnh và lưu',
-      danger: false,
-      onConfirm() {
-        const url = 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&h=120&fit=crop&q=80';
-        const face = `<img src="${url}" alt="Ảnh đại diện" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
-        const big = document.getElementById('acAvatar');
-        big.textContent = '';
-        big.style.padding = '0';
-        big.insertAdjacentHTML('beforeend', face);
-        const top = document.querySelector('.cust-user .avatar');
-        top.textContent = '';
-        top.insertAdjacentHTML('beforeend', face);
-        showToast('success', 'Đã đổi ảnh đại diện.');
-      },
-    });
-  });
-
-  /* ---------- email ---------- */
-  const emailForm = document.getElementById('emailForm');
-  const email = document.getElementById('acEmail');
-  const otpBox = document.getElementById('emailOtp');
-  const otp = document.getElementById('acOtp');
-  const timerEl = document.getElementById('acOtpTimer');
+  const emailEl = document.getElementById('acctEmail');
+  const phoneEl = document.getElementById('acctPhone');
+  const verifyPanel = document.getElementById('verifyPanel');
+  const verifyBtn = document.getElementById('verifyBtn');
+  const verifyCode = document.getElementById('verifyCode');
+  const countdown = document.getElementById('verifyCountdown');
+  let pending = null;
+  let left = 0;
   let timer = null;
 
-  emailForm.addEventListener('submit', e => {
-    e.preventDefault();
-    clearErr('acEmailErr');
-    const v = email.value.trim();
-
-    if (!EMAIL_RE.test(v)) { fieldError(email, 'acEmailErr', 'Email chưa đúng định dạng.'); return; }
-    if (v.toLowerCase() === 'hoa.nguyen@supergym.vn') {
-      fieldError(email, 'acEmailErr', 'Email mới trùng email đang dùng.');
-      return;
-    }
-
-    otpBox.querySelector('[data-otp-target]').textContent = maskEmail(v);
-    otpBox.hidden = false;
-    otp.value = '';
-    otp.focus();
-    startTimer();
-    showToast('info', `Đã gửi mã xác thực tới ${maskEmail(v)}.`);
-  });
-
-  function startTimer() {
+  function startCountdown() {
     clearInterval(timer);
-    let left = 300;
-    timerEl.textContent = mmss(left);
-    timer = setInterval(() => {
+    left = CODE_TTL;
+    const tick = () => {
+      countdown.textContent = mmss(left);
+      if (left <= 0) {
+        clearInterval(timer);
+        fieldError(verifyCode, 'verifyCodeErr', 'Mã xác thực đã hết hạn. Vui lòng gửi lại mã mới.');
+      }
       left--;
-      timerEl.textContent = mmss(left);
-      if (left > 0) return;
-      clearInterval(timer);
-      otpBox.hidden = true;
-      showToast('warning', 'Mã xác thực đã hết hạn. Gửi lại mã mới.');
-    }, 1000);
+    };
+    tick();
+    timer = setInterval(tick, 1000);
   }
 
-  document.getElementById('acOtpOk').addEventListener('click', () => {
-    clearErr('acOtpErr');
-    if (otp.value.trim() !== OTP) {
-      fieldError(otp, 'acOtpErr', 'Mã xác thực không đúng. Kiểm tra lại hộp thư mới.');
-      return;
-    }
-    clearInterval(timer);
-    const v = email.value.trim();
-    emailForm.querySelector('input[disabled]').value = v;
-    email.value = '';
-    otpBox.hidden = true;
-    showToast('success', 'Đã đổi email đăng nhập. Email cũ không còn hiệu lực.');
-  });
+  function sendCode(kind, to, value) {
+    pending = { kind, value };
+    clearErr('verifyCodeErr');
+    verifyCode.value = '123456';
+    document.getElementById('verifyTarget').textContent = maskEmail(to);
+    verifyBtn.textContent = kind === 'email' ? 'Xác nhận email' : 'Xác nhận số điện thoại';
+    verifyPanel.hidden = false;
+    verifyPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    startCountdown();
+    showToast('success', 'Đã gửi mã xác thực tới ' + maskEmail(to) + '.');
+  }
 
-  document.getElementById('acOtpCancel').addEventListener('click', () => {
-    clearInterval(timer);
-    otpBox.hidden = true;
-  });
-
-  /* ---------- số điện thoại ---------- */
-  const phoneForm = document.getElementById('phoneForm');
-  const phone = document.getElementById('acPhone');
-
-  phoneForm.addEventListener('submit', e => {
+  /* ---------- đổi email ---------- */
+  document.getElementById('emailForm').addEventListener('submit', e => {
     e.preventDefault();
-    clearErr('acPhoneErr');
-    const v = phone.value.trim();
-    if (!PHONE_RE.test(v)) {
-      fieldError(phone, 'acPhoneErr', 'Số điện thoại phải gồm 10 chữ số và bắt đầu bằng 0.');
-      return;
-    }
-    phoneForm.querySelector('input[disabled]').value = formatPhoneDisplay(v);
-    phone.value = '';
-    showToast('success', 'Đã cập nhật số điện thoại.');
+    const email = emailEl.value.trim().toLowerCase();
+    if (!email) return fieldError(emailEl, 'acctEmailErr', 'Email không được để trống.');
+    if (!EMAIL_RE.test(email)) return fieldError(emailEl, 'acctEmailErr', 'Email không hợp lệ.');
+    if (USED_EMAILS.includes(email)) return fieldError(emailEl, 'acctEmailErr', 'Email này đã được dùng cho tài khoản khác.');
+    if (email === CURRENT.email) return showToast('info', 'Không có thay đổi nào để lưu.');
+    clearErr('acctEmailErr');
+    sendCode('email', email, email);
   });
 
-  /* ---------- mật khẩu ---------- */
-  const pwForm = document.getElementById('pwForm');
-  const pwOld = document.getElementById('pwOld');
-  const pwNew = document.getElementById('pwNew');
-  const pwNew2 = document.getElementById('pwNew2');
-
-  pwForm.addEventListener('submit', e => {
+  /* ---------- đổi số điện thoại ---------- */
+  document.getElementById('phoneForm').addEventListener('submit', e => {
     e.preventDefault();
-    ['pwOldErr', 'pwNewErr', 'pwNew2Err'].forEach(clearErr);
+    const phone = phoneEl.value.trim();
+    if (!phone) return fieldError(phoneEl, 'acctPhoneErr', 'Số điện thoại không được để trống.');
+    if (!/^0\d{9}$/.test(phone)) return fieldError(phoneEl, 'acctPhoneErr', 'Số điện thoại không hợp lệ (10 số, bắt đầu bằng 0).');
+    if (USED_PHONES.includes(phone)) return fieldError(phoneEl, 'acctPhoneErr', 'Số điện thoại này đã tồn tại trên hồ sơ khác.');
+    if (phone === CURRENT.phone) return showToast('info', 'Không có thay đổi nào để lưu.');
+    clearErr('acctPhoneErr');
+    sendCode('phone', CURRENT.email, phone);
+  });
+
+  /* ---------- xác thực mã ---------- */
+  document.getElementById('verifyForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const v = verifyCode.value.trim();
+    if (!v) return fieldError(verifyCode, 'verifyCodeErr', 'Vui lòng nhập mã xác thực.');
+    if (left < 0) return fieldError(verifyCode, 'verifyCodeErr', 'Mã xác thực đã hết hạn. Vui lòng gửi lại mã mới.');
+    if (!/^\d{6}$/.test(v) || v !== '123456') return fieldError(verifyCode, 'verifyCodeErr', 'Mã xác thực không đúng hoặc đã hết hạn.');
+    clearInterval(timer);
+    verifyPanel.hidden = true;
+    if (pending.kind === 'email') {
+      CURRENT.email = pending.value;
+      showToast('success', 'Đổi email thành công. Đã gửi thông báo tới email cũ; mọi phiên đăng nhập đã bị đăng xuất.');
+    } else {
+      CURRENT.phone = pending.value;
+      showToast('success', 'Đổi số điện thoại thành công.');
+    }
+    pending = null;
+  });
+  document.getElementById('verifyResend').addEventListener('click', () => {
+    if (!pending) return;
+    sendCode(pending.kind, pending.kind === 'email' ? pending.value : CURRENT.email, pending.value);
+  });
+  document.getElementById('verifyCancel').addEventListener('click', () => {
+    clearInterval(timer);
+    pending = null;
+    verifyPanel.hidden = true;
+    emailEl.value = CURRENT.email;
+    phoneEl.value = CURRENT.phone;
+  });
+
+  /* ---------- ảnh đại diện ---------- */
+  const file = document.getElementById('avatarFile');
+  const saveBtn = document.getElementById('btnSaveAvatar');
+  document.getElementById('btnSelectAvatar').addEventListener('click', () => file.click());
+  file.addEventListener('change', () => {
+    const f = file.files[0];
+    if (!f) return;
+    if (!/^image\/(jpeg|png)$/.test(f.type)) { file.value = ''; return showToast('error', 'Chỉ nhận ảnh JPG hoặc PNG.'); }
+    if (f.size > 2 * 1024 * 1024) { file.value = ''; return showToast('error', 'Ảnh vượt quá 2 MB.'); }
+    saveBtn.disabled = false;
+  });
+  saveBtn.addEventListener('click', () => { saveBtn.disabled = true; showToast('success', 'Đã lưu ảnh đại diện.'); });
+  document.getElementById('btnRemoveAvatar').addEventListener('click', () => {
+    openConfirmModal({
+      title: 'Xóa ảnh đại diện?',
+      body: '<p>Ảnh sẽ được thay bằng chữ cái đầu tên.</p>',
+      confirmLabel: 'Xóa ảnh',
+      onConfirm() { file.value = ''; saveBtn.disabled = true; showToast('success', 'Đã xóa ảnh đại diện.'); },
+    });
+  });
+
+  /* ---------- đổi mật khẩu ---------- */
+  document.getElementById('passwordForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const oldP = document.getElementById('oldPass');
+    const p1 = document.getElementById('newPass');
+    const p2 = document.getElementById('newPass2');
     let ok = true;
 
-    if (!pwOld.value) { fieldError(pwOld, 'pwOldErr', 'Nhập mật khẩu hiện tại.'); ok = false; }
-    if (pwNew.value.length < 8) { fieldError(pwNew, 'pwNewErr', 'Mật khẩu mới tối thiểu 8 ký tự.'); ok = false; }
-    else if (pwNew.value === pwOld.value) { fieldError(pwNew, 'pwNewErr', 'Mật khẩu mới phải khác mật khẩu cũ.'); ok = false; }
-    if (pwNew2.value !== pwNew.value) { fieldError(pwNew2, 'pwNew2Err', 'Hai lần nhập chưa khớp.'); ok = false; }
+    if (!oldP.value) { fieldError(oldP, 'oldPassErr', 'Mật khẩu hiện tại không được để trống.'); ok = false; }
+    if (!p1.value) { fieldError(p1, 'newPassErr', 'Mật khẩu mới không được để trống.'); ok = false; }
+    else if (p1.value.length < 8 || p1.value.length > 64) { fieldError(p1, 'newPassErr', 'Mật khẩu phải từ 8-64 ký tự.'); ok = false; }
+    else if (!/[a-zA-Z]/.test(p1.value) || !/\d/.test(p1.value)) { fieldError(p1, 'newPassErr', 'Mật khẩu phải có ít nhất 1 chữ cái và 1 chữ số.'); ok = false; }
+    if (!p2.value) { fieldError(p2, 'newPass2Err', 'Vui lòng nhập lại mật khẩu mới.'); ok = false; }
+    else if (p1.value && p2.value !== p1.value) { fieldError(p2, 'newPass2Err', 'Mật khẩu nhập lại không khớp.'); ok = false; }
     if (!ok) return;
 
-    openConfirmModal({
-      title: 'Đổi mật khẩu',
-      body: '<p>Mọi phiên đăng nhập khác sẽ bị đăng xuất. Bạn vẫn giữ phiên trên máy quầy này.</p>',
-      confirmLabel: 'Đổi mật khẩu',
-      onConfirm() {
-        pwForm.reset();
-        showToast('success', 'Đã đổi mật khẩu. Các phiên đăng nhập khác đã bị đăng xuất.');
-      },
-    });
-  });
-
-  /* ---------- đăng xuất thiết bị khác ---------- */
-  document.getElementById('logoutAll').addEventListener('click', () => {
-    openConfirmModal({
-      title: 'Đăng xuất mọi thiết bị khác',
-      body: '<p>Dùng khi bạn đăng nhập nhầm trên máy lạ. Phiên trên máy quầy này được giữ nguyên.</p>',
-      confirmLabel: 'Đăng xuất',
-      onConfirm() { showToast('success', 'Đã đăng xuất mọi thiết bị khác.'); },
-    });
+    [oldP, p1, p2].forEach(i => { i.value = ''; });
+    showToast('success', 'Đã lưu thay đổi. Mọi phiên đăng nhập cũ đã bị đăng xuất.');
   });
 })();

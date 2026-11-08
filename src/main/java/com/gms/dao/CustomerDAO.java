@@ -80,6 +80,20 @@ public class CustomerDAO {
         }
     }
 
+    /** Cập nhật thông tin được phép sửa; không đổi loại, mã hoặc trạng thái. */
+    public void updateProfile(Connection conn, Customer customer) throws SQLException {
+        String sql = "UPDATE Customers SET GuardianName=?, GuardianRelationship=?, GuardianPhone=?, GuardianPhone2=?, CheckInPhoto=? WHERE CustomerId=?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, customer.getGuardianName());
+            stmt.setString(2, customer.getGuardianRelationship());
+            stmt.setString(3, customer.getGuardianPhone());
+            stmt.setString(4, customer.getGuardianPhone2());
+            stmt.setString(5, customer.getCheckInPhoto());
+            stmt.setInt(6, customer.getCustomerId());
+            if (stmt.executeUpdate() != 1) throw new SQLException("Không cập nhật được hồ sơ.");
+        }
+    }
+
     // ===== Truy vấn tìm kiếm =====
 
     /**

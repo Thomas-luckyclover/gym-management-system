@@ -12,10 +12,10 @@
    home.gymPackages    DAO đọc gói, Service tính giá/tháng,           PackageDAO.findActiveForHomepage:
                        % tiết kiệm, nhãn "Phổ biến nhất"/"Tiết kiệm"    Packages (IsActive = 1)
    home.ptPackages     cùng câu DAO trên, Service tách nhóm gói PT     (như trên)
-   home.pts, ptCount   EmployeeDAO.findWorkingPts                      Employees + Persons + COUNT Sessions đã dạy
+   home.pts, ptCount   EmployeeDAO.findWorkingPts                      Employees + Persons (tên, chuyên môn, năm kinh nghiệm)
    home.openingHours   Service đọc P-19 "05:30-22:00" → "05:30 – 22:00" SystemConfigs
    home.latestPosts    BlogService.getLatestPosts(3)                   BlogPosts (Status = Active, 3 bài mới nhất)
-   Mọi con số (giá, số buổi đã dạy…) lấy từ DB.
+   Mọi con số (giá, năm kinh nghiệm…) lấy từ DB.
 
  BỐ CỤC (từ trên xuống)
    1. Hero: "Mạnh hơn mỗi ngày." + giờ mở cửa + số huấn luyện viên, dải chữ chạy
@@ -32,7 +32,7 @@
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Super Gym · Mạnh hơn mỗi ngày</title>
   <meta name="description" content="Super Gym — chọn gói tập, đặt lịch huấn luyện viên và theo dõi hành trình tập luyện của bạn.">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/guest/home.css?v=20261025a">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/guest/home.css?v=20261108years">
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/guest/mascot.css?v=20261014f">
   <script src="${pageContext.request.contextPath}/js/pages/guest/home-motion.js?v=20261013c" defer></script>
   <script src="${pageContext.request.contextPath}/js/pages/guest/home.js?v=20261014f" defer></script>
@@ -66,6 +66,7 @@
             <div><dt>Mở cửa mỗi ngày</dt><dd class="tabular"><c:out value="${home.openingHours}" /></dd></div>
           </c:if>
           <c:if test="${not empty home.pts}">
+            <%-- home.ptCount = getter tự tính getPtCount() · dto/HomePageView.java --%>
             <div><dt>Huấn luyện viên</dt><dd class="tabular"><c:out value="${home.ptCount}" /></dd></div>
           </c:if>
         </dl>
@@ -199,14 +200,13 @@
         <div class="wrap">
           <h2 id="team-title" class="cine-h2" data-reveal-title><span class="cine-num tabular">${home.ptCount}</span> huấn luyện viên</h2>
           <div class="cine-coaches">
-            <%-- Mỗi PT 1 thẻ: số to "128 buổi đã dạy" (COUNT Sessions do EmployeeDAO đếm) / tên (Persons.FullName) /
-                 chuyên môn (Employees.Specialty) / "5 năm kinh nghiệm" (Employees.YearsOfExperience). Không ảnh, không SĐT. --%>
+            <%-- Mỗi PT 1 thẻ: số to "8 năm kinh nghiệm" (Employees.YearsOfExperience, Manager chưa nhập thì không hiện) /
+                 tên (Persons.FullName) / chuyên môn (Employees.Specialty). Không ảnh, không SĐT. --%>
             <c:forEach var="pt" items="${home.pts}">
               <article class="cine-coach" data-fade>
-                <p class="cine-coach__sessions tabular">${pt.completedSessionCount}<span>buổi đã dạy</span></p>
+                <c:if test="${not empty pt.yearsOfExperience}"><p class="cine-coach__years tabular">${pt.yearsOfExperience}<span>năm kinh nghiệm</span></p></c:if>
                 <h3><c:out value="${pt.fullName}" /></h3>
                 <c:if test="${not empty pt.specialty}"><p class="cine-coach__role"><c:out value="${pt.specialty}" /></p></c:if>
-                <c:if test="${not empty pt.yearsOfExperience}"><p class="cine-coach__exp">${pt.yearsOfExperience} năm kinh nghiệm</p></c:if>
               </article>
             </c:forEach>
           </div>

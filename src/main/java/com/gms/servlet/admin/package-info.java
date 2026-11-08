@@ -1,7 +1,7 @@
 /**
  * Khu vực Quản trị viên — URL /admin/*, được AdminAreaFilter bảo vệ.
  *
- * <p>Servlet dự kiến (nguồn: SRS 5.1 Screen List — bảng đầy đủ ở docs/project-structure.md):</p>
+ * <p>Servlet dự kiến (nguồn: SRS 5.1 Screen List):</p>
  * <pre>
  * AdminDashboardServlet            /admin/dashboard                                     #67  System Operational Report          TV2
  * UserListServlet                  /admin/users                                         #8   User List                          TV2

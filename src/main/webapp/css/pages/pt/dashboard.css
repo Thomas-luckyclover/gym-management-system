@@ -231,6 +231,10 @@ body.pt-dashboard-page {
 .pt-session-details h3 { font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold); overflow-wrap: anywhere; }
 .pt-session-details p { margin: var(--space-0-5) 0 0; color: var(--pt-soft); font-size: var(--font-size-sm); }
 
+.pt-session-reason {
+  color: var(--pt-muted);
+  font-size: var(--font-size-xs);
+}
 .pt-session-controls {
   display: flex;
   flex-wrap: wrap;
@@ -571,4 +575,34 @@ html body.dock.pt-dashboard-page .pt-outcome-legend i { border-radius: 1px; }
 /* Topbar thẳng mép khối ở 768–900px (mục 7 đổi lề .content riêng cho trang này) */
 @media (min-width: 768px) and (max-width: 900px) {
   html body.dock.pt-dashboard-page .topbar { padding-inline: calc(var(--layout-gutter-mobile) + var(--dock-handle-width)); }
+}
+
+/* Ô chọn tháng của khối hoa hồng: canh phải tiêu đề, xuống dòng khi hẹp. */
+.pt-board__summary .pt-section-heading {
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+.pt-month-filter {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+.pt-month-filter select {
+  width: auto;
+  min-width: 112px;
+  min-height: var(--control-height-sm);
+  padding: 0 var(--space-2);
+  border: 1px solid var(--pt-line-strong);
+  border-radius: var(--radius-sm);
+  background-color: transparent;
+  color: var(--pt-text);
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+/* Danh sách xổ xuống: tự đặt cả nền và chữ để chữ không trùng màu nền trình duyệt. */
+.pt-month-filter select option {
+  background-color: var(--pt-panel);
+  color: var(--pt-text);
 }

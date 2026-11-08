@@ -71,6 +71,7 @@ public class LeaveRequestService {
     }
 
     /** Danh sách cha phân trang theo nhân viên; mỗi người giữ đầy đủ đơn phù hợp bộ lọc. */
+    // Khi chọn All
     public ServiceResult<PageResult<LeaveEmployeeView>> getEmployeePage(
             LeaveRequestFilter filter, Integer managerAccountId, int page, int pageSize) {
         if (hasReversedDateRange(filter)) {
@@ -119,6 +120,7 @@ public class LeaveRequestService {
     }
 
     /** Trang từng đơn cho các tab trạng thái; kiểm tra Pending giống tab Tất cả và trang chi tiết. */
+    // khi mặc định, approve, reject 
     public ServiceResult<PageResult<LeaveRequestItemView>> getRequestPage(
             LeaveRequestFilter filter, Integer managerAccountId, int page, int pageSize) {
         if (hasReversedDateRange(filter)) {
@@ -163,6 +165,7 @@ public class LeaveRequestService {
     }
 
     /** Chuẩn hóa một lần để bảng và số lượng trên tab luôn dùng cùng điều kiện. */
+    // nạp vào LeaveRequestFilter
     public LeaveRequestFilter createManagerFilter(String keyword, String status, String position, String leaveType,
             String fromDate, String toDate) {
         String searchText = keyword == null ? "" : keyword.trim();
@@ -251,7 +254,10 @@ public class LeaveRequestService {
     }
 
     /** Chỉ đổi dữ liệu hiển thị; các kiểm tra database nằm ở loadApprovalSummary(). */
+    // cái này set sắp đến ngày nghỉ và đánh dấu đơn đã qua
+    
     private LeaveRequestItemView toItemView(LeaveRequestRow row, LocalDate today) {
+        //Đưa thông tin đơn DAO đọc được vào DTO hiển thị
         LeaveRequestItemView view = new LeaveRequestItemView(row);
         view.setNearLeaveDate(isNearLeaveDate(row.getLeaveRequest(), today));
         LeaveRequest request = row.getLeaveRequest();

@@ -1,0 +1,18 @@
+<%@ page pageEncoding="UTF-8" %>
+<%--
+  MẪU 1 KHUNG NHÁP — include trong schedule.jsp. <template> không hiện; schedule.js nhân bản khi thêm khung.
+  2 ô ẩn slotDate + startTime (form="pt-publish-form") → gửi lên khi Công bố. Nút × = bỏ khung nháp.
+--%>
+
+                            <template id="pt-draft-template">
+                                <article class="pt-slot pt-draft">
+                                    <input type="hidden" name="slotDate" form="pt-publish-form">
+                                    <input type="hidden" name="startTime" form="pt-publish-form">
+                                    <div class="pt-slot-body">
+                                        <span class="pt-slot-time"></span>
+                                        <span class="pt-slot-info"><strong>Khung rảnh mới</strong></span>
+                                        <span class="pt-slot-state">Nháp mới</span>
+                                    </div>
+                                    <button type="button" class="pt-draft-remove" aria-label="Bỏ khung nháp"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+                                </article>
+                            </template>

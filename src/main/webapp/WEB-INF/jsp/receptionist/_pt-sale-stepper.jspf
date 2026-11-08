@@ -1,0 +1,20 @@
+<%@ page pageEncoding="UTF-8" %>
+<%--
+================================================================================
+ _pt-sale-stepper.jspf — THANH 4 BƯỚC (1 Gói & PT · 2 Lịch tập · 3 Khách · 4 Giữ chỗ & thu tiền)
+ Nhúng vào: pt-sales.jsp (static include → dùng chung biến với trang cha).
+ Đọc biến do pt-sales.jsp c:set: done2 (đã có kỳ), customerReady (đủ khách), sale.held (đang giữ).
+ Lớp CSS: is-done = xong (dấu tích) · is-current = bước đang làm.
+ Bước 2 có data-step-plan: pt-sale-plan.js đổi is-done / is-current ngay khi chọn giờ (không tải lại trang).
+================================================================================ --%>
+
+<%-- ===== BẮT ĐẦU: THANH BƯỚC ===== --%>
+            <ol class="sale-stepper" aria-label="Các bước bán gói">
+                <%-- sale.held = getter tự tính isHeld() · dto/PtSaleView.java --%>
+                <li class="${done2 or sale.held ? 'is-done' : 'is-current'}"><span>1</span> Gói &amp; PT</li>
+                <%--  sale.held = true hoặc false để biết đang ở chế độ nào, = true thì bước 1-3 coi như xong hết - Nghĩa là khi bấm nút giữ lịch, data-step-plan: nếu lịch có > 1 buổi thì done --%>
+                <li class="${sale.held ? 'is-done' : (done2 ? 'is-current' : '')}" data-step-plan><span>2</span> Lịch tập</li>
+                <li class="${customerReady or sale.held ? 'is-done' : (done2 ? 'is-current' : '')}"><span>3</span> Khách</li>
+                <li class="${sale.held ? 'is-current' : ''}"><span>4</span> Giữ chỗ &amp; thu tiền</li>
+            </ol>
+<%-- ===== KẾT THÚC: THANH BƯỚC ===== --%>

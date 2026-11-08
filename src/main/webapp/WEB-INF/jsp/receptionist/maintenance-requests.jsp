@@ -7,7 +7,7 @@
 <head>
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Yêu cầu bảo trì · Super Gym Lễ tân</title>
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/maintenance-requests.css?v=20261031spacing1">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/maintenance-requests.css?v=20261031bulk1">
 
 </head>
 
@@ -89,8 +89,12 @@
         <%-- ===== Danh sách yêu cầu ===== --%>
         <section class="panel maintenance-panel">
           <div class="panel-head">
-            <div>
+            <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
               <h2>Danh sách yêu cầu</h2>
+              <label class="select-all-in-progress-label" id="labelCheckAllInProgress" style="display: none; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; user-select: none;">
+                <input type="checkbox" id="checkAllInProgress" class="bulk-checkbox">
+                <span>Chọn tất cả đang xử lý</span>
+              </label>
             </div>
           </div>
 
@@ -119,6 +123,7 @@
             </select>
 
             <input type="date"
+                   lang="vi"
                    name="reportedDate"
                    value="<c:out value='${reportedDateFilter}' />"
                    title="Lọc theo ngày báo"
@@ -139,6 +144,21 @@
             </c:if>
           </form>
 
+          <%-- Thanh nghiệm thu hàng loạt cho Lễ tân --%>
+          <div id="receptionistBulkBar" class="bulk-action-bar" style="display: none;">
+            <div class="bulk-info">
+              <span class="bulk-icon"><i class="fa-solid fa-list-check"></i></span>
+              <span class="bulk-text">Đã chọn <strong id="receptionistBulkCount">0</strong> yêu cầu đang xử lý</span>
+              <span class="bulk-codes text-muted" id="receptionistBulkCodes"></span>
+            </div>
+            <div class="bulk-buttons">
+              <button type="button" class="btn btn-outline btn-sm" id="btnCancelReceptionistBulk">Bỏ chọn</button>
+              <button type="button" class="btn btn-primary btn-sm" id="btnTriggerReceptionistBulkClose">
+                <i class="fa-solid fa-circle-check"></i> Nghiệm thu hàng loạt (<span id="receptionistBulkBtnCount">0</span>)
+              </button>
+            </div>
+          </div>
+
           <c:choose>
             <c:when test="${not empty requestPage.items}">
               <div class="maintenance-list">
@@ -147,17 +167,28 @@
 
                     <div class="maintenance-card-main">
                       <div class="maintenance-card-head">
-                        <strong>
-                          <c:out value="${item.request.requestCode}" /> · <c:out value="${item.facilityName}" />
-                          <c:choose>
-                            <c:when test="${not empty item.request.affectedItemsNote}">
-                              · <c:out value="${item.request.affectedItemsNote}" /> · <c:out value="${item.itemCode}" />
-                            </c:when>
-                            <c:otherwise>
-                              · <c:out value="${item.itemLabel}" /><c:if test="${not empty item.placementNote}"> · <c:out value="${item.placementNote}" /></c:if> (<c:out value="${item.itemCode}" />)
-                            </c:otherwise>
-                          </c:choose>
-                        </strong>
+                        <div class="maintenance-card-title-group">
+                          <c:if test="${item.request.inProgress}">
+                            <input type="checkbox"
+                                   class="bulk-checkbox receptionist-bulk-checkbox"
+                                   value="${item.request.maintenanceRequestId}"
+                                   data-request-code="<c:out value='${item.request.requestCode}' />"
+                                   data-item-code="<c:out value='${item.itemCode}' />"
+                                   data-facility-name="<c:out value='${item.facilityName}' />"
+                                   title="Chọn để nghiệm thu hàng loạt">
+                          </c:if>
+                          <strong>
+                            <c:out value="${item.request.requestCode}" /> · <c:out value="${item.facilityName}" />
+                            <c:choose>
+                              <c:when test="${not empty item.request.affectedItemsNote}">
+                                · <c:out value="${item.request.affectedItemsNote}" /> · <c:out value="${item.itemCode}" />
+                              </c:when>
+                              <c:otherwise>
+                                · <c:out value="${item.itemLabel}" /><c:if test="${not empty item.placementNote}"> · <c:out value="${item.placementNote}" /></c:if> (<c:out value="${item.itemCode}" />)
+                              </c:otherwise>
+                            </c:choose>
+                          </strong>
+                        </div>
 
                         <div class="maintenance-badges-group">
                           <c:if test="${item.request.warningTagPlaced}">
@@ -180,7 +211,7 @@
                         </span>
 
                         <span>
-                          Ưu tiên: <b><c:out value="${item.request.priority.displayName}" /></b>
+                          Ưu tiên: <b class="priority-val priority-${item.request.priority.dbValue.toLowerCase()}"><c:out value="${item.request.priority.displayName}" /></b>
                         </span>
 
                         <c:if test="${not empty item.facilityLocation}">
@@ -321,10 +352,12 @@
           </c:choose>
 
           <%-- ===== Phân trang ===== --%>
+          <%-- requestPage.totalPages = getter tự tính getTotalPages() · dto/PageResult.java --%>
           <c:if test="${requestPage.totalPages > 1}">
             <div class="maintenance-pager">
 
               <c:choose>
+                <%-- requestPage.hasPrevious = getter tự tính isHasPrevious() · dto/PageResult.java --%>
                 <c:when test="${requestPage.hasPrevious}">
                   <c:url var="previousUrl"
                          value="/receptionist/maintenance-requests">
@@ -354,6 +387,7 @@
               </span>
 
               <c:choose>
+                <%-- requestPage.hasNext = getter tự tính isHasNext() · dto/PageResult.java --%>
                 <c:when test="${requestPage.hasNext}">
                   <c:url var="nextUrl"
                          value="/receptionist/maintenance-requests">
@@ -386,5 +420,224 @@
     </div>
   </div>
 
+  <%-- ===== MODAL NGHIỆM THU HÀNG LOẠT (LỄ TÂN) ===== --%>
+  <div id="modalReceptionistBulkClose" class="gms-modal" role="dialog" aria-modal="true" aria-labelledby="receptionistModalTitle">
+    <div class="gms-modal-dialog">
+      <form action="${pageContext.request.contextPath}/receptionist/maintenance-requests" method="post" id="formReceptionistBulkClose">
+        <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
+        <input type="hidden" name="action" value="batchClose">
+        <input type="hidden" name="requestIds" id="receptionistBulkRequestIdsHidden">
+
+        <div class="gms-modal-header">
+          <h3 class="gms-modal-title" id="receptionistModalTitle">Nghiệm thu & Đóng hàng loạt yêu cầu bảo trì</h3>
+          <button type="button" class="gms-modal-close" onclick="closeReceptionistBulkModal()">&times;</button>
+        </div>
+        <div class="gms-modal-body">
+          <div class="bulk-modal-summary">
+            Xác nhận nghiệm thu đồng loạt <strong id="receptionistModalSummaryCount">0</strong> yêu cầu bảo trì đã chọn:
+            <div class="bulk-modal-tags" id="receptionistModalSummaryTags"></div>
+          </div>
+
+          <div class="alert-banner info" style="font-size: 12.5px; padding: 8px 12px; margin-top: 4px;">
+            <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+            <span>Hệ thống sẽ chuyển các yêu cầu trên sang <b>Đã đóng</b> và tự động khôi phục các thiết bị liên quan về trạng thái <b>Khả dụng</b> để tiếp tục phục vụ hội viên.</span>
+          </div>
+
+          <div class="field" style="margin-top: 6px;">
+            <label class="field-label" for="bulkAcceptanceNoteInput">
+              Ghi chú nghiệm thu chung <span style="color:var(--color-danger)">*</span> (5 - 500 ký tự)
+            </label>
+            <textarea id="bulkAcceptanceNoteInput"
+                      name="acceptanceNote"
+                      class="form-input"
+                      rows="3"
+                      minlength="5"
+                      maxlength="500"
+                      required
+                      placeholder="VD: Đã kiểm tra vận hành thử toàn bộ máy, thiết bị hoạt động bình thường, đã vệ sinh và gỡ biển cảnh báo..."></textarea>
+            <small class="field-hint">Ghi chú này sẽ được lưu chung vào tất cả các phiếu được nghiệm thu.</small>
+            <div class="field-error" id="bulkAcceptanceNoteError" style="display:none; color:var(--color-danger); font-size:12px; margin-top:4px;"></div>
+          </div>
+        </div>
+        <div class="gms-modal-footer">
+          <button type="button" class="btn btn-ghost" onclick="closeReceptionistBulkModal()">Hủy</button>
+          <button type="submit" class="btn btn-primary" id="btnSubmitReceptionistBulk">
+            <i class="fa-solid fa-check-double"></i> Xác nhận nghiệm thu & Đóng tất cả
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var checkAll = document.getElementById('checkAllInProgress');
+      var labelCheckAll = document.getElementById('labelCheckAllInProgress');
+      var rowCheckboxes = document.querySelectorAll('.receptionist-bulk-checkbox');
+      var bulkBar = document.getElementById('receptionistBulkBar');
+      var bulkCount = document.getElementById('receptionistBulkCount');
+      var bulkBtnCount = document.getElementById('receptionistBulkBtnCount');
+      var bulkCodes = document.getElementById('receptionistBulkCodes');
+      var btnCancel = document.getElementById('btnCancelReceptionistBulk');
+      var btnTrigger = document.getElementById('btnTriggerReceptionistBulkClose');
+
+      var modal = document.getElementById('modalReceptionistBulkClose');
+      var hiddenIds = document.getElementById('receptionistBulkRequestIdsHidden');
+      var modalSummaryCount = document.getElementById('receptionistModalSummaryCount');
+      var modalSummaryTags = document.getElementById('receptionistModalSummaryTags');
+      var noteInput = document.getElementById('bulkAcceptanceNoteInput');
+      var noteError = document.getElementById('bulkAcceptanceNoteError');
+      var form = document.getElementById('formReceptionistBulkClose');
+
+      if (rowCheckboxes.length > 0 && labelCheckAll) {
+        labelCheckAll.style.display = 'inline-flex';
+      }
+
+      function getSelectedCheckboxes() {
+        return Array.from(rowCheckboxes).filter(function (cb) {
+          return cb.checked;
+        });
+      }
+
+      function updateUI() {
+        var selected = getSelectedCheckboxes();
+        var count = selected.length;
+
+        rowCheckboxes.forEach(function (cb) {
+          var card = cb.closest('.maintenance-card');
+          if (card) {
+            if (cb.checked) {
+              card.classList.add('is-selected');
+            } else {
+              card.classList.remove('is-selected');
+            }
+          }
+        });
+
+        if (count > 0) {
+          bulkBar.style.display = 'flex';
+          bulkCount.textContent = count;
+          bulkBtnCount.textContent = count;
+
+          var codes = selected.map(function (cb) {
+            return cb.getAttribute('data-request-code') || ('#' + cb.value);
+          });
+
+          if (codes.length <= 4) {
+            bulkCodes.textContent = '(' + codes.join(', ') + ')';
+          } else {
+            bulkCodes.textContent = '(' + codes.slice(0, 3).join(', ') + '... +' + (codes.length - 3) + ' đơn khác)';
+          }
+        } else {
+          bulkBar.style.display = 'none';
+          bulkCodes.textContent = '';
+        }
+
+        if (checkAll && rowCheckboxes.length > 0) {
+          var allChecked = Array.from(rowCheckboxes).every(function (cb) {
+            return cb.checked;
+          });
+          checkAll.checked = allChecked;
+          checkAll.indeterminate = count > 0 && !allChecked;
+        }
+      }
+
+      if (checkAll) {
+        checkAll.addEventListener('change', function () {
+          var isChecked = checkAll.checked;
+          rowCheckboxes.forEach(function (cb) {
+            cb.checked = isChecked;
+          });
+          updateUI();
+        });
+      }
+
+      rowCheckboxes.forEach(function (cb) {
+        cb.addEventListener('change', updateUI);
+      });
+
+      if (btnCancel) {
+        btnCancel.addEventListener('click', function () {
+          rowCheckboxes.forEach(function (cb) {
+            cb.checked = false;
+          });
+          if (checkAll) {
+            checkAll.checked = false;
+            checkAll.indeterminate = false;
+          }
+          updateUI();
+        });
+      }
+
+      if (btnTrigger) {
+        btnTrigger.addEventListener('click', function () {
+          var selected = getSelectedCheckboxes();
+          if (selected.length === 0) return;
+
+          var ids = selected.map(function (cb) { return cb.value; });
+          hiddenIds.value = ids.join(',');
+          modalSummaryCount.textContent = selected.length;
+
+          modalSummaryTags.innerHTML = '';
+          selected.forEach(function (cb) {
+            var code = cb.getAttribute('data-request-code') || ('#' + cb.value);
+            var itemCode = cb.getAttribute('data-item-code') || '';
+            var facName = cb.getAttribute('data-facility-name') || '';
+            var tag = document.createElement('span');
+            tag.className = 'bulk-code-pill';
+            tag.textContent = code + (itemCode ? ' (' + itemCode + ')' : '');
+            if (facName) tag.title = facName;
+            modalSummaryTags.appendChild(tag);
+          });
+
+          if (noteError) noteError.style.display = 'none';
+          openReceptionistBulkModal();
+        });
+      }
+
+      if (form) {
+        form.addEventListener('submit', function (e) {
+          var note = noteInput ? noteInput.value.trim() : '';
+          if (!note || note.length < 5 || note.length > 500) {
+            e.preventDefault();
+            if (noteError) {
+              noteError.textContent = 'Ghi chú nghiệm thu phải từ 5 đến 500 ký tự.';
+              noteError.style.display = 'block';
+            }
+            if (noteInput) noteInput.focus();
+          }
+        });
+      }
+
+      window.closeReceptionistBulkModal = function () {
+        if (modal) {
+          modal.classList.remove('show');
+        }
+      };
+
+      window.openReceptionistBulkModal = function () {
+        if (modal) {
+          modal.classList.add('show');
+          if (noteInput) {
+            noteInput.focus();
+          }
+        }
+      };
+
+      window.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && modal && modal.classList.contains('show')) {
+          closeReceptionistBulkModal();
+        }
+      });
+
+      if (modal) {
+        modal.addEventListener('click', function (e) {
+          if (e.target === modal) {
+            closeReceptionistBulkModal();
+          }
+        });
+      }
+    })();
+  </script>
 </body>
 </html>

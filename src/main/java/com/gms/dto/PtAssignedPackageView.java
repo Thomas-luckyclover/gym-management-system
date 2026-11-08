@@ -7,36 +7,36 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * MỘT THẺ KHÁCH trong khối "Khách phụ trách" của PT Dashboard (1 gói PT hoặc 1 buổi lẻ).
- *
- * Ai điền gì:
- *   PtDashboardDAO.findAssignedPackages      → tên, loại gói, hạn, số buổi còn, mã gói, SĐT
- *   PtDashboardService.getAssignedPackages   → nhãn loại gói + danh sách cảnh báo (attentionItems)
- *   Tự tính trong getter                     → link Zalo từ SĐT, độ ưu tiên sắp xếp
- *
- * JSP đọc qua attribute assignedPackages, ví dụ:
- *   "Mai Đỗ & Lan Chi" · PT đôi · còn 6 buổi · đến 25/10/2026 · [Gọi] [Zalo]
+ * DTO 1 KHÁCH PHỤ TRÁCH (1 gói PT / buổi lẻ) — DAO TẠO: PtDashboardDAO.findAssignedPackages;
+ * Service ĐIỀN: getAssignedPackages (nhãn loại gói) + mergeClientAttention (gắn việc cần chú ý, xếp ưu tiên).
+ * Servlet: "assignedPackages" → pt/dashboard.jsp, khung "Khách phụ trách" (biến client).
+ * Hàm tính sẵn: getCustomerZaloUrl / getPartnerZaloUrl (nút Zalo) · getAttentionPriority (0 phòng nghỉ, 1 có việc, 2 bình thường → xếp lên đầu).
  */
 public class PtAssignedPackageView {
+    // ===== IN RA MÀN =====
+    // ← Persons.FullName người đứng tên → tên khách
+    private final String customerName;
+    // ← tên người tập cùng (PTCouple) → "& <tên>", nhãn tên cạnh SĐT
+    private final String partnerName;
+    // ← Service typeLabel → "PT cá nhân" | "PT đôi" | "Buổi lẻ"
+    private String ptSubscriptionTypeLabel;
+    // ← đếm buổi Scheduled chưa bắt đầu → "còn N buổi"
+    private final int scheduledSessionCount;
+    // ← Subscriptions.EndDate → "đến dd/MM/yyyy"
+    private final LocalDate ptEndDate;
+    // ← Persons.Phone → nút gọi + Zalo người đứng tên
+    private String customerPhone;
+    // ← SĐT người tập cùng → nút gọi + Zalo người tập cùng
+    private String partnerPhone;
+    // ← mergeClientAttention: các PtAttentionView cùng gói → các khung vàng/đỏ dưới khách
+    private final List<PtAttentionView> attentionItems = new ArrayList<>();
 
-    // ---------- DAO điền qua constructor ----------
-    private final String customerName;            // Người đứng tên gói, vd "Mai Đỗ"
-    private final String partnerName;             // Người tập cùng (chỉ gói PT đôi), null nếu không có
-    private final Package.Type ptSubscriptionType; // PT_SINGLE / PT_COUPLE / SINGLE_SESSION
-    private final LocalDate ptEndDate;            // Hạn gói (Subscriptions.EndDate)
-    private final int scheduledSessionCount;      // Số buổi Scheduled chưa bắt đầu của cả gói
+    // ===== KHÔNG IN RA MÀN =====
+    // ← Subscriptions.SubscriptionId → ghép attentionItems
+    private int ptSubscriptionId;
+    // ← Subscriptions.SubscriptionType → nhãn loại gói
+    private final Package.Type ptSubscriptionType;
 
-    // ---------- DAO điền qua setter ----------
-    private int ptSubscriptionId;                 // Mã gói — Service dùng để ghép cảnh báo đúng gói
-    private String customerPhone;                 // SĐT người đứng tên
-    private String partnerPhone;                  // SĐT người tập cùng
-
-    // ---------- Service điền ----------
-    private String ptSubscriptionTypeLabel;       // "PT cá nhân" / "PT đôi" / "Buổi lẻ"
-    private final List<PtAttentionView> attentionItems = new ArrayList<>(); // Cảnh báo của gói này
-
-
-    /** DAO gọi, mỗi dòng SQL 1 lần. */
     public PtAssignedPackageView(String customerName, String partnerName,
             Package.Type ptSubscriptionType, LocalDate ptEndDate, int scheduledSessionCount) {
         this.customerName = customerName;
@@ -46,23 +46,17 @@ public class PtAssignedPackageView {
         this.scheduledSessionCount = scheduledSessionCount;
     }
 
-
-    // ---------- Getter tự tính ----------
-
-    /** Link Zalo của người đứng tên, vd https://zalo.me/0912345678. Không có SĐT → null, JSP ẩn nút. */
+    // GETTER TỰ TÍNH — không có field/setter "customerZaloUrl"; = ZaloUtil.toUrl(customerPhone); JSP: pt/dashboard.jsp:233 …
     public String getCustomerZaloUrl() {
         return ZaloUtil.toUrl(customerPhone);
     }
 
-    /** Link Zalo của người tập cùng (gói đôi). */
+    // GETTER TỰ TÍNH — không có field/setter "partnerZaloUrl"; = ZaloUtil.toUrl(partnerPhone); JSP: pt/dashboard.jsp:244 …
     public String getPartnerZaloUrl() {
         return ZaloUtil.toUrl(partnerPhone);
     }
 
-    /**
-     * Service sắp xếp theo số này (mergeClientAttention):
-     * 0 = có buổi rơi vào ngày nghỉ (phải dời) · 1 = có cảnh báo khác · 2 = bình thường.
-     */
+    // GETTER TỰ TÍNH — không có field/setter "attentionPriority"; = có việc closedDay → 0, có việc khác → 1, không có việc → 2; JSP: không dùng (chỉ Java/test)
     public int getAttentionPriority() {
         for (PtAttentionView item : attentionItems) {
             if ("closedDay".equals(item.getKind())) {
@@ -71,9 +65,6 @@ public class PtAssignedPackageView {
         }
         return attentionItems.isEmpty() ? 2 : 1;
     }
-
-
-    // ---------- Getter / setter thường ----------
 
     public String getCustomerName() { return customerName; }
     public String getPartnerName() { return partnerName; }

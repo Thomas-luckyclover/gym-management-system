@@ -1,0 +1,38 @@
+<%@ page pageEncoding="UTF-8" %>
+<%--
+====================================================================================================
+ _schedule-handle-cancel.jspf — TAB HỦY BUỔI của hộp Xử lý buổi
+ Nhúng vào: _schedule-handle.jspf (static include → dùng chung biến chosen, sessionTime, closeUrl, handle, csrfToken, viewDate, view).
+ Không có khối dữ liệu riêng: chỉ handle.sessionId + chữ đã gõ handleReason khi bị từ chối.
+==================================================================================================== --%>
+
+<%-- ===== BẮT ĐẦU: FORM HỦY BUỔI ===== --%>
+        <%--
+          ===== FORM HỦY BUỔI (action=cancel) → PtSessionHandleService.cancel =====
+          name="reason" (5–500 ký tự, giữ lại chữ đã gõ handleReason) · ô tích name="refundAgreed" (bắt buộc).
+        --%>
+        <form class="pt-handle-panel" data-panel="cancel" method="post" action="${pageContext.request.contextPath}/pt/schedule" novalidate>
+            <input type="hidden" name="csrfToken" value="<c:out value='${csrfToken}' />">
+            <input type="hidden" name="action" value="cancel">
+            <input type="hidden" name="sessionId" value="${handle.sessionId}">
+            <input type="hidden" name="date" value="${viewDate}">
+            <input type="hidden" name="view" value="${view}">
+            <ul class="pt-handle-warning">
+                <li>Buổi vẫn tính là đã dùng, bạn vẫn nhận hoa hồng.</li>
+                <li>Bạn tự hoàn tiền mặt cho khách ngoài hệ thống.</li>
+                <li>Không hoàn tác được.</li>
+                <li class="is-must"><strong>Phải hỏi khách trước:</strong> khách đồng ý nhận tiền mặt thì mới tích ô xác nhận bên dưới — chưa tích thì không hủy được.</li>
+            </ul>
+            <label class="pt-handle-field"><span>Lý do hủy <small>(5–500 ký tự, khách sẽ đọc)</small></span>
+                <textarea name="reason" rows="3" maxlength="500" placeholder="VD: Mình ốm đột xuất, không dạy được buổi này."><c:if test="${chosen eq 'cancel'}"><c:out value="${handleReason}" /></c:if></textarea>
+            </label>
+            <label class="pt-handle-check">
+                <input type="checkbox" name="refundAgreed">
+                <span>Khách đã đồng ý nhận lại tiền mặt cho buổi này.</span>
+            </label>
+            <div class="pt-handle-actions">
+                <a class="btn btn-ghost" href="${closeUrl}" data-handle-close>Để sau</a>
+                <button class="btn btn-danger" type="submit">Hủy buổi</button>
+            </div>
+        </form>
+<%-- ===== KẾT THÚC: FORM HỦY BUỔI ===== --%>

@@ -20,16 +20,20 @@ import java.util.Map;
 /**
  * DAO MÀN THƯ VIỆN BÀI TẬP — bảng Exercises (bộ đệm từ wger.de) + đọc quyền mở khóa của khách.
  *
- *   findUnlockPeriods      các gói CÓ đặc quyền của khách đang đăng nhập (kể cả gói đôi người đi kèm)
- *   findUnlockingPackages  gói đang bán có đặc quyền (in ở màn khóa)
- *   findLastSyncedAt       lần tải từ wger gần nhất; null = bảng trống
- *   countAll / countByCategory / countFiltered / findPage   đọc thư viện theo bộ lọc, phân trang ở SQL
- *   deleteAll + insertAll  ghi lại cả bảng khi đồng bộ (Service mở transaction, DAO nhận Connection)
+ * AI GỌI DAO NÀY?  Chỉ ExerciseLibraryService (getPage và hàm phụ syncIfNeeded).
+ * BỐ CỤC: xếp theo bước của HÀM CHÍNH getPage dùng tới.
+ *   PHỤC VỤ getPage B1 (kiểm quyền khách)   findUnlockPeriods, findUnlockingPackages
+ *   PHỤC VỤ getPage B2 (syncIfNeeded)       findLastSyncedAt · deleteAll + insertAll (Service mở transaction, DAO nhận Connection) → joinIds
+ *   PHỤC VỤ getPage B4–B5 (đọc thư viện)    countFiltered, findPage, countAll, countByCategory → buildWhere, bindWhere, splitIds
+ *   Lọc, đếm, sắp xếp, phân trang đều làm ở SQL; giá trị người dùng luôn đi qua dấu ?.
  */
 public class ExerciseLibraryDAO {
+    // ============================================================================================================
+    // PHỤC VỤ HÀM CHÍNH getPage B1 — kiểm quyền khách: gói có đặc quyền của khách + gói đang bán (in ở màn khóa)
+    // ============================================================================================================
 
     /**
-     * Gói của khách có Packages.UnlocksExerciseLibrary = 1, bỏ gói Cancelled.
+     * getPage B1: gói của khách có Packages.UnlocksExerciseLibrary = 1, bỏ gói Cancelled.
      * Khách là người đứng tên (Subscriptions.CustomerId) hoặc người đi kèm gói đôi (Orders.PartnerCustomerId).
      *
      * @param accountId mã tài khoản từ session (không lấy từ URL)
@@ -62,7 +66,7 @@ public class ExerciseLibraryDAO {
         return periods;
     }
 
-    /** Gói đang bán có đặc quyền, gói tập trước gói PT, rẻ trước. Chỉ đọc tên + giá. */
+    /** getPage B1 (màn khóa): gói đang bán có đặc quyền, gói tập trước gói PT, rẻ trước. Chỉ đọc tên + giá. */
     public List<Package> findUnlockingPackages() throws SQLException {
         String sql = """
                 SELECT PackageId, PackageName, Price
@@ -84,7 +88,13 @@ public class ExerciseLibraryDAO {
         return packages;
     }
 
-    /** MAX(SyncedAt) của bảng; bảng trống → null. */
+
+
+    // ============================================================================================================
+    // PHỤC VỤ getPage B2 (syncIfNeeded) — lần tải gần nhất + ghi lại CẢ BẢNG khi đồng bộ (cùng 1 transaction)
+    // ============================================================================================================
+
+    /** syncIfNeeded B1: MAX(SyncedAt) của bảng; bảng trống → null. */
     public LocalDateTime findLastSyncedAt() throws SQLException {
         String sql = "SELECT MAX(SyncedAt) AS LastSync FROM Exercises";
         try (Connection connection = DBContext.getConnection();
@@ -95,92 +105,14 @@ public class ExerciseLibraryDAO {
         }
     }
 
-    /** Tổng số bài trong thư viện. */
-    public int countAll() throws SQLException {
-        try (Connection connection = DBContext.getConnection();
-                PreparedStatement statement = connection.prepareStatement("SELECT COUNT(*) FROM Exercises");
-                ResultSet rs = statement.executeQuery()) {
-            return rs.next() ? rs.getInt(1) : 0;
-        }
-    }
-
-    /** Số bài mỗi nhóm cơ: {11 → 78, 12 → 105, …} cho các chip. */
-    public Map<Integer, Integer> countByCategory() throws SQLException {
-        String sql = """
-                SELECT CategoryId, COUNT(*) AS Total
-                FROM Exercises
-                GROUP BY CategoryId
-                """;
-        Map<Integer, Integer> counts = new LinkedHashMap<>();
-        try (Connection connection = DBContext.getConnection();
-                PreparedStatement statement = connection.prepareStatement(sql);
-                ResultSet rs = statement.executeQuery()) {
-            while (rs.next()) {
-                counts.put(rs.getInt("CategoryId"), rs.getInt("Total"));
-            }
-        }
-        return counts;
-    }
-
-    /**
-     * Đếm bài khớp bộ lọc. Tham số null = không lọc theo điều kiện đó.
-     *
-     * @param namePattern mẫu LIKE đã escape (SqlUtil.toContainsPattern), ví dụ "%bench%"
-     */
-    public int countFiltered(String namePattern, Integer categoryId, Integer equipmentId) throws SQLException {
-        String sql = "SELECT COUNT(*) FROM Exercises" + buildWhere(namePattern, categoryId, equipmentId);
-        try (Connection connection = DBContext.getConnection();
-                PreparedStatement statement = connection.prepareStatement(sql)) {
-            bindWhere(statement, namePattern, categoryId, equipmentId);
-            try (ResultSet rs = statement.executeQuery()) {
-                return rs.next() ? rs.getInt(1) : 0;
-            }
-        }
-    }
-
-    /**
-     * Một trang bài theo bộ lọc, phân trang ở SQL (OFFSET … FETCH).
-     *
-     * @param orderBy mệnh đề ORDER BY lấy từ hằng số của Service (ExerciseLibraryService.orderByOf),
-     *                KHÔNG BAO GIỜ là chữ người dùng gõ trên URL
-     */
-    public List<ExerciseItem> findPage(String namePattern, Integer categoryId, Integer equipmentId,
-            String orderBy, int offset, int size) throws SQLException {
-        String sql = "SELECT ExerciseId, Name, CategoryId, MuscleIds, EquipmentIds, ImageUrl, Description FROM Exercises"
-                + buildWhere(namePattern, categoryId, equipmentId)
-                + " ORDER BY " + orderBy
-                + " OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
-        List<ExerciseItem> items = new ArrayList<>();
-        try (Connection connection = DBContext.getConnection();
-                PreparedStatement statement = connection.prepareStatement(sql)) {
-            int next = bindWhere(statement, namePattern, categoryId, equipmentId);
-            statement.setInt(next, offset);
-            statement.setInt(next + 1, size);
-            try (ResultSet rs = statement.executeQuery()) {
-                while (rs.next()) {
-                    ExerciseItem item = new ExerciseItem();
-                    item.setExerciseId(rs.getInt("ExerciseId"));
-                    item.setName(rs.getString("Name"));
-                    item.setCategoryId(rs.getInt("CategoryId"));
-                    item.setMuscleIds(splitIds(rs.getString("MuscleIds")));
-                    item.setEquipmentIds(splitIds(rs.getString("EquipmentIds")));
-                    item.setImageUrl(rs.getString("ImageUrl"));
-                    item.setDescription(rs.getString("Description"));
-                    items.add(item);
-                }
-            }
-        }
-        return items;
-    }
-
-    /** Xóa cả bảng (bước 1 của đồng bộ, cùng transaction với insertAll). */
+    /** syncIfNeeded: xóa cả bảng (bước 1 của đồng bộ, cùng transaction với insertAll). */
     public void deleteAll(Connection connection) throws SQLException {
         try (Statement statement = connection.createStatement()) {
             statement.executeUpdate("DELETE FROM Exercises");
         }
     }
 
-    /** Ghi lại toàn bộ bài vừa tải (batch, bước 2 của đồng bộ). */
+    /** syncIfNeeded: ghi lại toàn bộ bài vừa tải (batch, bước 2 của đồng bộ). */
     public void insertAll(Connection connection, List<ExerciseItem> items, LocalDateTime syncedAt) throws SQLException {
         String sql = """
                 INSERT INTO Exercises (ExerciseId, Name, CategoryId, MuscleIds, EquipmentIds, ImageUrl, Description, SyncedAt)
@@ -210,10 +142,119 @@ public class ExerciseLibraryDAO {
         }
     }
 
-    // ===== Hàm phụ =====
+    /** HÀM PHỤ (insertAll) — [1, 8] → ",1,8,"; rỗng → ",". */
+    static String joinIds(List<Integer> ids) {
+        StringBuilder text = new StringBuilder(",");
+        for (Integer id : ids) {
+            text.append(id).append(',');
+        }
+        String joined = text.toString();
+        return joined.length() > 100 ? "," : joined;
+    }
 
-    /** Ghép WHERE theo bộ lọc có giá trị. Chỉ ghép chữ cố định, giá trị luôn đi qua dấu ?. */
+
+
+    // ============================================================================================================
+    // PHỤC VỤ HÀM CHÍNH getPage B4–B5 — đọc thư viện theo bộ lọc, phân trang ở SQL
+    //   countFiltered / findPage dùng chung buildWhere → bindWhere; findPage đọc mã dụng cụ / nhóm cơ bằng splitIds
+    // ============================================================================================================
+
+        /**
+     * Đếm bài khớp bộ lọc. Tham số null = không lọc theo điều kiện đó.
+     *
+     * @param namePattern mẫu LIKE đã escape (SqlUtil.toContainsPattern), ví dụ "%bench%"
+     */
+    public int countFiltered(String namePattern, Integer categoryId, Integer equipmentId) throws SQLException {
+        // Ghép WHERE theo bộ lọc có giá trị (buildWhere)
+        String sql = "SELECT COUNT(*) FROM Exercises" + buildWhere(namePattern, categoryId, equipmentId);
+        try (Connection connection = DBContext.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+            bindWhere(
+                    statement,
+                    namePattern,
+                    categoryId,
+                    equipmentId);
+            try (ResultSet rs = statement.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        }
+    }
+
+    /**
+     * Một trang bài theo bộ lọc, phân trang ở SQL (OFFSET … FETCH).
+     *
+     * @param orderBy mệnh đề ORDER BY lấy từ hằng số của Service (ExerciseLibraryService.orderByOf),
+     *                KHÔNG BAO GIỜ là chữ người dùng gõ trên URL
+     Bỏ qua n dòng đầu tiên, rồi lấy m dòng tiếp theo: OFFSET n ROWS FETCH NEXT m 
+     */
+    public List<ExerciseItem> findPage(
+            String namePattern,
+            Integer categoryId,
+            Integer equipmentId,
+            String orderBy,
+            int offset,
+            int size) throws SQLException {
+        String sql = "SELECT ExerciseId, Name, CategoryId, MuscleIds, EquipmentIds, ImageUrl, Description FROM Exercises"
+                + buildWhere(namePattern, categoryId, equipmentId)
+                + " ORDER BY " + orderBy
+                + " OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+        List<ExerciseItem> items = new ArrayList<>();
+        try (Connection connection = DBContext.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+            int next = bindWhere(
+                    statement,
+                    namePattern,
+                    categoryId,
+                    equipmentId);
+            statement.setInt(next, offset); // điền giá trị của offset
+            statement.setInt(next + 1, size); // điền giá trị của size: PAGE_SIZE = 12
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    ExerciseItem item = new ExerciseItem();
+                    item.setExerciseId(rs.getInt("ExerciseId"));
+                    item.setName(rs.getString("Name"));
+                    item.setCategoryId(rs.getInt("CategoryId"));
+                    item.setMuscleIds(splitIds(rs.getString("MuscleIds")));
+                    item.setEquipmentIds(splitIds(rs.getString("EquipmentIds")));
+                    item.setImageUrl(rs.getString("ImageUrl"));
+                    item.setDescription(rs.getString("Description"));
+                    items.add(item);
+                }
+            }
+        }
+        return items;
+    }
+
+    /** getPage B5: tổng số bài trong thư viện ("823 bài"). */
+    public int countAll() throws SQLException {
+        try (Connection connection = DBContext.getConnection();
+                PreparedStatement statement = connection.prepareStatement("SELECT COUNT(*) FROM Exercises");
+                ResultSet rs = statement.executeQuery()) {
+            return rs.next() ? rs.getInt(1) : 0;
+        }
+    }
+
+    /** getPage B5: số bài mỗi nhóm cơ {11 → 78, 12 → 105, …} cho các chip. */
+    public Map<Integer, Integer> countByCategory() throws SQLException {
+        String sql = """
+                SELECT CategoryId, COUNT(*) AS Total
+                FROM Exercises
+                GROUP BY CategoryId
+                """;
+        Map<Integer, Integer> counts = new LinkedHashMap<>();
+        try (Connection connection = DBContext.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql);
+                ResultSet rs = statement.executeQuery()) {
+            while (rs.next()) {
+                counts.put(rs.getInt("CategoryId"), rs.getInt("Total"));
+            }
+        }
+        return counts;
+    }
+
+    /** HÀM PHỤ (countFiltered, findPage) — ghép WHERE theo bộ lọc có giá trị. Chỉ ghép chữ cố định, giá trị luôn đi qua dấu ?. */
     private String buildWhere(String namePattern, Integer categoryId, Integer equipmentId) {
+        // "1 = 1" để các điều kiện sau luôn bắt đầu bằng AND
         StringBuilder where = new StringBuilder(" WHERE 1 = 1");
         if (namePattern != null) {
             where.append(" AND Name LIKE ? ESCAPE '\\'");
@@ -228,8 +269,12 @@ public class ExerciseLibraryDAO {
         return where.toString();
     }
 
-    /** Gán giá trị cho các dấu ? của buildWhere theo đúng thứ tự; trả vị trí ? kế tiếp. */
-    private int bindWhere(PreparedStatement statement, String namePattern, Integer categoryId, Integer equipmentId)
+    /** HÀM PHỤ (countFiltered, findPage) — gán giá trị cho các dấu ? của buildWhere theo đúng thứ tự; trả vị trí ? kế tiếp. */
+    private int bindWhere(
+            PreparedStatement statement,
+            String namePattern,
+            Integer categoryId,
+            Integer equipmentId)
             throws SQLException {
         int index = 1;
         if (namePattern != null) {
@@ -241,20 +286,11 @@ public class ExerciseLibraryDAO {
         if (equipmentId != null) {
             statement.setString(index++, "%," + equipmentId + ",%");
         }
+        // Trả vị trí dấu ? kế tiếp (findPage dùng cho OFFSET, FETCH)
         return index;
     }
 
-    /** [1, 8] → ",1,8,"; rỗng → ",". */
-    static String joinIds(List<Integer> ids) {
-        StringBuilder text = new StringBuilder(",");
-        for (Integer id : ids) {
-            text.append(id).append(',');
-        }
-        String joined = text.toString();
-        return joined.length() > 100 ? "," : joined;
-    }
-
-    /** ",1,8," → [1, 8]; null hoặc "," → rỗng. */
+    /** HÀM PHỤ (findPage) — ",1,8," → [1, 8]; null hoặc "," → rỗng. */
     static List<Integer> splitIds(String text) {
         List<Integer> ids = new ArrayList<>();
         if (text == null) {

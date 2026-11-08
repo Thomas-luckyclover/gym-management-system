@@ -3,7 +3,9 @@ package com.gms.servlet.customer;
 import com.gms.constant.SessionKey;
 import com.gms.dto.CustomerDashboardView;
 import com.gms.dto.ServiceResult;
+import com.gms.dto.WeatherView;
 import com.gms.service.CustomerDashboardService;
+import com.gms.service.WeatherService;
 import com.gms.util.RequestUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -30,6 +32,7 @@ public class CustomerDashboardServlet extends HttpServlet {
     private static final String STREAK_INTRO_SHOWN = "streakIntroShown";
 
     private final CustomerDashboardService dashboardService = new CustomerDashboardService();
+    private final WeatherService weatherService = new WeatherService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -60,6 +63,12 @@ public class CustomerDashboardServlet extends HttpServlet {
                 session.setAttribute(STREAK_INTRO_SHOWN, Boolean.TRUE);
             }
         }
+
+        // Khối JSP thời tiết cần dữ liệu thật từ Service; khi API lỗi, Service trả null.
+        WeatherView weather = weatherService.getTodayWeather();
+        request.setAttribute("weather", weather);
+        request.setAttribute("weatherType", weather == null ? "cloudy" : weather.getWeatherType());
+        request.setAttribute("weatherPreview", false);
 
         // Token cho nút "Đổi ngày" bắt đầu gói trên thẻ Gói tập (POST kiểm CSRF).
         request.setAttribute("csrfToken", RequestUtil.getOrCreateCsrfToken(session));

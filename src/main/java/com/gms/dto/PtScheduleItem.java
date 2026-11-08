@@ -4,69 +4,108 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 /**
- * MỘT KHỐI GIỜ trên Lịch dạy PT: hoặc là khung trống, hoặc là buổi có khách.
- *
- *   Ai tạo?   PtScheduleDAO đọc từ DB (phần 1 + 2 bên dưới).
- *   Ai điền?  PtScheduleService.classify điền phần 3 (loại khối, nhãn, quyền, vị trí).
- *   Ai đọc?   schedule.jsp in ra thẻ khung; Service dùng lại khi Công bố.
- *
- * Ví dụ khung trống Thứ 3 09:30–11:00:
- *   timeSlotId=773, sessionId=null, kind="free", statusLabel="Còn trống", canRemove=true.
+ * DTO 1 Ô trên lịch dạy (1 khung giờ, có thể kèm buổi) — DAO TẠO: PtScheduleDAO.findSessions (khung có buổi)
+ * và findOpenSlots (khung Free / Held); Service ĐIỀN: PtScheduleService.classify (loại ô, nhãn, được gỡ / được xử lý).
+ * Dùng thêm ở: PtScheduleDAO.findSlotsForPublish (kiểm trùng khi Công bố), PtSaleDAO.findPtSlots (màn Bán gói PT).
+ * Hàm tính sẵn: isBooked() (ô có khách) · isBlocking() (chiếm giờ: khung trống hoặc buổi Scheduled → data-start/end cho JS chặn kéo trùng)
+ * · getStartOfDay() / getEndOfDay() (phút trong ngày).
  */
 public class PtScheduleItem {
+    public PtScheduleItem(int timeSlotId, LocalDate slotDate, LocalTime startTime, LocalTime endTime, String kind) {
+        this.timeSlotId = timeSlotId;
+        this.slotDate = slotDate;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.kind = kind;
+    }
 
-    // ===== 1. Khung giờ (bảng TimeSlots) =====
-    private int timeSlotId;          // mã khung, dùng khi gỡ khung. KHÁC mã buổi sessionId
-    private LocalDate slotDate;      // ngày của khung
-    private LocalTime startTime;     // giờ bắt đầu, ví dụ 09:30
-    private LocalTime endTime;       // giờ kết thúc, ví dụ 11:00
+    public PtScheduleItem(Integer sessionId, String sessionStatus, int timeSlotId, LocalDate slotDate, LocalTime startTime,
+            LocalTime endTime, String packageName, int sessionNo, int totalSessions, String customerNames,
+            String customerPhone) {
+        this.sessionId = sessionId;
+        this.sessionStatus = sessionStatus;
+        this.timeSlotId = timeSlotId;
+        this.slotDate = slotDate;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.packageName = packageName;
+        this.sessionNo = sessionNo;
+        this.totalSessions = totalSessions;
+        this.customerNames = customerNames;
+        this.customerPhone = customerPhone;
+    }
 
-    // ===== 2. Buổi có khách (bảng Sessions + gói). Khung trống thì phần này để null/0 =====
-    private Integer sessionId;       // mã buổi; null nếu khung chưa có khách
-    private String sessionStatus;    // Scheduled | CheckedIn | Missed | Cancelled
-    private String customerNames;    // tên khách; gói đôi ghép "A & B"
-    private String customerPhone;    // SĐT người đứng tên gói
-    private String packageName;      // tên gói lúc mua
-    private int sessionNo;           // buổi thứ mấy trong gói, ví dụ 20 trong "20/45"
-    private int totalSessions;       // tổng số buổi của gói, ví dụ 45
+    public PtScheduleItem() {
+    }
 
-    // ===== 3. Service tính để JSP hiển thị =====
-    private String kind;             // free | held | booked | locked → chọn màu thẻ
-    private boolean past;            // đã hết giờ → thẻ mờ
-    private String statusLabel;      // chữ trạng thái: Còn trống, Sắp tới, Vắng...
-    private int startMinute;         // số phút tính từ ĐẦU TRỤC GIỜ của tuần → vị trí thẻ trên lưới
-    private int lengthMinutes;       // độ dài khung (phút) → chiều cao thẻ
-    private boolean canRemove;       // true → JSP in ô "Gỡ khung" cho thẻ này
-    private boolean canHandle;       // true → buổi có thể xử lý (bước 11 sẽ dùng)
+    // ===== IN RA MÀN — ngày giờ của ô =====
+    // ← TimeSlots.TimeSlotId → value của ô tích "Gỡ khung" (removeSlotId)
+    private int timeSlotId;
+    // ← TimeSlots.SlotDate → ngày của ô
+    private LocalDate slotDate;
+    // ← TimeSlots.StartTime → "HH:mm – …", chia Ca sáng / Ca chiều
+    private LocalTime startTime;
+    // ← TimeSlots.EndTime → "… – HH:mm"
+    private LocalTime endTime;
+    // ← classify / fillWeek: phút từ đầu trục → vị trí dọc của ô (--start)
+    private int startMinute;
+    // ← classify: độ dài khung → chiều cao ô (--length)
+    private int lengthMinutes;
+    // ← PtScheduleService.assignLanes: ô này đứng ở làn thứ mấy (0 = sát trái) trong CỤM ô chồng giờ → --lane
+    //   VD 19:00–20:30 (làn 0) và 20:00–21:30 (làn 1) chồng nhau → 2 ô chia đôi bề ngang; ô 07:00 không chồng ai vẫn rộng đủ.
+    private int lane;
+    // ← PtScheduleService.assignLanes: số làn của cụm ô chồng giờ chứa ô này (1 = không chồng ai) → --lanes (chia bề ngang)
+    private int laneCount = 1;
 
+    // ===== IN RA MÀN — loại ô và nhãn (classify) =====
+    // ← booked (có buổi) | held (đơn tại quầy đang giữ) | locked (trùng ca nghỉ) | free → màu ô (is-<kind>)
+    private String kind;
+    // ← "Sắp tới" / "Đang diễn ra" / "Chưa chốt" / "Đã check-in"… / "Còn trống" / "Chờ duyệt nghỉ" → chữ trạng thái
+    private String statusLabel;
+    // ← khung đã kết thúc → ô mờ
+    private boolean past;
+    // ← khung Free chưa bắt đầu → ô có ô tích "Gỡ khung"
+    private boolean canRemove;
+    // ← buổi Scheduled chưa bắt đầu → ô là link "Bấm để xử lý" (?handle=<sessionId>)
+    private boolean canHandle;
 
-    // ===== Giá trị tính sẵn cho JSP (không lưu, tính từ giờ) =====
+    // ===== IN RA MÀN — buổi có khách (DAO, chỉ khi có sessionId) =====
+    // ← Sessions.SessionId → id="session-<id>" (cuộn tới sau khi xử lý), link xử lý
+    private Integer sessionId;
+    // ← Sessions.Status → data-status, nhãn trạng thái
+    private String sessionStatus;
+    // ← "Tên khách" hoặc "A & B" (gói đôi) → tên in đậm trên ô
+    private String customerNames;
+    // ← Orders.PackageNameSnapshot → "Tên gói · Buổi n/N"
+    private String packageName;
+    // ← ROW_NUMBER theo gói → "Buổi n"
+    private int sessionNo;
+    // ← Subscriptions.GeneratedSessionCount → "/N"
+    private int totalSessions;
 
-    /** Giờ bắt đầu đổi ra phút trong ngày: 09:30 → 570. JS dùng để kiểm tra trùng giờ. */
+    // ===== KHÔNG IN RA MÀN =====
+    // ← SĐT khách (dùng ở màn khác)
+    private String customerPhone;
+
+    // GETTER TỰ TÍNH — không có field/setter "startOfDay"; = startTime đổi ra số phút từ 0 giờ; JSP: pt/_schedule-slot.jspf:19
     public int getStartOfDay() {
         return startTime.toSecondOfDay() / 60;
     }
 
-    /** Giờ kết thúc đổi ra phút trong ngày: 11:00 → 660. */
+    // GETTER TỰ TÍNH — không có field/setter "endOfDay"; = endTime đổi ra số phút từ 0 giờ; JSP: pt/_schedule-slot.jspf:19
     public int getEndOfDay() {
         return endTime.toSecondOfDay() / 60;
     }
 
-    /** JSP viết ${item.booked}: true khi thẻ là buổi có khách. */
+    // GETTER TỰ TÍNH — không có field/setter "booked"; = kind == "booked"; JSP: pt/_schedule-slot.jspf:15 …
     public boolean isBooked() {
         return "booked".equals(kind);
     }
 
-    /**
-     * JSP viết ${item.blocking}: thẻ này có CHIẾM giờ không (khung mới không được đè lên).
-     * Khung trống/đang giữ/tạm khóa và buổi Scheduled thì chiếm; buổi đã hủy, vắng, đã check-in chỉ là lịch sử.
-     */
+    // GETTER TỰ TÍNH — không có field/setter "blocking"; = sessionId null hoặc sessionStatus == "Scheduled"; JSP: pt/_schedule-slot.jspf:19
     public boolean isBlocking() {
         return sessionId == null || "Scheduled".equals(sessionStatus);
     }
-
-
-    // ===== Getter / Setter: chỉ đọc và gán, không có nghiệp vụ =====
 
     public int getTimeSlotId() { return timeSlotId; }
     public void setTimeSlotId(int timeSlotId) { this.timeSlotId = timeSlotId; }
@@ -115,6 +154,12 @@ public class PtScheduleItem {
 
     public int getLengthMinutes() { return lengthMinutes; }
     public void setLengthMinutes(int lengthMinutes) { this.lengthMinutes = lengthMinutes; }
+
+    public int getLane() { return lane; }
+    public void setLane(int lane) { this.lane = lane; }
+
+    public int getLaneCount() { return laneCount; }
+    public void setLaneCount(int laneCount) { this.laneCount = laneCount; }
 
     public boolean isCanRemove() { return canRemove; }
     public void setCanRemove(boolean canRemove) { this.canRemove = canRemove; }

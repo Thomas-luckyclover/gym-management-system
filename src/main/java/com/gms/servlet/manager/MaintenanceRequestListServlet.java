@@ -1,5 +1,7 @@
 package com.gms.servlet.manager;
 
+import com.gms.constant.Messages;
+import com.gms.constant.SessionKey;
 import com.gms.dao.MaintenanceRequestDAO;
 import com.gms.dto.PageResult;
 import com.gms.dto.ServiceResult;
@@ -12,10 +14,13 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.Collections;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -44,6 +49,9 @@ public class MaintenanceRequestListServlet extends HttpServlet {
             HttpServletRequest request,
             HttpServletResponse response
     ) throws ServletException, IOException {
+
+        HttpSession session = request.getSession(true);
+        request.setAttribute("csrfToken", RequestUtil.getOrCreateCsrfToken(session));
 
         // Extract and sanitize search and filter parameters
         String keyword =
@@ -158,4 +166,86 @@ public class MaintenanceRequestListServlet extends HttpServlet {
                 VIEW_NAME
         );
     }
+
+    @Override
+    protected void doPost(
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) throws ServletException, IOException {
+
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute(SessionKey.ACCOUNT_ID) == null) {
+            RequestUtil.redirect(request, response, "/login");
+            return;
+        }
+
+        int accountId = (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
+
+        if (!RequestUtil.isValidCsrfToken(request)) {
+            RequestUtil.setFlashToast(request, "error", Messages.MSG214_FORM_SESSION_EXPIRED);
+            RequestUtil.redirect(request, response, "/manager/maintenance-requests");
+            return;
+        }
+
+        String action = RequestUtil.getTrimmedParam(request, "action");
+        if ("batchApprove".equals(action)) {
+            String rawIds = RequestUtil.getTrimmedParam(request, "requestIds");
+            List<Integer> requestIds = new ArrayList<>();
+
+            if (rawIds != null && !rawIds.isBlank()) {
+                for (String part : rawIds.split(",")) {
+                    try {
+                        int id = Integer.parseInt(part.trim());
+                        if (id > 0 && !requestIds.contains(id)) {
+                            requestIds.add(id);
+                        }
+                    } catch (NumberFormatException ignored) {
+                    }
+                }
+            }
+
+            String[] multiIds = request.getParameterValues("requestIds");
+            if (multiIds != null) {
+                for (String mid : multiIds) {
+                    try {
+                        int id = Integer.parseInt(mid.trim());
+                        if (id > 0 && !requestIds.contains(id)) {
+                            requestIds.add(id);
+                        }
+                    } catch (NumberFormatException ignored) {
+                    }
+                }
+            }
+
+            boolean setUnderMaintenance = request.getParameter("setUnderMaintenance") != null;
+            String managerNote = RequestUtil.getTrimmedParam(request, "managerNote");
+
+            ServiceResult<Integer> result = maintenanceRequestService.approveRequestsBatch(
+                    accountId,
+                    requestIds,
+                    setUnderMaintenance,
+                    managerNote
+            );
+
+            if (result.isSuccess()) {
+                RequestUtil.setFlashToast(
+                        request,
+                        "success",
+                        "Đã phê duyệt thành công " + result.getData() + " yêu cầu bảo trì."
+                );
+            } else {
+                RequestUtil.setFlashToast(
+                        request,
+                        "error",
+                        result.getMessage()
+                );
+            }
+
+            RequestUtil.redirect(request, response, "/manager/maintenance-requests");
+            return;
+        }
+
+        RequestUtil.redirect(request, response, "/manager/maintenance-requests");
+    }
+
 }

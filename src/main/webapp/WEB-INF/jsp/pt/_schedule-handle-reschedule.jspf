@@ -1,0 +1,84 @@
+<%@ page pageEncoding="UTF-8" %>
+<%--
+====================================================================================================
+ _schedule-handle-reschedule.jspf — TAB DỜI BUỔI của hộp Xử lý buổi
+ Nhúng vào: _schedule-handle.jspf (static include → dùng chung biến chosen, sessionTime, closeUrl, handle, csrfToken, viewDate, view).
+ Dữ liệu: handle.move (PtHandleMoveBlock ← PtSessionHandleService.findMoveDays): days · slotCount · from · until.
+ Bị từ chối → giữ lựa chọn cũ: handleSlotChoice (timeSlotId hoặc "new"), handleNewDate, handleNewStart, handleReason.
+==================================================================================================== --%>
+
+<%-- ===== BẮT ĐẦU: FORM DỜI BUỔI ===== --%>
+        <%-- ===== FORM DỜI BUỔI (action=reschedule) → PtSessionHandleService.reschedule ===== --%>
+        <form class="pt-handle-panel" data-panel="reschedule" method="post" action="${pageContext.request.contextPath}/pt/schedule" novalidate>
+            <input type="hidden" name="csrfToken" value="<c:out value='${csrfToken}' />">
+            <input type="hidden" name="action" value="reschedule">
+            <input type="hidden" name="sessionId" value="${handle.sessionId}">
+            <input type="hidden" name="date" value="${viewDate}">
+            <input type="hidden" name="view" value="${view}">
+            <c:set var="newChosen" value="${chosen eq 'reschedule' and handleSlotChoice eq 'new'}" />
+
+            <%--
+              CÁCH 1 — chọn khung trống có sẵn: các ngày (handle.move.days) × viên giờ (slot), radio name="timeSlotId" value = slot.timeSlotId.
+              Viên vàng = slot.hasGymAccess false (khách chưa có gói thành viên ngày đó, vẫn dời được).
+            --%>
+            <c:choose>
+                <c:when test="${handle.move.slotCount gt 0}">
+                    <p class="pt-handle-note"><strong><c:out value="${handle.move.slotCount}" /> khung trống</strong> tới <c:out value="${fn:substring(gms:formatDate(handle.move.until), 0, 5)}" />
+                        <span class="pt-handle-note-key"><span class="pt-handle-warn-key">Vàng</span> khách chưa có gói thành viên ngày đó</span></p>
+                    <div class="pt-handle-days">
+                        <c:forEach var="moveDay" items="${handle.move.days}">
+                            <div class="pt-handle-day">
+                                <span class="pt-handle-day-name"><c:out value="${moveDay.label}" /></span>
+                                <div class="pt-handle-times">
+                                    <c:forEach var="slot" items="${moveDay.slots}">
+                                        <label class="pt-handle-pill ${slot.hasGymAccess ? '' : 'is-warn'}"
+                                               title="${slot.hasGymAccess ? '' : 'Khách chưa có gói thành viên / vé ngày ngày này — vẫn dời được, hệ thống tự nhắc khách'}">
+                                            <input type="radio" name="timeSlotId" value="${slot.timeSlotId}"
+                                                   ${chosen eq 'reschedule' and handleSlotChoice eq ('' += slot.timeSlotId) ? 'checked' : ''}
+                                                   aria-label="${moveDay.label} ${gms:formatTime(slot.startTime)}${slot.hasGymAccess ? '' : ', khách chưa có gói thành viên ngày này'}">
+                                            <span><c:out value="${gms:formatTime(slot.startTime)}" /></span>
+                                        </label>
+                                    </c:forEach>
+                                </div>
+                            </div>
+                        </c:forEach>
+                    </div>
+                </c:when>
+                <c:otherwise>
+                    <p class="pt-handle-note">Chưa có khung trống nào tới <c:out value="${fn:substring(gms:formatDate(handle.move.until), 0, 5)}" />. Chọn <strong>Giờ khác</strong> bên dưới để tạo khung mới.</p>
+                </c:otherwise>
+            </c:choose>
+
+            <%--
+              CÁCH 2 — "Giờ khác": PT tự chọn ngày + giờ CHƯA mở khung → server tạo khung mới rồi dời luôn (1 transaction).
+              radio timeSlotId = "new" · newSlotDate (min = handle.move.from, max = handle.move.until) · newStartTime (mốc 15 phút).
+              Ô ngày/giờ chỉ hiện khi tích "Giờ khác" (CSS :has). Server kiểm: giờ mở cửa, ca nghỉ, chồng khung, lịch khách.
+            --%>
+            <c:if test="${not empty handle.move.from and not handle.move.from.isAfter(handle.move.until)}">
+                <div class="pt-handle-new">
+                    <label class="pt-handle-new-toggle">
+                        <input type="radio" name="timeSlotId" value="new" ${newChosen ? 'checked' : ''}>
+                        <span><i class="fa-solid fa-plus" aria-hidden="true"></i> Giờ khác <small>(chưa mở khung — tạo khung mới và dời luôn)</small></span>
+                    </label>
+                    <div class="pt-handle-new-fields">
+                        <label class="pt-handle-field"><span>Ngày</span>
+                            <input type="date" name="newSlotDate" value="<c:out value='${newChosen ? handleNewDate : ""}' />"
+                                   min="${handle.move.from}" max="${handle.move.until}">
+                        </label>
+                        <label class="pt-handle-field"><span>Giờ bắt đầu</span>
+                            <input type="time" name="newStartTime" step="900" value="<c:out value='${newChosen ? handleNewStart : ""}' />">
+                        </label>
+                    </div>
+                </div>
+            </c:if>
+
+            <label class="pt-handle-field"><span>Ghi chú gửi khách <small>(không bắt buộc)</small></span>
+                <textarea name="reason" rows="2" maxlength="500" placeholder="VD: Mình bận việc đột xuất, dời giúp bạn sang giờ này nhé."><c:if test="${chosen eq 'reschedule'}"><c:out value="${handleReason}" /></c:if></textarea>
+            </label>
+            <p class="pt-handle-effect">Khách nhận thông báo · không tính lượt đổi của khách · khung cũ trở lại Còn trống.</p>
+            <div class="pt-handle-actions">
+                <a class="btn btn-ghost" href="${closeUrl}" data-handle-close>Để sau</a>
+                <button class="btn btn-primary" type="submit">Dời buổi</button>
+            </div>
+        </form>
+<%-- ===== KẾT THÚC: FORM DỜI BUỔI ===== --%>

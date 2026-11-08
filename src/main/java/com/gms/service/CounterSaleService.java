@@ -208,6 +208,11 @@ public class CounterSaleService {
             if (noShift || shiftClosed) {
                 return ServiceResult.fail(Messages.MSG109_SHIFT_NOT_OPEN_FOR_SALE);
             }
+            // CBR-123: ca đang mở là ca ngày trước (quên chốt) → không bán vào ca đó.
+            String pastDayShift = ShiftService.pastDayShiftMessage(currentShift, DateTimeUtil.today());
+            if (pastDayShift != null) {
+                return ServiceResult.fail(pastDayShift);
+            }
 
             LocalDate today = DateTimeUtil.today();
             CounterCustomerRow row = counterSaleDAO.findCustomer(connection, customerId, today, receptionist[1]);
@@ -240,6 +245,16 @@ public class CounterSaleService {
      * 3
      */
     public ServiceResult<CounterCustomerRow> quickCreateCustomer(int accountId, CounterCustomerCreateInput input) {
+        return quickCreateCustomer(accountId, input, null, null);
+    }
+
+    public ServiceResult<CounterCustomerRow> quickCreateCustomer(int accountId, CounterCustomerCreateInput input,
+            String guardianPhone2, String checkInPhoto) {
+        if (guardianPhone2 != null && !guardianPhone2.isBlank()
+                && (!ValidationUtil.isValidPhone(guardianPhone2) || guardianPhone2.equals(input == null ? null : input.getGuardianPhone()))) {
+            return ServiceResult.failField("guardianPhone2", "Số phụ phải hợp lệ và khác số chính.");
+        }
+
         // B1: kiểm tra input hợp lệ
         if (input == null) {
             return ServiceResult.fail(Messages.MSG111_CUSTOMER_DATA_INVALID);
@@ -341,6 +356,8 @@ public class CounterSaleService {
                 customer.setGuardianName(guardianName);
                 customer.setGuardianRelationship(guardianRel);
                 customer.setGuardianPhone(guardianPhone);
+                customer.setGuardianPhone2(isDependent ? guardianPhone2 : null);
+                customer.setCheckInPhoto(checkInPhoto);
                 customer.setStatus("New");
 
                 int customerId = customerDAO.insert(connection, customer);
@@ -373,10 +390,9 @@ public class CounterSaleService {
                             CounterAccountService.maskEmail(email));
                 }
 
-                connection.commit();
-
-                // B5: đọc lại dòng CounterCustomerRow vừa tạo
+                // B5: đọc lại trước commit để lỗi đọc cũng rollback toàn bộ hồ sơ.
                 CounterCustomerRow row = counterSaleDAO.findCustomer(connection, customerId, today, receptionist[1]);
+                connection.commit();
                 return ServiceResult.ok(row, doneMessage);
             } catch (EmailSendException e) {
                 connection.rollback();
@@ -589,6 +605,11 @@ public class CounterSaleService {
             boolean shiftClosed = !noShift && !currentShift.isOpen();
             if (noShift || shiftClosed) {
                 return ServiceResult.fail(Messages.MSG110_SHIFT_NOT_OPEN_FOR_PAYMENT);
+            }
+            // CBR-123: ca đang mở là ca ngày trước (quên chốt) → không thu tiền vào ca đó.
+            String pastDayShift = ShiftService.pastDayShiftMessage(currentShift, DateTimeUtil.today());
+            if (pastDayShift != null) {
+                return ServiceResult.fail(pastDayShift);
             }
             int shiftId = currentShift.getShiftId();
 

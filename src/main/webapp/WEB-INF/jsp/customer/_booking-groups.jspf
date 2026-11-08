@@ -1,11 +1,10 @@
 <%@ page pageEncoding="UTF-8" %>
-<%-- ===== DANH SÁCH NHÓM BUỔI — BẮT ĐẦU =====
-     groups = List<SessionGroup> do JSP cha đặt (my-bookings.jsp: booking.watchGroups, Service groupByReason gom theo lý do).
-     Mỗi nhóm = 1 dòng đầu + 1 hàng chip ngày:
-       g.statusLabel  nhãn màu (màu theo g.statusKey), VD "Cần chú ý"
-       "10 buổi"      số buổi trong nhóm (đậm)
-       g.explanation  lý do chung do Service viết, VD "Chưa có Membership hoặc DayPass cho ngày này. Mua trước ngày tập để không bị tính vắng."
-       chip ngày      "T2 26/10" — bấm sang Lịch tập đúng buổi; rê chuột thấy "Thứ 2, 26/10/2026 · 18:00 – 19:30" --%>
+<%--
+  KHUNG "CẦN ĐỂ Ý" — include trong my-bookings.jsp; trang cha đặt biến groups = booking.watchGroups.
+  Mỗi nhóm (SessionGroup ← MyBookingService.groupByReason): nhãn trạng thái g.statusLabel · "N buổi" · lý do g.explanation
+    · danh sách ngày, bấm 1 ngày → Lịch tập tuần mở đúng buổi (weekLink + date + openSession).
+--%>
+
 <ul class="booking-groups">
     <c:forEach var="g" items="${groups}">
         <li class="booking-group">
@@ -16,11 +15,11 @@
             </p>
             <p class="booking-group-dates">
                 <c:forEach var="s" items="${g.sessions}">
-                    <%-- s.dayName ← Service ("Thứ 5") rút gọn "T5", "Chủ nhật" → "CN"; s.slotDate ← TimeSlots.SlotDate cắt "dd/MM". --%>
+
+                    <%-- s.dayName = getter tự tính getDayName() · dto/MyPtSessionRow.java (s = MyPtSessionRow) --%>
                     <a href="${weekLink}&amp;date=${s.slotDate}&amp;openSession=${s.sessionId}" title="${fn:escapeXml(s.dayName)}, ${gms:formatDate(s.slotDate)} · ${gms:formatTime(s.startTime)} – ${gms:formatTime(s.endTime)}">${fn:replace(fn:replace(s.dayName, 'Thứ ', 'T'), 'Chủ nhật', 'CN')} ${fn:substring(gms:formatDate(s.slotDate), 0, 5)}</a>
                 </c:forEach>
             </p>
         </li>
     </c:forEach>
 </ul>
-<%-- ===== DANH SÁCH NHÓM BUỔI — KẾT THÚC ===== --%>

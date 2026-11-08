@@ -1,0 +1,95 @@
+<%@ page pageEncoding="UTF-8" %>
+<%--
+================================================================================
+_pt-sale-plan.jspf — BƯỚC 2. LỊCH TẬP (cột trái, chọn giờ không tải lại trang)
+ Nhúng vào: pt-sales.jsp (static include → dùng chung biến với trang cha).
+ Hiện khi:  chưa giữ chỗ VÀ đã có kỳ (done2).
+ Server KHÔNG vẽ lịch ở đây: chỉ nhúng sale.plan.planJson (PtSalePlan → JSON, PtSaleService.loadPlan) vào
+   <script type="application/json" id="sale-plan-data">. pt-sale-plan.js đọc JSON đó rồi vẽ vào các ô rỗng:
+     [data-pattern]      "Lịch mẫu hằng tuần" (mỗi thứ: Nghỉ hoặc 1 giờ)
+     [data-week-tabs]    các tab tuần · [data-week-label] chữ "Tuần 1 · 03/11 – 07/11" · [data-week-step] nút ‹ ›
+     [data-week]         5 ô ngày của tuần đang xem · [data-editor] hộp sửa riêng 1 ngày
+     [data-plan-total]   "24 buổi · 3 buổi/tuần"
+================================================================================ --%>
+
+<%-- ===== BẮT ĐẦU: BƯỚC 2 — LỊCH TẬP: Hiện khi: not sale.held (chế độ chọn, chưa có ?order=) VÀ done2 (choice.endDate có giá trị = gói + PT + ngày đều hợp lệ ===== --%>
+            <%-- sale.held = getter tự tính isHeld() · dto/PtSaleView.java --%>
+            <c:if test="${not sale.held and done2}">
+            <section class="sale-card sale-plan" aria-labelledby="sale-h3">
+                
+                
+                  <%--Tiêu đề + ô [data-plan-total] RỖNG: pt-sale-plan.js (renderSummary) ghi "36 buổi · 3 buổi/tuần"
+                     và nút "N ngày chưa xếp được — xem" mỗi lần chọn giờ. aria-live: trình đọc màn hình đọc lại khi số đổi. --%>
+                <header class="sale-card-head">
+                    <h2 id="sale-h3">Lịch tập</h2>
+                    <%--ghi "36 buổi · 3 buổi/tuần--%>
+                    <p class="plan-total" data-plan-total aria-live="polite"></p>
+                </header>
+                
+                
+                
+                <c:choose>
+                    
+                    <%-- Ko load được lịch tập => in lỗi--%>
+                    <c:when test="${empty sale.plan.planJson}">
+                        <p class="sale-empty"><c:out value="${sale.plan.planError}" /></p>
+                    </c:when>
+                    
+                    
+                   <%-- ===== DỮ LIỆU LỊCH =====
+                             plan.planJson = PtSalePlan đổi sang JSON (loadPlan B5d). type="application/json" → trình duyệt KHÔNG chạy,
+                             chỉ là chỗ cất chữ. Sau đó pt-sale-plan.js tìm id "sale-plan-data" → JSON.parse → initPlan vẽ mọi ô rỗng bên dưới.
+                             Tắt JS → noscript báo cần bật JavaScript (lịch không vẽ được nếu thiếu JS). 
+                   Full khối bên dưới vẽ bằng planJSON lock = false
+                   
+                   
+                   --%>
+                    <c:otherwise>
+                        <script type="application/json" id="sale-plan-data">${sale.plan.planJson}</script>
+                        <noscript><p class="sale-msg is-error">Cần bật JavaScript để chọn lịch tập.</p></noscript>
+                        
+                        
+                        <%-- Nhắc: Thứ PT chưa công bố khung nào. Việc bắt tích "Đã xác nhận với PT" xét từng buổi (ô "PT chưa mở"). --%>
+                        <%-- sale.plan.unpublishedText = getter tự tính getUnpublishedText() · dto/PtSalePlanBlock.java --%>
+                        <c:if test="${not empty sale.plan.unpublishedText}">
+                            <div class="plan-alert" role="note">
+                                <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                                <p><b><c:out value="${sale.choice.ptName}" /> chưa công bố khung rảnh <c:out value="${sale.plan.unpublishedText}" /></b> trong 2 tuần đầu.
+                                    Nên hỏi PT trước khi thanh toán — buổi ghi <b>"PT chưa mở"</b> cần tích <b>"Đã xác nhận với PT"</b> mới giữ lịch được.</p>
+                            </div>
+                        </c:if>
+
+                        <div class="plan-block">
+                            <div class="plan-block-head">
+                                <div class="sale-label-row">
+                                    <h3 id="plan-pattern-title">Lịch mẫu hằng tuần</h3>
+                                    <span class="pt-info"><button type="button" class="pt-info-trigger" aria-label="Cách chọn lịch mẫu" aria-describedby="plan-pattern-help"><span aria-hidden="true">i</span></button><span id="plan-pattern-help" class="pt-info-popover" role="tooltip">Mỗi thứ chọn <b>Nghỉ</b> hoặc 1 giờ (1–5 buổi/tuần). Giờ nào có ngày không xếp được sẽ ghi <b>"Còn x/9 buổi"</b> và lý do chính; rê chuột vào giờ để xem từng ngày.</span></span>
+                                </div>
+                            </div>
+                            <div class="plan-pattern" data-pattern aria-labelledby="plan-pattern-title"></div>
+                        </div>
+
+                        <div class="plan-block">
+                            <div class="plan-block-head">
+                                <div class="sale-label-row">
+                                    <h3 id="plan-week-title">Từng tuần</h3>
+                                    <span class="pt-info"><button type="button" class="pt-info-trigger" aria-label="Cách xem và sửa từng tuần" aria-describedby="plan-week-help"><span aria-hidden="true">i</span></button><span id="plan-week-help" class="pt-info-popover" role="tooltip">Bấm số tuần hoặc ‹ › để xem. <b>Bấm 1 ô ngày</b> để đổi giờ hoặc bỏ buổi <b>chỉ ngày đó</b>; các tuần khác giữ lịch mẫu. Chấm đỏ trên số tuần = có ngày chưa xếp được.</span></span>
+                                </div>
+                                <div class="plan-week-nav">
+                                    <button type="button" class="plan-nav" data-week-step="-1" aria-label="Tuần trước"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
+                                    <p class="plan-week-label" data-week-label aria-live="polite"></p>
+                                    <button type="button" class="plan-nav" data-week-step="1" aria-label="Tuần sau"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>
+                                </div>
+                            </div>
+                            <div class="plan-tabs" role="tablist" aria-label="Chọn tuần" data-week-tabs></div>
+                            <div class="plan-week" role="tabpanel" aria-labelledby="plan-week-title" data-week></div>
+                            <div class="plan-editor" data-editor hidden></div>
+                            <ul class="plan-key" aria-label="Chú thích">
+                                <li class="is-ok">Có buổi</li><li class="is-edit">Đã sửa riêng</li><li class="is-warn">PT cần dời sau</li><li class="is-fresh">PT chưa mở — cần hỏi PT</li><li class="is-bad">Chưa xếp được</li>
+                            </ul>
+                        </div>
+                    </c:otherwise>
+                </c:choose>
+            </section>
+            </c:if>
+<%-- ===== KẾT THÚC: BƯỚC 2 — LỊCH TẬP ===== --%>

@@ -323,6 +323,21 @@ html body.auth-dark .auth-footer { color: var(--brand-muted); }
 html body.auth-dark :is(a, button, input, select, textarea):focus-visible { outline: 2px solid var(--auth-focus); outline-offset: 2px; }
 html body.auth-dark .field :is(input, select, textarea):focus-visible { outline: none; }
 
+/* Bố cục ô nhập (đăng nhập / đăng ký / quên mật khẩu): nhãn – ô – 1 dòng phụ, sát nhau, đều nhau.
+   Khi ô đang báo lỗi thì ẩn dòng gợi ý → dưới ô chỉ còn 1 dòng (lỗi), không chồng 2–3 dòng chữ nhỏ.
+   Ngoại lệ: gợi ý "còn x lần" (.field-hint--warn) vẫn hiện vì là thông tin khác với lỗi. */
+html body.auth-dark .field { gap: var(--space-1-5); margin-bottom: var(--space-5); }
+html body.auth-dark .field-label { font-weight: var(--font-weight-semibold); }
+html body.auth-dark .field-hint { color: var(--brand-muted); line-height: var(--line-height-normal); }
+html body.auth-dark .field:has(.field-error:not([hidden]):not(:empty)) .field-hint:not(.field-hint--warn) { display: none; }
+html body.auth-dark .field-error:empty { display: none; }
+html body.auth-dark .field :is(input, select, textarea).invalid { border-color: var(--color-danger); }
+html body.auth-dark .auth-head { margin-bottom: var(--space-5); }
+html body.auth-dark .auth-head h1 { margin-bottom: 0; }
+html body.auth-dark .auth-head p { margin-top: var(--space-2); }
+html body.auth-dark .recovery-note { justify-content: center; margin-top: var(--space-3); color: var(--brand-muted); text-align: center; }
+html body.auth-dark .auth-switch { margin-top: var(--space-4); }
+
 /* Bước khôi phục mật khẩu: vạch kem, bước hiện tại cam. */
 html body.auth-dark .recovery-steps li { border-top-color: var(--auth-panel-border); }
 html body.auth-dark .recovery-steps li.is-current { border-top-color: var(--brand-sunset); }

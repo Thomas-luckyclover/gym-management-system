@@ -8,8 +8,8 @@
 
   const list = makeList({
     listSel: '#txList',
-    perPage: 5,
-    unit: 'đơn',
+    perPage: 20,
+    unit: 'giao dịch',
     matcher(row) {
       const q = search.value.trim().toLowerCase();
       if (q && !viKey(row.dataset.q).includes(viKey(q))) return false;

@@ -33,7 +33,7 @@
       <form id="phoneForm" novalidate>
         <label class="field">
           <span class="field-label">Số điện thoại</span>
-          <input id="regPhone" type="tel" inputmode="numeric" placeholder="090 xxx xxxx" autocomplete="tel" value="0912345678">
+          <input id="regPhone" type="tel" maxlength="10" inputmode="numeric" placeholder="090 xxx xxxx" autocomplete="tel" value="0917000111">
           <span class="field-error" id="regPhoneErr" hidden></span>
         </label>
         <button class="btn btn-primary btn-block" type="submit">Tiếp tục</button>
@@ -51,7 +51,7 @@
       <form id="regForm" novalidate>
         <label class="field">
           <span class="field-label">Email</span>
-          <input id="regEmail" type="email" placeholder="ban@email.com" autocomplete="email" value="giabao.tran@email.com">
+          <input id="regEmail" type="email" maxlength="100" placeholder="ban@email.com" autocomplete="email" value="nam.lh@gmail.com">
           <span class="field-error" id="regEmailErr" hidden></span>
         </label>
         <label class="field">
@@ -69,7 +69,7 @@
         </label>
         <label class="field">
           <span class="field-label">Họ và tên</span>
-          <input id="regName" type="text" placeholder="Nguyễn Văn A" autocomplete="name" value="Trần Gia Bảo">
+          <input id="regName" type="text" maxlength="50" placeholder="Nguyễn Văn A" autocomplete="name" value="Lý Hoàng Nam">
           <span class="field-error" id="regNameErr" hidden></span>
         </label>
         <label class="field">
@@ -79,6 +79,43 @@
           <span class="field-error" id="regDobErr" hidden></span>
         </label>
         <button class="btn btn-primary btn-block" type="submit" id="regSubmitBtn">Tạo tài khoản</button>
+      </form>
+    </div>
+
+    <!-- ---------- Kích hoạt hồ sơ đã có tại quầy (claim) ---------- -->
+    <div class="step-panel" data-step="claim" hidden>
+      <span class="phone-chip"><i class="fa-solid fa-phone"></i> <span data-phone-display></span> <a href="#" data-reset-phone>Đổi số</a></span>
+      <div class="auth-head"><h1>Kích hoạt hồ sơ</h1></div>
+      <div class="msg-banner info"><i class="fa-solid fa-circle-info"></i><span>Số điện thoại này đã có hồ sơ tại quầy. Nhập email đã đăng ký tại quầy để nhận mã kích hoạt.</span></div>
+      <form id="claimForm" novalidate>
+        <label class="field">
+          <span class="field-label">Email đã đăng ký tại quầy</span>
+          <input id="claimEmail" type="email" maxlength="100" placeholder="ban@email.com" autocomplete="email" value="lanchi.do@gmail.com">
+          <span class="field-hint"><i class="fa-solid fa-circle-info"></i><span>Mã xác thực được gửi tới email này.</span></span>
+          <span class="field-error" id="claimEmailErr" hidden></span>
+        </label>
+        <button class="btn btn-primary btn-block" type="submit" id="claimSubmitBtn">Tiếp tục</button>
+      </form>
+    </div>
+
+    <!-- ---------- Đặt mật khẩu sau khi kích hoạt hồ sơ ---------- -->
+    <div class="step-panel" data-step="claim-password" hidden>
+      <div class="auth-head"><h1>Đặt mật khẩu</h1></div>
+      <form id="claimPassForm" novalidate>
+        <label class="field">
+          <span class="field-label">Mật khẩu mới</span>
+          <span class="input-wrap">
+            <input id="claimPass" type="password" placeholder="8-64 ký tự, có chữ và số" autocomplete="new-password" value="matkhau123">
+            <button type="button" class="pw-toggle" data-pw-toggle="claimPass" aria-label="Hiện mật khẩu"><i class="fa-solid fa-eye"></i></button>
+          </span>
+          <span class="field-error" id="claimPassErr" hidden></span>
+        </label>
+        <label class="field">
+          <span class="field-label">Xác nhận mật khẩu</span>
+          <input id="claimPass2" type="password" placeholder="Nhập lại mật khẩu" autocomplete="new-password" value="matkhau123">
+          <span class="field-error" id="claimPass2Err" hidden></span>
+        </label>
+        <button class="btn btn-primary btn-block" type="submit">Hoàn tất kích hoạt</button>
       </form>
     </div>
 
@@ -115,7 +152,7 @@
     <div class="step-panel" data-step="blocked-email-mismatch" hidden>
       <div class="auth-head"><h1>Email không khớp hồ sơ</h1></div>
       <div class="msg-banner warning"><i class="fa-solid fa-triangle-exclamation"></i><span>Số điện thoại này đã đăng ký với một email khác (<b data-profile-email></b>). Dùng đúng email đó, hoặc ra quầy để được hỗ trợ.</span></div>
-      <div class="counter-box"><i class="fa-solid fa-location-dot"></i><span><b>Quầy Lễ tân:</b> 12 Nguyễn Huệ, Q.1, TP.HCM — mở cửa 06:00 – 22:00 mỗi ngày. Mang theo giấy tờ tuỳ thân để Lễ tân đối chiếu hồ sơ.</span></div>
+      <div class="counter-box"><i class="fa-solid fa-location-dot"></i><span><b>Quầy Lễ tân:</b> 12 Nguyễn Huệ, Q.1, TP.HCM — mở cửa 05:30 – 22:00 mỗi ngày. Mang theo giấy tờ tuỳ thân để Lễ tân đối chiếu hồ sơ.</span></div>
       <div class="btn-row">
         <button class="btn btn-primary" type="button" id="retryEmailBtn">Thử email khác</button>
         <button class="btn btn-outline" type="button" data-reset-phone>Dùng số khác</button>
@@ -126,7 +163,7 @@
     <div class="step-panel" data-step="blocked-no-email" hidden>
       <div class="auth-head"><h1>Cần bổ sung thông tin tại quầy</h1></div>
       <div class="msg-banner warning"><i class="fa-solid fa-triangle-exclamation"></i><span>Hồ sơ của số điện thoại này chưa có email. Vui lòng ra quầy gặp Lễ tân để bổ sung trước khi tạo tài khoản.</span></div>
-      <div class="counter-box"><i class="fa-solid fa-location-dot"></i><span><b>Quầy Lễ tân:</b> 12 Nguyễn Huệ, Q.1, TP.HCM — mở cửa 06:00 – 22:00 mỗi ngày. Mang theo giấy tờ tuỳ thân để Lễ tân đối chiếu hồ sơ.</span></div>
+      <div class="counter-box"><i class="fa-solid fa-location-dot"></i><span><b>Quầy Lễ tân:</b> 12 Nguyễn Huệ, Q.1, TP.HCM — mở cửa 05:30 – 22:00 mỗi ngày. Mang theo giấy tờ tuỳ thân để Lễ tân đối chiếu hồ sơ.</span></div>
       <button class="btn btn-outline btn-block" type="button" data-reset-phone><i class="fa-solid fa-arrow-left"></i> Dùng số khác</button>
     </div>
 

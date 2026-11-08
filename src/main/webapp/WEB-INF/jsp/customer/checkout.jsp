@@ -17,7 +17,10 @@
             <div class="main">
                 <header class="topbar">
                     <div class="tb-left"><h1 class="tb-title">Thanh toán</h1></div>
-                    <div class="top-right"><span class="tb-user-text"><c:out value="${customerName}" /></span></div>
+                    <div class="top-right">
+                        <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
+                        <%@ include file="/WEB-INF/jsp/common/topbar-user.jspf" %>
+                    </div>
                 </header>
                 <main class="content" id="main-content">
                     <a class="checkout-back" href="${pageContext.request.contextPath}/customer/packages">← Quay lại chọn gói</a>
@@ -49,6 +52,7 @@
                                     </div>
                                     <c:if test="${not empty order.packageDescriptionSnapshot}"><p class="checkout-muted"><c:out value="${order.packageDescriptionSnapshot}" /></p></c:if>
                                         <ul class="checkout-benefits">
+                                        <%-- checkout.benefitLines = getter tự tính getBenefitLines() · dto/CheckoutView.java --%>
                                         <c:forEach var="benefit" items="${checkout.benefitLines}">
                                             <li><i class="fa-regular fa-circle-check" aria-hidden="true"></i><span><c:out value="${benefit}" /></span></li>
                                                 </c:forEach>
@@ -66,9 +70,11 @@
                                 <section class="checkout-card checkout-summary">
                                     <h2>Tóm tắt thanh toán</h2>
                                     <dl class="checkout-prices">
+                                        <%-- checkout.priceText = getter tự tính getPriceText() · dto/CheckoutView.java --%>
                                         <div><dt>Giá gói</dt><dd><c:out value="${checkout.priceText}" /></dd></div>
                                         <div id="discountRow" ${empty checkout.voucherCode ? 'hidden' : ''}>
                                             <dt>Giảm giá</dt>
+                                            <%-- checkout.discountText = getter tự tính getDiscountText() · dto/CheckoutView.java --%>
                                             <dd class="checkout-discount">
                                                 −<span id="discountAmount"><c:out value="${checkout.discountText}" /></span>
                                             </dd>
@@ -93,6 +99,7 @@
                                         <p id="voucherStatus" class="checkout-voucher__status" data-state="${empty voucherError ? 'success' : 'error'}" role="status" aria-live="polite">
                                             <c:choose>
                                                 <c:when test="${not empty voucherError}"><c:out value="${voucherError}" /></c:when>
+                                                <%-- checkout.voucherMessage = getter tự tính getVoucherMessage() · dto/CheckoutView.java --%>
                                                 <c:otherwise><c:out value="${checkout.voucherMessage}" /></c:otherwise>
                                             </c:choose>
                                         </p>
@@ -100,7 +107,9 @@
                                             <noscript><button class="btn btn-outline" type="submit">Kiểm tra mã</button></noscript>
                                         </form>
                                         <div class="checkout-total">
+                                            <%-- checkout.totalText = getter tự tính getTotalText() · dto/CheckoutView.java --%>
                                             <div><span>Tổng thanh toán</span><strong id="totalAmount"><c:out value="${checkout.totalText}" /></strong></div>
+                                        <%-- checkout.vatText = getter tự tính getVatText() · dto/CheckoutView.java --%>
                                         <p>Đã bao gồm VAT <c:out value="${order.vatRateSnapshot}" />%: <span id="vatAmount"><c:out value="${checkout.vatText}" /></span></p>
                                             <%-- Tiền trước thuế từ snapshot đơn; checkout.js cập nhật preTaxAmount khi đổi voucher. --%>
                                         <p>Tiền trước thuế:

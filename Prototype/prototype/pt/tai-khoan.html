@@ -23,16 +23,18 @@
         <b>Super Gym</b><span>Huấn luyện viên</span>
       </a>
       <nav class="cust-nav">
-        <h4>Hôm nay</h4>
+        <h4>Tổng quan</h4>
         <a href="trang-chu.html"><i class="fa-solid fa-gauge-high"></i>Tổng quan</a>
-        <a href="diem-danh.html"><i class="fa-solid fa-clipboard-check"></i>Điểm danh</a>
         <h4>Lịch dạy</h4>
-        <a href="lich-ranh.html"><i class="fa-solid fa-calendar-days"></i>Lịch rảnh</a>
+        <a href="lich-ranh.html"><i class="fa-solid fa-calendar-days"></i>Lịch dạy</a>
         <h4>Khách phụ trách</h4>
         <a href="khach-cua-toi.html"><i class="fa-solid fa-user-group"></i>Khách của tôi</a>
+        <h4>Huấn luyện</h4>
+        <a href="thu-vien-bai-tap.html"><i class="fa-solid fa-dumbbell"></i>Thư viện bài tập</a>
         <h4>Cá nhân</h4>
         <a href="nghi-phep.html"><i class="fa-solid fa-plane-departure"></i>Nghỉ phép</a>
         <a href="tai-khoan.html" aria-current="page"><i class="fa-solid fa-user-gear"></i>Cài đặt tài khoản</a>
+        <a href="../chon-vai-tro.html"><i class="fa-solid fa-repeat"></i>Đổi vai trò</a>
       </nav>
       <div class="cust-sidebar-foot">
         <a href="../dang-nhap.html"><i class="fa-solid fa-arrow-right-from-bracket"></i>Đăng xuất</a>
@@ -66,25 +68,39 @@
           <div class="tabs" role="tablist">
             <button type="button" role="tab" aria-selected="true" data-tab="profile">Hồ sơ</button>
             <button type="button" role="tab" aria-selected="false" data-tab="password">Mật khẩu</button>
+            
           </div>
 
           <div data-tab-panel="profile">
             <section class="panel">
-              <form id="profileForm" novalidate>
-                <div class="form-grid">
-                  <label class="field">
-                    <span class="field-label">Email</span>
-                    <input id="acctEmail" type="email" value="long.hoang@supergym.vn" autocomplete="email">
-                    <span class="field-hint"><i class="fa-solid fa-circle-info"></i><span>Mã xác thực gửi tới email mới.</span></span>
-                    <span class="field-error" id="acctEmailErr" hidden></span>
-                  </label>
-                  <label class="field">
-                    <span class="field-label">Số điện thoại</span>
-                    <input id="acctPhone" type="tel" inputmode="numeric" value="0908777111" autocomplete="tel">
-                    <span class="field-error" id="acctPhoneErr" hidden></span>
-                  </label>
-                </div>
-                <button class="btn btn-primary" type="submit">Lưu thay đổi</button>
+              <div class="panel-head"><h2>Thông tin cá nhân</h2><span class="muted">Họ tên và ngày sinh do quầy Lễ tân / Quản lý cập nhật</span></div>
+              <div class="form-grid">
+                <label class="field">
+                  <span class="field-label">Họ và tên</span>
+                  <input type="text" value="Hoàng Long" readonly>
+                </label>
+                <label class="field">
+                  <span class="field-label">Ngày sinh</span>
+                  <input id="acctDob" type="date" value="1997-11-02" readonly>
+                </label>
+              </div>
+              <form id="emailForm" novalidate>
+                <label class="field">
+                  <span class="field-label">Địa chỉ email</span>
+                  <input id="acctEmail" type="email" maxlength="100" value="long.h@gms.vn" autocomplete="email">
+                  <span class="field-hint"><i class="fa-solid fa-circle-info"></i><span>Mã xác thực được gửi tới email mới.</span></span>
+                  <span class="field-error" id="acctEmailErr" hidden></span>
+                </label>
+                <button class="btn btn-primary" type="submit">Đổi email</button>
+              </form>
+              <form id="phoneForm" novalidate style="margin-top:var(--space-5)">
+                <label class="field">
+                  <span class="field-label">Số điện thoại</span>
+                  <input id="acctPhone" type="tel" inputmode="numeric" maxlength="10" value="0978123456" autocomplete="tel">
+                  <span class="field-hint"><i class="fa-solid fa-circle-info"></i><span>Mã xác thực được gửi tới email hiện tại.</span></span>
+                  <span class="field-error" id="acctPhoneErr" hidden></span>
+                </label>
+                <button class="btn btn-primary" type="submit">Đổi số điện thoại</button>
               </form>
             </section>
 
@@ -92,16 +108,54 @@
               <div class="panel-head"><h2>Xác thực thay đổi</h2></div>
               <div class="msg-banner success">
                 <i class="fa-solid fa-circle-check"></i>
-                <span>Mã đã gửi tới <b id="verifyTarget"></b>.</span>
+                <span>Mã đã gửi tới <b id="verifyTarget"></b>. Mã còn hiệu lực: <b class="tabular" id="verifyCountdown">15:00</b></span>
               </div>
               <form id="verifyForm" novalidate>
                 <label class="field">
-                  <span class="field-label">Mã xác thực</span>
-                  <input id="verifyCode" class="otp-input" inputmode="numeric" maxlength="6" placeholder="––––––" value="123456">
+                  <span class="field-label">Mã xác thực (6 chữ số)</span>
+                  <input id="verifyCode" class="otp-input" inputmode="numeric" maxlength="6" placeholder="Ví dụ: 123456" value="123456">
                   <span class="field-error" id="verifyCodeErr" hidden></span>
                 </label>
-                <button class="btn btn-primary" type="submit">Xác nhận</button>
+                <div class="btn-row">
+                  <button class="btn btn-primary" type="submit" id="verifyBtn">Xác nhận email</button>
+                  <button class="btn btn-outline btn-sm" type="button" id="verifyResend">Gửi lại mã</button>
+                  <button class="btn btn-ghost btn-sm" type="button" id="verifyCancel">Hủy</button>
+                </div>
               </form>
+            </section>
+
+            <section class="panel" style="margin-top:var(--space-5)">
+              <div class="panel-head"><h2>Thông tin nhân sự</h2><span class="muted">Chỉ xem</span></div>
+              <div class="form-grid">
+                  <label class="field">
+                    <span class="field-label">Mã nhân viên</span>
+                    <input type="text" value="NV-0118" readonly>
+                  </label>
+                  <label class="field">
+                    <span class="field-label">Chức vụ</span>
+                    <input type="text" value="PT" readonly>
+                  </label>
+                  <label class="field">
+                    <span class="field-label">Ngày vào làm</span>
+                    <input type="text" value="01/08/2024" readonly>
+                  </label>
+                  <label class="field">
+                    <span class="field-label">Trạng thái làm việc</span>
+                    <input type="text" value="Đang làm việc" readonly>
+                  </label>
+                  <label class="field">
+                    <span class="field-label">Chuyên môn</span>
+                    <input type="text" value="Strength &amp; Conditioning" readonly>
+                  </label>
+                  <label class="field">
+                    <span class="field-label">Số năm kinh nghiệm</span>
+                    <input type="text" value="8" readonly>
+                  </label>
+                  <label class="field">
+                    <span class="field-label">Tỷ lệ hoa hồng</span>
+                    <input type="text" value="70%" readonly>
+                  </label>
+              </div>
             </section>
           </div>
 
@@ -121,13 +175,13 @@
                   <label class="field">
                     <span class="field-label">Mật khẩu mới</span>
                     <span class="input-wrap">
-                      <input id="newPass" type="password" placeholder="Tối thiểu 6 ký tự" autocomplete="new-password">
+                      <input id="newPass" type="password" placeholder="8-64 ký tự, có chữ và số" autocomplete="new-password">
                       <button type="button" class="pw-toggle" data-pw-toggle="newPass" aria-label="Hiện mật khẩu"><i class="fa-solid fa-eye"></i></button>
                     </span>
                     <span class="field-error" id="newPassErr" hidden></span>
                   </label>
                   <label class="field">
-                    <span class="field-label">Nhập lại</span>
+                    <span class="field-label">Xác nhận mật khẩu mới</span>
                     <input id="newPass2" type="password" autocomplete="new-password">
                     <span class="field-error" id="newPass2Err" hidden></span>
                   </label>
@@ -139,33 +193,21 @@
         </div>
 
         <aside class="col-side">
-          <!-- UC-04: phần này là của riêng bạn, tự sửa, không cần ai duyệt -->
           <div class="side-card">
             <div class="avatar-row">
-              <span class="avatar-lg" id="acAvatar">HL</span>
+              <span class="avatar-lg">HL</span>
               <div>
                 <h3>Hoàng Long</h3>
                 <p class="muted">PT · NV-0118</p>
               </div>
             </div>
-            <button class="btn btn-ghost btn-sm btn-block" type="button" id="avatarBtn"><i class="fa-solid fa-camera"></i> Đổi ảnh đại diện</button>
-            <p class="muted" style="margin-top:var(--space-3)">Ảnh đại diện, email, số điện thoại và mật khẩu là của riêng bạn. Tự đổi, không qua Quản lý.</p>
-          </div>
-          <!-- UC-13: hồ sơ nhân sự là quyền riêng của Quản lý, PT chỉ xem -->
-          <div class="side-card">
-            <div class="side-head">
-              <span class="section-label">Hồ sơ nhân sự</span>
-              <span class="badge badge-muted"><i class="fa-solid fa-lock"></i> Chỉ đọc</span>
+            <div class="btn-row" style="margin-top:var(--space-4)">
+              <button class="btn btn-outline btn-sm" type="button" id="btnSelectAvatar">Chọn ảnh</button>
+              <button class="btn btn-primary btn-sm" type="button" id="btnSaveAvatar" disabled>Lưu ảnh</button>
+              <button class="btn btn-ghost btn-sm" type="button" id="btnRemoveAvatar">Xóa ảnh</button>
             </div>
-            <div class="side-row"><span>Họ và tên</span><b>Hoàng Long</b></div>
-            <div class="side-row"><span>Ngày sinh</span><b>09/07/1994</b></div>
-            <div class="side-row"><span>Mã nhân viên</span><b class="tabular">NV-0118</b></div>
-            <div class="side-row"><span>Vị trí</span><b>Huấn luyện viên</b></div>
-            <div class="side-row"><span>Chuyên môn</span><b>Strength &amp; Conditioning</b></div>
-            <div class="side-row"><span>Ngày vào làm</span><b>16/01/2023</b></div>
-            <div class="side-row"><span>Tỷ lệ hoa hồng</span><b>70%</b></div>
-            <div class="side-row"><span>Trạng thái</span><b><span class="badge badge-ok">Đang làm việc</span></b></div>
-            <p class="muted" style="margin-top:var(--space-3)">Chỉ Quản lý sửa được. Đổi vị trí, đổi tỷ lệ hoa hồng hay cho nghỉ việc đều do Quản lý thao tác. Tài khoản đăng nhập do Quản trị hệ thống cấp.</p>
+            <input type="file" id="avatarFile" accept="image/jpeg,image/png" hidden>
+            <p class="muted" style="margin-top:var(--space-3)">Ảnh JPG hoặc PNG, tối đa 2 MB.</p>
           </div>
         </aside>
       </div>

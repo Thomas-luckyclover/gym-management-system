@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Lịch của tôi — Super Gym</title>
+<title>Gói của tôi — Super Gym</title>
 <meta name="robots" content="noindex">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/js/all.min.js" crossorigin="anonymous"></script>
@@ -30,12 +30,15 @@
       <a href="mua-goi.html"><i class="fa-solid fa-cart-shopping"></i>Mua gói</a>
       <a href="lich-su-giao-dich.html"><i class="fa-solid fa-receipt"></i>Lịch sử giao dịch</a>
         <h4>Lịch tập</h4>
-      <a href="lich-cua-toi.html" aria-current="page"><i class="fa-solid fa-calendar-check"></i>Lịch của tôi</a>
-      <a href="buoi-pt.html"><i class="fa-solid fa-user-check"></i>Buổi PT của tôi</a>
+      <a href="lich-cua-toi.html" aria-current="page"><i class="fa-solid fa-box-open"></i>Gói của tôi</a>
+      <a href="buoi-pt.html"><i class="fa-solid fa-calendar-check"></i>Lịch của tôi</a>
       <a href="dat-buoi-le.html"><i class="fa-solid fa-calendar-plus"></i>Đặt buổi lẻ</a>
       <a href="giao-an.html"><i class="fa-solid fa-clipboard-list"></i>Giáo án của tôi</a>
+      <a href="thu-vien-bai-tap.html"><i class="fa-solid fa-person-running"></i>Thư viện bài tập</a>
+      <a href="chi-so-co-the.html"><i class="fa-solid fa-weight-scale"></i>Chỉ số cơ thể</a>
         <h4>Tài khoản</h4>
       <a href="tai-khoan.html"><i class="fa-solid fa-user-gear"></i>Cài đặt tài khoản</a>
+      <a href="../chon-vai-tro.html"><i class="fa-solid fa-repeat"></i>Đổi vai trò</a>
         <h4>Hòm thư</h4>
       <a href="gop-y.html"><i class="fa-solid fa-inbox"></i>Hòm thư góp ý</a>
       </nav>
@@ -52,7 +55,7 @@
   <div class="cust-main">
     <header class="cust-topbar">
       <div>
-        <h1>Lịch của tôi</h1>
+        <h1>Gói của tôi</h1>
       </div>
       <div class="cust-topbar-actions">
         <a class="btn btn-primary btn-sm" href="dat-buoi-le.html">Đặt buổi lẻ</a>
@@ -67,125 +70,129 @@
     </header>
 
     <main class="cust-content">
-      <div class="toolbar">
-        <div class="search">
-          <i class="fa-solid fa-magnifying-glass"></i>
-          <input id="sSearch" type="search" placeholder="Tìm theo PT hoặc ngày" aria-label="Tìm buổi tập">
-        </div>
-        <label for="sState">Trạng thái</label>
-        <select id="sState">
-          <option value="all">Tất cả</option>
-          <option value="scheduled">Đã xếp</option>
-          <option value="completed">Hoàn thành</option>
-          <option value="missed">Vắng</option>
-          <option value="cancelled">Đã hủy</option>
-        </select>
-        <label for="sKind">Loại</label>
-        <select id="sKind">
-          <option value="all">Tất cả</option>
-          <option value="package">Gói PT</option>
-          <option value="single">Buổi lẻ</option>
-        </select>
-        <button class="btn btn-ghost btn-sm reset" type="button" id="sReset">Xoá lọc</button>
-      </div>
+      <div class="split">
 
-      <div class="data-list" data-session-list>
-        <div class="data-row" data-state="scheduled" data-kind="package" data-q="hoàng long 18/11/2026">
-          <div class="row-main">
-            <div class="row-title">18/11/2026 · 19:00 <span class="badge badge-info">Đã xếp</span> <span class="badge badge-muted">Gói PT</span> <span class="badge badge-warn"><i class="fa-solid fa-triangle-exclamation"></i> Ngoài hạn gói</span></div>
-            <div class="row-meta"><span><i class="fa-solid fa-user-check"></i> Hoàng Long</span></div>
-          </div>
-          <div class="row-actions">
-            <a class="btn btn-ghost btn-sm" href="doi-lich.html">Đổi lịch</a>
-            <button class="btn btn-outline btn-sm" type="button" data-cancel-session data-when="18/11/2026 19:00">Hủy</button>
-          </div>
-        </div>
-        <div class="data-row" data-state="scheduled" data-kind="single" data-q="phạm thu trang 30/09/2026">
-          <div class="row-main">
-            <div class="row-title">30/09/2026 · 17:00 <span class="badge badge-info">Đã xếp</span> <span class="badge badge-muted">Buổi lẻ</span></div>
-            <div class="row-meta"><span><i class="fa-solid fa-user-check"></i> Phạm Thu Trang</span></div>
-          </div>
-          <div class="row-actions">
-            <button class="btn btn-outline btn-sm" type="button" data-cancel-session data-when="30/09/2026 17:00">Hủy</button>
-          </div>
-        </div>
-        <div class="data-row" data-state="scheduled" data-kind="package" data-q="hoàng long 26/09/2026">
-          <div class="row-main">
-            <div class="row-title">26/09/2026 · 08:00 <span class="badge badge-info">Đã xếp</span> <span class="badge badge-muted">Gói PT</span></div>
-            <div class="row-meta"><span><i class="fa-solid fa-user-check"></i> Hoàng Long</span></div>
-          </div>
-          <div class="row-actions">
-            <a class="btn btn-ghost btn-sm" href="doi-lich.html">Đổi lịch</a>
-            <button class="btn btn-outline btn-sm" type="button" data-cancel-session data-when="26/09/2026 08:00">Hủy</button>
-          </div>
-        </div>
-        <div class="data-row" data-state="scheduled" data-kind="package" data-q="hoàng long 23/09/2026">
-          <div class="row-main">
-            <div class="row-title">23/09/2026 · 19:00 <span class="badge badge-info">Đã xếp</span> <span class="badge badge-muted">Gói PT</span></div>
-            <div class="row-meta"><span><i class="fa-solid fa-user-check"></i> Hoàng Long</span></div>
-          </div>
-          <div class="row-actions">
-            <a class="btn btn-ghost btn-sm" href="doi-lich.html">Đổi lịch</a>
-            <button class="btn btn-outline btn-sm" type="button" data-cancel-session data-when="23/09/2026 19:00">Hủy</button>
-          </div>
-        </div>
-        <div class="data-row" data-state="completed" data-kind="package" data-q="hoàng long 16/09/2026">
-          <div class="row-main">
-            <div class="row-title">16/09/2026 · 19:00 <span class="badge badge-ok">Hoàn thành</span> <span class="badge badge-muted">Gói PT</span></div>
-            <div class="row-meta"><span><i class="fa-solid fa-user-check"></i> Hoàng Long</span></div>
-          </div>
-        </div>
-        <div class="data-row" data-state="completed" data-kind="single" data-q="đỗ minh khoa 12/09/2026">
-          <div class="row-main">
-            <div class="row-title">12/09/2026 · 18:00 <span class="badge badge-ok">Hoàn thành</span> <span class="badge badge-muted">Buổi lẻ</span></div>
-            <div class="row-meta"><span><i class="fa-solid fa-user-check"></i> Đỗ Minh Khoa</span></div>
-          </div>
-        </div>
-        <div class="data-row" data-state="missed" data-kind="package" data-q="hoàng long 09/09/2026">
-          <div class="row-main">
-            <div class="row-title">09/09/2026 · 19:00 <span class="badge badge-danger">Vắng</span> <span class="badge badge-muted">Gói PT</span></div>
-            <div class="row-meta"><span><i class="fa-solid fa-user-check"></i> Hoàng Long</span></div>
-          </div>
-        </div>
-        <div class="data-row" data-state="completed" data-kind="package" data-q="hoàng long 05/09/2026">
-          <div class="row-main">
-            <div class="row-title">05/09/2026 · 07:00 <span class="badge badge-ok">Hoàn thành</span> <span class="badge badge-muted">Gói PT</span></div>
-            <div class="row-meta"><span><i class="fa-solid fa-user-check"></i> Hoàng Long</span></div>
-          </div>
-        </div>
-        <div class="data-row" data-state="cancelled" data-kind="package" data-q="hoàng long 02/09/2026">
-          <div class="row-main">
-            <div class="row-title">02/09/2026 · 19:00 <span class="badge badge-muted">Đã hủy</span> <span class="badge badge-muted">Gói PT</span></div>
-            <div class="row-meta"><span><i class="fa-solid fa-user-check"></i> Hoàng Long</span></div>
-          </div>
-        </div>
-        <div class="data-row" data-state="completed" data-kind="package" data-q="hoàng long 29/08/2026">
-          <div class="row-main">
-            <div class="row-title">29/08/2026 · 19:00 <span class="badge badge-ok">Hoàn thành</span> <span class="badge badge-muted">Gói PT</span></div>
-            <div class="row-meta"><span><i class="fa-solid fa-user-check"></i> Hoàng Long</span></div>
-          </div>
-        </div>
-        <div class="data-row" data-state="completed" data-kind="single" data-q="phạm thu trang 24/08/2026">
-          <div class="row-main">
-            <div class="row-title">24/08/2026 · 17:00 <span class="badge badge-ok">Hoàn thành</span> <span class="badge badge-muted">Buổi lẻ</span></div>
-            <div class="row-meta"><span><i class="fa-solid fa-user-check"></i> Phạm Thu Trang</span></div>
-          </div>
-        </div>
-        <div class="data-row" data-state="missed" data-kind="package" data-q="hoàng long 19/08/2026">
-          <div class="row-main">
-            <div class="row-title">19/08/2026 · 19:00 <span class="badge badge-danger">Vắng</span> <span class="badge badge-muted">Gói PT</span></div>
-            <div class="row-meta"><span><i class="fa-solid fa-user-check"></i> Hoàng Long</span></div>
-          </div>
-        </div>
-        <div class="empty-state" data-empty hidden>
-          <div class="empty-icon"><i class="fa-solid fa-box-open"></i></div>
-          <p>Không có kết quả phù hợp.</p>
-        </div>
-      </div>
+        <div class="col-main">
+          <div data-tab-main="active">
+            <section class="panel">
+              <div class="panel-head">
+                <div><h2>Gói PT 3 Tháng</h2><p class="muted">KH-0241 · DH-2026-1143 · 23.900.000đ</p></div>
+                <a class="btn btn-ghost btn-sm" href="buoi-pt.html">Xem trên lịch tập <i class="fa-solid fa-chevron-right"></i></a>
+              </div>
+              <div class="kpi-grid">
+                <div class="kpi-card">
+                  <div class="kpi-top"><i class="fa-solid fa-calendar-check"></i><span class="section-label">Buổi tới</span></div>
+                  <div class="kpi-value tabular is-key">23/09 · 19:00</div>
+                  <div class="kpi-note">Hoàng Long · 90 phút</div>
+                </div>
+                <div class="kpi-card">
+                  <div class="kpi-top"><i class="fa-solid fa-layer-group"></i><span class="section-label">Tiến độ</span></div>
+                  <div class="kpi-value tabular is-key">còn 59 <small>buổi</small></div>
+                  <div class="kpi-bar"><i style="width:9%"></i></div>
+                  <div class="kpi-note">/ 65 buổi, đã qua 6</div>
+                </div>
+                <div class="kpi-card">
+                  <div class="kpi-top"><i class="fa-solid fa-user-check"></i><span class="section-label">PT của gói</span></div>
+                  <div class="kpi-value">Hoàng Long</div>
+                  <div class="kpi-note"><a href="tel:0978123456">Gọi PT</a> · <a href="https://zalo.me/0978123456" target="_blank" rel="noopener noreferrer">Nhắn Zalo</a></div>
+                </div>
+              </div>
+              <p class="muted">Muốn đổi hoặc hủy buổi, hãy nhắn PT trước. Khách không tự đổi lịch trên hệ thống.</p>
+            </section>
 
-      <div class="pager" data-pager="s">
-        <div class="pager-info"></div>
-        <div class="pager-btns"></div>
+            <section class="panel">
+              <div class="panel-head"><h2>Vào phòng tập</h2></div>
+              <div class="data-row">
+                <div class="row-main">
+                  <div class="row-title">Gói 6 Tháng <span class="badge badge-ok">Đang hiệu lực</span></div>
+                  <div class="row-meta"><span><i class="fa-solid fa-calendar-days"></i> Đến 14/11/2026</span><span><i class="fa-solid fa-id-card"></i> Báo mã KH-0241 tại quầy</span></div>
+                </div>
+              </div>
+              <p class="muted">Gói PT không kèm quyền vào gym, cần gói thành viên hoặc Gói Ngày.</p>
+            </section>
+
+            <div class="alert-banner warn">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+              <span><b>Buổi sắp tới chưa vào được phòng tập.</b> Buổi 18/11 nằm ngoài hạn gói tập (14/11). Gia hạn tại quầy lễ tân, báo mã KH-0241 để giữ lịch cố định với PT Hoàng Long. Mở cửa 05:30 – 22:00.</span>
+              <a class="btn btn-primary btn-sm" href="mua-goi.html">Mua gói thành viên</a>
+              <a class="btn btn-outline btn-sm" href="tel:19006868"><i class="fa-solid fa-phone"></i> Gọi lễ tân 1900 6868</a>
+            </div>
+
+            <section class="panel">
+              <div class="panel-head"><h2>Lịch cố định</h2><span class="muted">Mỗi tuần: T4 19:00, T7 08:00</span></div>
+              <ul class="booking-week" style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:var(--space-2);list-style:none;padding:0;text-align:center"><li style="display:grid;gap:2px;min-width:0"><b>T2</b><small class="muted">—</small></li><li style="display:grid;gap:2px;min-width:0"><b>T3</b><small class="muted">—</small></li><li style="display:grid;gap:2px;min-width:0"><b>T4</b><small>19:00</small></li><li style="display:grid;gap:2px;min-width:0"><b>T5</b><small class="muted">—</small></li><li style="display:grid;gap:2px;min-width:0"><b>T6</b><small class="muted">—</small></li><li style="display:grid;gap:2px;min-width:0"><b>T7</b><small>08:00</small></li><li style="display:grid;gap:2px;min-width:0"><b>CN</b><small class="muted">—</small></li></ul>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head"><h2>Các buổi của gói</h2></div>
+              <p><span class="badge badge-danger">19/08</span> <span class="badge badge-ok">29/08</span> <span class="badge badge-muted">02/09</span> <span class="badge badge-ok">05/09</span> <span class="badge badge-danger">09/09</span> <span class="badge badge-ok">16/09</span> <span class="badge badge-info">23/09</span> <span class="badge badge-info">26/09</span> <span class="badge badge-info">18/11</span> </p>
+              <div class="row-meta">
+                <span><span class="badge badge-ok">Đã check-in</span> 3</span>
+                <span><span class="badge badge-danger">Vắng</span> 2</span>
+                <span><span class="badge badge-muted">Đã hủy</span> 1</span>
+                <span><span class="badge badge-warn">Đang cập nhật</span> 0</span>
+                <span><span class="badge badge-info">Sắp tới</span> 3</span>
+              </div>
+            </section>
+          </div>
+
+          <section class="panel" data-tab-main="single" hidden>
+            <div class="panel-head"><h2>Các buổi lẻ của bạn</h2><a class="btn btn-ghost btn-sm" href="dat-buoi-le.html">Đặt buổi lẻ</a></div>
+            <div class="data-list">
+            <div class="data-row">
+              <div class="row-main">
+                <div class="row-title">30/09/2026 · 17:00 <span class="badge badge-info">Đã xếp</span> <span class="badge badge-muted">Buổi lẻ</span></div>
+                <div class="row-meta"><span><i class="fa-solid fa-user-check"></i> Hoàng Long</span></div>
+              </div>
+            </div>
+            <div class="data-row">
+              <div class="row-main">
+                <div class="row-title">12/09/2026 · 18:00 <span class="badge badge-ok">Hoàn thành</span> <span class="badge badge-muted">Buổi lẻ</span></div>
+                <div class="row-meta"><span><i class="fa-solid fa-user-check"></i> Hoàng Long</span></div>
+              </div>
+            </div>
+            <div class="data-row">
+              <div class="row-main">
+                <div class="row-title">24/08/2026 · 17:00 <span class="badge badge-ok">Hoàn thành</span> <span class="badge badge-muted">Buổi lẻ</span></div>
+                <div class="row-meta"><span><i class="fa-solid fa-user-check"></i> Hoàng Long</span></div>
+              </div>
+            </div>
+            </div>
+          </section>
+
+          <section class="panel" data-tab-main="ended" hidden>
+            <div class="empty-state">
+              <div class="empty-icon"><i class="fa-solid fa-box-open"></i></div>
+              <p>Muốn tập tiếp với PT? Đăng ký gói PT mới tại quầy lễ tân, báo mã KH-0241.</p>
+            </div>
+          </section>
+        </div>
+
+        <aside class="col-side">
+          <div class="side-card" aria-labelledby="packages-title">
+            <span class="section-label" id="packages-title">Gói của bạn</span>
+            <div class="tabs" role="tablist" aria-label="Nhóm gói">
+              <button type="button" role="tab" data-tab="active" aria-selected="true">Đang tập <span class="badge badge-muted">1</span></button>
+              <button type="button" role="tab" data-tab="ended" aria-selected="false">Đã kết thúc <span class="badge badge-muted">0</span></button>
+              <button type="button" role="tab" data-tab="single" aria-selected="false">Buổi lẻ <span class="badge badge-muted">3</span></button>
+            </div>
+            <div data-tab-panel="active">
+              <div class="data-row">
+                <div class="row-main">
+                  <div class="row-title">Gói PT 3 Tháng <span class="badge badge-ok">Đang hiệu lực</span></div>
+                  <div class="row-meta"><span><i class="fa-solid fa-calendar-days"></i> 19/08/2026 – 18/11/2026</span></div>
+                </div>
+              </div>
+            </div>
+            <div data-tab-panel="ended" hidden>
+              <p class="muted">Chưa có gói nào kết thúc.</p>
+            </div>
+            <div data-tab-panel="single" hidden>
+              <p class="muted">Tất cả buổi lẻ</p>
+              <a class="btn btn-outline btn-sm btn-block" href="dat-buoi-le.html"><i class="fa-solid fa-calendar-plus"></i> Đặt buổi lẻ</a>
+            </div>
+          </div>
+        </aside>
       </div>
     </main>
   </div>
@@ -193,6 +200,6 @@
 
 <script src="../app.js"></script>
 <script src="customer.js"></script>
-<script src="lich-tap.js"></script>
+<script src="lich-cua-toi.js"></script>
 </body>
 </html>

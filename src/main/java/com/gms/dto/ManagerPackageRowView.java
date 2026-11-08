@@ -82,6 +82,7 @@ public class ManagerPackageRowView {
         this.price = price;
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "formattedPrice"; = price định dạng tiền, null → "0 ₫"; JSP: manager/membership-package-list.jsp:134 …
     public String getFormattedPrice() {
         if (price == null) {
             return "0 ₫";
@@ -106,6 +107,7 @@ public class ManagerPackageRowView {
         this.durationUnit = durationUnit;
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "durationDisplay"; = SingleSession → "Theo buổi", còn lại theo durationValue + durationUnit; JSP: manager/membership-package-list.jsp:130 …
     public String getDurationDisplay() {
         if ("SingleSession".equalsIgnoreCase(type)) {
             return "Theo buổi";
@@ -178,6 +180,7 @@ public class ManagerPackageRowView {
         this.rowVersion = rowVersion;
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "rowVersionBase64"; = rowVersion mã hóa Base64, trống → ""; JSP: manager/membership-package-list.jsp:182 …
     public String getRowVersionBase64() {
         if (rowVersion == null || rowVersion.length == 0) {
             return "";

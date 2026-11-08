@@ -1,25 +1,32 @@
 package com.gms.dto;
 
 /**
- * MỘT LỰA CHỌN trong ô chọn của màn Bán gói PT: 1 gói hoặc 1 PT.
- *
- *   Ai tạo?   PtSaleService (bước 2 của prepare: loadPackage / loadPt) — PtSaleDAO đọc Packages / Employees(+Persons).
- *   Ai in?    pt-sales.jsp hai ô chọn (Gói, PT).
- *
- *   value  giá trị gửi lên server (mã gói "9", mã PT "5")
- *   label  chữ chính ("Gói PT 2 Tháng", "Đinh Công Sơn")
- *   note   chữ phụ ("16.500.000đ · 2 tháng · 1 người", chữ cái đầu tên PT "ĐS")
+ * 1 LỰA CHỌN (1 ô gói hoặc 1 nút PT) ở khối "Gói & PT" — Service tạo: loadPackage / loadPt. JSP: _pt-sale-step1.jspf (biến o).
  */
 public class PtSaleOption {
-
+    // ===== IN RA MÀN =====
+    // ← PackageId / EmployeeId → value của radio (gửi lên ?package= / ?pt=)
     private final String value;
+    // ← tên gói / tên PT → chữ đậm
     private final String label;
+    // ← gói: "8.800.000đ · 1 tháng · 1 người" · PT: chữ cái viết tắt avatar
     private final String note;
+    // ← chỉ PT: "Boxing – Cardio · 4 năm kinh nghiệm" (ptDetail) → chữ nhỏ dưới tên · gói: null
+    private final String detail;
 
     public PtSaleOption(String value, String label, String note) {
+        this(value, label, note, null);
+    }
+
+    public PtSaleOption(
+            String value,
+            String label,
+            String note,
+            String detail) {
         this.value = value;
         this.label = label;
         this.note = note;
+        this.detail = detail;
     }
 
     public String getValue() { return value; }
@@ -27,4 +34,6 @@ public class PtSaleOption {
     public String getLabel() { return label; }
 
     public String getNote() { return note; }
+
+    public String getDetail() { return detail; }
 }

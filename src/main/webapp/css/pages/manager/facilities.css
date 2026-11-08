@@ -1,136 +1,108 @@
-/* ==========================================================================
-   Manager Facilities Management — Master Detail CSS
-   Design System: Super Gym · Aegean Ink (DESIGN.md)
-   ========================================================================== */
+/* =====================================================================
+   facilities.css — Quản lý Cơ sở vật chất & Thiết bị (theme-manager)
+   Tuân thủ design tokens từ tokens.css, không hard-code màu/px.
+   ===================================================================== */
 
-/* Dark Mode Tokens (Default in dock Aegean Ink) */
-:root,
-html[data-theme="dark"] body.theme-manager {
-  --bg-surface: var(--color-surface, #102A40);
-  --bg-canvas: var(--color-surface-muted, #18364F);
-  --bg-surface-hover: rgba(255, 255, 255, 0.06);
-  --border-subtle: var(--color-border, rgba(234, 244, 246, 0.12));
-  --text-primary: var(--color-text, #F0F4F8);
-  --text-secondary: var(--color-text-soft, #B1C4D7);
-  --text-tertiary: var(--color-text-muted, #94ADC5);
-  --color-primary: var(--brand-sunset, #FF4F2B);
-  --color-primary-subtle: rgba(255, 79, 43, 0.15);
-  --color-primary-ring: rgba(255, 79, 43, 0.35);
-}
-
-/* Light Mode Tokens (Arena cobalt + chalk) */
-html:where(:not([data-theme="dark"])) body.theme-manager {
-  --bg-surface: var(--color-surface, #FFFFFF);
-  --bg-canvas: var(--color-surface-muted, #F5FAFD);
-  --bg-surface-hover: #EDF5FA;
-  --border-subtle: var(--color-border, #C3DCEA);
-  --text-primary: var(--color-text, #0E1B3F);
-  --text-secondary: var(--color-text-soft, #33466B);
-  --text-tertiary: var(--color-text-muted, #4E6283);
-  --color-primary: var(--color-primary, #FF4F2B);
-  --color-primary-subtle: var(--color-primary-tint, #FFECE6);
-  --color-primary-ring: rgba(255, 79, 43, 0.25);
-}
-
+/* ===== 1. Khung bố cục 2 cột (Nhóm máy bên trái · Chi tiết bên phải) ===== */
 .facilities-layout {
   display: grid;
-  grid-template-columns: 340px 1fr;
-  gap: var(--space-3, 12px);
+  grid-template-columns: calc(var(--layout-dialog-width) - var(--space-12)) minmax(0, 1fr);
+  gap: var(--space-3);
   align-items: stretch;
 }
 
-@media (min-width: 993px) {
+@media (min-width: 900px) {
   .facilities-layout {
-    height: calc(100vh - var(--topbar-height, 68px) - 34px);
+    height: calc(100vh - var(--brand-header-height) - var(--space-6));
     overflow: hidden;
   }
 }
 
-@media (max-width: 992px) {
+@media (max-width: 900px) {
   .facilities-layout {
     grid-template-columns: 1fr;
     height: auto;
   }
 }
 
-/* --- Panel Trái: Danh sách nhóm máy --- */
+/* ===== 2. Cột trái: Danh sách nhóm máy ===== */
 .facility-master-panel {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md, 8px);
-  padding: 10px 12px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
   height: 100%;
-  overflow: hidden;
   min-height: 0;
+  padding: var(--space-2-5) var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  overflow: hidden;
 }
 
 .panel-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid var(--border-subtle);
-  padding-bottom: 8px;
   flex-shrink: 0;
+  padding-bottom: var(--space-2);
+  border-bottom: var(--border-width) solid var(--color-border);
 }
 
 .panel-title {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0;
+  margin: var(--space-0);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
 }
 
 .facility-group-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-1-5);
   flex: 1;
-  overflow-y: auto;
   min-height: 0;
-  padding-right: 4px;
+  padding-right: var(--space-1);
+  overflow-y: auto;
 }
 
 .facility-card-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 7px 10px;
-  background: var(--bg-canvas);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md, 6px);
-  text-decoration: none;
-  color: inherit;
-  transition: all 0.15s ease;
-  position: relative;
+  gap: var(--space-2-5);
   flex-shrink: 0;
+  padding: calc(var(--space-2) - var(--border-width)) var(--space-2-5);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-muted);
+  color: var(--color-text);
+  text-decoration: none;
+  position: relative;
 }
 
 .facility-card-item:hover {
-  border-color: var(--color-primary);
-  background: var(--bg-surface-hover);
-  box-shadow: var(--shadow-sm, 0 1px 2px 0 rgba(0,0,0,0.05));
+  border-color: var(--brand-sunset);
+  background: var(--color-surface-hover);
+  text-decoration: none;
 }
 
+/* Nhóm đang chọn: viền cam nổi bật + nền sáng nhẹ phân biệt rõ */
 .facility-card-item.active {
-  border-color: var(--color-primary);
-  background: var(--color-primary-subtle);
-  box-shadow: 0 0 0 1.5px var(--color-primary-ring);
+  border: var(--border-width-thick) solid var(--brand-sunset);
+  background: var(--color-surface-hover);
+  box-shadow: 0 0 0 var(--border-width) var(--brand-sunset);
 }
 
 .facility-thumb-box {
-  width: 38px;
-  height: 38px;
-  border-radius: var(--radius-sm, 4px);
-  background: var(--bg-canvas);
-  border: 1px solid var(--border-subtle);
-  flex-shrink: 0;
-  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+  width: var(--control-height-md);
+  height: var(--control-height-md);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-xs);
+  background: var(--color-surface);
+  overflow: hidden;
 }
 
 .facility-thumb-box img {
@@ -140,76 +112,125 @@ html:where(:not([data-theme="dark"])) body.theme-manager {
 }
 
 .facility-thumb-box .placeholder-icon {
-  font-size: 16px;
-  color: var(--text-tertiary);
+  font-size: var(--icon-size-md);
+  color: var(--color-text-muted);
 }
 
 .facility-info-box {
   flex: 1;
   min-width: 0;
+  overflow: hidden;
 }
 
 .facility-card-name {
-  font-weight: 600;
-  font-size: 13px;
-  color: var(--text-primary);
+  margin-bottom: var(--border-width);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin-bottom: 1px;
 }
 
 .facility-meta {
-  font-size: 11.5px;
-  color: var(--text-secondary);
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-1-5);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-soft);
 }
 
+.facility-meta span:last-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Badge nhóm máy ở cột trái */
+.facility-card-item .badge {
+  flex-shrink: 0;
+}
+
+.facility-card-item .badge-success {
+  background: var(--color-success-tint);
+  border: var(--border-width) solid var(--color-success-border);
+  color: var(--color-success-ink);
+}
+
+.facility-card-item .badge-warning {
+  background: var(--color-warning);
+  border: var(--border-width) solid var(--color-warning);
+  color: var(--color-on-primary);
+  font-weight: var(--font-weight-bold);
+}
+
+.facility-card-item .badge-neutral {
+  background: var(--color-neutral-tint);
+  border: var(--border-width) solid var(--color-neutral-border);
+  color: var(--color-text-soft);
+}
+
+/* Nhóm đã ẩn: tăng sáng chữ nhưng vẫn mờ hơn nhóm khác */
 .facility-card-item.inactive {
-  opacity: 0.6;
+  opacity: 0.75;
+  border-color: var(--color-border);
 }
 
-/* --- Panel Phải: Chi tiết nhóm máy & danh sách con --- */
+.facility-card-item.inactive .facility-card-name {
+  color: var(--color-text-soft);
+}
+
+.facility-card-item.inactive .facility-meta {
+  color: var(--color-text-muted);
+}
+
+/* ===== 3. Cột phải: Chi tiết nhóm máy & danh sách cá thể con ===== */
 .facility-detail-panel {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md, 8px);
-  padding: 12px 14px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
   height: 100%;
-  overflow: hidden;
   min-height: 0;
+  padding: var(--space-3) var(--space-3-5);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  overflow: hidden;
 }
 
 .detail-top-summary {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   flex-wrap: wrap;
-  gap: 8px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--border-subtle);
   flex-shrink: 0;
+  gap: var(--space-2);
+  padding-bottom: var(--space-2);
+  border-bottom: var(--border-width) solid var(--color-border);
 }
 
 .detail-main-info {
   display: flex;
-  gap: 10px;
   align-items: center;
+  gap: var(--space-2-5);
 }
 
 .detail-large-thumb {
-  width: 46px;
-  height: 46px;
-  border-radius: var(--radius-md, 6px);
-  background: var(--bg-canvas);
-  border: 1px solid var(--border-subtle);
-  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
+  width: var(--avatar-size-md);
+  height: var(--avatar-size-md);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-muted);
+  overflow: hidden;
 }
 
 .detail-large-thumb img {
@@ -221,117 +242,128 @@ html:where(:not([data-theme="dark"])) body.theme-manager {
 .detail-title-line {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 1px;
+  gap: var(--space-2);
+  margin-bottom: var(--space-0-5);
 }
 
 .detail-title {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0;
+  margin: var(--space-0);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
 }
 
 .detail-location-line {
-  font-size: 12px;
-  color: var(--text-secondary);
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-1-5);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-soft);
 }
 
 .detail-actions {
   display: flex;
-  gap: 6px;
   align-items: center;
+  gap: var(--space-1-5);
 }
 
-/* Stat counters for selected group */
+/* Thẻ đếm số lượng cá thể trong nhóm (Tổng số, Khả dụng, Đang bảo trì) */
 .group-stats-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(95px, 1fr));
-  gap: 6px;
+  grid-template-columns: repeat(auto-fit, minmax(var(--space-12), 1fr));
+  gap: var(--space-1-5);
   flex-shrink: 0;
 }
 
 .group-stat-box {
-  padding: 5px 8px;
-  border-radius: var(--radius-md, 6px);
-  background: var(--bg-canvas);
-  border: 1px solid var(--border-subtle);
   display: flex;
   flex-direction: column;
+  padding: var(--space-1-5) var(--space-2);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-muted);
 }
 
 .group-stat-label {
-  font-size: 10.5px;
-  color: var(--text-secondary);
-  margin-bottom: 1px;
+  margin-bottom: var(--space-0-5);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-soft);
 }
 
+/* Số liệu thống kê: cùng cỡ chữ, đổi màu theo đúng ngữ nghĩa */
 .group-stat-val {
-  font-size: 13.5px;
-  font-weight: 700;
-  color: var(--text-primary);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+  font-variant-numeric: var(--font-numeric);
+  color: var(--color-text);
 }
 
-.group-stat-val.available { color: var(--color-success, #10b981); }
-.group-stat-val.maintenance { color: var(--color-warning, #f59e0b); }
-.group-stat-val.retired { color: var(--text-tertiary); }
+.group-stat-val.available {
+  color: var(--color-board-up);
+}
 
-/* Items Table */
+.group-stat-val.maintenance {
+  color: var(--color-warning-ink);
+}
+
+.group-stat-val.retired {
+  color: var(--color-text-muted);
+}
+
+/* ===== 4. Bảng danh sách cá thể máy con ===== */
 .items-section-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-top: 2px;
+  justify-content: space-between;
   flex-shrink: 0;
+  margin-top: var(--space-0-5);
 }
 
 .items-section-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin: 0;
+  margin: var(--space-0);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
 }
 
 .items-table-wrapper {
-  overflow-x: auto;
-  overflow-y: auto;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md, 6px);
   flex: 1;
   min-height: 0;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow-x: auto;
+  overflow-y: auto;
 }
 
 .items-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 12.5px;
+  font-size: var(--font-size-xs);
   text-align: left;
 }
 
 .items-table th {
   position: sticky;
   top: 0;
-  z-index: 2;
-  background: var(--bg-canvas);
-  padding: 6px 10px;
-  font-weight: 600;
-  font-size: 11.5px;
-  color: var(--text-secondary);
-  border-bottom: 1px solid var(--border-subtle);
+  z-index: var(--z-base);
+  padding: var(--space-2) var(--space-2-5);
+  border-bottom: var(--border-width) solid var(--color-border);
+  background: var(--color-surface-muted);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-soft);
 }
 
 .items-table td {
-  padding: 6px 10px;
-  border-bottom: 1px solid var(--border-subtle);
-  color: var(--text-primary);
+  padding: var(--space-2) var(--space-2-5);
+  border-bottom: var(--border-width) solid var(--color-border);
+  color: var(--color-text);
   vertical-align: middle;
 }
 
 .items-table tr:hover td {
-  background: var(--bg-surface-hover);
+  background: var(--color-surface-hover);
 }
 
 .items-table tr:last-child td {
@@ -340,153 +372,268 @@ html:where(:not([data-theme="dark"])) body.theme-manager {
 
 .items-table tr.row-retired {
   opacity: 0.6;
-  background: var(--bg-canvas);
+  background: var(--color-surface-muted);
 }
 
+/* Mã máy cá thể (DB-001...) */
 .code-badge {
-  font-family: monospace;
-  font-size: 12px;
-  font-weight: 600;
-  padding: 1px 5px;
-  background: var(--bg-canvas);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm, 4px);
-  color: var(--text-primary);
+  display: inline-block;
+  padding: var(--space-0-5) var(--space-1-5);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-xs);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-family: var(--font-brand-mono, monospace);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
 }
 
+/* DB-003 hoặc máy đang bảo trì: đồng bộ họ token warning (vàng/amber) */
+.code-badge-maintenance {
+  display: inline-block;
+  padding: var(--space-0-5) var(--space-1-5);
+  border: var(--border-width) solid var(--color-warning-border);
+  border-radius: var(--radius-xs);
+  background: var(--color-warning-tint);
+  color: var(--color-warning-ink);
+  font-family: var(--font-brand-mono, monospace);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.code-badge-maintenance:hover {
+  border-color: var(--color-warning);
+  color: var(--color-warning);
+  text-decoration: none;
+}
+
+/* Badge "Khả dụng" cố định chiều rộng để cột thẳng hàng, chữ sáng, nền xanh nhạt */
+.items-table .badge-success {
+  display: inline-flex;
+  justify-content: center;
+  min-width: var(--space-12);
+  padding: var(--space-0-5) var(--space-2);
+  border: var(--border-width) solid var(--color-success-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-success-tint);
+  color: var(--color-success-ink);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Badge "Đang bảo trì" dạng link sang trang bảo trì, đồng bộ họ token warning (vàng/amber) */
+.badge-maintenance-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-0-5) var(--space-2);
+  border: var(--border-width) solid var(--color-warning-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-warning-tint);
+  color: var(--color-warning-ink);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.badge-maintenance-link:hover {
+  border-color: var(--color-warning);
+  color: var(--color-warning);
+  text-decoration: none;
+}
+
+/* Thao tác mỗi dòng: Nút Sửa & Nút Thanh lý */
 .table-actions {
   display: flex;
-  gap: 6px;
+  gap: var(--space-1-5);
 }
 
-/* Modals */
+/* Nút Sửa: giữ viền sáng */
+.table-actions .btn-secondary {
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-xs);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  padding: var(--space-1) var(--space-2);
+}
+
+.table-actions .btn-secondary:hover {
+  border-color: var(--color-primary-border);
+  color: var(--color-primary-hover);
+}
+
+/* Nút Thanh lý: dạng outline (viền đỏ + nền trong suốt + chữ đỏ sáng), hover tô đặc */
+.table-actions .btn-danger {
+  border: var(--border-width) solid var(--color-danger);
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--color-danger-ink);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  padding: var(--space-1) var(--space-2);
+}
+
+.table-actions .btn-danger:not(:disabled):hover {
+  background: var(--color-danger);
+  border-color: var(--color-danger);
+  color: var(--color-on-danger);
+}
+
+.table-actions .btn-danger:disabled,
+.table-actions .btn-danger[disabled] {
+  opacity: var(--opacity-disabled);
+  cursor: not-allowed;
+  pointer-events: auto;
+  background: transparent;
+  border-color: var(--color-danger);
+  color: var(--color-danger-ink);
+}
+
+.table-actions .btn-danger:disabled:hover,
+.table-actions .btn-danger[disabled]:hover {
+  background: transparent;
+  border-color: var(--color-danger);
+  color: var(--color-danger-ink);
+}
+
+/* ===== 5. Modals Thêm/Sửa Nhóm & Cá thể máy (JS đóng mở qua closeModal()) ===== */
 .modal-overlay {
   display: none;
   position: fixed;
   inset: 0;
-  background: var(--arena-overlay, rgba(2, 10, 20, 0.72));
-  z-index: 1000;
+  z-index: var(--z-modal);
   align-items: center;
   justify-content: center;
-  backdrop-filter: blur(2px);
+  background: var(--color-overlay);
 }
 
+/* JS toggle class .show để mở modal */
 .modal-overlay.show {
   display: flex;
 }
 
 .modal-card {
-  background: var(--bg-surface);
-  border-radius: var(--radius-lg, 12px);
-  box-shadow: var(--shadow-xl, 0 20px 25px -5px rgba(0,0,0,0.1));
   width: 100%;
-  max-width: 480px;
+  max-width: var(--layout-dialog-width);
   max-height: 90vh;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-pop);
   overflow-y: auto;
-  border: 1px solid var(--border-subtle);
 }
 
 .modal-header {
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding: var(--space-4) var(--space-5);
+  border-bottom: var(--border-width) solid var(--color-border);
 }
 
 .modal-title {
-  font-size: var(--text-lg, 18px);
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0;
+  margin: var(--space-0);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
 }
 
 .modal-close-btn {
-  background: transparent;
+  padding: var(--space-1) var(--space-2);
   border: none;
-  font-size: 20px;
-  color: var(--text-secondary);
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--color-text-soft);
+  font-size: var(--font-size-xl);
+  line-height: var(--line-height-none);
   cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 4px;
 }
 
 .modal-close-btn:hover {
-  background: var(--bg-surface-hover);
-  color: var(--text-primary);
+  background: var(--color-surface-hover);
+  color: var(--color-text);
 }
 
 .modal-body {
-  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: var(--space-3, 12px);
+  gap: var(--space-3);
+  padding: var(--space-5);
 }
 
 .modal-footer {
-  padding: 14px 20px;
-  border-top: 1px solid var(--border-subtle);
   display: flex;
+  align-items: center;
   justify-content: flex-end;
-  gap: var(--space-2, 8px);
-  background: var(--bg-canvas);
+  gap: var(--space-2);
+  padding: var(--space-3-5) var(--space-5);
+  border-top: var(--border-width) solid var(--color-border);
+  background: var(--color-surface-muted);
 }
 
 .form-field {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
 .form-label {
-  font-size: var(--text-xs, 12px);
-  font-weight: 600;
-  color: var(--text-secondary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-soft);
 }
 
-.form-input, .form-select {
-  padding: 8px 12px;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md, 8px);
-  font-size: var(--text-sm, 14px);
-  color: var(--text-primary);
-  background: var(--bg-surface);
+.form-input,
+.form-select {
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
 }
 
-.form-input:focus, .form-select:focus {
+.form-input:focus,
+.form-select:focus {
   outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px var(--color-primary-ring);
+  border-color: var(--brand-sunset);
+  box-shadow: 0 0 0 var(--border-width-thick) var(--arena-ember-tint);
 }
 
 .empty-state {
+  padding: var(--space-8);
   text-align: center;
-  padding: var(--space-8, 32px);
-  color: var(--text-secondary);
+  color: var(--color-text-soft);
+  font-size: var(--font-size-sm);
 }
 
-/* --- Image Upload in Modal --- */
+/* Tải ảnh trong modal thêm/sửa nhóm */
 .image-upload-wrapper {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 10px 14px;
-  background: var(--bg-canvas);
-  border: 1px dashed var(--border-subtle);
-  border-radius: var(--radius-md, 8px);
+  gap: var(--space-3-5);
+  padding: var(--space-2-5) var(--space-3-5);
+  border: var(--border-width) dashed var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-muted);
 }
 
 .image-preview-box {
-  width: 64px;
-  height: 64px;
-  border-radius: var(--radius-sm, 6px);
-  background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  overflow: hidden;
-  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+  width: var(--space-10);
+  height: var(--space-10);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-xs);
+  background: var(--color-surface);
+  overflow: hidden;
 }
 
 .image-preview-placeholder {
@@ -497,46 +644,8 @@ html:where(:not([data-theme="dark"])) body.theme-manager {
 }
 
 .image-upload-controls {
-  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  flex: 1;
+  gap: var(--space-1);
 }
-
-/* Link chuyển tới trang bảo trì cho máy đang hỏng */
-.badge-maintenance-link {
-  text-decoration: none;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  transition: all var(--duration-fast, 0.15s) ease;
-}
-
-.badge-maintenance-link:hover {
-  filter: brightness(1.15);
-  box-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
-  transform: translateY(-1px);
-}
-
-.code-badge-maintenance {
-  display: inline-block;
-  padding: 2px 6px;
-  border-radius: var(--radius-sm, 4px);
-  background: rgba(245, 158, 11, 0.12);
-  border: 1px solid rgba(245, 158, 11, 0.4);
-  color: var(--color-warning-text, #f59e0b);
-  text-decoration: none;
-  font-family: var(--font-mono, monospace);
-  font-size: 11.5px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all var(--duration-fast, 0.15s) ease;
-}
-
-.code-badge-maintenance:hover {
-  background: rgba(245, 158, 11, 0.22);
-  border-color: #f59e0b;
-  transform: translateY(-1px);
-}
-

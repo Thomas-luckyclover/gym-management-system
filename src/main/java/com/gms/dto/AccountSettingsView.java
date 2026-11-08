@@ -193,6 +193,7 @@ public class AccountSettingsView {
      * Giữ nguyên dấu tiếng Việt (không chuyển Đ thành D).
      * Xử lý an toàn khi null, rỗng hoặc nhiều khoảng trắng (trả về "—").
      */
+    // GETTER TỰ TÍNH — không có field/setter "initials"; = chữ đầu họ + chữ đầu tên viết hoa, tên trống → "—"; JSP: auth/account/profile-admin.jspf:18 …
     public String getInitials() {
         if (fullName == null || fullName.isBlank()) {
             return "—";
@@ -202,10 +203,11 @@ public class AccountSettingsView {
         if (parts.length == 0) {
             return "—";
         }
-        String lastName = parts[parts.length - 1];
-        if (lastName.isEmpty()) {
-            return "—";
+        String first = parts[0].substring(0, 1);
+        if (parts.length == 1) {
+            return first.toUpperCase(Locale.forLanguageTag("vi-VN"));
         }
-        return lastName.substring(0, 1).toUpperCase(Locale.forLanguageTag("vi-VN"));
+        String last = parts[parts.length - 1].substring(0, 1);
+        return (first + last).toUpperCase(Locale.forLanguageTag("vi-VN"));
     }
 }

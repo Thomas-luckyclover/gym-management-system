@@ -1,0 +1,79 @@
+<%@ page pageEncoding="UTF-8" %>
+<%--
+  _schedule-handle.jspf — HỘP "XỬ LÝ BUỔI" — include trong schedule.jsp khi có handle (PtHandleView ← PtSessionHandleService.getHandleForm).
+  3 tab (radio, schedule.js đổi tab) → 3 form POST /pt/schedule → PtScheduleServlet.doPost → handleSession:
+    Dời buổi (action=reschedule) · Chuyển PT (action=transfer) · Hủy buổi (action=cancel)
+  Mỗi form gửi: csrfToken · action · sessionId = handle.sessionId · date + view (để quay lại đúng tuần).
+  Bị từ chối → trang vẽ lại, hộp vẫn mở: handleFormError (câu lỗi), handleAction (tab đang chọn), handleReason (chữ đã gõ),
+    handleSlotChoice / handleNewDate / handleNewStart (lựa chọn "Giờ khác" ở tab Dời buổi).
+  3 form có novalidate: schedule.js (initPtHandleForms) tự kiểm trước khi gửi và báo bằng TOAST + viền đỏ,
+  không dùng bong bóng "Please check this box…" của trình duyệt. Server vẫn kiểm lại (PtSessionHandleService) → câu đỏ đầu hộp.
+  Mỗi tab 1 file: _schedule-handle-reschedule.jspf (handle.move) · _schedule-handle-transfer.jspf (handle.transfer) · _schedule-handle-cancel.jspf.
+--%>
+
+<%-- Tab mở sẵn: handleAction (sau khi bị từ chối) hoặc "reschedule". --%>
+<c:set var="chosen" value="${empty handleAction ? 'reschedule' : handleAction}" />
+<c:set var="sessionTime" value="${gms:formatTime(handle.startTime)} – ${gms:formatTime(handle.endTime)}" />
+<c:url var="closeUrl" value="/pt/schedule"><c:param name="date" value="${viewDate}" /><c:param name="view" value="${view}" /></c:url>
+
+<%-- Đóng hộp = link closeUrl (về lịch, bỏ ?handle=). --%>
+<dialog class="pt-handle" id="pt-handle" open aria-labelledby="pt-handle-title" data-close-url="${closeUrl}">
+
+    <header class="pt-handle-head">
+        <div>
+
+            <%-- ĐẦU HỘP: handle.dayLabel · giờ · handle.customerNames · handle.packageName · "Hạn gói đến" handle.termEnd · "Gói đôi" (handle.couple). --%>
+            <h2 id="pt-handle-title" tabindex="-1" autofocus><span class="visually-hidden">Xử lý buổi </span><c:out value="${handle.dayLabel}" /> · <c:out value="${sessionTime}" /></h2>
+            <p class="pt-handle-who"><strong><c:out value="${handle.customerNames}" /></strong> · <c:out value="${handle.packageName}" /></p>
+
+            <p class="pt-handle-chips">
+                <span>Hạn gói đến <c:out value="${gms:formatDate(handle.termEnd)}" /></span>
+                <%-- handle.couple = getter tự tính isCouple() · dto/PtHandleView.java --%>
+                <c:if test="${handle.couple}"><span>Gói đôi</span></c:if>
+            </p>
+        </div>
+        <a class="pt-handle-close" href="${closeUrl}" data-handle-close aria-label="Đóng hộp xử lý buổi"><i class="fa-solid fa-xmark" aria-hidden="true"></i></a>
+    </header>
+
+    <div class="pt-handle-body">
+
+        <%-- Câu lỗi khi Dời / Chuyển / Hủy bị từ chối (VD MSG103 khung vừa bị lấy). --%>
+        <c:if test="${not empty handleFormError}">
+            <p class="pt-handle-error" role="alert"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> <c:out value="${handleFormError}" /></p>
+        </c:if>
+
+        <%-- 3 NÚT CHỌN: Dời buổi ("N khung" = handle.move.slotCount) · Chuyển PT ("N PT trống" = số handle.transfer.slots) · Hủy buổi. --%>
+        <fieldset class="pt-handle-options">
+            <legend class="visually-hidden">Chọn cách xử lý</legend>
+            <label class="pt-handle-option">
+                <input type="radio" name="pt-handle-option" value="reschedule" ${chosen eq 'reschedule' ? 'checked' : ''}>
+                <i class="fa-solid fa-calendar-days" aria-hidden="true"></i>
+                <strong>Dời buổi</strong>
+                <span>Sang khung trống khác của bạn</span>
+                <small><c:out value="${handle.move.slotCount}" /> khung</small>
+            </label>
+            <label class="pt-handle-option">
+                <input type="radio" name="pt-handle-option" value="transfer" ${chosen eq 'transfer' ? 'checked' : ''}>
+                <i class="fa-solid fa-user-pen" aria-hidden="true"></i>
+                <strong>Chuyển PT</strong>
+                <span>Giữ giờ, PT khác dạy thay</span>
+                <small><c:out value="${fn:length(handle.transfer.slots)}" /> PT trống</small>
+            </label>
+            <label class="pt-handle-option is-danger">
+                <input type="radio" name="pt-handle-option" value="cancel" ${chosen eq 'cancel' ? 'checked' : ''}>
+                <i class="fa-solid fa-ban" aria-hidden="true"></i>
+                <strong>Hủy buổi</strong>
+                <span>Vẫn tính buổi, hoàn tiền mặt</span>
+            </label>
+        </fieldset>
+
+        <%-- TAB DỜI BUỔI (action=reschedule) · handle.move --%>
+        <%@ include file="/WEB-INF/jsp/pt/_schedule-handle-reschedule.jspf" %>
+
+        <%-- TAB CHUYỂN PT (action=transfer) · handle.transfer --%>
+        <%@ include file="/WEB-INF/jsp/pt/_schedule-handle-transfer.jspf" %>
+
+        <%-- TAB HỦY BUỔI (action=cancel) --%>
+        <%@ include file="/WEB-INF/jsp/pt/_schedule-handle-cancel.jspf" %>
+    </div>
+</dialog>

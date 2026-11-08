@@ -2,6 +2,7 @@ package com.gms.dao;
 
 import com.gms.constant.Role;
 import com.gms.dto.PTCardView;
+import com.gms.entity.Account;
 import com.gms.entity.Employee;
 import com.gms.util.DBContext;
 import java.sql.Connection;
@@ -11,11 +12,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Truy vấn nhân viên và thống kê buổi PT. */
+/** Truy vấn nhân viên (hồ sơ nhân viên, danh sách PT ở trang chủ). */
 public class EmployeeDAO {
-
-    /** Giá trị cột Sessions.Status của buổi đã dạy xong (chưa có entity Session nên tạm để hằng ở đây). */
-    private static final String SESSION_STATUS_COMPLETED = "CheckedIn";
 
     /**
      * Tìm Employee theo PersonId, ưu tiên dòng đang Working.
@@ -56,12 +54,12 @@ public class EmployeeDAO {
      *
      * Dùng khi: HomeServlet mở trang chủ. Số PT hiển thị = size() của list này (đếm thật, không hard-code).
      * Ví dụ với seed: trả về 3 dòng theo thứ tự EmployeeId
-     *   5 | Đinh Công Sơn         | Strength & Conditioning  | 8 năm | x buổi
-     *   6 | Nguyễn Thị Kiều Trang | Giảm mỡ · Thể hình nữ    | 6 năm | x buổi
-     *   7 | David Miller          | Tăng cơ · Powerlifting   | 9 năm | x buổi
-     *   (EmployeeId 8 Hồ Văn Nam đã Resigned → không có trong danh sách)
+     *   5 | Đinh Công Sơn         | Strength & Conditioning  | 8 năm
+     *   6 | Nguyễn Thị Kiều Trang | Giảm mỡ · Thể hình nữ    | 6 năm
+     *   7 | David Miller          | Tăng cơ · Powerlifting   | 9 năm
+     *   (EmployeeId 8 Hồ Văn Nam đã Resigned, 14 Phan Thanh Tú bị khóa tài khoản → không có trong danh sách)
      *
-     * Chỉ lấy họ tên, chuyên môn, kinh nghiệm, số buổi — KHÔNG lấy SĐT/email vì trang chủ là trang công khai.
+     * Chỉ lấy họ tên, chuyên môn, kinh nghiệm — KHÔNG lấy SĐT/email vì trang chủ là trang công khai.
      *
      * @return danh sách PT đang làm; list rỗng (không phải null) nếu không có PT nào
      * @throws SQLException lỗi kết nối hoặc lỗi câu SQL
@@ -70,18 +68,12 @@ public class EmployeeDAO {
         // B1: câu SQL nối 3 bảng
         //   - Employees  : lọc PT đang làm, lấy chuyên môn + kinh nghiệm
         //   - Persons    : lấy họ tên (Employees không có cột họ tên)
-        //   - Sessions   : đếm số buổi CheckedIn của từng PT
-        // Dùng LEFT JOIN cho Sessions: PT mới chưa dạy buổi nào vẫn phải hiện (đếm ra 0).
-        //   Nếu dùng JOIN thường, PT chưa có buổi nào sẽ BIẾN MẤT khỏi kết quả.
-        // Điều kiện s.Status = 'CheckedIn' đặt ở ON, KHÔNG đặt ở WHERE:
-        //   đặt ở WHERE thì dòng PT không có buổi (s.Status = NULL) bị loại → LEFT JOIN thành JOIN thường.
-        String sql = "SELECT e.EmployeeId, p.FullName, e.Specialty, e.YearsOfExperience, "
-                + "COUNT(s.SessionId) AS CompletedSessionCount "
+        //   - Accounts   : chỉ PT có tài khoản đang hoạt động — giống màn Bán gói PT (PT bị Admin khóa thì ẩn)
+        String sql = "SELECT e.EmployeeId, p.FullName, e.Specialty, e.YearsOfExperience "
                 + "FROM Employees e "
                 + "JOIN Persons p ON p.PersonId = e.PersonId "
-                + "LEFT JOIN Sessions s ON s.PtEmployeeId = e.EmployeeId AND s.Status = ? "
+                + "JOIN Accounts a ON a.PersonId = e.PersonId AND a.Status = ? "
                 + "WHERE e.Position = ? AND e.Status = ? "
-                + "GROUP BY e.EmployeeId, p.FullName, e.Specialty, e.YearsOfExperience "
                 + "ORDER BY e.EmployeeId";
 
         List<PTCardView> pts = new ArrayList<>();
@@ -90,8 +82,8 @@ public class EmployeeDAO {
         try (Connection connection = DBContext.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
 
-            // B3: điền 3 dấu ? — lấy giá trị từ enum, không gõ tay chuỗi "PT", "Working"
-            statement.setString(1, SESSION_STATUS_COMPLETED);
+            // B3: điền 3 dấu ? — lấy giá trị từ enum, không gõ tay chuỗi "Active", "PT", "Working"
+            statement.setString(1, Account.Status.ACTIVE.getDbValue());
             statement.setString(2, Role.PT.getDbValue());
             statement.setString(3, Employee.Status.WORKING.getDbValue());
 
@@ -102,8 +94,7 @@ public class EmployeeDAO {
                             resultSet.getInt("EmployeeId"),
                             resultSet.getString("FullName"),
                             resultSet.getString("Specialty"),
-                            getNullableInteger(resultSet, "YearsOfExperience"),
-                            resultSet.getInt("CompletedSessionCount")
+                            getNullableInteger(resultSet, "YearsOfExperience")
                     );
                     pts.add(pt);
                 }

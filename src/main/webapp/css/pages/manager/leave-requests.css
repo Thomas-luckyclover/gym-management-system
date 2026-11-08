@@ -594,6 +594,36 @@
   background: var(--color-surface);
 }
 
+/* Một khung chung giúp nhận ra các phần phép năm/không lương của cùng đợt. */
+.staff-leave-page .leave-history-group.is-linked {
+  border: var(--border-width) solid var(--color-border);
+  border-left: var(--space-1) solid var(--color-info);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  overflow: hidden;
+}
+
+.staff-leave-page .is-linked .leave-group-heading {
+  border-bottom: var(--border-width) solid var(--color-border);
+}
+
+.staff-leave-page .leave-group-code {
+  display: block;
+  margin-top: var(--space-1);
+  color: var(--color-text-soft);
+  font-size: var(--font-size-xs);
+}
+
+.staff-leave-page .is-linked .leave-history-row {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.staff-leave-page .is-linked .leave-history-row + .leave-history-row {
+  border-top: var(--border-width) solid var(--color-border);
+}
+
 /* Form PT/Lễ tân: chỉ thu gọn màn nhân viên, không ảnh hưởng trang manager dùng cùng CSS. */
 html body.dock.staff-leave-page .leave-staff-content {
   max-width: calc(var(--space-12) * 10);
@@ -675,6 +705,15 @@ html body.dock.staff-leave-page .leave-schedule-warning {
 html body.dock.staff-leave-page .leave-schedule-warning[hidden] {
   display: none;
 }
+/* leave-request-form.js: renderPlan thêm các buổi trùng vào #leaveConflictingSessions. */
+html body.dock.staff-leave-page .leave-conflicting-sessions {
+  flex-basis: 100%;
+  margin: 0;
+  padding-left: var(--space-4);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2) var(--space-4);
+}
 html body.dock.staff-leave-page .leave-empty {
   padding: var(--space-4);
 }
@@ -684,6 +723,9 @@ html body.dock.staff-leave-page .leave-empty {
   }
 }
 @media (max-width: 640px) {
+  html body.dock.staff-leave-page .leave-conflicting-sessions {
+    grid-template-columns: minmax(0, 1fr);
+  }
   html body.dock.staff-leave-page .leave-form-grid {
     grid-template-columns: minmax(0, 1fr);
   }

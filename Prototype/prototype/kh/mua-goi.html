@@ -30,12 +30,15 @@
       <a href="mua-goi.html" aria-current="page"><i class="fa-solid fa-cart-shopping"></i>Mua gói</a>
       <a href="lich-su-giao-dich.html"><i class="fa-solid fa-receipt"></i>Lịch sử giao dịch</a>
         <h4>Lịch tập</h4>
-      <a href="lich-cua-toi.html"><i class="fa-solid fa-calendar-check"></i>Lịch của tôi</a>
-      <a href="buoi-pt.html"><i class="fa-solid fa-user-check"></i>Buổi PT của tôi</a>
+      <a href="lich-cua-toi.html"><i class="fa-solid fa-box-open"></i>Gói của tôi</a>
+      <a href="buoi-pt.html"><i class="fa-solid fa-calendar-check"></i>Lịch của tôi</a>
       <a href="dat-buoi-le.html"><i class="fa-solid fa-calendar-plus"></i>Đặt buổi lẻ</a>
       <a href="giao-an.html"><i class="fa-solid fa-clipboard-list"></i>Giáo án của tôi</a>
+      <a href="thu-vien-bai-tap.html"><i class="fa-solid fa-person-running"></i>Thư viện bài tập</a>
+      <a href="chi-so-co-the.html"><i class="fa-solid fa-weight-scale"></i>Chỉ số cơ thể</a>
         <h4>Tài khoản</h4>
       <a href="tai-khoan.html"><i class="fa-solid fa-user-gear"></i>Cài đặt tài khoản</a>
+      <a href="../chon-vai-tro.html"><i class="fa-solid fa-repeat"></i>Đổi vai trò</a>
         <h4>Hòm thư</h4>
       <a href="gop-y.html"><i class="fa-solid fa-inbox"></i>Hòm thư góp ý</a>
       </nav>
@@ -70,67 +73,124 @@
       <div class="toolbar">
         <div class="search">
           <i class="fa-solid fa-magnifying-glass"></i>
-          <input id="pkgSearch" type="search" placeholder="Tìm gói" aria-label="Tìm gói">
+          <input id="pkgSearch" type="search" maxlength="100" placeholder="Tên gói, ví dụ: 3 tháng, gói ngày, PT 1-1" aria-label="Tìm gói theo tên">
         </div>
-        <label for="pkgKind">Loại</label>
-        <select id="pkgKind">
-          <option value="all">Tất cả</option>
-          <option value="goi-tap">Gói tập</option>
-          <option value="goi-ngay">Gói ngày</option>
-        </select>
         <label for="pkgSort">Sắp xếp</label>
         <select id="pkgSort">
-          <option value="months">Thời hạn tăng dần</option>
+          <option value="default">Mặc định</option>
+          <option value="saving">Tiết kiệm nhất</option>
           <option value="price-asc">Giá thấp → cao</option>
           <option value="price-desc">Giá cao → thấp</option>
         </select>
+      </div>
+      <div class="toolbar" aria-label="Bộ lọc gói">
+        <label for="pkgKind">Loại gói</label>
+        <select id="pkgKind">
+          <option value="all">Tất cả</option>
+          <option value="goi-tap">Gói tập</option>
+          <option value="goi-ngay">Gói Ngày</option>
+          <option value="goi-pt">Gói PT</option>
+        </select>
+        <label for="pkgDur">Thời hạn</label>
+        <select id="pkgDur">
+          <option value="all">Tất cả</option>
+          <option value="0">1 ngày</option>
+          <option value="1">1 tháng</option>
+          <option value="2">2 tháng</option>
+          <option value="3">3 tháng</option>
+          <option value="9">9 tháng</option>
+          <option value="12">12 tháng</option>
+        </select>
+        <label for="pkgChannel">Hình thức mua</label>
+        <select id="pkgChannel">
+          <option value="all">Tất cả</option>
+          <option value="online">Thanh toán trực tuyến</option>
+          <option value="counter">Chỉ mua tại quầy</option>
+        </select>
+        <label for="pkgMin">Khoảng giá</label>
+        <input id="pkgMin" type="number" min="0" step="10000" placeholder="Giá từ" aria-label="Giá từ" style="width:9rem">
+        <input id="pkgMax" type="number" min="0" step="10000" placeholder="Giá đến" aria-label="Giá đến" style="width:9rem">
         <button class="btn btn-ghost btn-sm reset" type="button" id="pkgReset">Xoá lọc</button>
       </div>
 
-      <p class="muted">Gói PT chỉ mua tại quầy. Giá đã gồm VAT.</p>
+      <p class="muted">Gói PT chỉ mua tại quầy; buổi PT lẻ đặt ở mục Đặt buổi lẻ. Giá đã gồm VAT 8%.</p>
 
       <section class="pricing-grid" id="pkgGrid">
-        <div class="price-card" data-kind="goi-tap" data-price="799000" data-months="1" data-name="gói 1 tháng">
+        <div class="price-card" data-kind="goi-ngay" data-channel="online" data-price="120000" data-months="0" data-name="gói ngày">
+          <h3>Gói Ngày</h3>
+          <div class="price-amount tabular">120.000đ<small> / 1 ngày</small></div>
+          <p class="price-desc">Vào tập một lượt trong ngày, hết hạn 23:59 nếu chưa check-in. Không mở Thư viện bài tập.</p>
+          <a class="btn btn-outline btn-block" href="thanh-toan.html?pkg=ngay">Chọn gói</a>
+        </div>
+        <div class="price-card" data-kind="goi-tap" data-channel="online" data-price="799000" data-months="1" data-name="gói 1 tháng">
           <h3>Gói 1 Tháng</h3>
           <div class="price-amount tabular">799.000đ<small> / 1 tháng</small></div>
-          <p class="price-desc">Không ràng buộc, dừng lúc nào cũng được.</p>
-          <a class="btn btn-outline btn-block" href="thanh-toan.html">Chọn gói</a>
+          <p class="price-desc">Bắt đầu xây thói quen tập luyện, dùng đủ thiết bị khu cardio và khu tạ.</p>
+          <a class="btn btn-outline btn-block" href="thanh-toan.html?pkg=m1">Chọn gói</a>
         </div>
-        <div class="price-card" data-kind="goi-tap" data-price="2190000" data-months="3" data-name="gói 3 tháng">
+        <div class="price-card" data-kind="goi-tap" data-channel="online" data-price="2190000" data-months="3" data-name="gói 3 tháng">
           <h3>Gói 3 Tháng</h3>
           <div class="price-amount tabular">2.190.000đ<small> / 3 tháng</small></div>
-          <span class="price-save">Tiết kiệm 9%</span>
-          <p class="price-desc">Đủ dài để thấy thể lực đổi khác.</p>
-          <a class="btn btn-outline btn-block" href="thanh-toan.html">Chọn gói</a>
+          <span class="price-save">Tiết kiệm 8%</span>
+          <p class="price-desc">Đủ thời gian thấy chuyển biến thể lực, tặng 1 buổi đo InBody.</p>
+          <a class="btn btn-outline btn-block" href="thanh-toan.html?pkg=m3">Chọn gói</a>
         </div>
-        <div class="price-card highlight" data-kind="goi-tap" data-price="3990000" data-months="6" data-name="gói 6 tháng">
+        <div class="price-card highlight" data-kind="goi-tap" data-channel="online" data-price="5490000" data-months="9" data-name="gói 9 tháng">
           <span class="price-badge">Phổ biến nhất</span>
-          <h3>Gói 6 Tháng</h3>
-          <div class="price-amount tabular">3.990.000đ<small> / 6 tháng</small></div>
-          <span class="price-save">Tiết kiệm 17%</span>
-          <p class="price-desc">Cân bằng giữa cam kết và chi phí.</p>
-          <a class="btn btn-primary btn-block" href="thanh-toan.html">Chọn gói</a>
+          <h3>Gói 9 Tháng</h3>
+          <div class="price-amount tabular">5.490.000đ<small> / 9 tháng</small></div>
+          <span class="price-save">Tiết kiệm 24%</span>
+          <p class="price-desc">Cam kết dài hạn, giá tốt, tặng 3 buổi đo InBody.</p>
+          <a class="btn btn-primary btn-block" href="thanh-toan.html?pkg=m9">Chọn gói</a>
         </div>
-        <div class="price-card" data-kind="goi-tap" data-price="6990000" data-months="12" data-name="gói 12 tháng">
+        <div class="price-card" data-kind="goi-tap" data-channel="online" data-price="6990000" data-months="12" data-name="gói 12 tháng">
           <span class="price-badge">Tiết kiệm nhất</span>
           <h3>Gói 12 Tháng</h3>
           <div class="price-amount tabular">6.990.000đ<small> / 12 tháng</small></div>
           <span class="price-save">Tiết kiệm 27%</span>
-          <p class="price-desc">Rẻ nhất tính theo tháng.</p>
-          <a class="btn btn-outline btn-block" href="thanh-toan.html">Chọn gói</a>
+          <p class="price-desc">Mức giá tốt nhất cho người tập lâu dài, tặng 4 buổi đo InBody.</p>
+          <a class="btn btn-outline btn-block" href="thanh-toan.html?pkg=m12">Chọn gói</a>
         </div>
-        <div class="price-card" data-kind="goi-ngay" data-price="120000" data-months="0" data-name="gói ngày">
-          <h3>Gói Ngày</h3>
-          <div class="price-amount tabular">120.000đ<small> / 1 ngày</small></div>
-          <p class="price-desc">Vào tập một ngày, miễn ảnh check-in.</p>
-          <small class="muted" style="display:block;margin-top:0.5rem">Một lần vào, hết hạn 23:59 cùng ngày nếu chưa check-in</small>
-          <a class="btn btn-outline btn-block" href="thanh-toan.html">Chọn gói</a>
+        <div class="price-card" data-kind="goi-pt" data-channel="counter" data-price="8800000" data-months="1" data-name="gói pt 1 tháng">
+          <h3>Gói PT 1 Tháng</h3>
+          <div class="price-amount tabular">8.800.000đ<small> / 1 tháng</small></div>
+          <p class="price-desc">22 buổi, tập T2–T6 một khung giờ cố định, huấn luyện viên riêng, giáo án và thực đơn cá nhân hóa.</p>
+          <button class="btn btn-outline btn-block" type="button" disabled title="Gói này chỉ mua tại quầy">Chỉ mua tại quầy</button>
+        </div>
+        <div class="price-card" data-kind="goi-pt" data-channel="counter" data-price="16500000" data-months="2" data-name="gói pt 2 tháng">
+          <h3>Gói PT 2 Tháng</h3>
+          <div class="price-amount tabular">16.500.000đ<small> / 2 tháng</small></div>
+          <p class="price-desc">43 buổi, huấn luyện viên riêng, giáo án cá nhân, đo InBody mỗi 2 tuần.</p>
+          <button class="btn btn-outline btn-block" type="button" disabled title="Gói này chỉ mua tại quầy">Chỉ mua tại quầy</button>
+        </div>
+        <div class="price-card" data-kind="goi-pt" data-channel="counter" data-price="23900000" data-months="3" data-name="gói pt 3 tháng">
+          <h3>Gói PT 3 Tháng</h3>
+          <div class="price-amount tabular">23.900.000đ<small> / 3 tháng</small></div>
+          <p class="price-desc">65 buổi, huấn luyện viên riêng, giáo án cá nhân, đo InBody mỗi 2 tuần.</p>
+          <button class="btn btn-outline btn-block" type="button" disabled title="Gói này chỉ mua tại quầy">Chỉ mua tại quầy</button>
+        </div>
+        <div class="price-card" data-kind="goi-pt" data-channel="counter" data-price="13200000" data-months="1" data-name="gói pt couple 1 tháng">
+          <h3>Gói PT Couple 1 Tháng</h3>
+          <div class="price-amount tabular">13.200.000đ<small> / 1 tháng</small></div>
+          <p class="price-desc">Hai người tập chung một huấn luyện viên, chung 22 buổi, giáo án riêng từng người.</p>
+          <button class="btn btn-outline btn-block" type="button" disabled title="Gói này chỉ mua tại quầy">Chỉ mua tại quầy</button>
+        </div>
+        <div class="price-card" data-kind="goi-pt" data-channel="counter" data-price="24900000" data-months="2" data-name="gói pt couple 2 tháng">
+          <h3>Gói PT Couple 2 Tháng</h3>
+          <div class="price-amount tabular">24.900.000đ<small> / 2 tháng</small></div>
+          <p class="price-desc">Hai người tập chung 2 tháng, chung 43 buổi, giáo án riêng từng người.</p>
+          <button class="btn btn-outline btn-block" type="button" disabled title="Gói này chỉ mua tại quầy">Chỉ mua tại quầy</button>
         </div>
         <div class="empty-state" id="pkgEmpty" hidden>
           <div class="empty-icon"><i class="fa-solid fa-box-open"></i></div>
           <p>Không có gói nào khớp bộ lọc.</p>
         </div>
       </section>
+
+      <div class="pager" data-pager>
+        <div class="pager-info"></div>
+        <div class="pager-btns"></div>
+      </div>
     </main>
   </div>
 </div>

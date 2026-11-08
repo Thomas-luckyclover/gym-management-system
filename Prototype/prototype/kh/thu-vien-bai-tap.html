@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Thư viện bài tập — Super Gym</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/js/all.min.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../customer.css">
+</head>
+<body class="cust member">
+<div id="toastRoot"></div>
+<div id="modalRoot"></div>
+
+<!-- #71 — Exercise Library · customer/exercises.jsp -->
+<div class="cust-shell" id="custShell">
+
+  <!-- Dock điều hướng: thu gọn mặc định, rê vào tay cầm thì trượt ra. -->
+  <div class="cust-dock" id="custDock">
+    <aside class="cust-sidebar">
+      <a class="cust-brand" href="trang-ca-nhan.html">
+        <b>Super Gym</b><span>Khu vực hội viên</span>
+      </a>
+      <nav class="cust-nav">
+        <h4>Tổng quan</h4>
+      <a href="trang-ca-nhan.html"><i class="fa-solid fa-gauge-high"></i>Trang cá nhân</a>
+        <h4>Gói tập</h4>
+      <a href="mua-goi.html"><i class="fa-solid fa-cart-shopping"></i>Mua gói</a>
+      <a href="lich-su-giao-dich.html"><i class="fa-solid fa-receipt"></i>Lịch sử giao dịch</a>
+        <h4>Lịch tập</h4>
+      <a href="lich-cua-toi.html"><i class="fa-solid fa-box-open"></i>Gói của tôi</a>
+      <a href="buoi-pt.html"><i class="fa-solid fa-calendar-check"></i>Lịch của tôi</a>
+      <a href="dat-buoi-le.html"><i class="fa-solid fa-calendar-plus"></i>Đặt buổi lẻ</a>
+      <a href="giao-an.html"><i class="fa-solid fa-clipboard-list"></i>Giáo án của tôi</a>
+      <a href="thu-vien-bai-tap.html" aria-current="page"><i class="fa-solid fa-person-running"></i>Thư viện bài tập</a>
+      <a href="chi-so-co-the.html"><i class="fa-solid fa-weight-scale"></i>Chỉ số cơ thể</a>
+        <h4>Tài khoản</h4>
+      <a href="tai-khoan.html"><i class="fa-solid fa-user-gear"></i>Cài đặt tài khoản</a>
+      <a href="../chon-vai-tro.html"><i class="fa-solid fa-repeat"></i>Đổi vai trò</a>
+        <h4>Hòm thư</h4>
+      <a href="gop-y.html"><i class="fa-solid fa-inbox"></i>Hòm thư góp ý</a>
+      </nav>
+      <div class="cust-sidebar-foot">
+        <a href="../dang-nhap.html"><i class="fa-solid fa-arrow-right-from-bracket"></i>Đăng xuất</a>
+      </div>
+    </aside>
+    <button class="cust-handle" type="button" id="dockHandle"
+            aria-label="Mở menu điều hướng" aria-expanded="false" aria-controls="custDock">
+      <i class="fa-solid fa-chevron-right"></i>
+    </button>
+  </div>
+
+  <div class="cust-main">
+    <header class="cust-topbar">
+      <div>
+        <h1>Thư viện bài tập</h1>
+      </div>
+      <div class="cust-topbar-actions">
+        <a class="cust-user" href="tai-khoan.html" title="Cài đặt tài khoản">
+          <span class="avatar">AN</span>
+          <span class="cust-user-text">
+            <b>Nguyễn Minh An</b>
+            <span>KH-0241</span>
+          </span>
+        </a>
+      </div>
+    </header>
+
+    <main class="cust-content">
+
+      <section class="panel" id="exLocked" hidden>
+        <div class="empty-state">
+          <div class="empty-icon"><i class="fa-solid fa-lock"></i></div>
+          <h2>Thư viện bài tập dành cho hội viên</h2>
+          <p>Bạn cần một gói thành viên còn hiệu lực. Gói Ngày và buổi PT lẻ không mở thư viện này.</p>
+          <a class="btn btn-primary" href="mua-goi.html">Xem các gói</a>
+        </div>
+      </section>
+
+      <div id="exMain">
+        <p class="muted" id="exSummary"></p>
+        <div class="toolbar">
+          <div class="search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input id="exQuery" type="search" maxlength="50" placeholder="squat, bench press…" aria-label="Tên bài (tiếng Anh)">
+          </div>
+          <label for="exEquip">Dụng cụ</label>
+          <select id="exEquip"><option value="">Tất cả</option></select>
+          <label for="exSort">Sắp xếp</label>
+          <select id="exSort">
+            <option value="name">Tên A → Z</option>
+            <option value="-name">Tên Z → A</option>
+          </select>
+          <button class="btn btn-primary btn-sm" type="button" id="exApply">Lọc</button>
+          <button class="btn btn-ghost btn-sm reset" type="button" id="exReset">Xóa lọc</button>
+        </div>
+        <div class="row-meta" id="exChips" aria-label="Lọc theo nhóm cơ"></div>
+        <div class="data-list" id="exList"></div>
+        <div class="empty-state" id="exEmpty" hidden>
+          <div class="empty-icon"><i class="fa-solid fa-box-open"></i></div>
+          <p>Không tìm thấy bài nào. Thử bỏ bớt bộ lọc.</p>
+        </div>
+        <div class="pager" data-pager>
+          <div class="pager-info"></div>
+          <div class="pager-btns"></div>
+        </div>
+      </div>
+    
+    </main>
+  </div>
+</div>
+
+<script src="../app.js"></script>
+<script src="customer.js"></script>
+<script src="../exercise-data.js"></script>
+<script src="thu-vien-bai-tap.js"></script>
+</body>
+</html>

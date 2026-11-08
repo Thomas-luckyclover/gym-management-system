@@ -24,7 +24,13 @@
 
         <div class="main">
             <header class="topbar">
-                <h1 class="tb-title">Kết quả thanh toán</h1>
+                <div class="tb-left">
+                    <h1 class="tb-title">Kết quả thanh toán</h1>
+                </div>
+                <div class="top-right">
+                    <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
+                    <%@ include file="/WEB-INF/jsp/common/topbar-user.jspf" %>
+                </div>
             </header>
 
             <main class="content" id="main-content">
@@ -79,7 +85,9 @@
                                 <div class="sdp-anchor" data-sdp data-sdp-url="/customer/subscription/start-date"
                                      data-sdp-sub="${picker.subscriptionId}" data-sdp-csrf="<c:out value='${csrfToken}' />">
                                     <div class="validity-line">
+                                        <%-- picker.editable = getter tự tính isEditable() · dto/StartDatePicker.java --%>
                                         <span class="validity-line__label">Hiệu lực<c:if test="${not picker.editable and not empty picker.lockReason}"><span class="hint-tip" tabindex="0" role="note" aria-label="<c:out value='${picker.lockReason}' />" data-tip="<c:out value='${picker.lockReason}' />">i</span></c:if></span>
+                                        <%-- picker.startText = getter tự tính getStartText() · dto/StartDatePicker.java --%>
                                         <b class="validity-line__range"><span data-sdp-start><c:out value="${picker.startText}" /></span> – <span data-sdp-end><c:out value="${picker.endText}" /></span></b>
                                         <c:if test="${picker.editable}"><button type="button" class="sdp-btn" data-sdp-toggle aria-expanded="false">Đổi ngày</button></c:if>
                                     </div>

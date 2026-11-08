@@ -86,6 +86,7 @@ public class LeaveRequestListServlet extends HttpServlet {
                     filter, managerAccountId, page, pageSize);
             listPage = result.isSuccess() ? result.getData()
                     : new PageResult<LeaveEmployeeView>(Collections.emptyList(), 1, pageSize, 0);
+            
             request.setAttribute("employeePage", listPage);
             if (!result.isSuccess()) {
                 pageError = result.getMessage();
@@ -95,6 +96,7 @@ public class LeaveRequestListServlet extends HttpServlet {
                     filter, managerAccountId, page, pageSize);
             listPage = result.isSuccess() ? result.getData()
                     : new PageResult<LeaveRequestItemView>(Collections.emptyList(), 1, pageSize, 0);
+            
             request.setAttribute("requestPage", listPage);
             if (!result.isSuccess()) {
                 pageError = result.getMessage();

@@ -24,12 +24,13 @@ class PtSaleServiceTest {
     private static final LocalTime SIX_PM = LocalTime.of(18, 0);
 
     private PtSaleCustomer customer() {
-        PtSaleCustomer c = new PtSaleCustomer();
-        c.setPersonId(50);
-        c.setFullName("Nguyễn Văn An");
-        c.setDateOfBirth(LocalDate.of(1995, 3, 12));
-        c.setMembershipEnd(LocalDate.of(2027, 7, 16));
-        return c;
+        return customer(LocalDate.of(1995, 3, 12), LocalDate.of(2027, 7, 16), false);
+    }
+
+    /** Khách mẫu (personId 50) — chỉ đổi ngày sinh / gói thành viên / bảo lưu để thử từng luật. */
+    private PtSaleCustomer customer(LocalDate dateOfBirth, LocalDate membershipEnd, boolean frozen) {
+        return new PtSaleCustomer(1, 50, "KH-1001", "Nguyễn Văn An", "0901234567",
+                dateOfBirth, membershipEnd, frozen);
     }
 
     private PtScheduleItem slot(int id, LocalDate date, String start, String kind) {
@@ -47,16 +48,13 @@ class PtSaleServiceTest {
         assertNull(PtSaleService.whyCannotBuy(customer(), NOW.toLocalDate(), 10, 19));
         assertTrue(PtSaleService.whyCannotBuy(customer(), NOW.toLocalDate(), 10, 50).contains("chính mình"));
 
-        PtSaleCustomer child = customer();
-        child.setDateOfBirth(LocalDate.of(2017, 1, 1));
+        PtSaleCustomer child = customer(LocalDate.of(2017, 1, 1), LocalDate.of(2027, 7, 16), false);
         assertTrue(PtSaleService.whyCannotBuy(child, NOW.toLocalDate(), 10, 19).contains("10 tuổi"));
 
-        PtSaleCustomer noMembership = customer();
-        noMembership.setMembershipEnd(null);
+        PtSaleCustomer noMembership = customer(LocalDate.of(1995, 3, 12), null, false);
         assertTrue(PtSaleService.whyCannotBuy(noMembership, NOW.toLocalDate(), 10, 19).contains("gói thành viên"));
 
-        PtSaleCustomer frozen = customer();
-        frozen.setFrozen(true);
+        PtSaleCustomer frozen = customer(LocalDate.of(1995, 3, 12), LocalDate.of(2027, 7, 16), true);
         assertTrue(PtSaleService.whyCannotBuy(frozen, NOW.toLocalDate(), 10, 19).contains("bảo lưu"));
     }
 
@@ -171,6 +169,36 @@ class PtSaleServiceTest {
     }
 
     @Test
+    void customTimeOnlyAddsToItsOwnWeekdayOrDateAndIsCheckedLikeHold() {
+        LocalDate end = MON.plusDays(11);   // 2 tuần, 10 ngày T2–T6
+        LocalTime quarterPast = LocalTime.of(17, 15);
+        List<PtScheduleItem> slots = List.of(
+                slot(30, MON, "17:00", "Booked"));                 // T2 tuần 1: PT có khách 17:00–18:30
+        // Lịch mẫu: Thứ 2 tự thêm 17:15 · Sửa riêng: chỉ Thứ 4 tuần 2 (04/11) tự thêm 07:00.
+        PtSalePlan plan = PtSaleService.buildPlan(MON, end, 90, 8_800_000, List.of(SIX_PM),
+                Map.of(1, quarterPast), Map.of(MON.plusDays(9), LocalTime.of(7, 0)),
+                slots, List.of(), List.of(), List.of(), NOW);
+
+        assertEquals(List.of("18:00"), plan.getTimes());            // giờ tự thêm KHÔNG thành giờ chung của mọi thứ
+        for (PtSalePlan.Day day : plan.getDays()) {
+            boolean has1715 = day.getOptions().stream().anyMatch(o -> o.getTime().equals("17:15"));
+            boolean has0700 = day.getOptions().stream().anyMatch(o -> o.getTime().equals("07:00"));
+            assertEquals(day.getWeekday() == 1, has1715, day.getDate());          // 17:15 chỉ ở các Thứ 2
+            assertEquals(day.getDate().equals("2026-11-04"), has0700, day.getDate()); // 07:00 chỉ ở 04/11
+        }
+        // Thứ 2 tuần 1: 17:15 chồng buổi 17:00 của PT → đỏ, không phải "xếp được".
+        PtSalePlan.Option clash = plan.getDays().get(0).getOptions().stream()
+                .filter(o -> o.getTime().equals("17:15")).findFirst().orElseThrow();
+        assertFalse(clash.isOk());
+        assertEquals("PT có khung khác chồng giờ", clash.getReason());
+        // Thứ 2 tuần 2: PT trống → xếp được nhưng là khung PT chưa mở.
+        PtSalePlan.Option free = plan.getDays().get(5).getOptions().stream()
+                .filter(o -> o.getTime().equals("17:15")).findFirst().orElseThrow();
+        assertTrue(free.isOk());
+        assertTrue(free.isFresh());
+    }
+
+    @Test
     void customTimesMergeOnlyValidTimesWithinOpeningHours() {
         LocalTime open = LocalTime.of(5, 30);
         LocalTime close = LocalTime.of(22, 0);
@@ -239,7 +267,28 @@ class PtSaleServiceTest {
     void moneyAndShift() {
         assertEquals(375000, PtSaleService.sessionValue(16_500_000, 44));
         assertEquals(1_500_000, PtSaleService.vatAmount(16_500_000, 10));
-        assertEquals("Morning", PtSaleService.shiftTypeAt(LocalTime.of(12, 59)));
-        assertEquals("Afternoon", PtSaleService.shiftTypeAt(LocalTime.of(13, 0)));
+    }
+
+    @Test
+    void vatBreakdownAddsUpToPrice() {
+        long price = 23_900_000;
+
+        // DBR-57: VAT nằm trong giá = round(giá × VAT ÷ (100 + VAT)), trước thuế = giá − VAT
+        long vat8 = PtSaleService.vatAmount(price, 8);
+        assertEquals(Math.round(price * 8.0 / 108), vat8);
+        assertEquals(1_770_370, vat8);
+        assertEquals(22_129_630, price - vat8);
+
+        long vat10 = PtSaleService.vatAmount(price, 10);
+        assertEquals(Math.round(price * 10.0 / 110), vat10);
+        assertEquals(2_172_727, vat10);
+        assertEquals(21_727_273, price - vat10);
+    }
+
+    @Test
+    void releaseUsesTheRightCancelType() {
+        // BR-93: hết 15 phút → PaymentTimeout; lễ tân bấm "Hủy giữ chỗ" → CancelledByReceptionist.
+        assertEquals("PaymentTimeout", PtSaleService.CANCEL_TIMEOUT);
+        assertEquals("CancelledByReceptionist", PtSaleService.CANCEL_BY_RECEPTIONIST);
     }
 }

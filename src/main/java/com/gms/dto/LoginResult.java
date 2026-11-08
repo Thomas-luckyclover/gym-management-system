@@ -89,6 +89,7 @@ public class LoginResult {
     }
 
     /** Có từ 2 vai trò trở lên (CBR-113). */
+    // GETTER TỰ TÍNH — không có field/setter "roleChoiceRequired"; = availableRoles có hơn 1 vai trò; JSP: không dùng (chỉ Java/test)
     public boolean isRoleChoiceRequired() {
         return availableRoles.size() > 1;
     }

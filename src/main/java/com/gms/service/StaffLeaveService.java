@@ -289,7 +289,11 @@ public class StaffLeaveService {
             StaffingPreview staffing = loadStaffingPreview(employee, fromDate, toDate, shiftType.getDbValue());
             try (Connection connection = DBContext.getConnection()) {
                 LeaveSubmissionPreview plan = calculateSubmission(connection, employee, leaveType, fromDate, toDate, staffing);
-                int conflicts = countSessionConflicts(connection, employee, fromDate, toDate, shiftType);
+                List<LeaveSubmissionPreview.ConflictingSession> conflicts = new ArrayList<>();
+                if (employee.getPosition() == Role.PT) {
+                    conflicts = leaveRequestDAO.findConflictingSessions(connection, employee.getEmployeeId(),
+                            fromDate, toDate, shiftType.getDbValue());
+                }
                 return ServiceResult.ok(new LeaveSubmissionPreview(fromDate, toDate, plan.getAnnualDays(), plan.getUnpaidDays(),
                         plan.getRemainingAnnualDays(), plan.isNeedsUnpaidConsent(), conflicts, staffing));
             }
@@ -319,7 +323,7 @@ public class StaffLeaveService {
         // B3: phần không dùng Annual chuyển sang đề nghị Unpaid; POST còn yêu cầu đồng ý.
         int unpaidDays = totalDays - annualDays;
         return new LeaveSubmissionPreview(fromDate, toDate, annualDays, unpaidDays, remainingAnnualDays,
-                leaveType == LeaveRequest.LeaveType.ANNUAL && unpaidDays > 0, 0, staffing);
+                leaveType == LeaveRequest.LeaveType.ANNUAL && unpaidDays > 0, List.of(), staffing);
     }
 
     /** PT cần giải quyết tất cả Scheduled trong khoảng nghỉ, không chỉ ngày đầu. */

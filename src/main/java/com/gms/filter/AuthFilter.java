@@ -3,6 +3,7 @@ package com.gms.filter;
 import com.gms.constant.Messages;
 import com.gms.constant.SessionKey;
 import com.gms.dto.JsonResponse;
+import com.gms.listener.SessionRegistryListener;
 import com.gms.service.UserBadgeService;
 import com.gms.util.JsonUtil;
 import com.gms.util.RequestUtil;
@@ -77,6 +78,9 @@ public class AuthFilter implements Filter {
         if (isLoggedIn) {
             // Đảm bảo CSRF token luôn tồn tại trong session của người dùng đã đăng nhập (TC-17A)
             RequestUtil.getOrCreateCsrfToken(session);
+
+            // Phiên nạp lại sau khi Tomcat reload app → ghi nhận lại để "đăng xuất mọi thiết bị" vẫn thấy phiên này
+            SessionRegistryListener.ensureRegistered((Integer) session.getAttribute(SessionKey.ACCOUNT_ID), session);
 
             // B2b: chưa chọn vai trò → chỉ vào /select-role, /logout (CBR-113)
             boolean isRoleChosen = session.getAttribute(SessionKey.ROLE) != null;

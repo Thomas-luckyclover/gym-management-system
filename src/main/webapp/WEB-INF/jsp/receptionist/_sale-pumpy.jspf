@@ -2,7 +2,7 @@
 <%--
  _sale-pumpy.jspf — Pumpy nhỏ vẫy tay cổ vũ lễ tân, đặt cạnh bong bóng nhắc việc dưới nút "Giữ lịch" (pt-sales.jsp).
  Dáng giống Pumpy gốc (guest/_mascot.jspf, common/pumpy-coach.jspf): mèo tròn xanh #294F78, tai nhọn,
- bụng trắng có xoáy, viền mực #141414, má hồng. Chỉ trang trí → aria-hidden; chữ nhắc nằm ở <p data-plan-note>.
+ bụng trắng có xoáy, viền mực #141414 (không má hồng, tay là cục tròn). Chỉ trang trí → aria-hidden; chữ nhắc nằm ở <p data-plan-note>.
  Màu cố định theo linh vật (không theo theme) giống 2 file gốc. CSS: .sale-pumpy trong pt-sales.css.
 --%>
 <svg class="sale-pumpy" viewBox="0 0 120 112" aria-hidden="true" focusable="false">
@@ -13,8 +13,11 @@
     <path d="M88 44 L86 14 L66 30 Z" fill="#294F78" stroke="#141414" stroke-width="3.5" stroke-linejoin="round"/>
     <path d="M29 36 L30 23 L39 30 Z" fill="#F4A6B8"/>
     <path d="M83 36 L82 23 L73 30 Z" fill="#F4A6B8"/>
-    <%-- Tay trái (cạnh thân) --%>
+    <%-- 2 tay = 2 cục tròn gắn sau thân (không có cánh tay dài). Tay phải hơi giơ, nằm trong .sale-pumpy-wave để lắc nhẹ. --%>
     <circle cx="16" cy="72" r="9" fill="#294F78" stroke="#141414" stroke-width="3"/>
+    <g class="sale-pumpy-wave">
+        <circle cx="99" cy="58" r="9" fill="#294F78" stroke="#141414" stroke-width="3"/>
+    </g>
     <%-- Thân tròn kiểu mochi --%>
     <path d="M12 66 C12 36 32 24 56 24 C80 24 100 36 100 66 C100 88 82 100 56 100 C30 100 12 88 12 66 Z" fill="#294F78" stroke="#141414" stroke-width="3.5"/>
     <path d="M22 50 Q27 37 40 31" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.7"/>
@@ -28,18 +31,9 @@
     <circle cx="70.8" cy="49.8" r="1.8" fill="#FFFFFF"/>
     <circle cx="41.8" cy="54.6" r="0.9" fill="#FFFFFF"/>
     <circle cx="67.8" cy="54.6" r="0.9" fill="#FFFFFF"/>
-    <%-- Má hồng + miệng chữ "w" --%>
-    <ellipse cx="34" cy="61" rx="5" ry="3" fill="#F4A6B8" opacity="0.85"/>
-    <ellipse cx="78" cy="61" rx="5" ry="3" fill="#F4A6B8" opacity="0.85"/>
+    <%-- Miệng chữ "w" --%>
     <path d="M50 60 Q53 64 56 60.5 Q59 64 62 60" fill="none" stroke="#141414" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
     <%-- Chân --%>
     <ellipse cx="40" cy="100" rx="10" ry="6" fill="#294F78" stroke="#141414" stroke-width="3"/>
     <ellipse cx="72" cy="100" rx="10" ry="6" fill="#294F78" stroke="#141414" stroke-width="3"/>
-    <%-- Tay phải giơ lên vẫy (nhóm .sale-pumpy-wave: CSS lắc nhẹ) + vệt vẫy --%>
-    <g class="sale-pumpy-wave">
-        <path d="M96 58 Q106 46 104 34" fill="none" stroke="#141414" stroke-width="12" stroke-linecap="round"/>
-        <path d="M96 58 Q106 46 104 34" fill="none" stroke="#294F78" stroke-width="6" stroke-linecap="round"/>
-        <circle cx="104" cy="31" r="7.5" fill="#294F78" stroke="#141414" stroke-width="3"/>
-    </g>
-    <path d="M112 20 L117 15 M115 28 L120 26" stroke="#F25A32" stroke-width="2.4" stroke-linecap="round"/>
 </svg>

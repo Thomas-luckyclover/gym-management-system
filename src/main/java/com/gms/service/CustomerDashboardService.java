@@ -378,21 +378,16 @@ public class CustomerDashboardService {
         // B2: kỷ lục toàn thời gian, không nhỏ hơn chuỗi đang chạy
         int record = Math.max(countLongestStreak(checkInDays, neutralDays), streak);
 
-        // B3: còn bao nhiêu ngày để PHÁ kỷ lục (cần vượt, nên +1); đang giữ kỷ lục thì 0
-        int daysToBeatRecord = streak < record ? record - streak + 1 : 0;
-
-        // B4: số buổi tháng này và tháng trước
+        // B3: số buổi tháng này và tháng trước
         int thisMonthCount = countCheckInsInMonth(checkInDays, thisMonth, today);
         int lastMonthCount = countCheckInsInMonth(checkInDays, thisMonth.minusMonths(1), today);
 
-        // B5: lịch tháng. Thứ Hai là cột đầu nên số ô trống = thứ của ngày 1 trừ 1
+        // B4: lịch tháng. Thứ Hai là cột đầu nên số ô trống = thứ của ngày 1 trừ 1
         int leadingBlanks = firstOfMonth.getDayOfWeek().getValue() - 1;
         String monthLabel = "Tháng " + String.format("%02d/%d", thisMonth.getMonthValue(), thisMonth.getYear());
 
         return new AttendanceView(
-                streak,
                 record,
-                daysToBeatRecord,
                 thisMonthCount,
                 lastMonthCount,
                 checkInDays.contains(today),
@@ -518,8 +513,9 @@ public class CustomerDashboardService {
         Object[] pendingOrder = dashboardDAO.findPendingOrder(customerId);
         if (pendingOrder != null) {
             int orderId = (int) pendingOrder[0];
-            String message = "Đơn #" + orderId + " đang chờ thanh toán";
-            warningBanners.add(new BannerItem("warning", message, "PENDING_ORDER"));
+            String packageName = (String) pendingOrder[2];
+            String message = "Bạn có đơn mua " + packageName + " đang chờ thanh toán";
+            warningBanners.add(new BannerItem("warning", message, "PENDING_ORDER", packageName, orderId));
         }
 
         // Gộp: đỏ trước, vàng sau

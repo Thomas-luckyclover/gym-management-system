@@ -4,26 +4,29 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 /**
- * MỘT NGÀY T2–T6 trong kỳ gói, trên bảng "Lịch dự kiến".
- *
- *   Ai tạo?   PtSaleService.checkDay (không đọc DB, test được) — 1 ngày + 1 giờ.
- *   Ai dùng?  pt-sales.jsp in lịch dự kiến; PtSaleService.hold giữ khung theo action.
- *
- *   action = "book"    PT đã công bố khung Free đúng giờ → giữ khung đó (slotId có giá trị)
- *            "create"  PT chưa có khung giờ này ngày đó → tạo khung mới (Held)
- *            "skip"    không có buổi ngày đó (reason nói vì sao) — không bù, không gia hạn (BR-41)
- *   warning  có buổi nhưng PT cần để ý (ngày phòng nghỉ, PT có đơn nghỉ) → PT tự dời sau
+ * KẾT QUẢ 1 NGÀY + 1 GIỜ: có xếp buổi được không — Service tạo: PtSaleService.checkDay (luật duy nhất, dùng cả lúc xem lẫn lúc giữ).
+ * Hiện ở: lưới "N buổi tập · Đang giữ" (_pt-sale-held.jspf, biến d). isSession() = có buổi (action ≠ skip).
  */
 public class PtSaleDay {
-
+    // ===== IN RA MÀN =====
+    // ← ngày → "dd/MM" trên ô, cột thứ
     private final LocalDate date;
-    private final String dayLabel;     // "Thứ 3 · 27/10"
+    // ← "Thứ 3 · 05/11" → dòng ghi chú dưới lưới
+    private final String dayLabel;
+    // ← giờ bắt đầu → giờ trên ô
     private final LocalTime startTime;
-    private final LocalTime endTime;
+    // ← whySkip: lý do không xếp được → ô xám + dòng ghi chú
+    private final String reason;
+    // ← warningFor: có buổi nhưng PT cần dời sau (phòng nghỉ / PT nghỉ) → ô vàng + ghi chú
+    private final String warning;
+
+    // ===== DÙNG KHI GIỮ LỊCH (không in) =====
+    // ← book (PT có khung Free đúng giờ → giữ khung đó) | create (PT chưa mở → tạo khung mới) | skip
     private final String action;
+    // ← TimeSlotId của khung Free (chỉ action = book) → hold() UPDATE khung này
     private final Integer slotId;
-    private final String reason;       // chỉ khi action = skip
-    private final String warning;      // có thể null
+    // ← giờ kết thúc (start + P-06) → INSERT khung mới
+    private final LocalTime endTime;
 
     public PtSaleDay(LocalDate date, String dayLabel, LocalTime startTime, LocalTime endTime,
             String action, Integer slotId, String reason, String warning) {
@@ -46,6 +49,6 @@ public class PtSaleDay {
     public String getReason() { return reason; }
     public String getWarning() { return warning; }
 
-    /** JSP viết ${d.session}: ngày này có buổi (book hoặc create). */
+    // GETTER TỰ TÍNH — không có field/setter "session"; = action khác "skip"; JSP: receptionist/_pt-sale-held.jspf:22 …
     public boolean isSession() { return !"skip".equals(action); }
 }

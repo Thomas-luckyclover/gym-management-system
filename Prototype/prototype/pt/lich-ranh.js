@@ -4,13 +4,14 @@
    khoảng nghỉ giữa hai ca cũng do PT đặt và được tính khi kiểm tra chồng.
 
    Mọi thay đổi đi qua HÀNG ĐỢI: khung mới là `draft`, khung gỡ là
-   `pending-remove`. Khách chỉ thấy sau khi PT bấm Xác nhận công bố.
+   `pending-remove`. Khách chỉ thấy sau khi PT bấm Công bố.
    PT khai báo được vô thời hạn nên đi tuần tuỳ ý; tuần đã qua chỉ xem.
    ===================================================================== */
 (function () {
   const VIEW_KEY = 'pt-lich-view';
   const DAY_START = 5 * 60;
   const DAY_END = 22 * 60;
+  const OPEN_FROM = 5 * 60 + 30;    // P-19: mở cửa 05:30
   const SPAN = DAY_END - DAY_START;
   const DUR = 90;                 // độ dài một ca, cố định
   const SNAP = 15;                // giờ bắt đầu bám mốc 15 phút
@@ -19,7 +20,6 @@
   const bar = document.getElementById('ttBar');
   const countEl = document.getElementById('ttCount');
   const summaryEl = document.getElementById('ttSummary');
-  const gapEl = document.getElementById('bulkGap');
   const labelEl = document.getElementById('weekLabel');
   const readonlyEl = document.getElementById('calReadonly');
 
@@ -27,7 +27,7 @@
   const toMin = t => Number(t.slice(0, 2)) * 60 + Number(t.slice(3));
   const pct = m => ((m - DAY_START) / SPAN * 100).toFixed(3);
   const hpct = m => (m / SPAN * 100).toFixed(3);
-  const gap = () => Number(gapEl.value);
+  const gap = () => 10;            // khoảng nghỉ cố định giữa hai ca (phút)
   const col = d => cal.querySelector(`.cal-col[data-col="${d}"]`);
   const slotsIn = d => [...col(d).querySelectorAll('.cal-slot')];
   const allSlots = () => [...cal.querySelectorAll('.cal-slot')];
@@ -117,10 +117,9 @@
     cal.classList.toggle('is-readonly', past);
     readonlyEl.hidden = !past;
     document.getElementById('weekToday').hidden = weekOffset === 0;
-    ['bulkApply', 'copyLastWeek', 'cloneApply'].forEach(id => {
+    ['addSlotBtn', 'clearFree', 'copyNextWeek'].forEach(id => {
       document.getElementById(id).disabled = past;
     });
-    renderPreview?.();
     sync();
   }
 
@@ -185,8 +184,8 @@
   }
 
   function addSlot(d, start, { silent = false } = {}) {
-    if (start < DAY_START || start + DUR > DAY_END) {
-      if (!silent) showToast('warning', 'Khung giờ nằm ngoài giờ hoạt động (05:00 – 22:00).');
+    if (start < OPEN_FROM || start + DUR > DAY_END) {
+      if (!silent) showToast('warning', 'Khung giờ nằm ngoài giờ hoạt động (05:30 – 22:00).');
       return false;
     }
     const clash = clashOf(d, start);
@@ -256,115 +255,50 @@
   addEventListener('blur', clearGhost);
 
   /* =====================================================================
-     Rải ca tự động — chia dải giờ thành các ca 90 phút liên tiếp,
-     cách nhau đúng khoảng nghỉ, áp cho mọi ngày đã chọn.
+     Gỡ hết khung trống · Chép sang tuần sau
      ===================================================================== */
-  const bulkFrom = document.getElementById('bulkFrom');
-  const bulkTo = document.getElementById('bulkTo');
-  const bulkDays = document.getElementById('bulkDays');
-  const bulkPreview = document.getElementById('bulkPreview');
-  const bulkBtn = document.getElementById('bulkApply');
-
-  /* các giờ bắt đầu sinh ra từ cấu hình hiện tại */
-  function bulkPlan() {
-    const days = [...bulkDays.querySelectorAll('input:checked')].map(i => Number(i.value));
-    const from = toMin(bulkFrom.value || '00:00');
-    const to = toMin(bulkTo.value || '00:00');
-    const step = DUR + gap();
-    const starts = [];
-    for (let s = from; s + DUR <= to; s += step) starts.push(s);
-    return { days, starts };
-  }
-
-  /* dòng xem trước để người dùng hiểu ngay công cụ này làm gì */
-  function renderPreview() {
-    const { days, starts } = bulkPlan();
-    if (!days.length) {
-      bulkPreview.textContent = 'Chọn ít nhất một ngày.';
-      bulkBtn.disabled = true;
-      return;
-    }
-    if (!starts.length) {
-      bulkPreview.textContent = 'Dải giờ chưa đủ cho một ca 90 phút.';
-      bulkBtn.disabled = true;
-      return;
-    }
-    const names = days.map(i => DAY_NAMES[i]).join(', ');
-    const list = starts.map(s => `${toStr(s)}–${toStr(s + DUR)}`).join(' · ');
-    bulkPreview.textContent =
-      `${names} → ${starts.length} ca mỗi ngày (${list}), tổng ${days.length * starts.length} khung.`;
-    bulkBtn.disabled = weekOffset < 0;
-    bulkBtn.textContent = `Thêm ${days.length * starts.length} khung`;
-  }
-
-  [bulkFrom, bulkTo, gapEl].forEach(el => el.addEventListener('input', renderPreview));
-  bulkDays.addEventListener('change', renderPreview);
-
-  bulkBtn.addEventListener('click', () => {
-    const { days, starts } = bulkPlan();
-    if (!days.length || !starts.length) return;
-
-    let added = 0;
-    let skipped = 0;
-    days.forEach(d => starts.forEach(s => {
-      if (addSlot(d, s, { silent: true })) added++;
-      else skipped++;
-    }));
-    sync();
-
-    if (!added) return showToast('warning', 'Không thêm được khung nào — trùng lịch sẵn có.');
-    showToast('success', skipped
-      ? `Đã thêm ${added} khung nháp, bỏ qua ${skipped} khung trùng lịch.`
-      : `Đã thêm ${added} khung nháp, cách nhau ${gap()} phút.`);
-  });
-
-  /* =====================================================================
-     Sao chép giữa các tuần
-     ===================================================================== */
-  document.getElementById('copyLastWeek').addEventListener('click', () => {
-    const src = WEEKS.get(weekOffset - 1);
-    if (!src || !src.length) {
-      return showToast('info', `${weekLabel(weekOffset - 1)} chưa có khung nào để lấy.`);
-    }
+  document.getElementById('clearFree').addEventListener('click', () => {
+    const free = allSlots().filter(s => s.dataset.state === 'open' || s.dataset.state === 'draft');
+    if (!free.length) return showToast('info', 'Tuần này không còn khung trống nào.');
     openConfirmModal({
-      title: `Lấy lịch ${weekLabel(weekOffset - 1)}?`,
-      body: '<p>Các khung của tuần đó sẽ được thêm vào tuần này ở dạng nháp. Khung trùng lịch sẵn có sẽ bị bỏ qua.</p>',
-      confirmLabel: 'Lấy lịch',
-      danger: false,
+      title: `Gỡ hết ${free.length} khung trống?`,
+      body: '<p>Khung đã công bố sẽ được đánh dấu gỡ, khung nháp bị xoá. Khung đã có khách không bị ảnh hưởng. Bấm Công bố để áp dụng.</p>',
+      confirmLabel: 'Gỡ hết',
       onConfirm() {
-        let added = 0;
-        src.filter(s => s.state !== 'pending-remove')
-          .forEach(s => { if (addSlot(s.d, s.start, { silent: true })) added++; });
+        free.forEach(s => {
+          if (s.dataset.state === 'draft') {
+            col(Number(s.dataset.d))
+              .querySelector(`.cal-buffer[data-after="${Number(s.dataset.start) + DUR}"]`)?.remove();
+            s.remove();
+          } else {
+            s.dataset.state = 'pending-remove';
+            s.querySelector('span').textContent = 'Sẽ gỡ';
+          }
+        });
         sync();
-        showToast(added ? 'success' : 'info', added
-          ? `Đã thêm ${added} khung nháp theo tuần trước.`
-          : 'Tuần này đã có đủ các khung của tuần trước.');
+        showToast('info', `Đã đánh dấu gỡ ${free.length} khung trống. Bấm Công bố để áp dụng.`);
       },
     });
   });
 
-  document.getElementById('cloneApply').addEventListener('click', () => {
-    const n = Number(document.getElementById('cloneTo').value);
+  document.getElementById('copyNextWeek').addEventListener('click', () => {
     const src = snapshot().filter(s => s.state === 'open' || s.state === 'draft');
-    if (!src.length) return showToast('warning', 'Tuần này chưa có khung nào để nhân bản.');
-
+    if (!src.length) return showToast('warning', 'Tuần này chưa có khung trống nào để chép.');
     openConfirmModal({
-      title: `Nhân bản ${src.length} khung sang ${n} tuần kế?`,
-      body: `<p>Các tuần kế sẽ nhận bản nháp của lịch tuần này. Bạn vẫn phải mở từng tuần và bấm Xác nhận công bố thì khách mới thấy.</p>`,
-      confirmLabel: 'Nhân bản',
+      title: `Chép ${src.length} khung sang ${weekLabel(weekOffset + 1)}?`,
+      body: '<p>Các khung trống của tuần này được thêm vào tuần sau ở dạng nháp. Khung trùng giờ sẽ bị bỏ qua. Mở tuần sau và bấm Công bố thì khách mới thấy.</p>',
+      confirmLabel: 'Chép sang',
       danger: false,
       onConfirm() {
-        for (let k = 1; k <= n; k++) {
-          const off = weekOffset + k;
-          const target = WEEKS.get(off) || [];
-          const kept = target.slice();
-          src.forEach(s => {
-            const busy = kept.some(t => s.start < t.start + DUR + gap() && t.start < s.start + DUR + gap() && t.d === s.d);
-            if (!busy) kept.push({ d: s.d, start: s.start, state: 'draft', who: '' });
-          });
-          WEEKS.set(off, kept);
-        }
-        showToast('success', `Đã nhân bản sang ${n} tuần kế, tất cả ở dạng nháp.`);
+        const off = weekOffset + 1;
+        const kept = (WEEKS.get(off) || []).slice();
+        let added = 0;
+        src.forEach(s => {
+          const busy = kept.some(t => t.d === s.d && s.start < t.start + DUR + gap() && t.start < s.start + DUR + gap());
+          if (!busy) { kept.push({ d: s.d, start: s.start, state: 'draft', who: '' }); added++; }
+        });
+        WEEKS.set(off, kept);
+        showToast('success', `Đã chép ${added} khung nháp sang tuần sau.`);
       },
     });
   });
@@ -378,7 +312,7 @@
     if (!add.length && !del.length) return;
 
     openConfirmModal({
-      title: 'Xác nhận công bố lịch rảnh?',
+      title: 'Công bố lịch rảnh?',
       danger: false,
       confirmLabel: 'Công bố',
       body: `<p>Sau khi công bố, khách đặt được ngay các khung mở mới.</p>
@@ -408,7 +342,7 @@
     openConfirmModal({
       title: 'Huỷ mọi thay đổi chưa công bố?',
       body: '<p>Khung nháp sẽ bị xoá, khung đang chờ gỡ trở lại bình thường. Lịch quay về đúng trạng thái khách đang thấy.</p>',
-      confirmLabel: 'Huỷ thay đổi',
+      confirmLabel: 'Bỏ tất cả',
       onConfirm() {
         drafts().forEach(s => {
           col(Number(s.dataset.d))
@@ -431,14 +365,6 @@
     e.returnValue = '';
   });
 
-  /* đổi khoảng nghỉ thì vẽ lại dải nghỉ */
-  gapEl.addEventListener('change', () => {
-    cal.querySelectorAll('.cal-buffer').forEach(b => { b.style.height = hpct(gap()) + '%'; });
-    showToast('info', gap()
-      ? `Khoảng nghỉ giữa hai ca: ${gap()} phút.`
-      : 'Đã bỏ khoảng nghỉ giữa hai ca.');
-  });
-
   /* chọn cả ngày — dùng để gỡ nhanh cả cột */
   document.querySelectorAll('[data-pick-col]').forEach(btn => btn.addEventListener('click', () => {
     if (weekOffset < 0) return;
@@ -450,7 +376,7 @@
       s.querySelector('span').textContent = 'Sẽ gỡ';
     });
     sync();
-    showToast('info', `Đã đánh dấu gỡ ${group.length} khung của ngày này. Bấm Xác nhận công bố để áp dụng.`);
+    showToast('info', `Đã đánh dấu gỡ ${group.length} khung của ngày này. Bấm Công bố để áp dụng.`);
   }));
 
   /* điều hướng tuần — PT khai báo được vô thời hạn */
@@ -514,8 +440,185 @@
     });
   });
 
+  /* ---------- Thêm khung giờ (gộp #55) ---------- */
+  const addDay = document.getElementById('addDay');
+  const addStart = document.getElementById('addStart');
+  const addEnd = document.getElementById('addEnd');
+  const addErr = document.getElementById('addErr');
+  const addEndSync = () => {
+    addEnd.textContent = addStart.value ? toStr(toMin(addStart.value) + DUR) : '--:--';
+    addErr.hidden = true;
+  };
+  addStart.addEventListener('input', addEndSync);
+  addEndSync();
+  document.getElementById('addSlotBtn').addEventListener('click', () => {
+    if (weekOffset < 0) return showToast('info', 'Tuần đã qua chỉ xem, không thêm được khung.');
+    if (!addStart.value) { addErr.textContent = 'Vui lòng nhập giờ bắt đầu.'; addErr.hidden = false; return; }
+    const m = toMin(addStart.value);
+    if (m % SNAP) { addErr.textContent = 'Giờ bắt đầu phải bám mốc 15 phút.'; addErr.hidden = false; return; }
+    if (addSlot(Number(addDay.value), m)) {
+      sync();
+      showToast('success', 'Đã thêm khung vào nháp. Bấm Công bố để khách thấy.');
+    }
+  });
+
+  /* ---------- Xử lý buổi (BF-08): dời · chuyển PT · huỷ ----------
+     Khớp pt/_handle-dialog.jspf: đầu hộp (giờ, khách, gói, hạn gói), 3 thẻ chọn
+     phương án, mỗi phương án một khung riêng. PT không điểm danh. */
+  const TERM_END = { 'Nguyễn Minh An': '18/11/2026', 'Trần Gia Bảo': '14/10/2026', 'Lê Thu Hà': '12/10/2026',
+    'Phạm Quốc Huy': '05/10/2026', 'Trịnh Quốc Bảo': '15/10/2026', 'Vũ Hoài Nam & Đỗ Lan Chi': '22/10/2026' };
+  const PKG_OF = { 'Nguyễn Minh An': 'Gói PT 3 Tháng', 'Trần Gia Bảo': 'Gói PT 2 Tháng', 'Lê Thu Hà': 'Gói PT 1 Tháng',
+    'Phạm Quốc Huy': 'Gói PT 1 Tháng', 'Trịnh Quốc Bảo': 'Gói PT 1 Tháng', 'Vũ Hoài Nam & Đỗ Lan Chi': 'Gói PT Couple 1 Tháng' };
+  const OTHER_PTS = { T2: ['Đỗ Minh Khoa'], T3: [], T4: ['Phạm Thu Trang', 'Vũ Hải Yến'], T5: ['Đỗ Minh Khoa'], T6: ['Phạm Thu Trang'], T7: ['Vũ Hải Yến'], CN: [] };
+  const DNAMES = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+
+  const rowBy = (dayIdx, start) => [...document.querySelectorAll('#slotList .data-row')].find(r => {
+    const t = r.querySelector('.row-title').firstChild.textContent;
+    const [dow, , from] = t.trim().split(/\s*·\s*|\s+–\s+/);
+    return DNAMES.indexOf(dow) === dayIdx && toMin(from) === start;
+  });
+  function freeSlot(row, slotEl) {
+    row.dataset.state = 'open';
+    const badge = row.querySelector('.row-title .badge');
+    badge.className = 'badge badge-muted';
+    badge.textContent = 'Còn trống';
+    row.querySelector('.row-meta')?.remove();
+    row.querySelector('.row-actions').innerHTML =
+      '<button class="btn btn-outline btn-sm" type="button" data-del-slot>Gỡ công bố</button>';
+    if (slotEl) {
+      slotEl.dataset.state = 'open';
+      slotEl.removeAttribute('data-who');
+      slotEl.title = '';
+      slotEl.querySelector('span').textContent = 'Còn trống';
+      if (!slotEl.querySelector('.slot-x')) slotEl.insertAdjacentHTML('beforeend', '<span class="slot-x" data-remove title="Gỡ khung này">&times;</span>');
+    }
+  }
+  function bookSlot(row, slotEl, who) {
+    row.dataset.state = 'booked';
+    const badge = row.querySelector('.row-title .badge');
+    badge.className = 'badge badge-info';
+    badge.textContent = 'Đã có khách';
+    row.querySelector('.row-main').insertAdjacentHTML('beforeend', `<div class="row-meta"><span><i class="fa-solid fa-user"></i> ${who}</span></div>`);
+    row.querySelector('.row-actions').innerHTML =
+      '<button class="btn btn-ghost btn-sm" type="button" data-handle-session>Xử lý buổi</button>' +
+      '<button class="btn btn-outline btn-sm" type="button" disabled title="Khung giờ đã có khách đặt, không gỡ được">Gỡ công bố</button>';
+    if (slotEl) {
+      slotEl.dataset.state = 'booked';
+      slotEl.dataset.who = who;
+      slotEl.title = who;
+      slotEl.querySelector('span').textContent = who;
+      slotEl.querySelector('.slot-x')?.remove();
+    }
+  }
+
+  document.addEventListener('click', e => {
+    const btn = e.target.closest('[data-handle-session]');
+    if (!btn) return;
+    const row = btn.closest('.data-row');
+    const when = row.querySelector('.row-title').firstChild.textContent.trim();
+    const who = row.querySelector('.row-meta span').textContent.trim();
+    const [dow, dateStr, from] = when.split(/\s*·\s*|\s+–\s+/);
+    const dayIdx = DNAMES.indexOf(dow);
+    const start = toMin(from);
+    const srcSlot = cal.querySelector(`.cal-slot[data-d="${dayIdx}"][data-start="${start}"]`);
+    const isCouple = who.includes('&');
+
+    // khung Free của chính PT, ngày sau buổi hiện tại (đã lọc theo hạn gói)
+    const moves = allSlots().filter(x => x.dataset.state === 'open' &&
+      (Number(x.dataset.d) > dayIdx || (Number(x.dataset.d) === dayIdx && Number(x.dataset.start) > start)));
+    const pts = OTHER_PTS[dow] || [];
+    const sessionTime = `${from} – ${toStr(start + DUR)}`;
+
+    const pills = moves.length ? DNAMES.map((dn, di) => {
+      const ds = moves.filter(x => Number(x.dataset.d) === di);
+      if (!ds.length) return '';
+      return `<div class="row-meta"><b>${dn}</b> ${ds.map(x => `<label class="pay-option" style="display:inline-flex"><input type="radio" name="hdSlot" value="${di}|${x.dataset.start}"><span>${toStr(Number(x.dataset.start))}</span></label>`).join(' ')}</div>`;
+    }).join('') : '';
+
+    openConfirmModal({
+      title: `Xử lý buổi ${dow} · ${dateStr} · ${sessionTime}`,
+      body: `<p><b>${who}</b> · ${PKG_OF[who] || 'Gói PT'}</p>
+             <p class="row-meta"><span>Hạn gói đến ${TERM_END[who] || '—'}</span>${isCouple ? '<span class="badge badge-muted">Gói đôi</span>' : ''}</p>
+             <label class="pay-option"><input type="radio" name="hdAct" value="reschedule" checked>
+               <i class="fa-solid fa-calendar-days"></i><span><b>Dời buổi</b><small>Sang khung trống khác của bạn · ${moves.length} khung</small></span></label>
+             <label class="pay-option"><input type="radio" name="hdAct" value="transfer">
+               <i class="fa-solid fa-user-pen"></i><span><b>Chuyển PT</b><small>Giữ giờ, PT khác dạy thay · ${pts.length} PT trống</small></span></label>
+             <label class="pay-option"><input type="radio" name="hdAct" value="cancel">
+               <i class="fa-solid fa-ban"></i><span><b>Hủy buổi</b><small>Vẫn tính buổi, hoàn tiền mặt</small></span></label>
+
+             <div data-panel="reschedule">
+               ${moves.length ? `<p class="muted">${moves.length} khung hợp lệ · đã lọc theo hạn gói, ngày nghỉ, đơn nghỉ và lịch của khách.</p>${pills}
+               <label class="field"><span class="field-label">Ghi chú gửi khách <small>(không bắt buộc)</small></span>
+                 <textarea id="hdNote" rows="2" maxlength="500" placeholder="VD: Mình bận việc đột xuất, dời giúp bạn sang giờ này nhé."></textarea></label>
+               <p class="muted">Khách nhận thông báo · không tính lượt đổi · khung cũ trở lại Còn trống.</p>`
+               : '<p class="muted">Chưa có khung trống phù hợp. Thêm khung rảnh trên lịch rồi Công bố, sau đó mở lại buổi này.</p>'}
+             </div>
+             <div data-panel="transfer" hidden>
+               ${pts.length ? `${pts.map(n => `<label class="pay-option"><input type="radio" name="hdPt" value="${n}"><span><b>${n}</b><small>Trống ${sessionTime}</small></span></label>`).join('')}
+               <p class="muted">Giữ nguyên ngày giờ · khách và PT nhận đều được báo · hoa hồng buổi này thuộc PT nhận.</p>`
+               : `<p class="muted">Không PT nào đang trống đúng ${sessionTime} ngày này. Nhờ PT khác công bố khung giờ này, hoặc chọn Dời buổi.</p>`}
+             </div>
+             <div data-panel="cancel" hidden>
+               <ul class="muted"><li>Buổi vẫn tính là đã dùng, bạn vẫn nhận hoa hồng.</li><li>Bạn tự hoàn tiền mặt cho khách ngoài hệ thống.</li><li>Không hoàn tác được.</li></ul>
+               <label class="field"><span class="field-label">Lý do hủy <small>(5–500 ký tự, khách sẽ đọc)</small></span>
+                 <textarea id="hdReason" rows="3" minlength="5" maxlength="500"></textarea>
+                 <span class="field-error" id="hdReasonErr" hidden></span></label>
+               <label class="pay-option"><input type="checkbox" id="hdRefund"><span>Khách đã đồng ý nhận lại tiền mặt cho buổi này.</span></label>
+             </div>`,
+      confirmLabel: 'Dời buổi',
+      danger: false,
+      onConfirm() {
+        const act = document.querySelector('input[name="hdAct"]:checked').value;
+        let msg;
+        if (act === 'reschedule') {
+          const pick = document.querySelector('input[name="hdSlot"]:checked');
+          if (!pick) { showToast('warning', 'Chọn một khung trống để dời.'); return false; }
+          const [td, ts] = pick.value.split('|').map(Number);
+          const target = cal.querySelector(`.cal-slot[data-d="${td}"][data-start="${ts}"]`);
+          const trow = rowBy(td, ts);
+          freeSlot(row, srcSlot);
+          if (trow) bookSlot(trow, target, who);
+          msg = `Đã dời buổi sang ${DNAMES[td]} ${toStr(ts)}. Khách nhận thông báo, khung cũ trở lại Còn trống.`;
+        } else if (act === 'transfer') {
+          const pt = document.querySelector('input[name="hdPt"]:checked');
+          if (!pt) { showToast('warning', pts.length ? 'Chọn PT nhận buổi.' : 'Không có PT trống để chuyển.'); return false; }
+          freeSlot(row, srcSlot);
+          msg = `Đã chuyển buổi cho ${pt.value}. Khách và PT nhận đều được báo, hoa hồng thuộc PT nhận.`;
+        } else {
+          const r = document.getElementById('hdReason');
+          if (r.value.trim().length < 5) { fieldError(r, 'hdReasonErr', 'Nêu lý do huỷ, tối thiểu 5 ký tự.'); return false; }
+          if (!document.getElementById('hdRefund').checked) { showToast('warning', 'Cần xác nhận khách đồng ý nhận lại tiền mặt.'); return false; }
+          freeSlot(row, srcSlot);
+          msg = 'Đã hủy buổi. Buổi vẫn tính là đã dùng, khách nhận thông báo.';
+        }
+        list.render();
+        sync();
+        showToast('success', msg);
+      },
+    });
+
+    // đổi khung theo phương án; nút xác nhận đổi chữ theo phương án; "Bỏ qua" thành "Để sau"
+    const root = document.getElementById('modalRoot');
+    const okBtn = root.querySelector('[data-modal-confirm]');
+    root.querySelector('[data-modal-close]').textContent = 'Để sau';
+    const LABEL = { reschedule: 'Dời buổi', transfer: 'Chuyển PT', cancel: 'Hủy buổi' };
+    root.querySelectorAll('input[name="hdAct"]').forEach(r => r.addEventListener('change', () => {
+      const act = root.querySelector('input[name="hdAct"]:checked').value;
+      root.querySelectorAll('[data-panel]').forEach(p => { p.hidden = p.dataset.panel !== act; });
+      okBtn.textContent = LABEL[act];
+      okBtn.className = 'btn ' + (act === 'cancel' ? 'btn-danger' : 'btn-primary');
+    }));
+  });
+
   /* nạp tuần mốc từ DOM tĩnh rồi khởi động */
   WEEKS.set(0, snapshot());
-  renderPreview();
+  /* tuần trước (đã qua): chỉ còn buổi hôm nay CN 20/09 19:00 */
+  WEEKS.set(-1, [{ d: 6, start: 19 * 60, state: 'booked', who: 'Trịnh Quốc Bảo' }]);
+  /* tuần 28/09 – 04/10: các buổi đã có khách (khớp lịch khách) */
+  WEEKS.set(1, [
+    { d: 0, start: 19 * 60, state: 'booked', who: 'Trịnh Quốc Bảo' },
+    { d: 2, start: 17 * 60, state: 'booked', who: 'Nguyễn Minh An' },
+    { d: 3, start: 17 * 60, state: 'booked', who: 'Bùi Khánh Linh' },
+  ]);
   renderWeek();
 })();

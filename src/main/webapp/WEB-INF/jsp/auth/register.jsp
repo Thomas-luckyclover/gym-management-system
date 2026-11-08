@@ -39,7 +39,7 @@
 
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/register.css?v=20261014b">
 
-    <script src="${pageContext.request.contextPath}/js/pages/auth/register.js?v=3" defer></script>
+    <script src="${pageContext.request.contextPath}/js/pages/auth/register.js?v=20261106blur" defer></script>
 </head>
 
 <body class="theme-guest-dark auth-dark auth-page-register">
@@ -94,9 +94,7 @@
 
                         <input type="tel" id="phone" name="phone" maxlength="10"
                             inputmode="numeric" autocomplete="tel" placeholder="0912345678"
-                            aria-describedby="phoneHint"
                             required value="<c:out value='${phone}' />">
-                        <span class="field-hint" id="phoneHint">Đã có hồ sơ tại quầy? Hệ thống tự tìm theo số này.</span>
 
                         <span class="field-error" id="phoneError"></span>
                     </label>
@@ -243,13 +241,7 @@
                             data-rule="dateOfBirth" required
                             value="<c:out value='${dateOfBirth}' />">
 
-                        <span class="field-hint">
-                            <i class="fa-solid fa-circle-info"></i>
-                            <span>
-                                Lưu ý: Thành viên dưới 10 tuổi không thể mua gói PT.
-                                Nếu đăng ký cho trẻ em, vui lòng liên hệ quầy.
-                            </span>
-                        </span>
+                        <span class="field-hint">Dưới 10 tuổi chưa mua được gói PT.</span>
 
                         <span class="field-error" id="dateOfBirthError" ${empty fieldErrors.dateOfBirth ? 'hidden' : '' }>
                             <c:out value="${fieldErrors.dateOfBirth}" />
@@ -344,12 +336,6 @@
                             class="otp-input" inputmode="numeric" maxlength="6"
                             placeholder="––––––" autocomplete="one-time-code"
                             required>
-
-                        <span class="field-hint">
-                            <i class="fa-solid fa-circle-info"></i>
-                            <span>Không nhận được mã? Kiểm tra hộp thư rác hoặc bấm
-                                Gửi lại mã.</span>
-                        </span>
 
                         <span class="field-error" id="otpCodeError" ${empty fieldErrors.code ? 'hidden' : '' }>
                             <c:out value="${fieldErrors.code}" />
@@ -526,12 +512,6 @@
                             placeholder="––––––" autocomplete="one-time-code"
                             required>
 
-                        <span class="field-hint">
-                            <i class="fa-solid fa-circle-info"></i>
-                            <span>Không nhận được mã? Kiểm tra hộp thư rác hoặc bấm
-                                Gửi lại mã.</span>
-                        </span>
-
                         <span class="field-error" id="claimOtpCodeError" ${empty fieldErrors.code ? 'hidden' : '' }>
                             <c:out value="${fieldErrors.code}" />
                         </span>
@@ -687,7 +667,7 @@
 
                 <div class="msg-banner warning" role="alert">
                     <i class="fa-solid fa-triangle-exclamation"></i>
-                    <span>Số điện thoại này đã có tài khoản. Vui lòng đăng nhập hoặc dùng chức năng Quên mật khẩu.</span>
+                    <span><c:out value="${blockedMessage}" /></span>
                 </div>
 
                 <div class="btn-row">
@@ -707,7 +687,7 @@
 
             <%-- ==========================================================
                  NHÁNH CHẶN: EMAIL KHÔNG KHỚP HỒ SƠ (CBR-25) — BẮT ĐẦU   (step = "blocked-email-mismatch")
-                 maskedEmail = email thật của hồ sơ đã che bớt, VD "(ma***@gmail.com)" để khách nhớ ra.
+                 blockedMessage = MSG52 (Servlet ghép sẵn email đã che, VD "ma***@gmail.com") để khách nhớ ra.
                  Hộp địa chỉ quầy lễ tân là chữ cố định.
                  ========================================================== --%>
             <c:if test="${step eq 'blocked-email-mismatch'}">
@@ -717,13 +697,7 @@
 
                 <div class="msg-banner warning" role="alert">
                     <i class="fa-solid fa-triangle-exclamation"></i>
-                    <span>
-                        Số điện thoại này đã đăng ký với một email khác
-                        (<strong>
-                            <c:out value="${maskedEmail}" />
-                        </strong>).
-                        Dùng đúng email đó, hoặc ra quầy để được hỗ trợ.
-                    </span>
+                    <span><c:out value="${blockedMessage}" /></span>
                 </div>
 
                 <div class="counter-box">
@@ -765,9 +739,7 @@
 
                 <div class="msg-banner warning" role="alert">
                     <i class="fa-solid fa-triangle-exclamation"></i>
-                    <span>Hồ sơ của số điện thoại này chưa có email.
-                        Vui lòng ra quầy gặp Lễ tân để bổ sung trước
-                        khi tạo tài khoản.</span>
+                    <span><c:out value="${blockedMessage}" /></span>
                 </div>
 
                 <div class="counter-box">

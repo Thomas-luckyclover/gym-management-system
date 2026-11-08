@@ -22,7 +22,7 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css">
 
         <%-- BF-07: hai vai trò dùng chung bố cục; token màu thay đổi theo theme. --%>
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/customer-list.css?v=20261025-bf07">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/customer-list.css?v=20261105-detail">
 
         <script src="${pageContext.request.contextPath}/js/pages/receptionist/customer-list.js?v=20261025-bf07" defer>
         </script>
@@ -46,10 +46,11 @@
                         <%@ include file="/WEB-INF/jsp/common/topbar-user.jspf" %>
                     </div>
                 </header>
-                <main class="content bf07-page" id="main-content" tabindex="-1">
+                <main class="content bf07-page bf07-profile-detail" id="main-content" tabindex="-1">
 
                     <%-- ===== detail: CustomerProfileDetailView do Service tạo cho cả hai vai trò ===== --%>
                     <c:set var="profile" value="${detail.profile}" />
+                    <%-- profile.inactive = getter tự tính isInactive() · dto/CustomerProfileRowView.java (profile = CustomerProfileRowView) --%>
                     <c:set var="showDeletionPanel" value="${not empty detail.pendingRequest or (not managerView and not profile.ownProfile and not profile.inactive)}" />
                     <c:url var="listUrl" value="${listPath}" />
                     <nav class="bf07-breadcrumb" aria-label="Đường dẫn">
@@ -58,13 +59,29 @@
                             <c:out value="${profile.customerCode}" />
                         </span>
                     </nav>
+                    <%-- Nút mở form #31 chỉ dành cho Lễ tân; Manager tiếp tục chỉ xem. --%>
+                    <c:if test="${not managerView}">
+                        <div class="bf07-detail-toolbar">
+                            <span class="bf07-muted">Thông tin hồ sơ hội viên</span>
+                            <div class="bf07-row-actions">
+                                <c:if test="${not profile.inactive and not profile.ownProfile}">
+                                    <c:url var="editUrl" value="/receptionist/customers/form">
+                                        <c:param name="id" value="${profile.customerId}" />
+                                        <c:param name="mode" value="edit" />
+                                    </c:url>
+                                    <a class="btn btn-outline" href="${editUrl}">Sửa hồ sơ</a>
+                                </c:if>
+                                <a class="btn btn-primary" href="${pageContext.request.contextPath}/receptionist/customers/form?mode=create">＋ Thêm hội viên</a>
+                            </div>
+                        </div>
+                    </c:if>
                     <c:if test="${not empty actionError}">
                         <p class="bf07-notice bf07-notice-danger" role="alert">
                             <c:out value="${actionError}" />
                         </p>
                     </c:if>
                     <div class="bf07-detail-grid">
-                        <section class="bf07-panel bf07-detail-card">
+                        <section class="bf07-panel bf07-detail-card ${showDeletionPanel ? '' : 'bf07-span-all'}">
                             <div class="bf07-person bf07-person-heading">
                                 <span class="bf07-avatar" aria-hidden="true">
                                     <c:out value="${fn:substring(profile.fullName, 0, 1)}" />
@@ -76,14 +93,27 @@
                                     <span class="bf07-sub">
                                         <c:out value="${profile.customerCode}" />
                                         ·
+                                        <%-- profile.customerTypeLabel = getter tự tính getCustomerTypeLabel() · dto/CustomerProfileRowView.java (profile = CustomerProfileRowView) --%>
                                         <c:out value="${profile.customerTypeLabel}" />
                                     </span>
                                 </div>
+                                <%-- profile.statusTone = getter tự tính getStatusTone() · dto/CustomerProfileRowView.java (profile = CustomerProfileRowView) --%>
                                 <span class="badge badge-<c:out value="${profile.statusTone}" />">
+                                    <%-- profile.statusLabel = getter tự tính getStatusLabel() · dto/CustomerProfileRowView.java (profile = CustomerProfileRowView) --%>
                                     <c:out value="${profile.statusLabel}" />
                                 </span>
                             </div>
+                            <c:if test="${not empty detail.customer.checkInPhoto}">
+                                <div class="bf07-checkin-photo">
+                                    <img src="${pageContext.request.contextPath}<c:out value='${detail.customer.checkInPhoto}'/>" alt="Ảnh check-in hội viên">
+                                    <span class="bf07-muted">Ảnh check-in</span>
+                                </div>
+                            </c:if>
                             <dl class="bf07-metadata">
+                                <div>
+                                    <dt>Ngày sinh</dt>
+                                    <dd><c:out value="${gms:formatDate(detail.person.dateOfBirth)}" default="Chưa cập nhật" /></dd>
+                                </div>
                                 <div>
                                     <dt>Số điện thoại</dt>
                                     <dd>
@@ -111,6 +141,15 @@
                                     </div>
                                 </c:if>
                             </dl>
+                            <c:if test="${profile.customerType == 'Dependent'}">
+                                <h3 class="bf07-guardian-title">Người giám hộ</h3>
+                                <dl class="bf07-metadata">
+                                    <div><dt>Họ và tên</dt><dd><c:out value="${detail.customer.guardianName}" default="—" /></dd></div>
+                                    <div><dt>Quan hệ</dt><dd><c:out value="${detail.customer.guardianRelationship}" default="—" /></dd></div>
+                                    <div><dt>Điện thoại chính</dt><dd><c:out value="${detail.customer.guardianPhone}" default="—" /></dd></div>
+                                    <c:if test="${not empty detail.customer.guardianPhone2}"><div><dt>Điện thoại phụ</dt><dd><c:out value="${detail.customer.guardianPhone2}" /></dd></div></c:if>
+                                </dl>
+                            </c:if>
                             <c:if test="${profile.inactive}">
                                 <p class="bf07-notice">Hồ sơ chỉ dùng để tra cứu. Giao dịch và lịch sử được giữ nguyên.</p>
                             </c:if>
@@ -122,7 +161,7 @@
                             <section class="bf07-panel bf07-detail-card">
                                 <c:choose>
                                     <c:when test="${not empty detail.pendingRequest}">
-                                        <h2>Đang chờ duyệt xóa</h2>
+                                        <h2>Yêu cầu xóa hồ sơ</h2>
                                         <span class="badge badge-warning">
                                             Yêu cầu #
                                             <c:out value="${detail.pendingRequest.customerDeletionRequestId}" />
@@ -131,7 +170,11 @@
                                             Gửi lúc
                                             <c:out value="${gms:formatDateTime(detail.pendingRequest.requestedAt)}" />
                                         </p>
-                                        <p class="bf07-reason"><c:out value="${detail.pendingRequest.reason}" /></p>
+                                        <div class="bf07-pending-reason">
+                                            <span class="bf07-muted">Lý do yêu cầu</span>
+                                            <p class="bf07-reason"><c:out value="${detail.pendingRequest.reason}" /></p>
+                                        </div>
+                                        <c:if test="${not managerView}"><p class="bf07-muted">Đang chờ Quản lý xét duyệt. Hồ sơ vẫn được giữ trong hệ thống.</p></c:if>
                                         <c:if test="${managerView}">
                                             <c:url var="reviewUrl" value="/manager/member-deletions/review">
                                                 <c:param name="id" value="${detail.pendingRequest.customerDeletionRequestId}" />
@@ -143,6 +186,7 @@
                                         <h2>Xóa hồ sơ</h2>
                                         <p class="bf07-notice">
                                             <c:choose>
+                                                <%-- detail.hasActiveAssets = getter tự tính isHasActiveAssets() · dto/CustomerProfileDetailView.java --%>
                                                 <c:when test="${detail.hasActiveAssets}">Còn gói hoặc buổi PT. Yêu cầu sẽ gửi quản lý duyệt; hồ sơ chưa bị xóa ngay.</c:when>
                                                 <c:otherwise>Không còn gói hoặc buổi PT. Xác nhận sẽ ngừng hồ sơ ngay.</c:otherwise>
                                             </c:choose>

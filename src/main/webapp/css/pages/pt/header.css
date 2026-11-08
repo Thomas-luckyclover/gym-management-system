@@ -132,3 +132,9 @@
     padding-inline: var(--space-1);
   }
 }
+
+/* Hướng dẫn của trang (nút "i" cạnh tiêu đề): Servlet ghép nhiều dòng bằng \n → giữ xuống dòng, hộp rộng hơn để đọc danh sách. */
+#pt-page-help {
+  width: min(86vw, calc(var(--space-12) * 6));
+  white-space: pre-line;
+}

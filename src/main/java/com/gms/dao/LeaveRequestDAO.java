@@ -6,6 +6,7 @@ import com.gms.dto.LeaveEmployeeView;
 import com.gms.dto.LeaveRequestFilter;
 import com.gms.dto.LeaveRequestRow;
 import com.gms.dto.LeaveReviewDetailView;
+import com.gms.dto.LeaveSubmissionPreview.ConflictingSession;
 import com.gms.entity.LeaveRequest;
 import com.gms.util.DBContext;
 import com.gms.util.DateTimeUtil;
@@ -59,6 +60,7 @@ public class LeaveRequestDAO {
     /**
      * Tuần tự hóa quyết định BF-05 trên mọi khoảng ngày và quỹ phép.
      * Khóa bảng phù hợp quy mô đồ án; duyệt/từ chối/rút/nộp đơn dùng cùng thứ tự khóa.
+     * // cái này là tránh 2 manager cùng duyệt
      */
     public void lockDecisionScope(Connection connection) throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement(
@@ -238,6 +240,7 @@ public class LeaveRequestDAO {
     /**
      * Phân trang theo đợt/đơn độc lập tại SQL. Pending: sắp nghỉ hôm nay/ngày mai trước, sau đó nộp trước xếp trước.
      * Đơn đã xử lý: lần xử lý mới nhất trước. Bộ lọc theo ngày gửi đơn, tính cả hai biên.
+     Lấy 1 trang đơn mà 10 mục
      */
     public List<LeaveRequestRow> findRequestPage(LeaveRequestFilter filter, int offset, int pageSize,
             Integer currentManagerEmployeeId) throws SQLException {
@@ -270,7 +273,9 @@ public class LeaveRequestDAO {
         }
     }
 
-    /** Lấy đơn của cả trang nhân viên trong một truy vấn; không phân trang cắt đôi đơn của một người. */
+    /** Lấy đơn của cả trang nhân viên trong một truy vấn; không phân trang cắt đôi đơn của một người. 
+     lấy tất cả nhân viên ở All
+     */
     public List<LeaveRequestRow> findEmployeeRequests(LeaveRequestFilter filter, List<Integer> employeeIds,
             Integer currentManagerEmployeeId) throws SQLException {
         if (employeeIds.isEmpty()) {
@@ -305,6 +310,7 @@ public class LeaveRequestDAO {
     }
 
     /** Đọc cùng bộ cột và quyền xử lý cho hai kiểu bảng; statement đã được truyền đủ tham số. */
+    // Chạy SQL đã chuẩn bị, chuyển các dòng kết quả thành danh sách DTO đơn nghỉ.
     private List<LeaveRequestRow> readRequestRows(PreparedStatement statement, Integer currentManagerEmployeeId)
             throws SQLException {
         List<LeaveRequestRow> rows = new ArrayList<>();
@@ -325,7 +331,7 @@ public class LeaveRequestDAO {
 
         return rows;
     }
-
+// hàm đếm số lượng 
     public Map<String, Integer> getStatusCounts(LeaveRequestFilter filter) throws SQLException {
         Map<String, Integer> counts = new LinkedHashMap<>();
         counts.put(LeaveRequest.Status.PENDING.getDbValue(), 0);
@@ -400,6 +406,7 @@ public class LeaveRequestDAO {
     /**
      * Đếm số nhân viên theo chức vụ còn trực ca trong ngày sau khi trừ các đơn nghỉ Approved
      * (chạy trong connection/transaction có sẵn).
+     * TEST 2
      */
     public int countOnDutyAfterApproval(
             Connection connection,
@@ -548,6 +555,7 @@ public class LeaveRequestDAO {
         return 0;
     }
 
+    // TEST 1 
     public LeaveBalance getAnnualBalance(Connection connection, int employeeId, int year, int quota) throws SQLException {
         return getAnnualBalance(connection, employeeId, year, quota, 0);
     }
@@ -646,6 +654,34 @@ public class LeaveRequestDAO {
             }
         }
         return 0;
+    }
+
+    /** Lấy các buổi Scheduled của chính PT trong hai ngày biên và ca nghỉ; rỗng nếu không trùng. */
+    public List<ConflictingSession> findConflictingSessions(Connection connection, int ptEmployeeId,
+            LocalDate fromDate, LocalDate toDate, String shiftType) throws SQLException {
+        String sql = "SELECT ts.SlotDate, ts.StartTime, ts.EndTime FROM Sessions s "
+                + "JOIN TimeSlots ts ON s.TimeSlotId = ts.TimeSlotId "
+                + "WHERE s.PtEmployeeId = ? AND s.Status = 'Scheduled' AND ts.SlotDate BETWEEN ? AND ? ";
+        // Cùng mốc chia ca với countScheduledSessions để danh sách khớp điều kiện chặn POST.
+        if ("Morning".equalsIgnoreCase(shiftType)) {
+            sql += "AND ts.StartTime < " + AppConstants.AFTERNOON_SHIFT_START_SQL + " ";
+        } else if ("Afternoon".equalsIgnoreCase(shiftType)) {
+            sql += "AND ts.StartTime >= " + AppConstants.AFTERNOON_SHIFT_START_SQL + " ";
+        }
+        sql += "ORDER BY ts.SlotDate, ts.StartTime, s.SessionId";
+        List<ConflictingSession> sessions = new ArrayList<>();
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, ptEmployeeId);
+            statement.setDate(2, java.sql.Date.valueOf(fromDate));
+            statement.setDate(3, java.sql.Date.valueOf(toDate));
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    sessions.add(new ConflictingSession(rs.getDate("SlotDate").toLocalDate(),
+                            rs.getTime("StartTime").toLocalTime(), rs.getTime("EndTime").toLocalTime()));
+                }
+            }
+        }
+        return sessions;
     }
 
     /**

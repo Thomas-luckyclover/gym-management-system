@@ -1,7 +1,7 @@
 /**
  * Khu vực Lễ tân — URL /receptionist/*, được ReceptionistAreaFilter bảo vệ.
  *
- * <p>Servlet dự kiến (nguồn: SRS 5.1 Screen List — bảng đầy đủ ở docs/project-structure.md):</p>
+ * <p>Servlet dự kiến (nguồn: SRS 5.1 Screen List):</p>
  * <pre>
  * CheckInServlet                   /receptionist/check-in                               #33  Member Check-in                    TV4
  * CustomerProfileListServlet       /receptionist/customers                              #28  Customer Profile List              TV4

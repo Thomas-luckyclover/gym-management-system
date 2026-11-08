@@ -543,3 +543,114 @@
 .bf07-pagination {
   justify-content: center;
 }
+
+/* Thanh trên: tab ở trái và nút Thêm hội viên ở phải. */
+.bf07-list-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.bf07-list-toolbar .bf07-tabs {
+  flex: 1;
+}
+
+/* Cột Thao tác rộng hơn để ba nút không chen vào cột Trạng thái. */
+.bf07-profile-table-actions th:nth-child(1) {
+  width: 24%;
+}
+
+.bf07-profile-table-actions th:nth-child(2) {
+  width: 22%;
+}
+
+.bf07-profile-table-actions th:nth-child(3) {
+  width: 14%;
+}
+
+.bf07-profile-table-actions th:nth-child(4) {
+  width: 18%;
+}
+
+.bf07-profile-table-actions th:nth-child(5) {
+  width: 22%;
+}
+
+/* Xem/Sửa luôn bắt đầu ở cùng vị trí, dù hàng có hoặc không có Duyệt xóa. */
+.bf07-profile-actions {
+  justify-content: flex-start;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.bf07-profile-actions > .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: var(--control-height-md);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.bf07-profile-actions > .bf07-short-action {
+  width: calc(var(--control-height-md) + var(--space-4));
+}
+
+/* Trang chi tiết: thanh thao tác và nhãn yêu cầu không kéo giãn theo khung. */
+.bf07-detail-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.bf07-profile-detail .bf07-detail-card > .badge {
+  align-self: flex-start;
+}
+
+.bf07-profile-detail .bf07-detail-grid {
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+}
+
+.bf07-checkin-photo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.bf07-checkin-photo img {
+  width: calc(var(--space-8) * 2);
+  height: calc(var(--space-8) * 2 + var(--space-4));
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  border: var(--border-width) solid var(--color-border);
+}
+
+.bf07-guardian-title {
+  margin: var(--space-3) 0 0;
+  font-size: var(--font-size-md);
+}
+
+.bf07-pending-reason {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+@media (max-width: 760px) {
+  .bf07-profile-detail .bf07-detail-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Tabs nam tren nen xanh o che do sang, nen dung mau chu sang tu theme. */
+html:where(:not([data-theme="dark"])) .bf07-list-toolbar .bf07-tab:not(.is-active) {
+  color: var(--zone-silver);
+}

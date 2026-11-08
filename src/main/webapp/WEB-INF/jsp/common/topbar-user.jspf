@@ -6,11 +6,11 @@
 <a class="tb-user" href="${pageContext.request.contextPath}/account" title="Cài đặt tài khoản">
   <c:choose>
     <c:when test="${not empty sessionScope.avatar}">
-      <img class="avatar" src="${pageContext.request.contextPath}${sessionScope.avatar}" alt="Avatar" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='';" style="object-fit:cover;">
-      <span class="avatar" style="display:none;"><c:out value="${not empty sessionScope.userInitials ? sessionScope.userInitials : (not empty sessionScope.displayName ? sessionScope.displayName.substring(0, 1) : 'U')}" /></span>
+      <img id="topbarAvatarImg" class="avatar" src="${pageContext.request.contextPath}${sessionScope.avatar}" alt="Avatar" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='';" style="object-fit:cover;">
+      <span id="topbarAvatarFallback" class="avatar" style="display:none;"><c:out value="${not empty sessionScope.userInitials ? sessionScope.userInitials : (not empty sessionScope.displayName ? sessionScope.displayName.substring(0, 1) : 'U')}" /></span>
     </c:when>
     <c:otherwise>
-      <span class="avatar"><c:out value="${not empty sessionScope.userInitials ? sessionScope.userInitials : (not empty sessionScope.displayName ? sessionScope.displayName.substring(0, 1) : 'U')}" /></span>
+      <span id="topbarAvatarFallback" class="avatar"><c:out value="${not empty sessionScope.userInitials ? sessionScope.userInitials : (not empty sessionScope.displayName ? sessionScope.displayName.substring(0, 1) : 'U')}" /></span>
     </c:otherwise>
   </c:choose>
   <span>

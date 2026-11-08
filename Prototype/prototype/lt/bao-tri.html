@@ -32,11 +32,12 @@
         <a href="hoi-vien.html"><i class="fa-solid fa-user-group"></i>Hồ sơ khách</a>
         <a href="bao-luu.html"><i class="fa-solid fa-circle-pause"></i>Bảo lưu</a>
         <h4>Cơ sở vật chất</h4>
-        <a href="co-so-vat-chat.html"><i class="fa-solid fa-boxes-stacked"></i>Danh mục</a>
+        <a href="co-so-vat-chat.html"><i class="fa-solid fa-boxes-stacked"></i>Báo hỏng thiết bị</a>
         <a href="bao-tri.html" aria-current="page"><i class="fa-solid fa-screwdriver-wrench"></i>Yêu cầu bảo trì</a>
         <h4>Cá nhân</h4>
         <a href="nghi-phep.html"><i class="fa-solid fa-plane-departure"></i>Nghỉ phép</a>
         <a href="tai-khoan.html"><i class="fa-solid fa-user-gear"></i>Cài đặt tài khoản</a>
+        <a href="../chon-vai-tro.html"><i class="fa-solid fa-repeat"></i>Đổi vai trò</a>
       </nav>
       <div class="cust-sidebar-foot">
         <a href="../dang-nhap.html"><i class="fa-solid fa-arrow-right-from-bracket"></i>Đăng xuất</a>
@@ -69,80 +70,112 @@
       <div class="split is-single">
         <div class="col-main">
           <section class="panel">
-            <div class="panel-head"><h2>Gửi yêu cầu mới</h2></div>
-            <form id="mtForm" novalidate>
-              <label class="field">
-                <span class="field-label">Thiết bị</span>
-                <select id="mtEq">
-                  <option value="">Chọn thiết bị…</option>
-                  <option value="TB-0101">TB-0101 · Máy chạy bộ Technogym Run</option>
-                  <option value="TB-0102">TB-0102 · Máy chạy bộ Technogym Run</option>
-                  <option value="TB-0103">TB-0103 · Xe đạp tập Keiser M3i</option>
-                  <option value="TB-0201">TB-0201 · Giàn tạ đa năng Hammer</option>
-                  <option value="TB-0202">TB-0202 · Máy kéo cáp Life Fitness</option>
-                  <option value="TB-0203">TB-0203 · Máy đẩy ngực Matrix</option>
-                  <option value="TB-0301">TB-0301 · Giá squat Rogue R-3</option>
-                  <option value="TB-0302">TB-0302 · Bộ tạ đòn Olympic 150kg</option>
-                  <option value="TB-0303">TB-0303 · Bộ tạ đơn 2–40kg</option>
-                  <option value="TB-0401">TB-0401 · Điều hoà Daikin 24000BTU</option>
-                  <option value="TB-0402">TB-0402 · Bình nóng lạnh Ariston</option>
-                  <option value="TB-0403">TB-0403 · Tủ khoá cá nhân · dãy A</option>
-                </select>
-                <span class="field-error" id="mtEqErr" hidden></span>
-              </label>
-              <label class="field">
-                <span class="field-label">Mức ưu tiên</span>
-                <select id="mtPri">
-                  <option>Thường</option>
-                  <option>Khẩn</option>
-                  <option>Thấp</option>
-                </select>
-                <span class="field-hint"><i class="fa-solid fa-circle-info"></i><span>Chọn Khẩn khi thiết bị có nguy cơ gây thương tích.</span></span>
-              </label>
-              <label class="field">
-                <span class="field-label">Mô tả hỏng hóc</span>
-                <textarea id="mtDesc" rows="4" placeholder="Hỏng ở đâu, xảy ra khi nào, đã xử lý tạm thế nào"></textarea>
-                <span class="field-error" id="mtDescErr" hidden></span>
-              </label>
-              <label class="pay-option">
-                <input type="checkbox" id="mtStop">
-                <span class="pay-body"><b>Đã dán cảnh báo, ngừng cho khách dùng</b><small>Chọn khi thiết bị không còn an toàn</small></span>
-              </label>
-              <div class="btn-row">
-                <button class="btn btn-primary" type="submit">Gửi yêu cầu</button>
-              </div>
-            </form>
+            <div class="panel-head"><h2>Báo hỏng thiết bị · Bước 2</h2></div>
+<form id="mtForm" novalidate>
+<label class="field">
+<span class="field-label">Thiết bị đã chọn</span>
+<select id="mtEq">
+<option value="">Chọn thiết bị…</option>
+<option value="TB-0101">TB-0101 · Máy chạy bộ Technogym Run</option>
+<option value="TB-0102">TB-0102 · Máy chạy bộ Technogym Run</option>
+<option value="TB-0103">TB-0103 · Xe đạp tập Keiser M3i</option>
+<option value="TB-0201">TB-0201 · Giàn tạ đa năng Hammer</option>
+<option value="TB-0202">TB-0202 · Máy kéo cáp Life Fitness</option>
+<option value="TB-0203">TB-0203 · Máy đẩy ngực Matrix</option>
+<option value="TB-0301">TB-0301 · Giá squat Rogue R-3</option>
+<option value="TB-0302">TB-0302 · Bộ tạ đòn Olympic 150kg</option>
+<option value="TB-0303">TB-0303 · Bộ tạ đơn 2–40kg</option>
+<option value="TB-0401">TB-0401 · Điều hoà Daikin 24000BTU</option>
+<option value="TB-0402">TB-0402 · Bình nóng lạnh Ariston</option>
+<option value="TB-0403">TB-0403 · Tủ khoá cá nhân · dãy A</option>
+</select>
+<span class="field-error" id="mtEqErr" hidden></span>
+</label>
+<label class="field">
+<span class="field-label">Loại sự cố *</span>
+<select id="mtType">
+<option>Không hoạt động</option>
+<option>Kêu / rung lạ</option>
+<option>Gãy vỡ / hao mòn</option>
+<option>Mất an toàn</option>
+<option>Vệ sinh</option>
+</select>
+</label>
+<label class="field">
+<span class="field-label">Mức ưu tiên *</span>
+<select id="mtPri">
+<option>Thường</option>
+<option>Khẩn</option>
+<option>Thấp</option>
+</select>
+<span class="field-hint"><i class="fa-solid fa-circle-info"></i><span>Chọn Khẩn khi thiết bị có thể gây chấn thương.</span></span>
+</label>
+<label class="field">
+<span class="field-label">Mô tả sự cố *</span>
+<textarea id="mtDesc" rows="4" minlength="10" maxlength="500" placeholder="VD: Đang chạy thì dừng đột ngột, báo lỗi E05. Đã rút điện."></textarea>
+<span class="field-error" id="mtDescErr" hidden></span>
+</label>
+<label class="field">
+<span class="field-label">Ảnh sự cố (không bắt buộc)</span>
+<input id="mtImg" type="file" accept="image/*" multiple>
+</label>
+<label class="pay-option">
+<input type="checkbox" id="mtStop">
+<span class="pay-body"><b>Đã treo biển "Ngừng sử dụng" tại máy</b></span>
+</label>
+<div class="btn-row">
+<a class="btn btn-ghost" href="co-so-vat-chat.html">Quay lại</a>
+<button class="btn btn-primary" type="submit">Gửi yêu cầu</button>
+</div>
+</form>
           </section>
 
           <section class="panel">
-            <div class="panel-head"><h2>Yêu cầu của tôi</h2></div>
+            <div class="panel-head"><h2>Danh sách yêu cầu</h2></div>
             <div class="toolbar">
               <div class="search">
                 <i class="fa-solid fa-magnifying-glass"></i>
-                <input id="mtq" type="search" placeholder="Tìm mã yêu cầu hoặc tên thiết bị" aria-label="Tìm yêu cầu">
+                <input id="mtq" type="search" placeholder="Mã yêu cầu hoặc tên thiết bị" aria-label="Tìm yêu cầu">
               </div>
               <label for="mtSt">Trạng thái</label>
               <select id="mtSt">
                 <option value="all">Tất cả</option>
                 <option value="pending">Chờ duyệt</option>
-                <option value="approved">Đã duyệt</option>
-                <option value="doing">Đang xử lý</option>
+                                <option value="doing">Đang xử lý</option>
                 <option value="done">Đã đóng</option>
                 <option value="rejected">Từ chối</option>
               </select>
-              <button class="btn btn-ghost btn-sm reset" type="button" id="mtReset">Xoá lọc</button>
+              <label for="mtPriF">Mức ưu tiên</label>
+<select id="mtPriF">
+<option value="all">Tất cả mức ưu tiên</option>
+<option>Khẩn</option>
+<option>Thường</option>
+<option>Thấp</option>
+</select>
+<button class="btn btn-ghost btn-sm reset" type="button" id="mtReset">Xoá lọc</button>
             </div>
 
             <div class="data-list" id="mtList">
-              <div class="data-row" data-st="approved" data-q="BT-0312 TB-0203 · Máy đẩy ngực Matrix">
+              <div class="data-row" data-st="pending" data-q="BT-0313 TB-0303 · Bộ tạ đơn 2–40kg">
                 <div class="row-main">
-                  <div class="row-title">BT-0312 · TB-0203 · Máy đẩy ngực Matrix <span class="badge badge-info">Đã duyệt</span></div>
+                  <div class="row-title">BT-0313 · TB-0303 · Bộ tạ đơn 2–40kg <span class="badge badge-warn">Chờ duyệt</span></div>
+                  <div class="row-meta">
+                    <span><i class="fa-solid fa-calendar"></i> 20/09/2026</span>
+                    <span><i class="fa-solid fa-flag"></i> Thường</span>
+                    <span><i class="fa-solid fa-quote-left"></i> Quả tạ 20kg bị lỏng ốc, cần siết lại.</span>
+                  </div>
+                  <div class="row-meta"><span><i class="fa-solid fa-user-tie"></i> Chờ Quản lý duyệt</span></div>
+                </div>
+              </div>
+              <div class="data-row" data-st="doing" data-q="BT-0312 TB-0203 · Máy đẩy ngực Matrix">
+                <div class="row-main">
+                  <div class="row-title">BT-0312 · TB-0203 · Máy đẩy ngực Matrix <span class="badge badge-info">Đang xử lý</span></div>
                   <div class="row-meta">
                     <span><i class="fa-solid fa-calendar"></i> 19/09/2026</span>
                     <span><i class="fa-solid fa-flag"></i> Khẩn</span>
                     <span><i class="fa-solid fa-quote-left"></i> Gãy chốt điều chỉnh ghế, khách có thể kẹt tay.</span>
                   </div>
-                  <div class="row-meta"><span><i class="fa-solid fa-user-tie"></i> Quản lý duyệt 19/09 · thợ hẹn 21/09</span></div>
+                  <div class="row-meta"><span><i class="fa-solid fa-user-tie"></i> Quản lý duyệt 19/09 · thợ hẹn 21/09 · thiết bị đang bảo trì</span></div>
                 </div>
                 <button class="btn btn-outline btn-sm" type="button" data-close="BT-0312">Đóng yêu cầu</button>
               </div>
@@ -158,16 +191,17 @@
                 </div>
                 <button class="btn btn-outline btn-sm" type="button" data-close="BT-0311">Đóng yêu cầu</button>
               </div>
-              <div class="data-row" data-st="pending" data-q="BT-0309 TB-0103 · Xe đạp Keiser M3i">
+              <div class="data-row" data-st="doing" data-q="BT-0309 TB-0103 · Xe đạp Keiser M3i">
                 <div class="row-main">
-                  <div class="row-title">BT-0309 · TB-0103 · Xe đạp Keiser M3i <span class="badge badge-warn">Chờ duyệt</span></div>
+                  <div class="row-title">BT-0309 · TB-0103 · Xe đạp Keiser M3i <span class="badge badge-info">Đang xử lý</span></div>
                   <div class="row-meta">
                     <span><i class="fa-solid fa-calendar"></i> 12/09/2026</span>
                     <span><i class="fa-solid fa-flag"></i> Thường</span>
                     <span><i class="fa-solid fa-quote-left"></i> Bánh đà kêu to khi đạp nhanh.</span>
                   </div>
-                  <div class="row-meta"><span><i class="fa-solid fa-user-tie"></i> Chờ Quản lý duyệt</span></div>
+                  <div class="row-meta"><span><i class="fa-solid fa-user-tie"></i> Quản lý duyệt 13/09 · đang sửa bánh đà, dự kiến xong 23/09 · thiết bị đang bảo trì</span></div>
                 </div>
+                <button class="btn btn-outline btn-sm" type="button" data-close="BT-0309">Đóng yêu cầu</button>
               </div>
               <div class="data-row" data-st="done" data-q="BT-0305 TB-0302 · Bộ tạ đòn Olympic">
                 <div class="row-main">

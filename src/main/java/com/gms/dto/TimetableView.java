@@ -32,7 +32,9 @@ public class TimetableView {
 
     public LocalDate getWeekStart() { return weekStart; }
     public LocalDate getWeekEnd() { return weekEnd; }
+    // GETTER TỰ TÍNH — không có field/setter "prevWeek"; = weekStart lùi 1 tuần; JSP: customer/my-pt-sessions.jsp:97
     public LocalDate getPrevWeek() { return weekStart.minusWeeks(1); }
+    // GETTER TỰ TÍNH — không có field/setter "nextWeek"; = weekStart tiến 1 tuần; JSP: customer/my-pt-sessions.jsp:107
     public LocalDate getNextWeek() { return weekStart.plusWeeks(1); }
     public boolean isCurrentWeek() { return currentWeek; }
     public List<Day> getDays() { return days; }

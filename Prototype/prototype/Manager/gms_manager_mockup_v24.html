@@ -341,7 +341,7 @@ function shell(active,crumbs,body,title){
     </div>
     <div class="main">
       <header class="topbar"><div class="tb-left">${parent?`<div class="crumbs">${parent}</div>`:''}<h1 class="tb-title">${title||parts[parts.length-1].replace(/<[^>]+>/g,'')}</h1></div>
-        <div class="top-right">${ROLE.topExtra?ROLE.topExtra():''}
+        <div class="top-right">${ROLE.topExtra?ROLE.topExtra():''}${bellHTML()}<a class="btn" href="../chon-vai-tro.html" title="Đổi vai trò">Đổi vai trò</a>
           <a class="tb-user" href="#/settings" title="Cài đặt tài khoản"><span class="avatar">${initials(ROLE.me.name)}</span><span class="tb-user-text"><b>${ROLE.me.name}</b><small>${ROLE.me.title}</small></span></a></div></header>
       <main class="content">${body}</main>
     </div>
@@ -358,7 +358,7 @@ function shell(active,crumbs,body,title){
     </aside>
     <div class="main">
       <div class="topbar"><div class="crumbs">${crumbs}</div>
-        <div class="top-right">${ROLE.topExtra?ROLE.topExtra():''}</div></div>
+        <div class="top-right">${ROLE.topExtra?ROLE.topExtra():''}${bellHTML()}<a class="btn" href="../chon-vai-tro.html" title="Đổi vai trò">Đổi vai trò</a></div></div>
       <main class="content">${body}</main>
     </div>
   </div>`;
@@ -377,9 +377,9 @@ function toast(code,text,kind='ok'){
   t.querySelector('.dot').style.background={ok:'#6FD19B',danger:'#F07C86',warn:'#F0C368',info:'#8DB6E6'}[kind];
   t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),4000);
 }
-let modalCb=null,lastFocus=null,modalNeedReason=false;
-function modal({title,text,ok='Xác nhận',danger=false,reason=false,reasonLabel='Lý do',reasonErr='Vui lòng nhập lý do.',onOk}){
-  lastFocus=document.activeElement;modalNeedReason=reason;
+let modalCb=null,lastFocus=null,modalNeedReason=false,modalMin=1,modalValidate=null;
+function modal({title,text,ok='Xác nhận',danger=false,reason=false,reasonLabel='Lý do',reasonErr='Vui lòng nhập lý do.',onOk,minLen=1,validate=null}){
+  lastFocus=document.activeElement;modalNeedReason=reason;modalMin=minLen;modalValidate=validate;
   $('#m-title').innerHTML=title;$('#m-text').innerHTML=text||'';
   const w=$('#m-reason-wrap');w.style.display=reason?'':'none';w.classList.remove('bad');
   $('#m-reason-label').innerHTML=reasonLabel+' <span class="req">*</span>';$('#m-reason-err').innerHTML=reasonErr;$('#m-reason').value='';
@@ -395,7 +395,8 @@ function bindCoreChrome(){
   $('#d-close').onclick=closeDrawer;
   document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeDrawer();const d=$('#dock');if(d&&d.classList.contains('is-open'))toggleDock()}});
   $('#m-ok').onclick=()=>{const r=$('#m-reason').value.trim();
-    if(modalNeedReason&&!r){$('#m-reason-wrap').classList.add('bad');$('#m-reason').focus();return}
+    if(modalNeedReason&&r.length<modalMin){$('#m-reason-wrap').classList.add('bad');$('#m-reason').focus();return}
+    if(modalValidate&&modalValidate()===false)return;
     const cb=modalCb;closeModal();cb&&cb(r)};
 }
 function bindRows(){$$('[data-go]').forEach(r=>{r.onclick=e=>{if(e.target.closest('a,button,input,select'))return;location.hash=r.dataset.go};r.onkeydown=e=>{if(e.key==='Enter')location.hash=r.dataset.go}})}
@@ -418,8 +419,10 @@ function viewSettings(){
   const draw=()=>{render(page('', '<b>Cài đặt tài khoản</b>','Cài đặt tài khoản','1.4.1 / L2 / dùng chung','Hồ sơ đăng nhập của bạn. Đổi email hoặc SĐT phải xác thực bằng mã gửi tới email mới.','',`
     <div class="grid-half">
       <div class="card"><div class="pad">
+        <h2>Thông tin nhân sự</h2><p class="sub">Dữ liệu nhân sự chỉ đọc, do Admin quản lý</p>
+        <dl class="kv" style="margin-bottom:16px"><dt>Mã nhân viên</dt><dd class="num">NV-0010</dd><dt>Họ và tên</dt><dd>${ROLE.me.name}</dd><dt>Chức danh</dt><dd>${ROLE.me.title}</dd><dt>Ngày vào làm</dt><dd class="num">01/03/2024</dd></dl>
         <h2>Hồ sơ</h2><p class="sub">Ảnh đại diện, email và số điện thoại</p>
-        <div style="display:flex;gap:14px;align-items:center;margin-bottom:16px"><span class="avatar" style="width:56px;height:56px;font-size:18px">${initials(ROLE.me.name)}</span><button class="btn btn-sm" onclick="toast('','Mở hộp chọn ảnh (mô phỏng).','info')">Đổi ảnh</button></div>
+        <div style="display:flex;gap:14px;align-items:center;margin-bottom:16px"><span class="avatar" style="width:56px;height:56px;font-size:18px">${initials(ROLE.me.name)}</span><button class="btn btn-sm" onclick="toast('','Mở hộp chọn ảnh (mô phỏng).','info')">Đổi ảnh</button><button class="btn btn-sm" onclick="toast('','Đã gỡ ảnh đại diện.','info')">Gỡ ảnh</button></div>
         <div class="stack">
           <div class="f"><label for="s-email">Email</label><input class="input" id="s-email" value="${ROLE.me.email}"></div>
           <div class="f"><label for="s-phone">Số điện thoại</label><input class="input num" id="s-phone" value="${ROLE.me.phone}"></div>
@@ -433,7 +436,7 @@ function viewSettings(){
         <div class="stack"><div class="f"><label for="p1">Mật khẩu hiện tại</label><input class="input" type="password" id="p1"></div>
         <div class="f"><label for="p2">Mật khẩu mới</label><input class="input" type="password" id="p2"></div>
         <div class="f" id="f-p3"><label for="p3">Nhập lại mật khẩu mới</label><input class="input" type="password" id="p3"><span class="err">Mật khẩu nhập lại không khớp.</span></div></div></div>
-        <div class="form-actions"><button class="btn" id="pw-save">Đổi mật khẩu</button></div>
+        <div class="form-actions"><a class="btn" href="../chon-vai-tro.html" style="margin-right:auto">Đổi vai trò</a><button class="btn" id="pw-save">Đổi mật khẩu</button></div>
       </div>
     </div>`));
     const sv=$('#s-save');if(sv)sv.onclick=()=>{const changed=val('s-email')!==ROLE.me.email||val('s-phone')!==ROLE.me.phone;
@@ -472,119 +475,193 @@ const D=s=>{const[d,m,y]=s.split('/').map(Number);return new Date(y,m-1,d)};
 const fmtD=dt=>`${pad(dt.getDate())}/${pad(dt.getMonth()+1)}/${dt.getFullYear()}`;
 const fromIso=s=>{const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
 const toIso=s=>{const[d,m,y]=s.split('/');return `${y}-${m}-${d}`};
-const NOW=new Date(2026,8,20,14,20);
+const NOW=new Date(2026,8,20,16,30);
 
 /* ---------- DATA ---------- */
 let PARAMS=[
- {k:'freezeTimes',label:'Số lần bảo lưu tối đa mỗi gói',v:1,unit:'lần',min:0,max:5,desc:'Mỗi gói tập được bảo lưu tối đa bấy nhiêu lần.'},
- {k:'freezeDays',label:'Thời hạn bảo lưu tối đa',v:30,unit:'ngày',min:1,max:90,desc:'Tổng số ngày của một lần bảo lưu.'},
- {k:'minPt',label:'Số PT tối thiểu còn lại mỗi ca',v:2,unit:'người',min:1,max:10,desc:'Căn cứ để khóa nút Duyệt đơn nghỉ.'},
- {k:'minLt',label:'Số Lễ tân tối thiểu còn lại mỗi ca',v:1,unit:'người',min:1,max:5,desc:'Căn cứ để khóa nút Duyệt đơn nghỉ.'},
- {k:'vat',label:'% VAT',v:8,unit:'%',min:0,max:20,desc:'Được chép vào đơn lúc tạo đơn. Giá niêm yết đã gồm VAT.'},
- {k:'comm',label:'% hoa hồng PT mặc định',v:70,unit:'%',min:0,max:100,desc:'Áp cho PT mới. Mỗi PT có thể đặt riêng ở hồ sơ nhân sự.'},
- {k:'payLimit',label:'Hạn thanh toán đơn online',v:20,unit:'phút',min:5,max:120,desc:'Quá hạn, đơn online tự hủy.'},
- {k:'leaveSubmit',label:'Giờ chốt nộp đơn nghỉ',v:'15:00',unit:'ngày liền trước ngày nghỉ',type:'time',desc:'Sau giờ này PT và Lễ tân không nộp được đơn cho ngày hôm sau.'},
- {k:'leaveApprove',label:'Giờ chốt duyệt đơn nghỉ',v:'20:00',unit:'ngày liền trước ngày nghỉ',type:'time',desc:'Đơn còn chờ sau giờ này bị hệ thống tự từ chối. Phải muộn hơn giờ chốt nộp.'},
- {k:'hours',label:'Giờ mở / đóng cửa mặc định',v:'05:30 – 22:00',unit:'',link:'#/hours',desc:''},
+ {c:'P-01',k:'freezeTimes',label:'Số lần bảo lưu tối đa mỗi gói',v:1,unit:'lần',min:0,max:5,desc:'Mỗi gói tập được bảo lưu tối đa bấy nhiêu lần.'},
+ {c:'P-02',k:'freezeDays',label:'Thời hạn bảo lưu tối đa',v:1,unit:'tháng',min:1,max:12,desc:'Số tháng tối đa của một lần bảo lưu, tính theo lịch.'},
+ {c:'P-03',k:'freezeFee',label:'Phí bảo lưu',v:0,unit:'đ (0 = miễn phí)',min:0,max:1000000,desc:'Phí thu mỗi lần bảo lưu. 0 là miễn phí.'},
+ {c:'P-05',k:'minAge',label:'Tuổi tối thiểu dùng dịch vụ PT',v:10,unit:'tuổi',min:1,max:18,desc:'Khách nhỏ hơn tuổi này không mua được gói PT.'},
+ {c:'P-06',k:'sessionLen',label:'Độ dài một buổi PT',v:90,unit:'phút',min:30,max:180,desc:'Độ dài cố định của mọi khung PT.'},
+ {c:'P-09',k:'payLimit',label:'Hạn thanh toán đơn online (cũng là thời gian giữ chỗ)',v:20,unit:'phút',min:5,max:120,desc:'Quá hạn, đơn online tự hủy và khung giờ trở lại Còn trống.'},
+ {c:'P-10',k:'vat',label:'% VAT',v:8,unit:'%',min:0,max:20,desc:'Được chép vào đơn lúc tạo đơn. Giá niêm yết đã gồm VAT.'},
+ {c:'P-11',k:'comm',label:'% hoa hồng PT mặc định',v:70,unit:'%',min:0,max:100,desc:'Áp cho PT mới. Mỗi PT có thể đặt riêng ở hồ sơ nhân sự.'},
+ {c:'P-12',k:'leaveSubmit',label:'Giờ chốt nộp đơn nghỉ',v:'15:00',unit:'ngày liền trước ngày nghỉ',type:'time',desc:'Sau giờ này PT và Lễ tân không nộp được đơn cho ngày hôm sau.'},
+ {c:'P-13',k:'minPt',label:'Số PT tối thiểu còn lại mỗi ca',v:2,unit:'người',min:1,max:10,desc:'Căn cứ để khóa nút Duyệt đơn nghỉ.'},
+ {c:'P-14',k:'minLt',label:'Số Lễ tân tối thiểu còn lại mỗi ca',v:1,unit:'người',min:1,max:5,desc:'Căn cứ để khóa nút Duyệt đơn nghỉ.'},
+ {c:'P-15',k:'codeTtl',label:'Hiệu lực mã xác thực / mã khôi phục',v:15,unit:'phút',min:5,max:60,desc:'Mã gửi qua email hết hiệu lực sau thời gian này.'},
+ {c:'P-17',k:'failMax',label:'Số lần sai trước khi khóa tạm',v:5,unit:'lần',min:3,max:10,desc:'Áp cho đăng nhập và mã xác thực.'},
+ {c:'P-18',k:'lockMin',label:'Thời gian khóa tạm',v:5,unit:'phút',min:1,max:60,desc:'Tài khoản tự mở khóa sau thời gian này.'},
+ {c:'P-19',k:'hours',label:'Giờ mở / đóng cửa mặc định',v:'05:30 – 22:00',unit:'',link:'#/hours',desc:''},
+ {c:'P-20',k:'leaveApprove',label:'Giờ chốt duyệt đơn nghỉ',v:'20:00',unit:'ngày liền trước ngày nghỉ',type:'time',desc:'Đơn còn chờ sau giờ này bị hệ thống tự từ chối. Phải muộn hơn giờ chốt nộp.'},
 ];
+/* ---------- #73 Notification Bell ---------- */
+const BELL=[["Đơn nghỉ NP-31 (Hoàng Long, 21/09 Ca sáng) và 3 đơn khác đang chờ duyệt.", "20/09/2026 08:10"], ["Yêu cầu bảo trì BT-0313 (Bộ tạ đơn) chờ duyệt.", "20/09/2026 15:50"], ["Yêu cầu xoá hồ sơ KH-1008, KH-1009 chờ duyệt.", "20/09/2026 09:12"], ["Ca sáng 20/09 đã chốt, khớp tiền mặt.", "20/09/2026 14:00"], ["Góp ý mới từ Trần Bảo Ngọc.", "20/09/2026 07:45"], ["Đơn DH-2026-1198 chờ xác nhận chuyển khoản.", "20/09/2026 16:05"]];
+let bellRead=[];
+function bellHTML(){
+  const un=BELL.filter((_,i)=>!bellRead.includes(i)).length;
+  return `<div class="notif-bell" style="position:relative"><button class="btn" type="button" data-bell aria-label="Thông báo" aria-expanded="false">🔔 <span class="pill">${un||''}</span></button>
+    <div class="card" data-bell-panel hidden style="position:absolute;right:0;top:100%;width:min(360px,90vw);z-index:60;margin-top:6px">
+      <div class="card-head"><h2>Thông báo</h2><button class="btn" type="button" data-bell-all>Đọc tất cả</button></div>
+      <ul style="list-style:none;margin:0;padding:6px 16px 12px">${BELL.slice(0,10).map((n,i)=>`<li data-n="${i}" style="padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer"><b>${n[0]}</b>${bellRead.includes(i)?'':' <span class="pill">Mới</span>'}<div class="muted" style="font-size:12px">${n[1]}</div></li>`).join('')}</ul></div></div>`;
+}
+document.addEventListener('click',e=>{
+  const w=e.target.closest('.notif-bell');
+  if(!w){document.querySelectorAll('[data-bell-panel]').forEach(p=>p.hidden=true);return}
+  if(e.target.closest('[data-bell]')){const p=w.querySelector('[data-bell-panel]');p.hidden=!p.hidden;return}
+  const n=e.target.closest('[data-n]');
+  if(n&&!bellRead.includes(+n.dataset.n))bellRead.push(+n.dataset.n);
+  if(e.target.closest('[data-bell-all]'))bellRead=BELL.map((_,i)=>i);
+  const open=!w.querySelector('[data-bell-panel]').hidden;
+  w.outerHTML=bellHTML();
+  if(open)document.querySelector('[data-bell-panel]').hidden=false;
+});
+
 let HOURS={open:'05:30',close:'22:00',exc:[{date:'01/10/2026',closed:false,open:'05:30',close:'14:00',note:'Bảo trì điều hòa buổi chiều'},{date:'18/10/2026',closed:false,open:'07:00',close:'20:00',note:'Giải chạy nội bộ'},{date:'01/01/2027',closed:true,note:'Tết Dương lịch'}]};
-const DURS=['1 ngày','1 tháng','3 tháng','9 tháng','12 tháng'];
+const DURS=['1 ngày','1 tháng','3 tháng','6 tháng','9 tháng','12 tháng'];
 let MPKG=[
- {id:'G-01',name:'Vé 1 ngày',price:60000,dur:'1 ngày',desc:'Vào phòng tập trong ngày mua. Hết hiệu lực sau lượt check-in đầu tiên.',status:'Active',running:14},
- {id:'G-02',name:'Gói 1 tháng',price:450000,dur:'1 tháng',desc:'',status:'Active',running:86},
- {id:'G-03',name:'Gói 3 tháng',price:1290000,dur:'3 tháng',desc:'',status:'Active',running:132},
- {id:'G-04',name:'Gói 6 tháng (cũ)',price:2390000,dur:'9 tháng',desc:'Đã thay bằng gói 9 tháng.',status:'Inactive',running:9},
- {id:'G-05',name:'Gói 9 tháng',price:3450000,dur:'9 tháng',desc:'',status:'Active',running:41},
- {id:'G-06',name:'Gói 12 tháng',price:4200000,dur:'12 tháng',desc:'',status:'Active',running:67},
+ {id:'G-01',name:'Gói Ngày',price:120000,dur:'1 ngày',desc:'Vé vào tập một lượt trong ngày. Hết hiệu lực sau lượt check-in đầu tiên.',status:'Active',running:14},
+ {id:'G-02',name:'Gói 1 Tháng',price:799000,dur:'1 tháng',desc:'Bắt đầu xây thói quen tập luyện.',status:'Active',running:86},
+ {id:'G-03',name:'Gói 3 Tháng',price:2190000,dur:'3 tháng',desc:'Đủ thời gian thấy chuyển biến thể lực.',status:'Active',running:132},
+ {id:'G-04',name:'Gói 9 Tháng',price:5490000,dur:'9 tháng',desc:'Cam kết dài hạn, giá tốt.',status:'Active',running:41},
+ {id:'G-05',name:'Gói 12 Tháng',price:6990000,dur:'12 tháng',desc:'Mức giá tốt nhất cho người tập lâu dài.',status:'Active',running:67},
+ {id:'G-06',name:'Gói 6 Tháng',price:3990000,dur:'6 tháng',desc:'Đã ngừng bán.',status:'Inactive',running:9},
+ {id:'G-07',name:'Gói 12 Tháng (bảng giá cũ)',price:6490000,dur:'12 tháng',desc:'Bảng giá cũ, đã thay bằng gói 12 tháng mới.',status:'Inactive',running:0},
 ];
 let PTPKG=[
- {id:'P-01',name:'PT 12 buổi',n:12,price:4800000,type:'single',status:'Active'},
- {id:'P-02',name:'PT 24 buổi',n:24,price:9200000,type:'single',status:'Active'},
- {id:'P-03',name:'Couple 12 buổi',n:12,price:7200000,type:'couple',status:'Active'},
- {id:'P-04',name:'PT 8 buổi (thử)',n:8,price:3400000,type:'single',status:'Inactive'},
+ {id:'P-01',name:'Gói PT 1 Tháng',n:22,price:8800000,type:'single',dur:'1 tháng',status:'Active'},
+ {id:'P-02',name:'Gói PT 2 Tháng',n:43,price:16500000,type:'single',dur:'2 tháng',status:'Active'},
+ {id:'P-03',name:'Gói PT 3 Tháng',n:65,price:23900000,type:'single',dur:'3 tháng',status:'Active'},
+ {id:'P-04',name:'Gói PT Couple 1 Tháng',n:22,price:13200000,type:'couple',dur:'1 tháng',status:'Active'},
+ {id:'P-05',name:'Gói PT Couple 2 Tháng',n:43,price:24900000,type:'couple',dur:'2 tháng',status:'Active'},
+ {id:'P-06',name:'Buổi PT lẻ',n:1,price:450000,type:'session',dur:'',status:'Active'},
 ];
 let VOUCH=[
- {code:'THU10',kind:'pct',value:10,used:22,max:50,per:1,min:0,scope:'all',from:'01/09/2026',to:'30/09/2026',status:'Active'},
- {code:'GYM15',kind:'pct',value:15,used:8,max:20,per:1,min:0,scope:'gym',from:'15/09/2026',to:'15/10/2026',status:'Active'},
- {code:'GIAM200',kind:'amt',value:200000,used:0,max:100,per:1,min:2000000,scope:'gym',from:'20/09/2026',to:'31/12/2026',status:'Active'},
+ {code:'GYMVUI10',kind:'pct',value:10,used:22,max:50,per:1,min:500000,scope:'all',from:'01/09/2026',to:'31/12/2026',status:'Active'},
+ {code:'NGAY15K',kind:'amt',value:15000,used:18,max:500,per:0,min:100000,scope:'all',from:'01/09/2026',to:'31/12/2026',status:'Active'},
+ {code:'HETLUOT25',kind:'amt',value:100000,used:2,max:2,per:1,min:700000,scope:'gym',from:'15/08/2026',to:'31/10/2026',status:'Active'},
  {code:'HE2026',kind:'pct',value:20,used:64,max:64,per:1,min:0,scope:'all',from:'01/06/2026',to:'31/08/2026',status:'Inactive'},
 ];
 let STAFF=[
- {id:'NV003',name:'Nguyễn Văn An',dob:'1988-03-14',title:'Manager',phone:'0903456789',email:'an.nv@gms.vn',start:'2024-03-01',status:'Active'},
- {id:'NV004',name:'Phạm Đức Thắng',dob:'1994-06-20',title:'PT',phone:'0934567890',email:'thang.pd@gms.vn',start:'2024-05-10',comm:70,status:'Active',pending:{sessions:3,shifts:0,orders:0}},
- {id:'NV005',name:'Hoàng Mai Linh',dob:'1997-11-02',title:'PT',phone:'0978123456',email:'linh.hm@gms.vn',start:'2024-08-01',comm:72,status:'Active',pending:{sessions:5,shifts:0,orders:0}},
- {id:'NV011',name:'Đinh Công Sơn',dob:'1996-01-25',title:'PT',phone:'0966558812',email:'son.dc@gms.vn',start:'2025-02-15',comm:70,status:'Active',pending:{sessions:0,shifts:0,orders:0}},
- {id:'NV012',name:'Mai Phương Thảo',dob:'1999-09-09',title:'PT',phone:'0827441290',email:'thao.mp@gms.vn',start:'2025-06-01',comm:65,status:'Active',pending:{sessions:2,shifts:0,orders:0}},
- {id:'NV006',name:'Nguyễn Thị Hoa',dob:'1998-04-04',title:'Lễ tân',phone:'0356789012',email:'hoa.nt@gms.vn',start:'2024-04-01',status:'Active',pending:{sessions:0,shifts:1,orders:1}},
- {id:'NV009',name:'Bùi Khánh Vân',dob:'2000-12-01',title:'Lễ tân',phone:'0707654321',email:'van.bk@gms.vn',start:'2025-07-01',status:'Active',pending:{sessions:0,shifts:0,orders:0}},
- {id:'NV008',name:'Đỗ Quang Huy',dob:'1993-08-18',title:'PT',phone:'0961234987',email:'huy.dq@gms.vn',start:'2024-02-01',comm:70,status:'Inactive',pending:{sessions:0,shifts:0,orders:0}},
+ {id:'NV-0010',name:'Nguyễn Văn An',dob:'1988-03-14',title:'Manager',phone:'0903456789',email:'an.nv@gms.vn',start:'2024-03-01',status:'Active'},
+ {id:'NV-0121',name:'Phạm Thu Trang',dob:'1994-06-20',title:'PT',phone:'0934567890',email:'trang.pt@gms.vn',start:'2024-05-10',comm:70,status:'Active',pending:{sessions:3,shifts:0,orders:0}},
+ {id:'NV-0118',name:'Hoàng Long',dob:'1997-11-02',title:'PT',phone:'0978123456',email:'long.h@gms.vn',start:'2024-08-01',comm:70,status:'Active',pending:{sessions:5,shifts:0,orders:0}},
+ {id:'NV-0127',name:'Đỗ Minh Khoa',dob:'1996-01-25',title:'PT',phone:'0966558812',email:'khoa.dm@gms.vn',start:'2025-02-15',comm:70,status:'Active',pending:{sessions:0,shifts:0,orders:0}},
+ {id:'NV-0133',name:'Vũ Hải Yến',dob:'1999-09-09',title:'PT',phone:'0827441290',email:'yen.vh@gms.vn',start:'2025-06-01',comm:65,status:'Active',pending:{sessions:2,shifts:0,orders:0}},
+ {id:'NV-0042',name:'Nguyễn Thị Hoa',dob:'1998-04-04',title:'Lễ tân',phone:'0356789012',email:'hoa.nt@gms.vn',start:'2024-04-01',status:'Active',pending:{sessions:0,shifts:1,orders:1}},
+ {id:'NV-0057',name:'Bùi Khánh Vân',dob:'2000-12-01',title:'Lễ tân',phone:'0707654321',email:'van.bk@gms.vn',start:'2025-07-01',status:'Active',pending:{sessions:0,shifts:0,orders:0}},
+ {id:'NV-0090',name:'Đỗ Quang Huy',dob:'1993-08-18',title:'PT',phone:'0961234987',email:'huy.dq@gms.vn',start:'2024-02-01',comm:70,status:'Inactive',pending:{sessions:0,shifts:0,orders:0}},
 ];
 // số người còn lại của ca TRƯỚC khi duyệt đơn (đã trừ các đơn đã duyệt)
 const CAPACITY={'21/09/2026|Ca sáng':{pt:3,lt:2},'22/09/2026|Ca chiều':{pt:2,lt:2},'23/09/2026|Ca sáng':{pt:3,lt:1},'25/09/2026|Ca sáng':{pt:3,lt:2},'25/09/2026|Ca chiều':{pt:4,lt:2}};
 let LEAVES=[
- {id:'NP-31',who:'Hoàng Mai Linh',title:'PT',date:'21/09/2026',shift:'Ca sáng',type:'Nghỉ ốm',reason:'Sốt, có giấy khám',sent:'20/09/2026 08:10',status:'Pending'},
- {id:'NP-32',who:'Đinh Công Sơn',title:'PT',date:'22/09/2026',shift:'Ca chiều',type:'Nghỉ việc riêng',reason:'Đám cưới người thân',sent:'19/09/2026 16:40',status:'Pending'},
+ {id:'NP-31',who:'Hoàng Long',title:'PT',date:'21/09/2026',shift:'Ca sáng',type:'Nghỉ ốm',reason:'Sốt, có giấy khám',sent:'20/09/2026 08:10',status:'Pending'},
+ {id:'NP-32',who:'Đỗ Minh Khoa',title:'PT',date:'22/09/2026',shift:'Ca chiều',type:'Nghỉ không lương',reason:'Đám cưới người thân',sent:'19/09/2026 16:40',status:'Pending'},
  {id:'NP-33',who:'Bùi Khánh Vân',title:'Lễ tân',date:'23/09/2026',shift:'Ca sáng',type:'Nghỉ phép năm',reason:'Về quê',sent:'19/09/2026 09:00',status:'Pending'},
- {id:'NP-34',who:'Nguyễn Thị Hoa',title:'Lễ tân',date:'25/09/2026',shift:'Cả ngày',type:'Nghỉ việc riêng',reason:'Làm thủ tục giấy tờ',sent:'18/09/2026 10:15',status:'Pending'},
- {id:'NP-28',who:'Mai Phương Thảo',title:'PT',date:'19/09/2026',shift:'Ca chiều',type:'Nghỉ việc riêng',reason:'Việc gia đình',sent:'17/09/2026 11:00',status:'Rejected',why:'Quá hạn duyệt',auto:true},
- {id:'NP-25',who:'Nguyễn Thị Hoa',title:'Lễ tân',date:'12/09/2026',shift:'Ca sáng',type:'Nghỉ việc riêng',reason:'Đưa con đi khám',sent:'10/09/2026 09:30',status:'Approved'},
+ {id:'NP-34',who:'Nguyễn Thị Hoa',title:'Lễ tân',date:'25/09/2026',shift:'Cả ngày',type:'Nghỉ không lương',reason:'Làm thủ tục giấy tờ',sent:'18/09/2026 10:15',status:'Pending'},
+ {id:'NP-28',who:'Vũ Hải Yến',title:'PT',date:'19/09/2026',shift:'Ca chiều',type:'Nghỉ không lương',reason:'Việc gia đình',sent:'17/09/2026 11:00',status:'Rejected',why:'Quá hạn duyệt',auto:true},
+ {id:'NP-25',who:'Nguyễn Thị Hoa',title:'Lễ tân',date:'12/09/2026',shift:'Ca sáng',type:'Nghỉ không lương',reason:'Đưa con đi khám',sent:'10/09/2026 09:30',status:'Approved'},
 ];
-const ST={New:['Mới tạo','info'],Active:['Đang hoạt động','ok'],Frozen:['Đang bảo lưu','warn'],Expired:['Hết hạn','muted'],Inactive:['Đã xóa','danger']};
+const ST={New:['Chưa có gói','info'],Active:['Hoạt động','ok'],Frozen:['Đang bảo lưu','warn'],Expired:['Hết hạn','muted'],Inactive:['Ngừng hoạt động','danger']};
 let CUSTOMERS=[
- {id:'KH-1001',name:'Trần Bảo Ngọc',phone:'0902345678',email:'ngoc.tb@gmail.com',dob:'12/04/1996',type:'Tự chủ',status:'Active',pkg:'Gói 3 tháng, hạn 15/11/2026',pt:'PT 12 buổi, còn 8 buổi'},
- {id:'KH-1003',name:'Phạm Thu Trang',phone:'0934111222',email:'trang.pt@gmail.com',dob:'02/07/1998',type:'Tự chủ',status:'Frozen',pkg:'Gói 12 tháng, bảo lưu tới 05/10/2026',pt:''},
- {id:'KH-1004',name:'Đỗ Văn Khang',phone:'0987654321',email:'khang.dv@gmail.com',dob:'30/11/1985',type:'Tự chủ',status:'Expired',pkg:'Gói 1 tháng, hết hạn 10/09/2026',pt:'PT 12 buổi, còn 4 buổi'},
+ {id:'KH-1001',name:'Trần Bảo Ngọc',phone:'0902345678',email:'ngoc.tb@gmail.com',dob:'12/04/1996',type:'Tự chủ',status:'Active',pkg:'Gói 3 Tháng, hạn 15/11/2026',pt:'Gói PT 1 Tháng, còn 8 buổi'},
+ {id:'KH-1003',name:'Phạm Minh Châu',phone:'0934111222',email:'chau.pm@gmail.com',dob:'02/07/1998',type:'Tự chủ',status:'Frozen',pkg:'Gói 12 Tháng, bảo lưu tới 05/10/2026',pt:''},
+ {id:'KH-1004',name:'Đỗ Văn Khang',phone:'0987654321',email:'khang.dv@gmail.com',dob:'30/11/1985',type:'Tự chủ',status:'Expired',pkg:'Gói 1 Tháng, hết hạn 10/09/2026',pt:'Gói PT 1 Tháng, còn 4 buổi'},
  {id:'KH-1007',name:'Hoàng Gia Huy',phone:'0388990011',email:'',dob:'05/05/2017',type:'Phụ thuộc',guardian:'Hoàng Văn Hùng (Bố) · 0388 990 012',status:'New',pkg:'',pt:''},
- {id:'KH-1008',name:'Bùi Thanh Hà',phone:'0967123123',email:'ha.bt@gmail.com',dob:'03/03/1995',type:'Tự chủ',status:'Active',pkg:'Gói 9 tháng, hạn 01/03/2027',pt:'',pendingDelete:{by:'Nguyễn Thị Hoa',at:'19/09/2026 17:05',reason:'Khách chuyển công tác vào TP.HCM, xin dừng tập.',active:[['Gói 9 tháng','hạn 01/03/2027, còn 162 ngày']],ptLeft:0}},
- {id:'KH-1009',name:'Trịnh Quốc Bảo',phone:'0909111222',email:'bao.tq@gmail.com',dob:'12/12/1992',type:'Tự chủ',status:'Active',pkg:'Gói 3 tháng, hạn 01/12/2026',pt:'PT 12 buổi, còn 6 buổi',pendingDelete:{by:'Bùi Khánh Vân',at:'20/09/2026 09:12',reason:'Khách yêu cầu xóa dữ liệu cá nhân.',active:[['Gói 3 tháng','hạn 01/12/2026, còn 72 ngày'],['PT 12 buổi','còn 6 buổi chưa dùng']],ptLeft:6}},
- {id:'KH-1010',name:'Mai Anh Thư',phone:'0826554433',email:'thu.ma@gmail.com',dob:'10/10/2001',type:'Tự chủ',status:'Active',pkg:'Gói 1 tháng, hạn 05/10/2026',pt:''},
+ {id:'KH-1008',name:'Bùi Thanh Hà',phone:'0967123123',email:'ha.bt@gmail.com',dob:'03/03/1995',type:'Tự chủ',status:'Active',pkg:'Gói 9 Tháng, hạn 01/03/2027',pt:'',pendingDelete:{by:'Nguyễn Thị Hoa',at:'19/09/2026 17:05',reason:'Khách chuyển công tác vào TP.HCM, xin dừng tập.',active:[['Gói 9 Tháng','hạn 01/03/2027, còn 162 ngày']],ptLeft:0}},
+ {id:'KH-1009',name:'Trịnh Quốc Bảo',phone:'0909111222',email:'bao.tq@gmail.com',dob:'12/12/1992',type:'Tự chủ',status:'Active',pkg:'Gói 3 Tháng, hạn 01/12/2026',pt:'Gói PT 1 Tháng, còn 6 buổi',pendingDelete:{by:'Bùi Khánh Vân',at:'20/09/2026 09:12',reason:'Khách yêu cầu xóa dữ liệu cá nhân.',active:[['Gói 3 Tháng','hạn 01/12/2026, còn 72 ngày'],['Gói PT 1 Tháng','còn 6 buổi chưa dùng']],ptLeft:6}},
+ {id:'KH-1010',name:'Mai Anh Thư',phone:'0826554433',email:'thu.ma@gmail.com',dob:'10/10/2001',type:'Tự chủ',status:'Active',pkg:'Gói 1 Tháng, hạn 05/10/2026',pt:''},
  {id:'KH-0975',name:'Lương Văn Tài',phone:'0911000975',email:'tai.lv@gmail.com',dob:'01/01/1990',type:'Tự chủ',status:'Inactive',pkg:'',pt:''},
 ];
 let ORDERS=[
- {id:'DH-2046',cust:'Trần Bảo Ngọc',pkg:'PT 12 buổi',amount:4800000,method:'Tiền mặt',status:'Paid',at:'20/09/2026 14:25',ch:'Quầy',att:[['14:25','Tiền mặt','Success']]},
- {id:'DH-2045',cust:'Đỗ Văn Khang',pkg:'Gói 3 tháng (GYM15)',amount:1096500,method:'Tiền mặt',status:'Paid',at:'20/09/2026 14:24',ch:'Quầy',att:[['14:24','Tiền mặt','Success']]},
- {id:'DH-2044',cust:'Lý Văn Hòa',pkg:'Gói 3 tháng',amount:1290000,method:'Tiền mặt',status:'Pending',at:'20/09/2026 14:16',ch:'Quầy',att:[]},
- {id:'DH-2040',cust:'Ngô Thị Lan',pkg:'Gói 1 tháng',amount:450000,method:'Cổng thanh toán',status:'Paid',at:'18/09/2026 21:40',ch:'Online',att:[['21:32','Cổng thanh toán','Failed'],['21:40','Cổng thanh toán','Success']]},
- {id:'DH-2038',cust:'Phan Thảo Vy',pkg:'Gói 3 tháng',amount:1290000,method:'Cổng thanh toán',status:'Cancelled',at:'18/09/2026 10:02',ch:'Online',refund:true,att:[['10:02','Cổng thanh toán','Expired'],['10:25','Cổng thanh toán','Success']],note:'Cổng báo thành công sau khi đơn đã tự hủy do quá hạn.'},
- {id:'DH-2031',cust:'Lê Minh Tuấn',pkg:'Vé 1 ngày',amount:60000,method:'Chuyển khoản',status:'Cancelled',at:'16/09/2026 07:15',ch:'Quầy',reason:'Bấm nhầm gói, đã lập lại đơn DH-2032',att:[['07:15','Chuyển khoản','Success']]},
- {id:'DH-2027',cust:'Mai Anh Thư',pkg:'Gói 1 tháng',amount:450000,method:'Cổng thanh toán',status:'Paid',at:'05/09/2026 19:02',ch:'Online',refund:true,att:[['19:00','Cổng thanh toán','Success'],['19:02','Cổng thanh toán','Success']],note:'Khách bị trừ tiền 2 lần do bấm thanh toán hai lần.'},
+ {id:'DH-2026-1199',cust:'Trần Bảo Ngọc',pkg:'Gói 1 Tháng',amount:799000,method:'Chuyển khoản',status:'Paid',at:'20/09/2026 16:20',ch:'Quầy',att:[['16:20','Chuyển khoản','Success']]},
+ {id:'DH-2026-1198',cust:'Mai Anh Thư',pkg:'Gói 1 Tháng',amount:799000,method:'Chuyển khoản',status:'Pending',at:'20/09/2026 16:05',ch:'Quầy',att:[]},
+ {id:'DH-2026-1197',cust:'Trịnh Quốc Bảo',pkg:'Gói 3 Tháng',amount:2190000,method:'Tiền mặt',status:'Paid',at:'20/09/2026 15:40',ch:'Quầy',att:[['15:40','Tiền mặt','Success']]},
+ {id:'DH-2026-1196',cust:'Vũ Hoài Nam & Đỗ Lan Chi',pkg:'Gói PT Couple 1 Tháng',amount:13200000,method:'Chuyển khoản',status:'Paid',at:'20/09/2026 15:15',ch:'Quầy',att:[['15:15','Chuyển khoản','Success']]},
+ {id:'DH-2026-1195',cust:'Lê Minh Tuấn',pkg:'Gói Ngày',amount:120000,method:'Tiền mặt',status:'Paid',at:'20/09/2026 14:50',ch:'Quầy',att:[['14:50','Tiền mặt','Success']]},
+ {id:'DH-2026-1194',cust:'Ngô Thị Lan',pkg:'Gói 1 Tháng',amount:799000,method:'Tiền mặt',status:'Cancelled',at:'20/09/2026 14:30',ch:'Quầy',refund:true,reason:'Khách đổi ý ngay tại quầy',att:[['14:30','Tiền mặt','Success']]},
+ {id:'DH-2026-1193',cust:'Đỗ Văn Khang',pkg:'Gói 1 Tháng',amount:799000,method:'Tiền mặt',status:'Paid',at:'20/09/2026 14:12',ch:'Quầy',att:[['14:12','Tiền mặt','Success']]},
+ {id:'DH-2026-1192',cust:'Hoàng Gia Huy',pkg:'Gói Ngày (NGAY15K)',amount:105000,method:'Tiền mặt',status:'Paid',at:'20/09/2026 14:05',ch:'Quầy',att:[['14:05','Tiền mặt','Success']]},
+ {id:'DH-2026-1191',cust:'Nguyễn Minh An',pkg:'Gói 12 Tháng',amount:6990000,method:'Cổng thanh toán',status:'Pending',at:'20/09/2026 09:12',ch:'Online',att:[['09:12','Cổng thanh toán','Pending']]},
+ {id:'DH-2026-1190',cust:'Nguyễn Minh An',pkg:'Gói 3 Tháng',amount:2190000,method:'Cổng thanh toán',status:'Cancelled',at:'19/09/2026 21:40',ch:'Online',att:[['21:40','Cổng thanh toán','Expired']]},
+ {id:'DH-2026-1187',cust:'Nguyễn Minh An',pkg:'Buổi PT lẻ',amount:450000,method:'Cổng thanh toán',status:'Paid',at:'18/09/2026 14:02',ch:'Online',att:[['14:02','Cổng thanh toán','Success']]},
+ {id:'DH-2026-1166',cust:'Nguyễn Minh An',pkg:'Buổi PT lẻ',amount:450000,method:'Cổng thanh toán',status:'Paid',at:'04/09/2026 10:18',ch:'Online',att:[['10:18','Cổng thanh toán','Success']]},
+ {id:'DH-2026-1147',cust:'Nguyễn Minh An',pkg:'Buổi PT lẻ',amount:450000,method:'Cổng thanh toán',status:'Paid',at:'20/08/2026 10:18',ch:'Online',att:[['10:18','Cổng thanh toán','Success']]},
+ {id:'DH-2026-1143',cust:'Nguyễn Minh An',pkg:'Gói PT 3 Tháng',amount:23900000,method:'Tiền mặt',status:'Paid',at:'17/08/2026 10:15',ch:'Quầy',att:[['10:15','Tiền mặt','Success']]},
+ {id:'DH-2026-1140',cust:'Nguyễn Minh An',pkg:'Buổi PT lẻ',amount:450000,method:'Cổng thanh toán',status:'Cancelled',at:'15/08/2026 19:30',ch:'Online',att:[['19:30','Cổng thanh toán','Failed'],['20:05','Cổng thanh toán','Expired']]},
+ {id:'DH-2026-0912',cust:'Nguyễn Minh An',pkg:'Gói 6 Tháng',amount:3990000,method:'Cổng thanh toán',status:'Paid',at:'15/05/2026 08:36',ch:'Online',att:[['08:31','Cổng thanh toán','Failed'],['08:36','Cổng thanh toán','Success']]},
+ {id:'DH-2026-0905',cust:'Nguyễn Minh An',pkg:'Gói Ngày',amount:120000,method:'Tiền mặt',status:'Paid',at:'12/05/2026 18:20',ch:'Quầy',att:[['18:20','Tiền mặt','Success']]},
 ];
 const SHIFTS=[
+ {d:'20/09/2026',s:'Ca chiều',lt:'Nguyễn Thị Hoa',cash:3214000,tr:13999000,counted:3214000,why:''},
  {d:'20/09/2026',s:'Ca sáng',lt:'Bùi Khánh Vân',cash:3240000,tr:1290000,counted:3240000,why:''},
- {d:'19/09/2026',s:'Ca chiều',lt:'Nguyễn Thị Hoa',cash:5120000,tr:4800000,counted:5100000,why:'Thối nhầm 20.000đ cho khách mua vé ngày'},
+ {d:'19/09/2026',s:'Ca chiều',lt:'Nguyễn Thị Hoa',cash:5120000,tr:4800000,counted:5100000,why:'Thối nhầm 20.000đ cho khách mua Gói Ngày'},
  {d:'19/09/2026',s:'Ca sáng',lt:'Bùi Khánh Vân',cash:2150000,tr:0,counted:2150000,why:''},
 ];
 let FAC=[
- {id:'CS-01',name:'Máy chạy bộ số 3',cat:'Cardio',loc:'Khu cardio',qty:1,cond:'Available',open:0,status:'Active'},
- {id:'CS-02',name:'Máy chạy bộ số 7',cat:'Cardio',loc:'Khu cardio',qty:1,cond:'Under Maintenance',open:1,status:'Active'},
- {id:'CS-04',name:'Khung squat',cat:'Tạ tự do',loc:'Khu tạ tự do',qty:4,cond:'Available',open:0,status:'Active'},
- {id:'CS-05',name:'Ghế đa năng',cat:'Tạ tự do',loc:'Khu tạ tự do',qty:10,cond:'Available',open:0,status:'Active'},
- {id:'CS-06',name:'Máy kéo cáp đa năng',cat:'Máy tập',loc:'Khu máy',qty:3,cond:'Available',open:0,status:'Active'},
- {id:'CS-09',name:'Tủ đồ số 45',cat:'Tiện ích',loc:'Phòng thay đồ',qty:1,cond:'Available',open:1,status:'Active'},
- {id:'CS-11',name:'Xe đạp tập đời cũ',cat:'Cardio',loc:'Kho',qty:2,cond:'Retired',open:0,status:'Active'},
+ {id:'G-01',name:'Máy chạy bộ Technogym Run',cat:'Cardio',loc:'Khu cardio',unit:'máy',visible:true,items:[{code:'TB-0101',label:'Số 1',place:'Hàng 1, cạnh cửa sổ',status:'Available'},{code:'TB-0102',label:'Số 2',place:'Hàng 1, giữa',status:'Available'}]},
+ {id:'G-02',name:'Xe đạp tập Keiser M3i',cat:'Cardio',loc:'Khu cardio',unit:'máy',visible:true,items:[{code:'TB-0103',label:'Số 1',place:'Hàng 2, đầu dãy',status:'Under Maintenance'}]},
+ {id:'G-03',name:'Giàn tạ đa năng Hammer',cat:'Máy tập',loc:'Khu máy',unit:'máy',visible:true,items:[{code:'TB-0201',label:'Số 1',place:'Góc phải',status:'Available'}]},
+ {id:'G-04',name:'Máy kéo cáp Life Fitness',cat:'Máy tập',loc:'Khu máy',unit:'máy',visible:true,items:[{code:'TB-0202',label:'Số 1',place:'Cạnh giàn Hammer',status:'Available'}]},
+ {id:'G-05',name:'Máy đẩy ngực Matrix',cat:'Máy tập',loc:'Khu máy',unit:'máy',visible:true,items:[{code:'TB-0203',label:'Số 1',place:'Cạnh tường gương',status:'Under Maintenance'}]},
+ {id:'G-06',name:'Giá squat Rogue R-3',cat:'Tạ tự do',loc:'Khu tạ tự do',unit:'giá',visible:true,items:[{code:'TB-0301',label:'Giá 1',place:'Dãy A',status:'Available'}]},
+ {id:'G-07',name:'Bộ tạ đòn Olympic 150kg',cat:'Tạ tự do',loc:'Khu tạ tự do',unit:'bộ',visible:true,items:[{code:'TB-0302',label:'Bộ 1',place:'Dãy B',status:'Available'}]},
+ {id:'G-08',name:'Bộ tạ đơn 2–40kg',cat:'Tạ tự do',loc:'Khu tạ tự do',unit:'bộ',visible:true,items:[{code:'TB-0303',label:'Bộ 1',place:'Giá tạ đơn, cuối phòng',status:'Available'}]},
+ {id:'G-09',name:'Điều hoà Daikin 24000BTU',cat:'Tiện ích',loc:'Khu tạ máy',unit:'máy',visible:true,items:[{code:'TB-0401',label:'Số 1',place:'Trần khu tạ máy',status:'Under Maintenance'}]},
+ {id:'G-10',name:'Bình nóng lạnh Ariston',cat:'Tiện ích',loc:'Phòng thay đồ',unit:'bình',visible:true,items:[{code:'TB-0402',label:'Số 1',place:'Phòng tắm nam',status:'Available'}]},
+ {id:'G-11',name:'Tủ khoá cá nhân · dãy A',cat:'Tiện ích',loc:'Phòng thay đồ',unit:'tủ',visible:true,items:[{code:'TB-0403',label:'Tủ A01',place:'Dãy A, hàng trên',status:'Available'},{code:'TB-0404',label:'Tủ A02',place:'Dãy A, hàng trên',status:'Available'}]},
+ {id:'G-12',name:'Xe đạp tập đời cũ',cat:'Cardio',loc:'Kho',unit:'máy',visible:false,items:[{code:'TB-0501',label:'Số 1',place:'Kho tầng hầm',status:'Retired'}]},
 ];
 let REQ=[
- {id:'BT-121',item:'Tủ đồ số 45',desc:'Khóa tủ bị kẹt, không rút được chìa.',by:'Nguyễn Thị Hoa',date:'19/09/2026',status:'Open'},
- {id:'BT-122',item:'Máy kéo cáp đa năng',desc:'Dây cáp bên trái bị sờn, có nguy cơ đứt.',by:'Bùi Khánh Vân',date:'20/09/2026',status:'Open'},
- {id:'BT-118',item:'Máy chạy bộ số 7',desc:'Băng chạy bị trượt khi tăng tốc trên 10 km/h.',by:'Nguyễn Thị Hoa',date:'17/09/2026',status:'In Progress'},
- {id:'BT-112',item:'Ghế đa năng',desc:'Đệm ghế số 4 rách nhẹ.',by:'Bùi Khánh Vân',date:'12/09/2026',status:'Rejected',why:'Đã có lịch thay đệm định kỳ ngày 01/10.'},
- {id:'BT-109',item:'Vòi sen phòng tắm nam số 2',desc:'Nước nóng yếu.',by:'Nguyễn Thị Hoa',date:'10/09/2026',status:'Closed'},
+ {id:'BT-0313',item:'Bộ tạ đơn 2–40kg',desc:'Quả tạ 20kg bị lỏng ốc, cần siết lại.',by:'Nguyễn Thị Hoa',date:'20/09/2026',status:'Open'},
+ {id:'BT-0312',item:'Máy đẩy ngực Matrix',desc:'Gãy chốt điều chỉnh ghế, khách có thể kẹt tay.',by:'Nguyễn Thị Hoa',date:'19/09/2026',status:'In Progress'},
+ {id:'BT-0311',item:'Điều hoà Daikin 24000BTU',desc:'Chảy nước xuống sàn khu tạ máy.',by:'Bùi Khánh Vân',date:'17/09/2026',status:'In Progress'},
+ {id:'BT-0309',item:'Xe đạp tập Keiser M3i',desc:'Bánh đà kêu to khi đạp nhanh.',by:'Nguyễn Thị Hoa',date:'12/09/2026',status:'In Progress'},
+ {id:'BT-0305',item:'Bộ tạ đòn Olympic 150kg',desc:'Thiếu 2 chốt khoá tạ.',by:'Bùi Khánh Vân',date:'02/09/2026',status:'Closed'},
+ {id:'BT-0301',item:'Tủ khoá cá nhân · dãy A',desc:'Ba ổ khoá kẹt, khách phàn nàn.',by:'Nguyễn Thị Hoa',date:'21/08/2026',status:'Rejected',why:'Đã có hợp đồng thay toàn bộ dãy A.'},
 ];
+const REQ_X={'BT-0313':['TB-0303','Thường',false],'BT-0312':['TB-0203','Khẩn',true],'BT-0311':['TB-0401','Thường',false],'BT-0309':['TB-0103','Thường',false],'BT-0305':['TB-0302','Thấp',false],'BT-0301':['TB-0403','Thường',false]};
+REQ.forEach(r=>{const x=REQ_X[r.id];if(x){r.code=x[0];r.prio=x[1];r.stopped=x[2]}});
 let FEEDBACK=[
  {id:1,cust:'Trần Bảo Ngọc',at:'20/09/2026 07:45',text:'Khu tạ tự do buổi tối hơi đông, mong phòng tập cân nhắc thêm một khung squat.',read:false},
  {id:2,cust:'Mai Anh Thư',at:'19/09/2026 21:10',text:'Phòng tắm nữ thiếu máy sấy tóc vào giờ cao điểm.',read:false},
- {id:3,cust:'Trịnh Quốc Bảo',at:'18/09/2026 18:30',text:'PT Thắng hướng dẫn rất kỹ. Cảm ơn phòng tập.',read:true},
+ {id:3,cust:'Trịnh Quốc Bảo',at:'18/09/2026 18:30',text:'PT Hoàng Long hướng dẫn rất kỹ. Cảm ơn phòng tập.',read:true},
  {id:4,cust:'Ngô Thị Lan',at:'16/09/2026 06:20',text:'Nhạc ở khu cardio buổi sáng hơi to.',read:true},
+ {id:5,cust:'Nguyễn Minh An',at:'14/09/2026 20:05',text:'Mong có thêm khung giờ PT cuối tuần vào buổi sáng.',read:true},
 ];
 let BLOG=[
- {id:1,title:'Khu tập chức năng mở cửa từ tháng 10',date:'17/09/2026',status:'Active',body:'<p>Thêm 120 m² sàn tập với làn cỏ nhân tạo, xe đẩy sled, battle rope và khung xà.</p>'},
- {id:2,title:'5 bài compound cho người mới tập tạ',date:'15/09/2026',status:'Active',body:'<p>Squat, deadlift, bench press, overhead press và row.</p>'},
- {id:3,title:'Ăn gì trước buổi tập sáng sớm?',date:'12/09/2026',status:'Active',body:'<p>Một bữa nhỏ dễ tiêu 45–60 phút trước khi tập.</p>'},
- {id:4,title:'Lịch tập Tết 2027',date:'—',status:'Inactive',body:'<p>Bản nháp.</p>'},
- {id:5,title:'Giờ mở cửa dịp Quốc khánh 2/9',date:'28/08/2026',status:'Inactive',body:'<p>Ngày 2/9 phòng tập mở từ 07:00 đến 20:00.</p>'},
+ {id:1,title:'Khu tập chức năng mở cửa từ tháng 10',cat:'Tin tức',excerpt:'Khu functional mở cửa từ 01/10.',date:'17/09/2026',status:'Active',body:'<p>Thêm 120 m² sàn tập với làn cỏ nhân tạo, xe đẩy sled, battle rope và khung xà.</p>'},
+ {id:2,title:'5 bài compound cho người mới tập tạ',cat:'Tập luyện',excerpt:'Năm bài nền tảng cho người mới.',date:'15/09/2026',status:'Active',body:'<p>Squat, deadlift, bench press, overhead press và row.</p>'},
+ {id:3,title:'Ăn gì trước buổi tập sáng sớm?',cat:'Dinh dưỡng',excerpt:'Bữa nhỏ dễ tiêu trước giờ tập.',date:'12/09/2026',status:'Active',body:'<p>Một bữa nhỏ dễ tiêu 45–60 phút trước khi tập.</p>'},
+ {id:4,title:'Lịch tập Tết 2027',cat:'Tin tức',excerpt:'',date:'—',status:'Inactive',body:'<p>Bản nháp.</p>'},
+ {id:5,title:'Giờ mở cửa dịp Quốc khánh 2/9',cat:'Tin tức',excerpt:'',date:'28/08/2026',status:'Inactive',body:'<p>Ngày 2/9 phòng tập mở từ 07:00 đến 20:00.</p>'},
 ];
 let SENT=[{title:'Lịch bảo trì điều hòa 01/10',to:'Tất cả',at:'18/09/2026 09:00'}];
 
+/* ---------- dữ liệu bổ sung (E) ---------- */
+const TODAYD=new Date(2026,8,20);
+MPKG.forEach(p=>{p.kind=p.dur==='1 ngày'?'Gói Ngày':'Gói tập';p.benefits=p.benefits||(p.kind==='Gói Ngày'?'Vào tập 1 lượt trong ngày\nDùng đủ thiết bị khu chung':'Tập không giới hạn giờ mở cửa\nDùng đủ thiết bị khu cardio và khu tạ\nMiễn phí nước uống');p.exLib=p.exLib??(p.kind!=='Gói Ngày')});
+PTPKG.forEach(p=>{p.benefits=p.benefits||(p.type==='session'?'Một buổi 90 phút cùng huấn luyện viên':'Huấn luyện viên riêng\nGiáo án và thực đơn cá nhân hóa');p.desc=p.desc||(p.type==='session'?'Không ràng buộc kỳ hạn.':'');p.exLib=p.exLib??(p.type!=='session')});
+VOUCH.forEach(v=>{if(v.scope==='all')v.scope='both'});
+VOUCH.push({code:'TET2027X',kind:'pct',value:20,used:0,max:50,per:1,min:0,scope:'both',from:'20/01/2027',to:'28/02/2027',status:'Active'});
+[['NV-0118','Strength & Conditioning',8],['NV-0121','Giảm mỡ · Thể hình nữ',6],['NV-0127','Tăng cơ · Powerlifting',9],['NV-0133','Yoga & Phục hồi chấn thương',5]].forEach(([id,sp,y])=>{const x=STAFF.find(t=>t.id===id);if(x){x.spec=sp;x.years=y;x.comm=70}});
+STAFF.forEach(x=>{if(x.status==='Inactive'){x.leftAt='02/09/2026';x.leftWhy='Chuyển về quê làm việc, đã bàn giao khách.'}});
+LEAVES.forEach(l=>{const st=STAFF.find(t=>t.name===l.who);l.emp=st?st.id:'';if(l.type==='Nghỉ ốm')l.type='Nghỉ phép năm'});
+const ANNUAL_USED={'Hoàng Long':3,'Nguyễn Thị Hoa':5,'Bùi Khánh Vân':2,'Đỗ Minh Khoa':1,'Phạm Thu Trang':4,'Vũ Hải Yến':2};
+const JOINED={'KH-1001':'10/03/2026','KH-1003':'05/10/2025','KH-1004':'11/07/2026','KH-1007':'01/09/2026','KH-1008':'02/09/2026','KH-1009':'20/04/2026','KH-1010':'05/09/2026','KH-0975':'03/02/2024'};
+CUSTOMERS.forEach(c=>{c.joined=JOINED[c.id]||'15/06/2026'});
+CUSTOMERS.push(
+ {id:'KH-0430',name:'Nguyễn Thị Hoa',phone:'0356789012',email:'hoa.nt@gms.vn',dob:'04/04/1998',type:'Tự chủ',status:'Active',pkg:'Gói 1 Tháng, hạn 12/10/2026',pt:'',joined:'01/09/2026'},
+ {id:'KH-0241',name:'Nguyễn Minh An',phone:'0905123456',email:'an.nguyen@email.com',dob:'14/06/1999',type:'Tự chủ',status:'Active',pkg:'Gói 6 Tháng, hạn 14/11/2026',pt:'Gói PT 3 Tháng, còn 59 buổi',joined:'12/05/2026'},
+ {id:'KH-1002',name:'Lê Minh Tuấn',phone:'0913456789',email:'tuan.lm@gmail.com',dob:'09/09/1994',type:'Tự chủ',status:'Active',pkg:'Gói Ngày, hạn 20/09/2026',pt:'',joined:'20/09/2026'},
+ {id:'KH-1005',name:'Vũ Hoài Nam',phone:'0971222333',email:'nam.vh@gmail.com',dob:'21/06/1996',type:'Tự chủ',status:'Active',pkg:'',pt:'Gói PT Couple 1 Tháng, còn 20 buổi',joined:'20/09/2026'},
+ {id:'KH-1011',name:'Đỗ Lan Chi',phone:'0981333444',email:'chi.dl@gmail.com',dob:'30/01/1997',type:'Tự chủ',status:'Active',pkg:'',pt:'Gói PT Couple 1 Tháng, còn 20 buổi',joined:'20/09/2026'}
+);
+const SESS={'KH-0241':[['23/09/2026 19:00','Hoàng Long','Đã xếp'],['26/09/2026 08:00','Hoàng Long','Đã xếp'],['30/09/2026 17:00','Hoàng Long','Đã xếp (buổi lẻ)'],['18/11/2026 19:00','Hoàng Long','Đã xếp']],
+ 'KH-1009':[['20/09/2026 19:00','Hoàng Long','Đã xếp'],['24/09/2026 19:00','Hoàng Long','Đã xếp'],['28/09/2026 19:00','Hoàng Long','Đã xếp']],
+ 'KH-1005':[['23/09/2026 17:00','Hoàng Long','Đã xếp']],'KH-1011':[['23/09/2026 17:00','Hoàng Long','Đã xếp']]};
+CUSTOMERS.sort((a,b)=>a.id.localeCompare(b.id));
 const NAV=[
  {group:'Cấu hình'},
  {key:'params',href:'#/params',icon:'gear',label:'Tham số'},
@@ -613,8 +690,8 @@ const lockTip=(label,tip,cls='btn-danger')=>`<span class="tip-wrap"><button clas
 function viewParams(){
   render(page('params',crumb(['Tham số']),'Tham số vận hành','4.1.1 / L1 / UC-09','Danh mục cố định. Bấm vào một dòng để sửa.','',`
     <div class="banner b-info" style="margin-bottom:16px">${I.info}<span>Thay đổi chỉ áp dụng cho bản ghi tạo mới từ thời điểm lưu, không áp ngược cho đơn và hồ sơ đã tạo.</span></div>
-    <div class="card"><div class="table-wrap"><table><thead><tr><th>Tham số</th><th class="r">Giá trị</th><th></th></tr></thead><tbody>
-    ${PARAMS.map(p=>`<tr class="click" tabindex="0" data-go="${p.link||'#/params/'+p.k}"><td><b>${p.label}</b><div class="muted" style="font-size:12px">${p.link?'Sửa ở màn Giờ hoạt động':'Áp dụng cho bản ghi tạo mới từ thời điểm lưu'}</div></td><td class="r num"><b style="font-size:15px">${p.v}</b> <span class="muted">${p.unit}</span></td><td class="r muted" style="width:40px">›</td></tr>`).join('')}
+    <div class="card"><div class="table-wrap"><table><thead><tr><th>Mã</th><th>Tham số</th><th class="r">Giá trị hiện tại</th><th></th></tr></thead><tbody>
+    ${PARAMS.map(p=>`<tr class="click" tabindex="0" data-go="${p.link||'#/params/'+p.k}"><td class="num">${p.c}</td><td><b>${p.label}</b><div class="muted" style="font-size:12px">${p.link?'Sửa ở màn Giờ hoạt động':'Áp dụng cho bản ghi tạo mới từ thời điểm lưu'}</div></td><td class="r num"><b style="font-size:15px">${p.v}</b> <span class="muted">${p.unit}</span></td><td class="r muted" style="width:40px">›</td></tr>`).join('')}
     </tbody></table></div></div>`));
   bindRows();
 }
@@ -678,101 +755,119 @@ function viewHours(){
 }
 
 /* ---------- 4.2.x PACKAGES ---------- */
-let PKF={st:'all'};
-const pkgTabs=a=>`<div class="tabs" role="tablist"><button role="tab" aria-selected="${a==='g'}" onclick="location.hash='#/packages'">Gói tập & gói ngày</button><button role="tab" aria-selected="${a==='p'}" onclick="location.hash='#/ptpackages'">Gói PT</button></div>`;
-function stopSale(p,back){modal({title:`Ngừng bán gói ${esc(p.name)}?`,text:`<p>Gói sẽ biến khỏi danh mục bán mới; các đơn đang chạy không bị ảnh hưởng.</p>${p.running?`<p><b>${p.running}</b> đơn đang chạy vẫn giữ nguyên.</p>`:''}`,ok:'Ngừng bán',danger:true,onOk:()=>{p.status='Inactive';toast('','Đã ngừng bán '+p.name+'.');back()}})}
+let PKF={st:'all',t:'all'};
+const pkgTabs=a=>`<div class="tabs" role="tablist"><button role="tab" aria-selected="${a==='g'}" onclick="location.hash='#/packages'">Gói tập & Gói Ngày</button><button role="tab" aria-selected="${a==='p'}" onclick="location.hash='#/ptpackages'">Gói PT</button></div>`;
+function stopSale(p,back){modal({title:`Ngừng bán ${esc(p.name)}?`,text:`<p>Gói biến khỏi danh mục bán mới; các đơn đang chạy không bị ảnh hưởng.</p>${p.running?`<p><b>${p.running}</b> đơn đang chạy vẫn giữ nguyên.</p>`:''}`,ok:'Ngừng bán',danger:true,onOk:()=>{p.status='Inactive';toast('','Đã ngừng bán '+p.name+'.');back()}})}
+function resell(p,back){modal({title:`Bán lại ${esc(p.name)}?`,text:'<p>Gói trở lại danh mục bán mới với giá hiện tại.</p>',ok:'Bán lại',onOk:()=>{p.status='Active';toast('','Đã bán lại '+p.name+'.');back()}})}
+const benefitErr=t=>{const L=t.split('\n').map(x=>x.trim()).filter(Boolean);if(t.length>1000)return 'Quyền lợi tối đa 1000 ký tự.';if(L.length>10)return 'Tối đa 10 dòng quyền lợi.';if(L.some(x=>x.length<3||x.length>100))return 'Mỗi dòng quyền lợi dài 3–100 ký tự.';return ''};
 function viewPackages(){
   const rows=MPKG.filter(p=>PKF.st==='all'||p.status===PKF.st);
   render(page('packages',crumb(['Danh mục gói']),'Danh mục gói','4.2.1 / L1 / UC-10','Giá niêm yết là giá cuối khách trả, đã gồm VAT.',`<a class="btn btn-primary" href="#/packages/new">${I.plus} Thêm gói</a>`,`
     <div class="card">${pkgTabs('g')}<div class="filters"><select class="select" id="pst"><option value="all">Mọi trạng thái</option><option value="Active" ${PKF.st==='Active'?'selected':''}>Đang bán</option><option value="Inactive" ${PKF.st==='Inactive'?'selected':''}>Ngừng bán</option></select></div>
-    <div class="table-wrap"><table><thead><tr><th>Tên gói</th><th>Thời hạn</th><th class="r">Giá (gồm VAT)</th><th class="r">Đơn đang chạy</th><th>Trạng thái</th><th></th></tr></thead><tbody>
-    ${rows.map(p=>`<tr class="click" tabindex="0" data-go="#/packages/${p.id}"><td><b>${esc(p.name)}</b></td><td>${p.dur}</td><td class="r num">${vnd(p.price)}</td><td class="r num">${p.running}</td><td>${active_(p.status)}</td><td class="r">${p.status==='Active'?`<button class="btn btn-sm btn-danger" data-stop="${p.id}">Ngừng bán</button>`:''}</td></tr>`).join('')}
+    <div class="table-wrap"><table><thead><tr><th>Tên gói</th><th>Loại</th><th>Thời hạn</th><th class="r">Giá (gồm VAT)</th><th class="r">Đơn đang chạy</th><th>Thư viện bài tập</th><th>Trạng thái</th><th></th></tr></thead><tbody>
+    ${rows.map(p=>`<tr class="click" tabindex="0" data-go="#/packages/${p.id}"><td><b>${esc(p.name)}</b></td><td>${p.kind}</td><td>${p.dur}</td><td class="r num">${vnd(p.price)}</td><td class="r num">${p.running}</td><td>${p.exLib?'Có':'<span class="muted">Không</span>'}</td><td>${active_(p.status)}</td><td class="r">${p.status==='Active'?`<button class="btn btn-sm btn-danger" data-stop="${p.id}">Ngừng bán</button>`:`<button class="btn btn-sm" data-resell="${p.id}">Bán lại</button>`}</td></tr>`).join('')}
     </tbody></table></div></div>`));
   $('#pst').onchange=e=>{PKF.st=e.target.value;viewPackages()};
-  $$('[data-stop]').forEach(b=>b.onclick=()=>stopSale(MPKG.find(p=>p.id===b.dataset.stop),viewPackages));bindRows();
+  $$('[data-stop]').forEach(b=>b.onclick=()=>stopSale(MPKG.find(p=>p.id===b.dataset.stop),viewPackages));
+  $$('[data-resell]').forEach(b=>b.onclick=()=>resell(MPKG.find(p=>p.id===b.dataset.resell),viewPackages));bindRows();
 }
 function viewPackage(id){
-  const isNew=id==='new';const p=isNew?{name:'',price:'',dur:'1 tháng',desc:'',status:'Active'}:MPKG.find(x=>x.id===id);if(!p){location.hash='#/packages';return}
-  render(page('packages',crumb(['Danh mục gói','#/packages'],[isNew?'Thêm gói':p.name]),isNew?'Thêm gói tập':esc(p.name),'4.2.2 / L2 / UC-10','','',`
+  const isNew=id==='new';const p=isNew?{name:'',price:'',dur:'1 tháng',desc:'',benefits:'',exLib:true,status:'Active'}:MPKG.find(x=>x.id===id);if(!p){location.hash='#/packages';return}
+  render(page('packages',crumb(['Danh mục gói','#/packages'],[isNew?'Thêm gói':p.name]),isNew?'Thêm gói tập':esc(p.name),'4.2.2 / L2 / UC-10','Gói Ngày luôn là 1 ngày; gói tập tính theo tháng.','',`
     <div class="card" style="max-width:760px"><div class="pad"><div class="form-grid">
-      <div class="f full" id="f-pn"><label for="pn">Tên gói<span class="req">*</span></label><input class="input" id="pn" value="${esc(p.name)}"><span class="err">Tên gói không được để trống.</span></div>
+      <div class="f full" id="f-pn"><label for="pn">Tên gói<span class="req">*</span></label><input class="input" id="pn" maxlength="100" value="${esc(p.name)}"><span class="err">Tên gói không được để trống.</span></div>
+      <div class="f"><label for="pd">Thời hạn<span class="req">*</span></label><select class="select" id="pd">${DURS.map(d=>`<option ${d===p.dur?'selected':''}>${d}</option>`).join('')}</select><span class="hint">1 ngày là Gói Ngày; 1/3/6/9/12 tháng là gói tập.</span></div>
       <div class="f" id="f-pp"><label for="pp">Giá (đã gồm VAT)<span class="req">*</span></label><input class="input num" id="pp" inputmode="numeric" value="${p.price}"><span class="hint">Giá đã bao gồm VAT. Đổi giá không áp dụng cho đơn đã tạo.</span><span class="err">Nhập giá lớn hơn 0.</span></div>
-      <div class="f"><label for="pd">Thời hạn<span class="req">*</span></label><select class="select" id="pd">${DURS.map(d=>`<option ${d===p.dur?'selected':''}>${d}</option>`).join('')}</select><span class="hint">Danh sách thời hạn do Manager quản lý.</span></div>
-      <div class="f full"><label for="pdesc">Mô tả</label><textarea class="input" id="pdesc">${esc(p.desc)}</textarea></div>
+      <div class="f full" id="f-pdesc"><label for="pdesc">Mô tả</label><textarea class="input" id="pdesc" maxlength="500">${esc(p.desc)}</textarea><span class="hint">Tối đa 500 ký tự.</span><span class="err">Mô tả tối đa 500 ký tự.</span></div>
+      <div class="f full" id="f-pben"><label for="pben">Quyền lợi</label><textarea class="input" id="pben" rows="5" placeholder="Mỗi dòng một quyền lợi">${esc(p.benefits||'')}</textarea><span class="hint">Mỗi dòng một quyền lợi (3–100 ký tự), tối đa 10 dòng, tổng tối đa 1000 ký tự.</span><span class="err" id="pbenErr"></span></div>
+      <div class="f full"><label class="check"><input type="checkbox" id="pex" ${p.exLib?'checked':''}> Mở Thư viện bài tập cho hội viên có gói này</label></div>
       <div class="f"><span class="lbl">Trạng thái</span><div>${active_(p.status)}</div></div>
-    </div></div><div class="form-actions">${!isNew&&p.status==='Active'?`<button class="btn btn-danger" id="stop" style="margin-right:auto">Ngừng bán</button>`:''}<a class="btn" href="#/packages">Hủy</a><button class="btn btn-primary" id="save">Lưu</button></div></div>`));
+    </div></div><div class="form-actions">${!isNew&&p.status==='Active'?`<button class="btn btn-danger" id="stop" style="margin-right:auto">Ngừng bán</button>`:''}${!isNew&&p.status!=='Active'?`<button class="btn" id="resell" style="margin-right:auto">Bán lại</button>`:''}<a class="btn" href="#/packages">Hủy</a><button class="btn btn-primary" id="save">Lưu</button></div></div>`));
   const st=$('#stop');if(st)st.onclick=()=>stopSale(p,()=>location.hash='#/packages');
-  $('#save').onclick=()=>{const n=val('pn').trim(),pr=+val('pp').replace(/\D/g,'');const ok=mark('f-pn',!!n)&mark('f-pp',pr>0);if(!ok)return;
-    Object.assign(p,{name:n,price:pr,dur:val('pd'),desc:val('pdesc')});if(isNew)MPKG.push({...p,id:'G-0'+(MPKG.length+1),running:0});toast('MSG-042','Đã lưu gói.');location.hash='#/packages'};
+  const rs=$('#resell');if(rs)rs.onclick=()=>resell(p,()=>location.hash='#/packages');
+  $('#save').onclick=()=>{const n=val('pn').trim(),pr=+val('pp').replace(/\D/g,''),be=benefitErr(val('pben'));$('#pbenErr').innerHTML=be;
+    const ok=mark('f-pn',!!n)&mark('f-pp',pr>0)&mark('f-pdesc',val('pdesc').length<=500)&mark('f-pben',!be);if(!ok)return;
+    Object.assign(p,{name:n,price:pr,dur:val('pd'),desc:val('pdesc'),benefits:val('pben').trim(),exLib:$('#pex').checked,kind:val('pd')==='1 ngày'?'Gói Ngày':'Gói tập'});if(isNew)MPKG.push({...p,id:'G-0'+(MPKG.length+1),running:0});toast('MSG-042','Đã lưu gói.');location.hash='#/packages'};
 }
+const PTYPE={single:'Gói đơn',couple:'Gói couple',session:'Buổi lẻ'};
 function viewPtPackages(){
-  const rows=PTPKG.filter(p=>PKF.st==='all'||p.status===PKF.st);
-  render(page('packages',crumb(['Danh mục gói','#/packages'],['Gói PT']),'Danh mục gói','4.2.3 / L1 / UC-10','Gói PT tính theo số buổi và không áp voucher.',`<a class="btn btn-primary" href="#/ptpackages/new">${I.plus} Thêm gói PT</a>`,`
-    <div class="card">${pkgTabs('p')}<div class="filters"><select class="select" id="ptype"><option value="all">Đơn và couple</option><option value="single" ${PKF.t==='single'?'selected':''}>Gói đơn</option><option value="couple" ${PKF.t==='couple'?'selected':''}>Gói couple</option></select></div>
-    <div class="table-wrap"><table><thead><tr><th>Tên gói</th><th class="r">Số buổi</th><th class="r">Giá</th><th class="r">Giá trị 1 buổi</th><th>Loại</th><th>Trạng thái</th><th></th></tr></thead><tbody>
-    ${rows.filter(p=>!PKF.t||PKF.t==='all'||p.type===PKF.t).map(p=>`<tr class="click" tabindex="0" data-go="#/ptpackages/${p.id}"><td><b>${esc(p.name)}</b></td><td class="r num">${p.n}</td><td class="r num">${vnd(p.price)}</td><td class="r num muted">${vnd(p.price/p.n)}</td><td>${p.type==='couple'?'Couple':'Đơn'}</td><td>${active_(p.status)}</td><td class="r">${p.status==='Active'?`<button class="btn btn-sm btn-danger" data-stop="${p.id}">Ngừng bán</button>`:''}</td></tr>`).join('')}
+  const rows=PTPKG.filter(p=>(PKF.st==='all'||p.status===PKF.st)&&(PKF.t==='all'||p.type===PKF.t));
+  render(page('packages',crumb(['Danh mục gói','#/packages'],['Gói PT']),'Danh mục gói','4.2.3 / L1 / UC-10','Gói PT không áp voucher. Buổi lẻ chỉ sửa, không thêm hay ngừng bán.',`<a class="btn btn-primary" href="#/ptpackages/new">${I.plus} Thêm gói PT</a>`,`
+    <div class="card">${pkgTabs('p')}<div class="filters"><select class="select" id="ptype"><option value="all">Mọi loại gói PT</option>${Object.entries(PTYPE).map(([k,v])=>`<option value="${k}" ${PKF.t===k?'selected':''}>${v}</option>`).join('')}</select>
+      <select class="select" id="pst"><option value="all">Mọi trạng thái</option><option value="Active" ${PKF.st==='Active'?'selected':''}>Đang bán</option><option value="Inactive" ${PKF.st==='Inactive'?'selected':''}>Ngừng bán</option></select></div>
+    <div class="table-wrap"><table><thead><tr><th>Tên gói</th><th>Loại</th><th>Thời hạn</th><th class="r">Số buổi dự kiến</th><th class="r">Giá (gồm VAT)</th><th class="r">Giá trị 1 buổi</th><th>Trạng thái</th><th></th></tr></thead><tbody>
+    ${rows.map(p=>`<tr class="click" tabindex="0" data-go="#/ptpackages/${p.id}"><td><b>${esc(p.name)}</b></td><td>${PTYPE[p.type]}</td><td>${p.dur||'<span class="muted">Không kỳ hạn</span>'}</td><td class="r num">${p.type==='session'?'<span class="muted">—</span>':p.n}</td><td class="r num">${vnd(p.price)}</td><td class="r num muted">${vnd(p.price/p.n)}</td><td>${active_(p.status)}</td><td class="r">${p.type==='session'?'':p.status==='Active'?`<button class="btn btn-sm btn-danger" data-stop="${p.id}">Ngừng bán</button>`:`<button class="btn btn-sm" data-resell="${p.id}">Bán lại</button>`}</td></tr>`).join('')}
     </tbody></table></div></div>`));
-  $('#ptype').onchange=e=>{PKF.t=e.target.value;viewPtPackages()};
-  $$('[data-stop]').forEach(b=>b.onclick=()=>stopSale(PTPKG.find(p=>p.id===b.dataset.stop),viewPtPackages));bindRows();
+  $('#ptype').onchange=e=>{PKF.t=e.target.value;viewPtPackages()};$('#pst').onchange=e=>{PKF.st=e.target.value;viewPtPackages()};
+  $$('[data-stop]').forEach(b=>b.onclick=()=>stopSale(PTPKG.find(p=>p.id===b.dataset.stop),viewPtPackages));
+  $$('[data-resell]').forEach(b=>b.onclick=()=>resell(PTPKG.find(p=>p.id===b.dataset.resell),viewPtPackages));bindRows();
 }
 function viewPtPackage(id){
-  const isNew=id==='new';const p=isNew?{name:'',n:12,price:'',type:'single',status:'Active'}:PTPKG.find(x=>x.id===id);if(!p){location.hash='#/ptpackages';return}
+  const isNew=id==='new';const p=isNew?{name:'',n:20,price:'',type:'single',dur:'1 tháng',desc:'',benefits:'',status:'Active'}:PTPKG.find(x=>x.id===id);if(!p){location.hash='#/ptpackages';return}
+  const sess=p.type==='session';
   const per=()=>{const n=+val('ptn'),pr=+val('ptp').replace(/\D/g,'');$('#per').textContent=n&&pr?vnd(pr/n):'—'};
-  render(page('packages',crumb(['Danh mục gói','#/packages'],['Gói PT','#/ptpackages'],[isNew?'Thêm gói PT':p.name]),isNew?'Thêm gói PT':esc(p.name),'4.2.4 / L2 / UC-10','','',`
+  render(page('packages',crumb(['Danh mục gói','#/packages'],['Gói PT','#/ptpackages'],[isNew?'Thêm gói PT':p.name]),isNew?'Thêm gói PT':esc(p.name),'4.2.4 / L2 / UC-10',sess?'Gói buổi lẻ chỉ được sửa, không đổi loại, không ngừng bán.':'','',`
     <div class="card" style="max-width:760px"><div class="pad"><div class="form-grid">
-      <div class="f full" id="f-ptn2"><label for="ptname">Tên gói<span class="req">*</span></label><input class="input" id="ptname" value="${esc(p.name)}"><span class="err">Tên gói không được để trống.</span></div>
-      <div class="f" id="f-ptn"><label for="ptn">Số buổi<span class="req">*</span></label><input class="input num" id="ptn" inputmode="numeric" value="${p.n}"><span class="err">Nhập số buổi lớn hơn 0.</span></div>
-      <div class="f" id="f-ptp"><label for="ptp">Giá<span class="req">*</span></label><input class="input num" id="ptp" inputmode="numeric" value="${p.price}"><span class="err">Nhập giá lớn hơn 0.</span></div>
-      <div class="f full"><span class="lbl">Loại</span><div class="radio-row"><label class="opt"><input type="radio" name="ptt" value="single" ${p.type==='single'?'checked':''}> Đơn (1 khách)</label><label class="opt"><input type="radio" name="ptt" value="couple" ${p.type==='couple'?'checked':''}> Couple (2 khách)</label></div></div>
+      <div class="f full" id="f-ptn2"><label for="ptname">Tên gói<span class="req">*</span></label><input class="input" id="ptname" maxlength="100" value="${esc(p.name)}"><span class="err">Tên gói không được để trống.</span></div>
+      ${sess?'':`<div class="f full"><span class="lbl">Loại</span><div class="radio-row"><label class="opt"><input type="radio" name="ptt" value="single" ${p.type==='single'?'checked':''}> Đơn (1 khách)</label><label class="opt"><input type="radio" name="ptt" value="couple" ${p.type==='couple'?'checked':''}> Couple (2 khách)</label></div></div>
+      <div class="f"><label for="ptd">Thời hạn<span class="req">*</span></label><select class="select" id="ptd">${['1 tháng','2 tháng','3 tháng'].map(d=>`<option ${d===p.dur?'selected':''}>${d}</option>`).join('')}</select></div>
+      <div class="f" id="f-ptn"><label for="ptn">Số buổi dự kiến<span class="req">*</span></label><input class="input num" id="ptn" inputmode="numeric" value="${p.n}"><span class="err">Nhập số buổi lớn hơn 0.</span></div>`}
+      <div class="f" id="f-ptp"><label for="ptp">Giá (đã gồm VAT)<span class="req">*</span></label><input class="input num" id="ptp" inputmode="numeric" value="${p.price}"><span class="err">Nhập giá lớn hơn 0.</span></div>
+      <div class="f full" id="f-ptdesc"><label for="ptdesc">Mô tả</label><textarea class="input" id="ptdesc" maxlength="500">${esc(p.desc||'')}</textarea><span class="hint">Tối đa 500 ký tự.</span><span class="err">Mô tả tối đa 500 ký tự.</span></div>
+      <div class="f full" id="f-ptben"><label for="ptben">Quyền lợi</label><textarea class="input" id="ptben" rows="4" placeholder="Mỗi dòng một quyền lợi">${esc(p.benefits||'')}</textarea><span class="hint">Mỗi dòng một quyền lợi (3–100 ký tự), tối đa 10 dòng.</span><span class="err" id="ptbenErr"></span></div>
       <div class="f full"><div class="banner b-role">${I.info}<div><b>Giá trị 1 buổi: <span id="per" class="num">${p.price?vnd(p.price/p.n):'—'}</span></b>Chốt vào từng buổi khi đơn được thanh toán, làm căn cứ tính hoa hồng PT. Gói PT không áp dụng voucher.</div></div></div>
-    </div></div><div class="form-actions">${!isNew&&p.status==='Active'?`<button class="btn btn-danger" id="stop" style="margin-right:auto">Ngừng bán</button>`:''}<a class="btn" href="#/ptpackages">Hủy</a><button class="btn btn-primary" id="save">Lưu</button></div></div>`));
-  $('#ptn').oninput=per;$('#ptp').oninput=per;
+    </div></div><div class="form-actions">${!isNew&&!sess&&p.status==='Active'?`<button class="btn btn-danger" id="stop" style="margin-right:auto">Ngừng bán</button>`:''}${!isNew&&!sess&&p.status!=='Active'?`<button class="btn" id="resell" style="margin-right:auto">Bán lại</button>`:''}<a class="btn" href="#/ptpackages">Hủy</a><button class="btn btn-primary" id="save">Lưu</button></div></div>`));
+  if(!sess){$('#ptn').oninput=per;}$('#ptp').oninput=per;
   const st=$('#stop');if(st)st.onclick=()=>stopSale(p,()=>location.hash='#/ptpackages');
-  $('#save').onclick=()=>{const nm=val('ptname').trim(),n=+val('ptn'),pr=+val('ptp').replace(/\D/g,'');const ok=mark('f-ptn2',!!nm)&mark('f-ptn',n>0)&mark('f-ptp',pr>0);if(!ok)return;
-    Object.assign(p,{name:nm,n,price:pr,type:$('input[name=ptt]:checked').value});if(isNew)PTPKG.push({...p,id:'P-0'+(PTPKG.length+1)});toast('MSG-042','Đã lưu gói.');location.hash='#/ptpackages'};
+  const rs=$('#resell');if(rs)rs.onclick=()=>resell(p,()=>location.hash='#/ptpackages');
+  $('#save').onclick=()=>{const nm=val('ptname').trim(),n=sess?1:+val('ptn'),pr=+val('ptp').replace(/\D/g,''),be=benefitErr(val('ptben'));$('#ptbenErr').innerHTML=be;
+    const ok=mark('f-ptn2',!!nm)&(sess||mark('f-ptn',n>0))&mark('f-ptp',pr>0)&mark('f-ptdesc',val('ptdesc').length<=500)&mark('f-ptben',!be);if(!ok)return;
+    Object.assign(p,{name:nm,n,price:pr,desc:val('ptdesc'),benefits:val('ptben').trim()});if(!sess)Object.assign(p,{type:$('input[name=ptt]:checked').value,dur:val('ptd')});
+    if(isNew)PTPKG.push({...p,id:'P-0'+(PTPKG.length+1)});toast('MSG-042','Đã lưu gói.');location.hash='#/ptpackages'};
 }
 
 /* ---------- 4.3.x VOUCHERS ---------- */
-let VF={st:'all',scope:'all'};
+let VF={st:'all',scope:'all',q:''};
 const vVal=v=>v.kind==='pct'?`${v.value}%`:vnd(v.value);
-const vScope=s=>s==='all'?'Gói tập & gói ngày':'Chỉ gói tập';
+const vScope=s=>s==='gym'?'Chỉ gói tập':'Gói tập & Gói Ngày';
+const vState=v=>{if(v.status==='Inactive')return['Đã vô hiệu hóa','muted','off'];if(D(v.to)<TODAYD)return['Hết hạn','muted','expired'];if(v.used>=v.max)return['Hết lượt','warn','full'];if(D(v.from)>TODAYD)return['Chưa bắt đầu','info','soon'];return['Đang hoạt động','ok','run']};
 function viewVouchers(){
-  const rows=VOUCH.filter(v=>(VF.st==='all'||v.status===VF.st)&&(VF.scope==='all'||v.scope===VF.scope));
-  render(page('vouchers',crumb(['Voucher']),'Voucher','4.3.1 / L1 / UC-12','Voucher không bao giờ áp cho gói PT.',`<a class="btn btn-primary" href="#/vouchers/new">${I.plus} Thêm voucher</a>`,`
-    <div class="card"><div class="filters">
-      <select class="select" id="vs"><option value="all">Mọi trạng thái</option><option value="Active" ${VF.st==='Active'?'selected':''}>Đang hoạt động</option><option value="Inactive" ${VF.st==='Inactive'?'selected':''}>Đã vô hiệu hóa</option></select>
-      <select class="select" id="vsc"><option value="all">Mọi phạm vi</option><option value="gym" ${VF.scope==='gym'?'selected':''}>Chỉ gói tập</option><option value="all2" ${VF.scope==='all2'?'selected':''}>Gói tập & gói ngày</option></select></div>
-    <div class="table-wrap"><table><thead><tr><th>Mã</th><th class="r">Giảm</th><th>Đã dùng</th><th>Phạm vi</th><th>Hiệu lực</th><th>Trạng thái</th><th></th></tr></thead><tbody>
-    ${rows.filter(v=>VF.scope!=='all2'||v.scope==='all').map(v=>`<tr class="click" tabindex="0" data-go="#/vouchers/${v.code}"><td><b class="num">${v.code}</b></td><td class="r num">${vVal(v)}</td><td style="min-width:120px"><div class="num" style="font-size:13px">${v.used}/${v.max}</div><div class="mini-bar"><i style="width:${v.used/v.max*100}%"></i></div></td><td>${vScope(v.scope)}</td><td class="num">${v.from.slice(0,5)} – ${v.to}</td><td>${v.status==='Active'?pill('Đang hoạt động','ok'):pill('Đã vô hiệu hóa','muted')}</td>
-      <td class="r" style="white-space:nowrap">${v.status==='Active'?`<button class="btn btn-sm" data-off="${v.code}">Vô hiệu hóa</button> `:''}${v.used>0?lockTip('Xóa','Voucher đã được sử dụng nên chỉ có thể vô hiệu hóa, không thể xóa.'):`<button class="btn btn-sm btn-danger" data-del="${v.code}">Xóa</button>`}</td></tr>`).join('')}
-    </tbody></table></div></div>`));
-  $('#vs').onchange=e=>{VF.st=e.target.value;viewVouchers()};$('#vsc').onchange=e=>{VF.scope=e.target.value==='all2'?'all2':e.target.value;viewVouchers()};
+  const rows=VOUCH.filter(v=>(VF.st==='all'||vState(v)[2]===VF.st)&&(VF.scope==='all'||v.scope===VF.scope)&&(!VF.q||v.code.toLowerCase().includes(VF.q.toLowerCase())));
+  render(page('vouchers',crumb(['Voucher']),'Voucher','4.3.1 / L1 / UC-12','Voucher không bao giờ áp cho gói PT và buổi lẻ.',`<a class="btn btn-primary" href="#/vouchers/new">${I.plus} Thêm voucher</a>`,`
+    <div class="card"><div class="filters"><select class="select" id="vs"><option value="all">Mọi trạng thái</option>${[['run','Đang hoạt động'],['soon','Chưa bắt đầu'],['full','Hết lượt'],['expired','Hết hạn'],['off','Đã vô hiệu hóa']].map(([k,l])=>`<option value="${k}" ${VF.st===k?'selected':''}>${l}</option>`).join('')}</select>
+      <select class="select" id="vsc"><option value="all">Mọi phạm vi</option><option value="gym" ${VF.scope==='gym'?'selected':''}>Chỉ gói tập</option><option value="both" ${VF.scope==='both'?'selected':''}>Gói tập & Gói Ngày</option></select></div>
+    <div class="table-wrap">${rows.length?`<table><thead><tr><th>Mã</th><th class="r">Giảm</th><th>Đã dùng</th><th>Phạm vi</th><th>Hiệu lực</th><th>Trạng thái</th><th></th></tr></thead><tbody>
+    ${rows.map(v=>{const stt=vState(v);return `<tr class="click" tabindex="0" data-go="#/vouchers/${v.code}"><td><b class="num">${v.code}</b></td><td class="r num">${vVal(v)}</td><td style="min-width:120px"><div class="num" style="font-size:13px">${v.used}/${v.max}</div><div class="mini-bar"><i style="width:${Math.min(100,v.used/v.max*100)}%"></i></div></td><td>${vScope(v.scope)}</td><td class="num">${v.from} – ${v.to}</td><td>${pill(stt[0],stt[1])}</td>
+      <td class="r" style="white-space:nowrap">${v.status==='Active'?`<button class="btn btn-sm" data-off="${v.code}">Vô hiệu hóa</button> `:''}${v.used>0?lockTip('Xóa','Voucher đã được sử dụng nên chỉ có thể vô hiệu hóa, không thể xóa.'):`<button class="btn btn-sm btn-danger" data-del="${v.code}">Xóa</button>`}</td></tr>`}).join('')}
+    </tbody></table>`:'<div class="empty">Không có voucher nào phù hợp với bộ lọc.</div>'}</div></div>`));
+  $('#vs').onchange=e=>{VF.st=e.target.value;viewVouchers()};$('#vsc').onchange=e=>{VF.scope=e.target.value;viewVouchers()};
   $$('[data-off]').forEach(b=>b.onclick=()=>{const v=VOUCH.find(x=>x.code===b.dataset.off);modal({title:`Vô hiệu hóa ${v.code}?`,text:'<p>Mã sẽ không dùng được cho đơn mới. Đơn đã áp mã không bị ảnh hưởng.</p>',ok:'Vô hiệu hóa',danger:true,onOk:()=>{v.status='Inactive';toast('','Đã vô hiệu hóa '+v.code+'.');viewVouchers()}})});
   $$('[data-del]').forEach(b=>b.onclick=()=>{const v=VOUCH.find(x=>x.code===b.dataset.del);modal({title:`Xóa ${v.code}?`,text:'<p>Mã chưa được dùng lần nào nên xóa được.</p>',ok:'Xóa',danger:true,onOk:()=>{VOUCH=VOUCH.filter(x=>x!==v);toast('','Đã xóa '+v.code+'.');viewVouchers()}})});
   bindRows();
 }
 function viewVoucher(code){
-  const isNew=code==='new';const v=isNew?{code:'',kind:'pct',value:'',used:0,max:'',per:1,min:0,scope:'all',from:'20/09/2026',to:'20/10/2026',status:'Active'}:VOUCH.find(x=>x.code===code);if(!v){location.hash='#/vouchers';return}
-  render(page('vouchers',crumb(['Voucher','#/vouchers'],[isNew?'Thêm voucher':v.code]),isNew?'Thêm voucher':v.code,'4.3.2 / L2 / UC-12',v.used?`Đã dùng ${v.used} lượt. Sửa điều kiện không áp ngược cho đơn đã áp mã.`:'','',`
+  const isNew=code==='new';const v=isNew?{code:'',kind:'pct',value:'',used:0,max:'',per:1,min:0,scope:'both',from:'20/09/2026',to:'20/10/2026',status:'Active'}:VOUCH.find(x=>x.code===code);if(!v){location.hash='#/vouchers';return}
+  render(page('vouchers',crumb(['Voucher','#/vouchers'],[isNew?'Thêm voucher':v.code]),isNew?'Thêm voucher':v.code,'4.3.2 / L2 / UC-12',v.used?`Đã dùng ${v.used} lượt. Mã không đổi được; sửa điều kiện không áp ngược cho đơn đã áp mã.`:'','',`
     <div class="grid-half" style="align-items:start">
-      <div class="card"><div class="card-head"><h2>Giá trị giảm</h2></div><div class="pad stack">
-        <div class="f" id="f-vc"><label for="vc">Mã<span class="req">*</span></label><input class="input num" id="vc" value="${v.code}" style="text-transform:uppercase" ${isNew?'':'readonly'}><span class="err" id="vcErr">Mã voucher đã tồn tại.</span></div>
-        <div class="f"><span class="lbl">Kiểu giảm</span><div class="radio-row"><label class="opt"><input type="radio" name="vk" value="pct" ${v.kind==='pct'?'checked':''}> Theo %</label><label class="opt"><input type="radio" name="vk" value="amt" ${v.kind==='amt'?'checked':''}> Số tiền cố định</label></div></div>
-        <div class="f" id="f-vv"><label for="vv">Giá trị giảm<span class="req">*</span></label><input class="input num" id="vv" inputmode="numeric" value="${v.value}"><span class="err">Nhập giá trị hợp lệ (% từ 1 đến 100).</span></div>
+      <div class="card"><div class="card-head"><h2>Mã & giá trị giảm</h2></div><div class="pad stack">
+        <div class="f" id="f-vc"><label for="vc">Mã voucher<span class="req">*</span></label><input class="input num" id="vc" maxlength="20" value="${v.code}" style="text-transform:uppercase" ${v.used?'readonly':''}><span class="hint">4–20 ký tự, chỉ chữ hoa và số, không trùng.</span><span class="err" id="vcErr">Mã voucher đã tồn tại.</span></div>
+        <div class="f"><span class="lbl">Loại giảm</span><div class="radio-row"><label class="opt"><input type="radio" name="vk" value="pct" ${v.kind==='pct'?'checked':''}> Theo %</label><label class="opt"><input type="radio" name="vk" value="amt" ${v.kind==='amt'?'checked':''}> Số tiền cố định</label></div></div>
+        <div class="f" id="f-vv"><label for="vv">Giá trị giảm<span class="req">*</span></label><input class="input num" id="vv" inputmode="numeric" value="${v.value}"><span class="hint">Theo %: 1–100. Số tiền: lớn hơn 0 (đ).</span><span class="err">Nhập giá trị hợp lệ (% từ 1 đến 100).</span></div>
       </div></div>
-      <div class="card"><div class="card-head"><h2>Điều kiện áp dụng</h2></div><div class="pad stack">
-        <div class="grid-half"><div class="f" id="f-vm"><label for="vm">Tổng lượt tối đa<span class="req">*</span></label><input class="input num" id="vm" value="${v.max}"><span class="err">Nhập số lớn hơn 0.</span></div>
-        <div class="f"><label for="vp">Số lần mỗi khách</label><input class="input num" id="vp" value="${v.per??''}" placeholder="Không giới hạn"><span class="hint">Mặc định 1. Để trống là không giới hạn.</span></div></div>
-        <div class="f"><label for="vmin">Giá trị đơn tối thiểu</label><input class="input num" id="vmin" value="${v.min}"><span class="hint">Tính trên giá trước giảm.</span></div>
-        <div class="f"><span class="lbl">Phạm vi</span><div class="radio-row"><label class="opt"><input type="radio" name="vsc" value="all" ${v.scope==='all'?'checked':''}> Gói tập & gói ngày</label><label class="opt"><input type="radio" name="vsc" value="gym" ${v.scope==='gym'?'checked':''}> Chỉ gói tập</label></div><span class="hint">Không có phạm vi nào gồm gói PT.</span></div>
-        <div class="grid-half"><div class="f"><label for="vf">Từ ngày</label><input class="input" type="date" id="vf" value="${toIso(v.from)}"></div><div class="f" id="f-vt"><label for="vt">Đến ngày</label><input class="input" type="date" id="vt" value="${toIso(v.to)}"><span class="err">Ngày kết thúc phải sau ngày bắt đầu.</span></div></div>
+      <div class="card"><div class="card-head"><h2>Giới hạn & hiệu lực</h2></div><div class="pad stack">
+        <div class="grid-half"><div class="f" id="f-vm"><label for="vm">Tổng lượt tối đa<span class="req">*</span></label><input class="input num" id="vm" value="${v.max}"><span class="err">Nhập số lớn hơn 0 và không nhỏ hơn số lượt đã dùng (${v.used}).</span></div>
+        <div class="f" id="f-vp"><label for="vp">Số lần mỗi khách</label><input class="input num" id="vp" value="${v.per??''}" placeholder="Không giới hạn"><span class="hint">Mặc định 1. Để trống là không giới hạn.</span><span class="err">Phải lớn hơn 0.</span></div></div>
+        <div class="f"><label for="vmin">Giá trị đơn tối thiểu (đ)</label><input class="input num" id="vmin" value="${v.min}"><span class="hint">Tính trên giá gói trước giảm.</span></div>
+        <div class="f"><span class="lbl">Phạm vi</span><div class="radio-row"><label class="opt"><input type="radio" name="vsc" value="both" ${v.scope==='both'?'checked':''}> Gói tập & Gói Ngày</label><label class="opt"><input type="radio" name="vsc" value="gym" ${v.scope==='gym'?'checked':''}> Chỉ gói tập</label></div><span class="hint">Không có phạm vi nào gồm gói PT và buổi lẻ.</span></div>
+        <div class="grid-half"><div class="f" id="f-vf"><label for="vf">Hiệu lực từ ngày<span class="req">*</span></label><input class="input" type="date" id="vf" value="${toIso(v.from)}"><span class="err">Chọn ngày bắt đầu.</span></div><div class="f" id="f-vt"><label for="vt">Đến ngày<span class="req">*</span></label><input class="input" type="date" id="vt" value="${toIso(v.to)}"><span class="err">Ngày kết thúc phải sau ngày bắt đầu và không ở quá khứ.</span></div></div>
+        <div class="f"><label for="vstat">Trạng thái</label><select class="select" id="vstat"><option value="Active" ${v.status==='Active'?'selected':''}>Đang hoạt động</option><option value="Inactive" ${v.status==='Inactive'?'selected':''}>Đã vô hiệu hóa</option></select></div>
       </div></div>
     </div>
     <div class="card" style="margin-top:16px"><div class="form-actions" style="border-top:0"><a class="btn" href="#/vouchers">Hủy</a><button class="btn btn-primary" id="save">Lưu voucher</button></div></div>`));
-  $('#save').onclick=()=>{const c=val('vc').trim().toUpperCase(),kind=$('input[name=vk]:checked').value,value=+val('vv').replace(/\D/g,''),max=+val('vm'),f=val('vf'),t=val('vt');
-    const dup=isNew&&VOUCH.some(x=>x.code===c);$('#vcErr').innerHTML=!c?'Mã không được để trống.':'Mã voucher đã tồn tại. ';
-    const ok=mark('f-vc',!!c&&!dup)&mark('f-vv',value>0&&(kind!=='pct'||value<=100))&mark('f-vm',max>0)&mark('f-vt',t>f);if(!ok)return;
-    Object.assign(v,{code:c,kind,value,max,per:val('vp')===''?null:+val('vp'),min:+val('vmin').replace(/\D/g,'')||0,scope:$('input[name=vsc]:checked').value,from:fmtD(fromIso(f)),to:fmtD(fromIso(t))});
+  $('#save').onclick=()=>{const c=val('vc').trim().toUpperCase(),kind=$('input[name=vk]:checked').value,value=+val('vv').replace(/\D/g,''),max=+val('vm'),f=val('vf'),t=val('vt'),stt=val('vstat'),per=val('vp')===''?null:+val('vp');
+    const dup=VOUCH.some(x=>x!==v&&x.code===c);$('#vcErr').innerHTML=!c?'Mã không được để trống.':!/^[A-Z0-9]{4,20}$/.test(c)?'Mã gồm 4–20 chữ hoa hoặc số.':'Mã voucher đã tồn tại. ';
+    const ok=mark('f-vc',/^[A-Z0-9]{4,20}$/.test(c)&&!dup)&mark('f-vv',value>0&&(kind!=='pct'||value<=100))&mark('f-vm',max>0&&max>=v.used)&mark('f-vp',per===null||per>0)&mark('f-vf',!!f)&mark('f-vt',!!t&&t>f&&(stt!=='Active'||fromIso(t)>=TODAYD));if(!ok)return;
+    Object.assign(v,{code:c,kind,value,max,per,min:+val('vmin').replace(/\D/g,'')||0,scope:$('input[name=vsc]:checked').value,from:fmtD(fromIso(f)),to:fmtD(fromIso(t)),status:stt});
     if(isNew)VOUCH.unshift(v);toast('','Đã lưu voucher '+c+'.');location.hash='#/vouchers'};
 }
 
@@ -784,250 +879,383 @@ function viewStaff(){
     <div class="card"><div class="filters">
       <select class="select" id="sft"><option value="all">Mọi chức danh</option>${['Manager','PT','Lễ tân'].map(t=>`<option ${SF.title===t?'selected':''}>${t}</option>`).join('')}</select>
       <select class="select" id="sfs"><option value="all">Mọi trạng thái</option><option value="Active" ${SF.st==='Active'?'selected':''}>Đang làm việc</option><option value="Inactive" ${SF.st==='Inactive'?'selected':''}>Đã nghỉ việc</option></select></div>
-    <div class="table-wrap"><table><thead><tr><th>Nhân sự</th><th>Chức danh</th><th>SĐT</th><th class="r">Hoa hồng</th><th>Trạng thái</th></tr></thead><tbody>
-    ${rows.map(s=>`<tr class="click" tabindex="0" data-go="#/staff/${s.id}"><td><div class="who"><span class="avatar">${initials(s.name)}</span><div><b>${esc(s.name)}</b><small>${s.email}</small></div></div></td><td>${s.title}</td><td class="num">${fmtPhone(s.phone)}</td><td class="r num">${s.title==='PT'?s.comm+'%':'<span class="muted">—</span>'}</td><td>${s.status==='Active'?pill('Đang làm việc','ok'):pill('Đã nghỉ việc','muted')}</td></tr>`).join('')}
+    <div class="table-wrap"><table><thead><tr><th>Mã nhân viên</th><th>Nhân sự</th><th>Chức danh</th><th>SĐT</th><th class="r">Hoa hồng</th><th>Trạng thái</th></tr></thead><tbody>
+    ${rows.map(s=>`<tr class="click" tabindex="0" data-go="#/staff/${s.id}"><td class="num">${s.id}</td><td><div class="who"><span class="avatar">${initials(s.name)}</span><div><b>${esc(s.name)}</b><small>${s.email}</small></div></div></td><td>${s.title}</td><td class="num">${fmtPhone(s.phone)}</td><td class="r num">${s.title==='PT'?s.comm+'%':'<span class="muted">—</span>'}</td><td>${s.status==='Active'?pill('Đang làm việc','ok'):pill('Đã nghỉ việc','muted')}</td></tr>`).join('')}
     </tbody></table></div><div class="table-foot"><span>${rows.length} người</span></div></div>`));
   $('#sft').onchange=e=>{SF.title=e.target.value;viewStaff()};$('#sfs').onchange=e=>{SF.st=e.target.value;viewStaff()};bindRows();
 }
 function viewStaffOne(id){
-  const isNew=id==='new';const s=isNew?{name:'',dob:'',title:'PT',phone:'',email:'',start:'2026-09-21',comm:PARAMS.find(p=>p.k==='comm').v,status:'Active',pending:{sessions:0,shifts:0,orders:0}}:STAFF.find(x=>x.id===id);if(!s){location.hash='#/staff';return}
+  const isNew=id==='new';const s=isNew?{name:'',dob:'',title:'PT',phone:'',email:'',start:'2026-09-21',comm:PARAMS.find(p=>p.k==='comm').v,spec:'',years:0,status:'Active',pending:{sessions:0,shifts:0,orders:0}}:STAFF.find(x=>x.id===id);if(!s){location.hash='#/staff';return}
   const pd=s.pending||{sessions:0,shifts:0,orders:0};const busy=!isNew&&(pd.sessions||pd.shifts||pd.orders);
   const title=s._t||s.title;const off=s.status==='Inactive';
   render(page('staff',crumb(['Nhân sự','#/staff'],[isNew?'Thêm nhân sự':s.name]),isNew?'Thêm nhân sự':esc(s.name),'5.1.2 / L2 / UC-13',off?'Đã nghỉ việc. Lịch sử buổi dạy, ca trực và giao dịch vẫn được giữ.':'','',`
     <div class="grid2"><div class="card"><div class="pad"><div class="form-grid">
-      <div class="f full" id="f-sn"><label for="sn">Họ và tên<span class="req">*</span></label><input class="input" id="sn" value="${esc(s.name)}" ${off?'disabled':''}><span class="err">Họ và tên không được để trống.</span></div>
+      <div class="f"><label>Mã nhân viên</label><div class="input num" style="background:var(--page);display:flex;align-items:center">${isNew?'Hệ thống tự sinh (NV-nnnn)':s.id}</div></div>
+      <div class="f" id="f-sn"><label for="sn">Họ và tên<span class="req">*</span></label><input class="input" id="sn" maxlength="50" value="${esc(s.name)}" ${off?'disabled':''}><span class="err">Họ và tên không được để trống.</span></div>
       <div class="f"><label for="sd">Ngày sinh</label><input class="input" type="date" id="sd" value="${s.dob}" ${off?'disabled':''}></div>
       <div class="f"><label for="st">Chức danh<span class="req">*</span></label><select class="select" id="st" ${busy||off?'disabled':''}>${['PT','Lễ tân','Manager'].map(t=>`<option ${t===title?'selected':''}>${t}</option>`).join('')}</select></div>
       ${busy?`<div class="full banner b-warn">${I.lock}<div><b>Không đổi được chức danh khi ${esc(s.name)} còn việc chưa xong: ${pd.sessions} buổi đã xếp, ${pd.shifts} ca chưa đóng, ${pd.orders} đơn chưa thu tiền.</b></div></div>`:''}
       <div class="f" id="f-sp"><label for="sp">SĐT<span class="req">*</span></label><input class="input num" id="sp" value="${s.phone}" maxlength="10" ${off?'disabled':''}><span class="err">SĐT phải gồm 10 chữ số, bắt đầu bằng 0.</span></div>
-      <div class="f" id="f-se"><label for="se">Email (dùng để đăng nhập)<span class="req">*</span></label><input class="input" id="se" value="${s.email}" ${off?'disabled':''}><span class="err">Email chưa đúng định dạng.</span></div>
+      <div class="f" id="f-se"><label for="se">Email (dùng để đăng nhập)<span class="req">*</span></label><input class="input" id="se" value="${s.email}" maxlength="100" ${off?'disabled':''}><span class="err">Email chưa đúng định dạng.</span></div>
       <div class="f"><label for="ss">Ngày vào làm</label><input class="input" type="date" id="ss" value="${s.start}" ${off?'disabled':''}></div>
-      ${title==='PT'?`<div class="full" style="border:1px solid var(--role-border);background:var(--role-bg);border-radius:var(--r-md);padding:14px 16px"><div class="f" id="f-sc" style="max-width:240px"><label for="sc">% hoa hồng</label><input class="input num" id="sc" value="${s.comm??70}" ${off?'disabled':''}><span class="hint">% hoa hồng mặc định là ${PARAMS.find(p=>p.k==='comm').v}%, có thể đặt riêng cho từng PT.</span><span class="err">Từ 0 đến 100.</span></div></div>`:''}
+      ${title==='PT'?`<div class="full" style="border:1px solid var(--role-border);background:var(--role-bg);border-radius:var(--r-md);padding:14px 16px"><div class="form-grid">
+        <div class="f" id="f-sc"><label for="sc">% hoa hồng<span class="req">*</span></label><input class="input num" id="sc" value="${s.comm??70}" ${off?'disabled':''}><span class="hint">% hoa hồng mặc định là ${PARAMS.find(p=>p.k==='comm').v}%, có thể đặt riêng cho từng PT.</span><span class="err">Từ 0 đến 100.</span></div></div></div>`:''}
     </div></div>${off?'':`<div class="form-actions">${isNew?'':`<button class="btn btn-danger" id="quit" style="margin-right:auto">Ghi nhận nghỉ việc</button>`}<a class="btn" href="#/staff">Hủy</a><button class="btn btn-primary" id="save">Lưu</button></div>`}</div>
     <aside class="stack"><div class="card pad"><h2>Tài khoản đăng nhập</h2><p class="sub" style="margin:0">Admin tạo, khóa và mở tài khoản ở màn Tài khoản hệ thống. Ghi nhận nghỉ việc ở đây sẽ khóa tài khoản ngay.</p></div>
+    ${off?`<div class="card pad"><h2>Nghỉ việc</h2><dl class="kv" style="margin-top:10px"><dt>Ngày nghỉ việc</dt><dd class="num">${s.leftAt}</dd><dt>Lý do</dt><dd>${esc(s.leftWhy||'')}</dd></dl></div>`:''}
     ${!isNew?`<div class="card pad"><h2>Việc đang treo</h2><dl class="kv" style="margin-top:10px"><dt>Buổi đã xếp</dt><dd>${pd.sessions}</dd><dt>Ca chưa đóng</dt><dd>${pd.shifts}</dd><dt>Đơn chưa thu tiền</dt><dd>${pd.orders}</dd></dl></div>`:''}</aside></div>`));
   const stSel=$('#st');if(stSel)stSel.onchange=e=>{s._t=e.target.value;viewStaffOne(id)};
-  const q=$('#quit');if(q)q.onclick=()=>modal({title:`Ghi nhận ${esc(s.name)} nghỉ việc?`,text:`<p>Quyền truy cập bị khóa ngay, lịch sử dữ liệu vẫn được giữ.</p>`,ok:'Ghi nhận nghỉ việc',danger:true,onOk:()=>{s.status='Inactive';toast('','Đã ghi nhận nghỉ việc. Tài khoản đăng nhập đã bị khóa.');location.hash='#/staff'}});
-  const sv=$('#save');if(sv)sv.onclick=()=>{const ok=mark('f-sn',!!val('sn').trim())&mark('f-sp',/^0\d{9}$/.test(val('sp')))&mark('f-se',/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val('se')))&(title!=='PT'||mark('f-sc',+val('sc')>=0&&+val('sc')<=100));if(!ok)return;
+  const q=$('#quit');if(q)q.onclick=()=>modal({title:`Ghi nhận ${esc(s.name)} nghỉ việc?`,text:`<p>Quyền truy cập bị khóa ngay, lịch sử dữ liệu vẫn được giữ.</p><div class="f" style="margin-top:12px"><label for="qd">Ngày nghỉ việc</label><input class="input" type="date" id="qd" value="2026-09-20"></div>`,ok:'Ghi nhận nghỉ việc',danger:true,reason:true,reasonLabel:'Lý do nghỉ việc',reasonErr:'Nhập lý do nghỉ việc, tối thiểu 5 ký tự.',minLen:5,onOk:x=>{s.status='Inactive';s.leftAt=fmtD(fromIso(val('qd')||'2026-09-20'));s.leftWhy=x;toast('','Đã ghi nhận nghỉ việc. Tài khoản đăng nhập đã bị khóa.');location.hash='#/staff'}});
+  const sv=$('#save');if(sv)sv.onclick=()=>{const ok=mark('f-sn',!!val('sn').trim())&mark('f-sp',/^0\d{9}$/.test(val('sp')))&mark('f-se',/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val('se')))&(title!=='PT'||mark('f-sc',val('sc')!==''&&+val('sc')>=0&&+val('sc')<=100));if(!ok)return;
     Object.assign(s,{name:val('sn').trim(),dob:val('sd'),title:val('st')||title,phone:val('sp'),email:val('se'),start:val('ss'),comm:title==='PT'?+val('sc'):undefined});delete s._t;
-    if(isNew)STAFF.push({...s,id:'NV0'+(20+STAFF.length)});toast('','Đã lưu hồ sơ nhân sự.');location.hash='#/staff'};
+    if(isNew)STAFF.push({...s,id:'NV-'+String(130+STAFF.length).padStart(4,'0')});toast('','Đã lưu hồ sơ nhân sự.');location.hash='#/staff'};
 }
 
 /* ---------- 5.2.x LEAVES ---------- */
-let LF={tab:'Pending'};
+let LF={tab:'Pending',q:'',from:'',to:'',pos:'',type:'',page:1,sel:[],open:{}};
 const deadlineOf=l=>{const d=D(l.date);d.setDate(d.getDate()-1);const[h,m]=PARAMS.find(p=>p.k==='leaveApprove').v.split(':');d.setHours(+h,+m,0,0);return d};
 const leftTxt=l=>{const ms=deadlineOf(l)-NOW;if(ms<=0)return pill('Quá hạn','danger');const h=Math.floor(ms/36e5),m=Math.floor(ms%36e5/6e4);const txt=h>=24?`${Math.floor(h/24)} ngày ${h%24} giờ`:`${h} giờ ${m} phút`;return h<6?pill('Còn '+txt,'danger'):`<span class="num">Còn ${txt}</span>`};
-const LS={Pending:['Đang chờ','info'],Approved:['Đã duyệt','ok'],Rejected:['Đã từ chối','danger']};
-function viewLeaves(){
-  const tabs=[['all','Tất cả'],['Pending','Đang chờ'],['Approved','Đã duyệt'],['Rejected','Đã từ chối']];
-  let rows=LEAVES.filter(l=>LF.tab==='all'||l.status===LF.tab);rows.sort((a,b)=>(a.status==='Pending'?0:1)-(b.status==='Pending'?0:1)||deadlineOf(a)-deadlineOf(b));
-  render(page('leaves',crumb(['Đơn nghỉ phép']),'Đơn nghỉ phép','5.2.2 / L1 / UC-15',`Hạn duyệt là ${PARAMS.find(p=>p.k==='leaveApprove').v} ngày liền trước ngày nghỉ. Quá hạn, hệ thống tự từ chối.`,'',`
-    <div class="card"><div class="tabs" role="tablist">${tabs.map(([k,l])=>`<button role="tab" aria-selected="${LF.tab===k}" data-tab="${k}">${l}<span class="count">${k==='all'?LEAVES.length:LEAVES.filter(x=>x.status===k).length}</span></button>`).join('')}</div>
-    <div class="table-wrap">${rows.length?`<table><thead><tr><th>Người nộp</th><th>Ngày & ca nghỉ</th><th>Loại</th><th>Trạng thái</th><th>Tới giờ chốt duyệt</th></tr></thead><tbody>
-    ${rows.map(l=>`<tr class="click ${l.status==='Pending'?'pinned':''}" tabindex="0" data-go="#/leaves/${l.id}"><td><div class="who"><span class="avatar">${initials(l.who)}</span><div><b>${esc(l.who)}</b><small>${l.title}</small></div></div></td><td><b class="num">${l.date}</b><div class="muted" style="font-size:12px">${l.shift}</div></td><td>${l.type}</td><td>${pill(LS[l.status][0],LS[l.status][1])}${l.auto?`<div class="muted" style="font-size:12px">Tự động: quá hạn duyệt</div>`:''}</td><td>${l.status==='Pending'?leftTxt(l):'<span class="muted">—</span>'}</td></tr>`).join('')}
-    </tbody></table>`:`<div class="empty">Không có đơn nào.</div>`}</div></div>`));
-  $$('[data-tab]').forEach(b=>b.onclick=()=>{LF.tab=b.dataset.tab;viewLeaves()});bindRows();
-}
+const LS={Pending:['Chờ duyệt','warn'],Approved:['Đã duyệt','ok'],Rejected:['Từ chối','danger']};
+const LTYPE=t=>t==='Nghỉ phép năm'?'Phép năm':'Không lương';
+const leaveDays=l=>l.shift==='Cả ngày'?1:0.5;
+const isLate=l=>D(l.date)<TODAYD;
 function capOf(l){const shifts=l.shift==='Cả ngày'?['Ca sáng','Ca chiều']:[l.shift];return shifts.map(s=>{const c=CAPACITY[`${l.date}|${s}`]||{pt:3,lt:2};const after={pt:c.pt-(l.title==='PT'?1:0),lt:c.lt-(l.title==='Lễ tân'?1:0)};return {s,before:c,after}})}
-function viewLeave(id){
-  const l=LEAVES.find(x=>x.id===id);if(!l){location.hash='#/leaves';return}
+function leaveChecks(l){
   const minPt=PARAMS.find(p=>p.k==='minPt').v,minLt=PARAMS.find(p=>p.k==='minLt').v;
   const caps=capOf(l);const bad=caps.filter(c=>c.after.pt<minPt||c.after.lt<minLt);
-  const pending=l.status==='Pending';
-  render(page('leaves',crumb(['Đơn nghỉ phép','#/leaves'],[l.id]),`Đơn nghỉ ${l.id}`,'5.2.3 / L2 / UC-15','','',`
-    <div class="grid2"><div class="card"><div class="pad">
-      <div class="who" style="margin-bottom:16px"><span class="avatar" style="width:44px;height:44px">${initials(l.who)}</span><div><b style="font-size:16px">${esc(l.who)}</b><small>${l.title} · nộp lúc ${l.sent}</small></div></div>
-      <dl class="kv"><dt>Ngày nghỉ</dt><dd class="num">${l.date}</dd><dt>Ca</dt><dd>${l.shift}</dd><dt>Loại nghỉ</dt><dd>${l.type}</dd><dt>Lý do</dt><dd>${esc(l.reason)}</dd><dt>Trạng thái</dt><dd>${pill(LS[l.status][0],LS[l.status][1])} ${l.why?`<span class="muted">· ${esc(l.why)}</span>`:''}</dd>${pending?`<dt>Tới giờ chốt</dt><dd>${leftTxt(l)}</dd>`:''}</dl>
-      ${pending&&bad.length?`<div class="banner b-danger" style="margin-top:16px">${I.lock}<div><b>Không duyệt được: sau khi duyệt, ${bad.map(c=>`${c.s.toLowerCase()} ${l.date.slice(0,5)} chỉ còn ${[c.after.pt<minPt?`${c.after.pt} PT (tối thiểu ${minPt})`:'',c.after.lt<minLt?`${c.after.lt} Lễ tân (tối thiểu ${minLt})`:''].filter(Boolean).join(' và ')}`).join('; ')}.</b>Chỉ còn cách từ chối, hoặc để hệ thống tự từ chối khi quá hạn.</div></div>`:''}
-    </div>${pending?`<div class="form-actions"><button class="btn btn-danger" id="rej">Từ chối</button><button class="btn btn-primary" id="apr" ${bad.length?'disabled':''}>Duyệt</button></div>`:''}</div>
-    <aside class="card pad"><h2>Định biên ca sau khi duyệt</h2><p class="sub">Tối thiểu ${minPt} PT và ${minLt} Lễ tân mỗi ca.</p>
-      ${caps.map(c=>`<div style="border:1px solid var(--border);border-radius:var(--r-sm);padding:12px;margin-bottom:10px"><b>${c.s} ${l.date.slice(0,5)}</b>
-        <div style="display:grid;grid-template-columns:1fr auto auto;gap:4px 14px;margin-top:8px;font-size:13px"><span class="muted"></span><span class="muted">Hiện tại</span><span class="muted">Sau duyệt</span>
-        <span>PT</span><span class="num">${c.before.pt}</span><span class="num" style="font-weight:700;color:${c.after.pt<minPt?'var(--danger)':'var(--success)'}">${c.after.pt}</span>
-        <span>Lễ tân</span><span class="num">${c.before.lt}</span><span class="num" style="font-weight:700;color:${c.after.lt<minLt?'var(--danger)':'var(--success)'}">${c.after.lt}</span></div></div>`).join('')}
+  const used=ANNUAL_USED[l.who]||0,left=14-used;
+  const quota=l.type==='Nghỉ phép năm'?{label:'Quỹ phép năm',ok:left>=leaveDays(l),message:`Đã dùng ${used}/14 ngày, còn ${left} ngày; đơn này ${leaveDays(l)} ngày.`}:{label:'Quỹ phép năm',ok:true,message:'Nghỉ không lương, không trừ quỹ phép năm.'};
+  const staff={label:'Định biên ca',ok:!bad.length,message:bad.length?`Sau khi duyệt, ${bad.map(c=>`${c.s.toLowerCase()} ${l.date.slice(0,5)} chỉ còn ${[c.after.pt<minPt?`${c.after.pt} PT (tối thiểu ${minPt})`:'',c.after.lt<minLt?`${c.after.lt} Lễ tân (tối thiểu ${minLt})`:''].filter(Boolean).join(' và ')}`).join('; ')}.`:`Mỗi ca vẫn đủ tối thiểu ${minPt} PT và ${minLt} Lễ tân.`};
+  const dl={label:'Hạn duyệt',ok:!isLate(l),message:isLate(l)?'Ngày nghỉ đã qua, duyệt muộn cần xác nhận nghỉ thực tế và nhập lý do.':`Hạn duyệt ${PARAMS.find(p=>p.k==='leaveApprove').v} ngày liền trước ngày nghỉ.`};
+  const list=[quota,staff,dl];
+  return {caps,list,canApprove:quota.ok&&staff.ok,summary:!quota.ok?'Hết quỹ phép':!staff.ok?'Thiếu người':'Đạt',minPt,minLt};
+}
+function approveLeave(l,reasonLate){l.status='Approved';l.by='Nguyễn Văn An';l.at='20/09/2026 16:30';if(reasonLate)l.lateWhy=reasonLate;
+  capOf(l).forEach(c=>{const k=`${l.date}|${c.s}`;if(CAPACITY[k]){CAPACITY[k].pt=c.after.pt;CAPACITY[k].lt=c.after.lt}})}
+function approveDialog(l,after){const late=isLate(l);
+  modal({title:late?'Xác nhận duyệt muộn':'Phê duyệt đơn nghỉ phép',text:`<p>Xác nhận duyệt đơn nghỉ phép của <b>${esc(l.who)}</b>?</p>`,ok:late?'Xác nhận duyệt muộn':'Xác nhận duyệt',reason:late,reasonLabel:'Lý do xác nhận nghỉ thực tế',reasonErr:'Nhập lý do, tối thiểu 5 ký tự.',minLen:5,onOk:x=>{approveLeave(l,x);toast('MSG-059',`Đã duyệt đơn nghỉ của ${l.who}.`);after()}})}
+function rejectDialog(l,after){modal({title:'Từ chối đơn nghỉ phép',text:'<p>Người nộp nhận thông báo kèm lý do.</p>',ok:'Từ chối đơn',danger:true,reason:true,reasonLabel:'Lý do từ chối (5–500 ký tự)',reasonErr:'Vui lòng nhập lý do từ chối, tối thiểu 5 ký tự.',minLen:5,onOk:x=>{l.status='Rejected';l.why=x;l.by='Nguyễn Văn An';l.at='20/09/2026 16:30';toast('MSG-060',`Đã từ chối đơn nghỉ của ${l.who}.`);after()}})}
+function viewLeaves(){
+  const tabs=[['Pending','Chờ duyệt'],['Approved','Đã duyệt'],['Rejected','Từ chối'],['All','Tất cả']];
+  const f=LF;const inRange=l=>(!f.from||D(l.date)>=fromIso(f.from))&&(!f.to||D(l.date)<=fromIso(f.to));
+  const base=LEAVES.filter(l=>(!f.q||(l.who+l.emp).toLowerCase().includes(f.q.toLowerCase()))&&inRange(l)&&(!f.pos||l.title===f.pos)&&(!f.type||l.type===f.type));
+  const cnt=k=>k==='All'?base.length:base.filter(x=>x.status===k).length;
+  let rows=base.filter(l=>f.tab==='All'||l.status===f.tab);rows.sort((a,b)=>(a.status==='Pending'?0:1)-(b.status==='Pending'?0:1)||D(a.date)-D(b.date));
+  const per=10,pages=Math.max(1,Math.ceil(rows.length/per));if(f.page>pages)f.page=pages;
+  const shown=f.tab==='All'?rows:rows.slice((f.page-1)*per,f.page*per);
+  const who=l=>`<div class="who"><span class="avatar">${initials(l.who)}</span><div><b>${esc(l.who)}</b><small>${l.emp} · ${l.title}</small></div></div>`;
+  const rowHtml=(l,withWho,withStatus)=>{const ck=leaveChecks(l);const pend=l.status==='Pending';return `<tr class="click ${pend?'pinned':''}" tabindex="0" data-go="#/leaves/${l.id}">
+    ${f.tab==='Pending'?`<td><input type="checkbox" data-sel="${l.id}" aria-label="Chọn đơn ${l.id}" ${f.sel.includes(l.id)?'checked':''} ${ck.canApprove?'':'disabled'}></td>`:''}
+    ${withWho?`<td>${who(l)}</td>`:''}<td><b class="num">${l.date}</b><div class="muted" style="font-size:12px">${l.shift}</div></td><td>${LTYPE(l.type)}</td>
+    ${withStatus?`<td>${pill(LS[l.status][0],LS[l.status][1])}${l.auto?'<div class="muted" style="font-size:12px">Tự động: quá hạn duyệt</div>':''}</td>`:''}
+    <td>${pend?`${pill(ck.summary,ck.canApprove?'ok':'warn')} ${isLate(l)?pill('Cần duyệt muộn','warn'):''}<div style="font-size:12px">${leftTxt(l)}</div>`:'<span class="muted">—</span>'}</td>
+    <td class="r" style="white-space:nowrap">${pend?`<button class="btn btn-sm btn-primary" data-apr="${l.id}" ${ck.canApprove?'':'disabled title="Không duyệt được: '+esc(ck.list.find(x=>!x.ok).message)+'"'}>Duyệt</button> <button class="btn btn-sm" data-rej="${l.id}">Từ chối</button>`:`<a class="btn btn-sm" href="#/leaves/${l.id}">Xem</a>`}</td></tr>`};
+  let table='';
+  if(!rows.length)table='<div class="empty">Không có đơn nào.</div>';
+  else if(f.tab==='All'){
+    const groups={};rows.forEach(l=>(groups[l.who]=groups[l.who]||[]).push(l));
+    const gs=Object.entries(groups).sort((a,b)=>D(a[1][0].date)-D(b[1][0].date));
+    table=`<table><thead><tr><th>Nhân viên</th><th class="r">Số đơn</th><th class="r">Chờ duyệt</th><th>Ngày nghỉ gần nhất</th><th class="r">Thao tác</th></tr></thead><tbody>
+    ${gs.map(([n,ls])=>`<tr><td>${who(ls[0])}</td><td class="r num">${ls.length}</td><td class="r num">${ls.filter(x=>x.status==='Pending').length}</td><td class="num">${ls[0].date}</td><td class="r"><button class="btn btn-sm" data-grp="${esc(n)}">${f.open[n]?'Thu gọn':'Xem đơn'}</button></td></tr>
+    ${f.open[n]?`<tr><td colspan="5" style="padding:0"><table style="min-width:0"><thead><tr><th>Ngày nghỉ / Ca</th><th>Loại nghỉ</th><th>Trạng thái</th><th>Kiểm tra</th><th class="r">Thao tác</th></tr></thead><tbody>${ls.map(l=>rowHtml(l,false,true)).join('')}</tbody></table></td></tr>`:''}`).join('')}</tbody></table>`;
+  }else table=`<table><thead><tr>${f.tab==='Pending'?'<th></th>':''}<th>Nhân viên</th><th>Ngày nghỉ / Ca</th><th>Loại nghỉ</th><th>Kiểm tra</th><th class="r">Thao tác</th></tr></thead><tbody>${shown.map(l=>rowHtml(l,true,false)).join('')}</tbody></table>`;
+  render(page('leaves',crumb(['Đơn nghỉ phép']),'Quản lý đơn nghỉ phép','5.2.2 / L1 / UC-15',`Hạn duyệt là ${PARAMS.find(p=>p.k==='leaveApprove').v} ngày liền trước ngày nghỉ. Quá hạn, hệ thống tự từ chối.`,'',`
+    <div class="card"><div class="tabs" role="tablist">${tabs.map(([k,l])=>`<button role="tab" aria-selected="${f.tab===k}" data-tab="${k}">${l}<span class="count">${cnt(k)}</span></button>`).join('')}</div>
+    <div class="filters"><div class="search">${I.search}<input class="input" id="lq" placeholder="Tên hoặc mã nhân viên" aria-label="Tìm theo tên hoặc mã nhân viên" value="${esc(f.q)}"></div>
+      <label class="muted" for="lp">Chức vụ</label><select class="select" id="lp"><option value="">Tất cả chức vụ</option><option value="PT" ${f.pos==='PT'?'selected':''}>PT</option><option value="Lễ tân" ${f.pos==='Lễ tân'?'selected':''}>Lễ tân</option></select>
+      <label class="muted" for="ly">Loại nghỉ</label><select class="select" id="ly"><option value="">Tất cả loại nghỉ</option><option value="Nghỉ phép năm" ${f.type==='Nghỉ phép năm'?'selected':''}>Phép năm</option><option value="Nghỉ không lương" ${f.type==='Nghỉ không lương'?'selected':''}>Không lương</option></select>
+      <button class="btn btn-sm btn-primary" id="lgo">Lọc</button><button class="btn btn-sm" id="lclr">Xóa lọc</button></div>
+    ${f.tab==='Pending'?`<div class="filters" style="border-top:0"><button class="btn btn-sm btn-primary" id="bulk" ${f.sel.length?'':'disabled'}>Duyệt các đơn đã chọn (${f.sel.length})</button><span class="muted">Chỉ chọn được đơn đạt điều kiện duyệt.</span></div>`:''}
+    <div class="table-wrap">${table}</div>
+    ${f.tab!=='All'&&pages>1?`<div class="table-foot"><button class="btn btn-sm" id="pprev" ${f.page<=1?'disabled':''}>Trang trước</button><span>Trang ${f.page}/${pages}</span><button class="btn btn-sm" id="pnext" ${f.page>=pages?'disabled':''}>Trang sau</button></div>`:''}</div>`));
+  $$('[data-tab]').forEach(b=>b.onclick=()=>{f.tab=b.dataset.tab;f.page=1;f.sel=[];viewLeaves()});
+  $('#lgo').onclick=()=>{f.q=val('lq');f.from=val('lf');f.to=val('lt');f.pos=val('lp');f.type=val('ly');f.page=1;viewLeaves()};
+  $('#lclr').onclick=()=>{Object.assign(f,{q:'',from:'',to:'',pos:'',type:'',page:1,sel:[]});viewLeaves()};
+  $$('[data-sel]').forEach(c=>c.onclick=e=>{e.stopPropagation();const id=c.dataset.sel;f.sel=c.checked?[...f.sel,id]:f.sel.filter(x=>x!==id);$('#bulk').disabled=!f.sel.length;$('#bulk').textContent=`Duyệt các đơn đã chọn (${f.sel.length})`});
+  const bk=$('#bulk');if(bk)bk.onclick=()=>modal({title:`Duyệt ${f.sel.length} đơn đã chọn?`,text:'<p>Các đơn chọn được duyệt cùng lúc; định biên ca được kiểm tra từng đơn.</p>',ok:'Duyệt các đơn',onOk:()=>{let n=0;f.sel.forEach(id=>{const l=LEAVES.find(x=>x.id===id);if(l&&l.status==='Pending'&&leaveChecks(l).canApprove&&!isLate(l)){approveLeave(l);n++}});f.sel=[];toast('MSG-059',`Đã duyệt ${n} đơn nghỉ.`);viewLeaves()}});
+  $$('[data-apr]').forEach(b=>b.onclick=e=>{e.stopPropagation();approveDialog(LEAVES.find(x=>x.id===b.dataset.apr),viewLeaves)});
+  $$('[data-rej]').forEach(b=>b.onclick=e=>{e.stopPropagation();rejectDialog(LEAVES.find(x=>x.id===b.dataset.rej),viewLeaves)});
+  $$('[data-grp]').forEach(b=>b.onclick=()=>{f.open[b.dataset.grp]=!f.open[b.dataset.grp];viewLeaves()});
+  const pp=$('#pprev');if(pp)pp.onclick=()=>{f.page--;viewLeaves()};const pn=$('#pnext');if(pn)pn.onclick=()=>{f.page++;viewLeaves()};
+  const lq=$('#lq');lq.onkeydown=e=>{if(e.key==='Enter')$('#lgo').click()};bindRows();
+}
+function viewLeave(id){
+  const l=LEAVES.find(x=>x.id===id);if(!l){location.hash='#/leaves';return}
+  const ck=leaveChecks(l);const pending=l.status==='Pending';const late=isLate(l);
+  render(page('leaves',crumb(['Đơn nghỉ phép','#/leaves'],[l.id]),pending?'Duyệt đơn nghỉ phép':'Chi tiết đơn nghỉ phép','5.2.3 / L2 / UC-15','','',`
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px"><a class="btn btn-sm" href="#/leaves" title="Quay lại danh sách">← Quay lại danh sách</a><h2 style="margin:0">Đơn nghỉ phép #${l.id}</h2>${pill(LS[l.status][0],LS[l.status][1])}
+      ${pending?`<span style="margin-left:auto;display:flex;gap:8px"><button class="btn btn-danger" id="rej">Từ chối</button><button class="btn btn-primary" id="apr" ${ck.canApprove?'':'disabled title="'+esc(ck.list.find(x=>!x.ok).message)+'"'}>${late?'Duyệt muộn':'Duyệt'}</button></span>`:''}</div>
+    ${pending&&late?`<div class="banner b-warn" style="margin-bottom:12px">${I.warn}<span>Ngày nghỉ ${l.date} đã qua. Duyệt muộn cần xác nhận nghỉ thực tế và nhập lý do.</span></div>`:''}
+    ${pending&&!ck.canApprove?`<div class="banner b-danger" style="margin-bottom:12px">${I.lock}<span><b>Không duyệt được.</b> ${esc(ck.list.find(x=>!x.ok).message)} Chỉ còn cách từ chối, hoặc để hệ thống tự từ chối khi quá hạn.</span></div>`:''}
+    <div class="grid2"><div class="stack"><div class="card"><div class="pad">
+      <div class="who" style="margin-bottom:16px"><span class="avatar" style="width:44px;height:44px">${initials(l.who)}</span><div><b style="font-size:16px">${esc(l.who)}</b><small>${l.emp} · ${l.title==='PT'?'Huấn luyện viên PT':'Lễ tân'}</small></div></div>
+      <dl class="kv"><dt>Thời gian nghỉ</dt><dd class="num">${l.date} (${leaveDays(l)} ngày)</dd><dt>Ca làm việc</dt><dd>${l.shift}</dd><dt>Loại nghỉ</dt><dd>${LTYPE(l.type)}</dd><dt>Thời điểm gửi đơn</dt><dd class="num">${l.sent}</dd><dt>Lý do xin nghỉ</dt><dd>${esc(l.reason)}</dd></dl>
+      <details open style="margin-top:14px"><summary><b>Các đơn cùng đợt nghỉ</b></summary><p class="muted" style="margin:8px 0 0">${LTYPE(l.type)} · ${leaveDays(l)} ngày · ${l.date}. Được duyệt ${l.status==='Approved'?leaveDays(l):0}/${leaveDays(l)} ngày.</p></details></div></div>
+      ${pending?'':`<div class="card pad"><h2>Kết quả xử lý</h2><dl class="kv" style="margin-top:10px"><dt>Người xử lý</dt><dd>${l.auto?'Hệ thống':(l.by||'Nguyễn Văn An')}</dd><dt>Thời gian xử lý</dt><dd class="num">${l.at||'—'}</dd>${l.status==='Rejected'?`<dt>Lý do từ chối</dt><dd>${esc(l.why||'')}</dd>`:''}${l.lateWhy?`<dt>Lý do duyệt muộn</dt><dd>${esc(l.lateWhy)}</dd>`:''}</dl></div>`}</div>
+    <aside class="card pad"><h2>Điều kiện duyệt ${pill(ck.canApprove&&!late?'Đạt':'Cần lưu ý',ck.canApprove&&!late?'ok':'warn')}</h2>
+      ${ck.list.map(c=>`<div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)"><b style="color:${c.ok?'var(--success)':'var(--danger)'}">${c.ok?'✓':'✕'}</b><div><b>${c.label}</b><div class="muted" style="font-size:13px">${c.message}</div></div></div>`).join('')}
+      <details style="margin-top:12px"><summary><b>Xem quân số từng ca</b></summary><table style="min-width:0;margin-top:8px"><thead><tr><th>Ca trực</th><th class="r">Trước đơn</th><th class="r">Sau duyệt</th><th class="r">Tối thiểu</th><th>Kết quả</th></tr></thead><tbody>
+      ${ck.caps.map(c=>{const bad=c.after.pt<ck.minPt||c.after.lt<ck.minLt;return `<tr><td>${c.s} ${l.date.slice(0,5)}</td><td class="r num">${c.before.pt} PT · ${c.before.lt} Lễ tân</td><td class="r num"><b>${c.after.pt} PT · ${c.after.lt} Lễ tân</b></td><td class="r num">${ck.minPt} PT · ${ck.minLt} Lễ tân</td><td>${bad?pill('Thiếu người','danger'):pill('Đạt','ok')}</td></tr>`}).join('')}</tbody></table></details>
     </aside></div>`));
-  const a=$('#apr');if(a)a.onclick=()=>{l.status='Approved';toast('MSG-059',`Đã duyệt đơn nghỉ của ${l.who}.`);location.hash='#/leaves'};
-  const r=$('#rej');if(r)r.onclick=()=>modal({title:`Từ chối đơn nghỉ của ${esc(l.who)}?`,text:'<p>Người nộp nhận thông báo kèm lý do.</p>',ok:'Từ chối',danger:true,reason:true,reasonLabel:'Lý do từ chối',reasonErr:'Vui lòng nhập lý do từ chối. ',onOk:x=>{l.status='Rejected';l.why=x;toast('MSG-060',`Đã từ chối đơn nghỉ của ${l.who}.`);location.hash='#/leaves'}});
+  const a=$('#apr');if(a)a.onclick=()=>approveDialog(l,()=>location.hash='#/leaves');
+  const r=$('#rej');if(r)r.onclick=()=>rejectDialog(l,()=>location.hash='#/leaves');
 }
 
 /* ---------- 6.1.x CUSTOMERS ---------- */
-let CF={tab:'all',member:'all',q:''};
+let CF={tab:'all',status:'ALL',q:'',size:10,page:1};
+const pkgRows=c=>{const r=[];if(c.pkg)r.push(['Gói tập',c.pkg]);if(c.pt)r.push(['Gói PT',c.pt]);return r};
 function viewCustomers(){
-  const tabs=[['all','Tất cả'],['New','Mới tạo'],['Active','Đang hoạt động'],['Frozen','Đang bảo lưu'],['Expired','Hết hạn'],['Inactive','Đã xóa'],['pending','Chờ duyệt xóa']];
-  let rows=CUSTOMERS.filter(c=>(CF.tab==='all'?c.status!=='Inactive':CF.tab==='pending'?c.pendingDelete:c.status===CF.tab)&&(CF.member==='all'||(CF.member==='yes'?c.status!=='New':c.status==='New'))&&(!CF.q||(c.name+c.phone+c.id).toLowerCase().includes(CF.q.toLowerCase())));
+  const pend=CUSTOMERS.filter(c=>c.pendingDelete);
+  const q=CF.q.trim().toLowerCase();
+  const rows=(CF.tab==='pending'?pend:CUSTOMERS.filter(c=>CF.status==='ALL'?c.status!=='Inactive'||false:c.status===CF.status)).filter(c=>!q||[c.name,c.id,c.phone,c.email].join(' ').toLowerCase().includes(q));
   rows.sort((a,b)=>(b.pendingDelete?1:0)-(a.pendingDelete?1:0));
-  render(page('customers',crumb(['Hội viên']),'Hồ sơ khách','6.1.1 / L1 / UC-16, UC-17','Quản lý xem hồ sơ và duyệt yêu cầu xóa. Tạo và sửa hồ sơ do Lễ tân làm.','',`
-    <div class="card"><div class="tabs" role="tablist">${tabs.map(([k,l])=>`<button role="tab" aria-selected="${CF.tab===k}" data-tab="${k}">${l}<span class="count">${k==='all'?CUSTOMERS.filter(c=>c.status!=='Inactive').length:k==='pending'?CUSTOMERS.filter(c=>c.pendingDelete).length:CUSTOMERS.filter(c=>c.status===k).length}</span></button>`).join('')}</div>
-    <div class="filters"><div class="search">${I.search}<input class="input" id="cq" placeholder="Tìm theo tên, SĐT hoặc mã khách" value="${esc(CF.q)}"></div>
-      <select class="select" id="cm"><option value="all">Hội viên và chưa là hội viên</option><option value="yes" ${CF.member==='yes'?'selected':''}>Hội viên</option><option value="no" ${CF.member==='no'?'selected':''}>Chưa là hội viên</option></select></div>
-    <div class="table-wrap">${rows.length?`<table><thead><tr><th>Mã khách</th><th>Khách</th><th>SĐT</th><th>Trạng thái</th><th>Hội viên</th></tr></thead><tbody>
-    ${rows.map(c=>`<tr class="click ${c.pendingDelete?'pinned':''}" tabindex="0" data-go="#/customers/${c.id}"><td class="num">${c.id}</td><td><div class="who"><span class="avatar">${initials(c.name)}</span><div><b>${esc(c.name)}</b><small>${c.pkg||'Chưa có gói'}</small></div></div></td><td class="num">${fmtPhone(c.phone)}</td><td>${pill(ST[c.status][0],ST[c.status][1])} ${c.pendingDelete?pill('Chờ duyệt xóa','danger'):''}</td><td>${c.status==='New'?'<span class="muted">Chưa</span>':'Hội viên'}</td></tr>`).join('')}
-    </tbody></table>`:`<div class="empty">Không có dữ liệu phù hợp với bộ lọc.</div>`}</div></div>`));
-  $$('[data-tab]').forEach(b=>b.onclick=()=>{CF.tab=b.dataset.tab;viewCustomers()});$('#cm').onchange=e=>{CF.member=e.target.value;viewCustomers()};
-  $('#cq').oninput=e=>{CF.q=e.target.value;const p=e.target.selectionStart;viewCustomers();const n=$('#cq');n.focus();n.setSelectionRange(p,p)};bindRows();
+  const pages=Math.max(1,Math.ceil(rows.length/CF.size));if(CF.page>pages)CF.page=pages;
+  const shown=rows.slice((CF.page-1)*CF.size,CF.page*CF.size);
+  render(page('customers',crumb(['Hội viên']),'Hồ sơ hội viên','6.1.1 / L1 / UC-16, UC-17','Quản lý chỉ xem hồ sơ và duyệt yêu cầu xóa. Tạo và sửa hồ sơ do Lễ tân làm.','',`
+    <div class="card"><div class="tabs" role="tablist"><button role="tab" aria-selected="${CF.tab==='all'}" data-tab="all">Tất cả hồ sơ<span class="count">${CUSTOMERS.filter(c=>c.status!=='Inactive').length}</span></button><button role="tab" aria-selected="${CF.tab==='pending'}" data-tab="pending">Chờ duyệt xóa<span class="count">${pend.length}</span></button></div>
+    <div class="filters"><div class="search">${I.search}<input class="input" id="cq" maxlength="100" aria-label="Tìm hội viên" placeholder="Tên, mã hội viên, số điện thoại hoặc email" value="${esc(CF.q)}"></div>
+      ${CF.tab==='all'?`<label class="muted" for="cs">Trạng thái hồ sơ</label><select class="select" id="cs"><option value="ALL">Tất cả trạng thái</option>${[['New','Chưa có gói'],['Active','Hoạt động'],['Frozen','Đang bảo lưu'],['Expired','Hết hạn'],['Inactive','Ngừng hoạt động']].map(([k,l])=>`<option value="${k}" ${CF.status===k?'selected':''}>${l}</option>`).join('')}</select>`:''}
+      <button class="btn btn-sm btn-primary" id="cgo">Tìm</button></div>
+    <div class="table-wrap">${shown.length?(CF.tab==='pending'?`<table><thead><tr><th>Hội viên / Yêu cầu</th><th>Thời điểm gửi</th><th>Lý do yêu cầu</th><th>Thao tác</th></tr></thead><tbody>
+    ${shown.map(c=>`<tr class="click pinned" tabindex="0" data-go="#/customers/${c.id}"><td><div class="who"><span class="avatar">${initials(c.name)}</span><div><b>${esc(c.name)}</b><small>${c.id} · ${esc(c.pendingDelete.by)} yêu cầu ${pill('Chờ duyệt','warn')}</small></div></div></td><td class="num">${c.pendingDelete.at}</td><td style="max-width:320px">${esc(c.pendingDelete.reason)}</td><td><a class="btn btn-sm btn-primary" href="#/customers/${c.id}">Xem và duyệt</a></td></tr>`).join('')}</tbody></table>`
+    :`<table><thead><tr><th>Hội viên</th><th>Liên hệ</th><th>Gói hiện tại</th><th>Trạng thái</th><th>Thao tác</th></tr></thead><tbody>
+    ${shown.map(c=>`<tr class="click ${c.pendingDelete?'pinned':''}" tabindex="0" data-go="#/customers/${c.id}"><td><div class="who"><span class="avatar">${initials(c.name)}</span><div><b>${esc(c.name)}</b><small>${c.id} · ${c.type}</small></div></div></td><td class="num">${fmtPhone(c.phone)}<div class="muted" style="font-size:12px">${c.email||'Không có email'}</div></td><td>${c.pkg||c.pt||'<span class="muted">Chưa có gói</span>'}</td><td>${pill(ST[c.status][0],ST[c.status][1])} ${c.pendingDelete?pill('Chờ duyệt xóa','danger'):''}</td><td><a class="btn btn-sm" href="#/customers/${c.id}">Xem</a></td></tr>`).join('')}</tbody></table>`):`<div class="empty">Không có dữ liệu phù hợp với bộ lọc.</div>`}</div>
+    <div class="table-foot"><span>${rows.length} hồ sơ</span>${pages>1?`<span><button class="btn btn-sm" id="pp" ${CF.page<=1?'disabled':''}>Trang trước</button> Trang ${CF.page}/${pages} <button class="btn btn-sm" id="pn" ${CF.page>=pages?'disabled':''}>Trang sau</button></span>`:''}</div></div>`));
+  $$('[data-tab]').forEach(b=>b.onclick=()=>{CF.tab=b.dataset.tab;CF.page=1;viewCustomers()});
+  const cs=$('#cs');if(cs)cs.onchange=e=>{CF.status=e.target.value;CF.page=1;viewCustomers()};
+  $('#cgo').onclick=()=>{CF.q=val('cq');CF.page=1;viewCustomers()};$('#cq').onkeydown=e=>{if(e.key==='Enter')$('#cgo').click()};
+  const pp=$('#pp');if(pp)pp.onclick=()=>{CF.page--;viewCustomers()};const pn=$('#pn');if(pn)pn.onclick=()=>{CF.page++;viewCustomers()};bindRows();
 }
 function viewCustomer(id){
   const c=CUSTOMERS.find(x=>x.id===id);if(!c){location.hash='#/customers';return}
   const pdl=c.pendingDelete;
-  const info=`<dl class="kv"><dt>Mã khách</dt><dd class="num">${c.id}</dd><dt>Loại hồ sơ</dt><dd>${c.type}</dd><dt>Ngày sinh</dt><dd class="num">${c.dob}</dd><dt>SĐT</dt><dd class="num">${fmtPhone(c.phone)}</dd><dt>Email</dt><dd>${c.email||'<span class="muted">Không có</span>'}</dd>${c.guardian?`<dt>Người giám hộ</dt><dd>${c.guardian}</dd>`:''}<dt>Trạng thái</dt><dd>${pill(ST[c.status][0],ST[c.status][1])}</dd><dt>Gói tập</dt><dd>${c.pkg||'<span class="muted">Không có</span>'}</dd><dt>Gói PT</dt><dd>${c.pt||'<span class="muted">Không có</span>'}</dd></dl>`;
+  const info=`<dl class="kv"><dt>Mã khách</dt><dd class="num">${c.id}</dd><dt>Loại hồ sơ</dt><dd>${c.type}</dd><dt>Ngày sinh</dt><dd class="num">${c.dob}</dd><dt>Số điện thoại</dt><dd class="num">${fmtPhone(c.phone)}</dd><dt>Email</dt><dd>${c.email||'<span class="muted">Không có</span>'}</dd>${c.guardian?`<dt>Người giám hộ</dt><dd>${c.guardian}</dd>`:''}<dt>Trạng thái</dt><dd>${pill(ST[c.status][0],ST[c.status][1])}</dd><dt>Ngày tham gia</dt><dd class="num">${c.joined}</dd></dl>`;
   const photo=`<div style="width:120px;aspect-ratio:3/4;border-radius:8px;background:var(--role-bg);border:1px solid var(--role-border);display:grid;place-items:center"><svg viewBox="0 0 64 64" style="width:65%;stroke:var(--role);fill:none;stroke-width:2.5">${I.person.replace(/<\/?svg[^>]*>/g,'')}</svg></div>`;
+  const pk=pkgRows(c),ss=SESS[c.id]||[];
+  const plans=`<div class="card"><div class="card-head"><h2>Gói tập và lịch PT</h2></div><div class="pad">${pk.length?`<table style="min-width:0"><tbody>${pk.map(a=>`<tr><td><b>${a[0]}</b></td><td>${a[1]}</td></tr>`).join('')}</tbody></table>`:'<p class="muted" style="margin:0">Chưa có gói nào.</p>'}
+    <h3 style="font:600 14px var(--heading);margin:16px 0 8px">Buổi PT</h3>${ss.length?`<table style="min-width:0"><tbody>${ss.map(a=>`<tr><td class="num">${a[0]}</td><td>${a[1]}</td><td>${pill(a[2],'info')}</td></tr>`).join('')}</tbody></table>`:'<p class="muted" style="margin:0">Chưa có buổi PT nào.</p>'}</div></div>`;
   if(!pdl){render(page('customers',crumb(['Hội viên','#/customers'],[c.name]),esc(c.name),'6.1.2 / L2 / UC-16','Chế độ xem. Mọi trường bị khóa; sửa hồ sơ do Lễ tân thực hiện.','',`
-    <div class="card pad" style="display:flex;gap:24px;flex-wrap:wrap;max-width:820px">${photo}<div style="flex:1;min-width:260px">${info}</div></div>`));return}
-  render(page('customers',crumb(['Hội viên','#/customers'],[c.name]),'Yêu cầu xóa hồ sơ','6.1.3 / L2 / UC-17',`${esc(c.name)} · ${c.id}`,'',`
+    <div class="grid2"><div class="stack"><div class="card pad" style="display:flex;gap:24px;flex-wrap:wrap">${photo}<div style="flex:1;min-width:260px">${info}</div></div></div><div class="stack">${plans}</div></div>`));return}
+  render(page('customers',crumb(['Hội viên','#/customers'],[c.name]),'Duyệt xóa hồ sơ','6.1.3 / L2 / UC-17',`${esc(c.name)} · ${c.id}`,'',`
+    <p style="margin:0 0 12px"><a href="#/customers">← Chờ duyệt xóa</a></p>
     <div class="grid2"><div class="stack">
-      <div class="card"><div class="card-head"><h2>Lý do Lễ tân yêu cầu xóa</h2><span class="muted">${esc(pdl.by)} · ${pdl.at}</span></div><div class="pad"><p style="margin:0;font-size:15px">${esc(pdl.reason)}</p></div></div>
-      <div class="card"><div class="card-head"><h2>Khách còn đang dùng</h2></div><div class="pad">
-        <div class="banner b-warn" style="margin-bottom:14px">${I.warn}<span><b>Khách còn ${pdl.active.filter(a=>!a[0].startsWith('PT')).length} gói đang chạy và ${pdl.ptLeft} buổi PT chưa dùng.</b></span></div>
-        <table><tbody>${pdl.active.map(a=>`<tr><td><b>${a[0]}</b></td><td class="muted">${a[1]}</td></tr>`).join('')}</tbody></table></div>
-        <div class="form-actions"><button class="btn btn-danger" id="rej">Từ chối</button><button class="btn btn-primary" id="apr">Duyệt xóa</button></div></div>
+      <div class="card"><div class="card-head"><h2>Yêu cầu xóa hồ sơ</h2>${pill('Chờ duyệt','warn')}</div><div class="pad"><p class="muted" style="margin:0 0 8px">${esc(pdl.by)} · ${pdl.at}</p><p style="margin:0;font-size:15px">${esc(pdl.reason)}</p></div>
+        <div class="form-actions"><button class="btn" id="rej">Từ chối</button><button class="btn btn-danger" id="apr">Duyệt xóa hồ sơ</button></div></div>
+      <div class="card"><div class="card-head"><h2>Gói tập và lịch PT</h2></div><div class="pad">
+        <div class="banner b-warn" style="margin-bottom:14px">${I.warn}<span><b>Khách còn ${pdl.active.filter(a=>!a[0].startsWith('Gói PT')).length} gói đang chạy và ${pdl.ptLeft} buổi PT chưa dùng.</b></span></div>
+        <table><tbody>${pdl.active.map(a=>`<tr><td><b>${a[0]}</b></td><td class="muted">${a[1]}</td></tr>`).join('')}</tbody></table></div></div>
     </div><aside class="card pad"><div style="display:flex;gap:14px;margin-bottom:14px">${photo}</div>${info}</aside></div>`));
-  $('#apr').onclick=()=>modal({title:`Duyệt xóa hồ sơ ${esc(c.name)}?`,text:'<p>Hồ sơ chuyển sang Đã xóa. Các gói và buổi PT còn lại không dùng được nữa; lịch sử vẫn được giữ.</p>',ok:'Duyệt xóa',danger:true,onOk:()=>{c.status='Inactive';delete c.pendingDelete;toast('MSG-076',`Đã duyệt xóa hồ sơ ${c.name}.`);location.hash='#/customers'}});
-  $('#rej').onclick=()=>modal({title:'Từ chối yêu cầu xóa?',text:'<p>Hồ sơ bỏ cờ chờ duyệt xóa và trở lại trạng thái cũ.</p>',ok:'Từ chối',danger:true,reason:true,reasonLabel:'Lý do từ chối',reasonErr:'Vui lòng nhập lý do từ chối. ',onOk:()=>{delete c.pendingDelete;toast('MSG-077','Đã từ chối yêu cầu xóa. Hồ sơ trở lại trạng thái cũ.');location.hash='#/customers'}});
+  $('#apr').onclick=()=>modal({title:`Duyệt xóa hồ sơ ${esc(c.name)}?`,text:'<p>Hồ sơ chuyển sang Ngừng hoạt động. Các gói và buổi PT còn lại không dùng được nữa; lịch sử vẫn được giữ.</p>',ok:'Duyệt xóa hồ sơ',danger:true,onOk:()=>{c.status='Inactive';delete c.pendingDelete;toast('MSG-076',`Đã duyệt xóa hồ sơ ${c.name}.`);location.hash='#/customers'}});
+  $('#rej').onclick=()=>modal({title:'Từ chối yêu cầu xóa',text:'<p>Hồ sơ bỏ cờ chờ duyệt xóa và trở lại trạng thái cũ.</p>',ok:'Xác nhận từ chối',danger:true,reason:true,reasonLabel:'Lý do từ chối',reasonErr:'Vui lòng nhập lý do từ chối, tối thiểu 5 ký tự.',minLen:5,onOk:()=>{delete c.pendingDelete;toast('MSG-077','Đã từ chối yêu cầu xóa. Hồ sơ trở lại trạng thái cũ.');location.hash='#/customers'}});
 }
 
 /* ---------- 7.4.3 TRANSACTIONS ---------- */
-let TF={tab:'orders',method:'all',st:'all',refund:false};
-const OS={Paid:['Đã thanh toán','ok'],Pending:['Chờ thanh toán','warn'],Cancelled:['Đã hủy','muted']};
+let TF={tab:'orders',q:'',method:'all',st:'all',from:'',to:'',refund:false,sf:'',st2:''};
+const OS={Paid:['Đã thanh toán','ok'],Pending:['Chờ thanh toán','warn'],Cancelled:['Đã hủy','danger']};
 const AS={Success:'ok',Failed:'danger',Expired:'muted',Pending:'warn'};
+const ASV={Success:'Thành công',Failed:'Thất bại',Expired:'Hết hạn',Pending:'Đang xử lý'};
+const MLBL=m=>m==='Cổng thanh toán'?'VNPay':m;
+const odate=o=>D(o.at.slice(0,10));
 function viewTx(){
   const vat=PARAMS.find(p=>p.k==='vat').v;
-  const rows=ORDERS.filter(o=>(TF.method==='all'||o.method===TF.method)&&(TF.st==='all'||o.status===TF.st)&&(!TF.refund||o.refund));
+  const q=TF.q.trim().toLowerCase();
+  const rows=ORDERS.filter(o=>(TF.method==='all'||o.method===TF.method)&&(TF.st==='all'||o.status===TF.st)&&(!TF.refund||(o.refund&&!o.refunded))&&(!q||(o.id+o.cust).toLowerCase().includes(q))&&(!TF.from||odate(o)>=fromIso(TF.from))&&(!TF.to||odate(o)<=fromIso(TF.to)));
+  const needRefund=ORDERS.filter(o=>o.refund&&!o.refunded).length;
+  const sh=SHIFTS.filter(x=>(!TF.sf||D(x.d)>=fromIso(TF.sf))&&(!TF.st2||D(x.d)<=fromIso(TF.st2)));
   const body=TF.tab==='orders'?`
-    <div class="filters">
-      <select class="select" id="tm"><option value="all">Mọi phương thức</option>${['Tiền mặt','Chuyển khoản','Cổng thanh toán'].map(m=>`<option ${TF.method===m?'selected':''}>${m}</option>`).join('')}</select>
-      <select class="select" id="ts"><option value="all">Mọi trạng thái</option>${Object.entries(OS).map(([k,v])=>`<option value="${k}" ${TF.st===k?'selected':''}>${v[0]}</option>`).join('')}</select>
-      <label class="opt" style="padding:7px 12px"><input type="checkbox" id="tr" ${TF.refund?'checked':''}> Giao dịch thành công cần hoàn tiền <span class="pill p-danger nodot" style="margin-left:4px">${ORDERS.filter(o=>o.refund).length}</span></label></div>
-    ${TF.refund?`<div class="banner b-warn" style="margin:12px 16px 0">${I.warn}<span>Các giao dịch trong danh sách này cần hoàn tiền thủ công cho khách, ngoài hệ thống. Đánh dấu đã hoàn chỉ là ghi chú, không đổi trạng thái đơn hay giao dịch.</span></div>`:''}
-    <div class="table-wrap"><table><thead><tr><th>Mã đơn</th><th>Thời điểm</th><th>Khách</th><th>Gói</th><th class="r">Số tiền</th><th class="r">Trong đó VAT</th><th>Phương thức</th><th>Trạng thái</th></tr></thead><tbody>
-    ${rows.map(o=>`<tr class="click" tabindex="0" data-order="${o.id}"><td class="num"><b>${o.id}</b><div class="muted" style="font-size:12px">${o.ch}</div></td><td class="num">${o.at}</td><td>${esc(o.cust)}</td><td>${esc(o.pkg)}</td><td class="r num">${vnd(o.amount)}</td><td class="r num muted">${vnd(o.amount-o.amount/(1+vat/100))}</td><td>${o.method}</td><td>${pill(OS[o.status][0],OS[o.status][1])}${o.refund?' '+pill(o.refunded?'Đã hoàn':'Cần hoàn tiền',o.refunded?'muted':'danger'):''}</td></tr>`).join('')}
-    </tbody></table></div>`:`
-    <div class="table-wrap"><table><thead><tr><th>Ngày</th><th>Ca</th><th>Lễ tân</th><th class="r">Tiền mặt</th><th class="r">Chuyển khoản</th><th class="r">Thực đếm</th><th class="r">Chênh lệch</th><th>Lý do chênh lệch</th></tr></thead><tbody>
-    ${SHIFTS.map(s=>{const d=s.counted-s.cash;return `<tr><td class="num">${s.d}</td><td>${s.s}</td><td>${s.lt}</td><td class="r num">${vnd(s.cash)}</td><td class="r num">${vnd(s.tr)}</td><td class="r num">${vnd(s.counted)}</td><td class="r num" style="color:${d?'var(--danger)':'var(--success)'};font-weight:600">${d?(d>0?'+':'')+vnd(d):'0đ'}</td><td>${esc(s.why)||'<span class="muted">—</span>'}</td></tr>`}).join('')}
+    <div class="filters"><div class="search">${I.search}<input class="input" id="tq" placeholder="Mã đơn hoặc tên khách hàng..." aria-label="Tìm kiếm" value="${esc(TF.q)}"></div>
+      <select class="select" id="tm" aria-label="Phương thức"><option value="all">Tất cả phương thức</option><option value="Tiền mặt" ${TF.method==='Tiền mặt'?'selected':''}>Tiền mặt</option><option value="Chuyển khoản" ${TF.method==='Chuyển khoản'?'selected':''}>Chuyển khoản</option><option value="Cổng thanh toán" ${TF.method==='Cổng thanh toán'?'selected':''}>Cổng VNPay</option></select>
+      <select class="select" id="ts" aria-label="Trạng thái đơn"><option value="all">Tất cả trạng thái</option>${Object.entries(OS).map(([k,v])=>`<option value="${k}" ${TF.st===k?'selected':''}>${v[0]}</option>`).join('')}</select>
+      <label class="opt" style="padding:7px 12px"><input type="checkbox" id="tr" ${TF.refund?'checked':''}> Cần hoàn tiền <span class="pill p-danger nodot" style="margin-left:4px">${needRefund}</span></label>
+      <button class="btn btn-sm btn-primary" id="tgo">Lọc</button><button class="btn btn-sm" id="tclr">Xóa lọc</button></div>
+    ${TF.refund?`<div class="banner b-warn" style="margin:12px 16px 0">${I.warn}<span>Các đơn này cần hoàn tiền thủ công cho khách, ngoài hệ thống. Xác nhận hoàn tiền chỉ là ghi chú, không đổi trạng thái đơn hay giao dịch.</span></div>`:''}
+    <div class="table-wrap">${rows.length?`<table><thead><tr><th>Mã đơn / Kênh</th><th>Thời gian</th><th>Khách hàng</th><th>Gói tập & Voucher</th><th class="r">Tổng tiền</th><th>Phương thức</th><th>Trạng thái đơn</th><th>Hoàn tiền</th><th>Thao tác</th></tr></thead><tbody>
+    ${rows.map(o=>`<tr><td class="num"><b>${o.id}</b><div class="muted" style="font-size:12px">${o.ch==='Quầy'?'Tại quầy':'Trực tuyến'}</div></td><td class="num">${o.at}</td><td>${esc(o.cust)}</td><td>${esc(o.pkg)}</td><td class="r num">${vnd(o.amount)}<div class="muted" style="font-size:12px">VAT ${vnd(o.amount-o.amount/(1+vat/100))}</div></td><td>${MLBL(o.method)}</td><td>${pill(OS[o.status][0],OS[o.status][1])}</td><td>${o.refund?(o.refunded?pill('Đã hoàn','muted'):pill('Cần hoàn tiền','danger')):'<span class="muted">—</span>'}</td>
+      <td style="white-space:nowrap"><button class="btn btn-sm" data-order="${o.id}">Chi tiết</button>${o.refund&&!o.refunded?` <button class="btn btn-sm btn-danger" data-refund="${o.id}">Xác nhận hoàn tiền</button>`:''}</td></tr>`).join('')}
+    </tbody></table>`:'<div class="empty">Không có đơn hàng phù hợp với bộ lọc.</div>'}</div>`:`
+    
+    <div class="table-wrap"><table><thead><tr><th>Ngày ca</th><th>Loại ca</th><th>Người mở</th><th>Người chốt</th><th>Giờ mở — đóng</th><th class="r">Tiền mặt kiểm đếm</th><th class="r">Tiền mặt dự tính</th><th class="r">Chênh lệch tiền</th><th class="r">Chuyển khoản</th><th>Lý do chênh lệch</th></tr></thead><tbody>
+    ${sh.map(x=>{const d=x.counted-x.cash;const open=x.s==='Ca sáng'?'05:30':'14:00',close=x.s==='Ca sáng'?'14:00':'22:00';const isOpen=x.d==='20/09/2026'&&x.s==='Ca chiều';return `<tr><td class="num">${x.d}</td><td>${x.s}</td><td>${x.lt}</td><td>${isOpen?'<span class="muted">Đang mở</span>':x.lt}</td><td class="num">${open} — ${isOpen?'…':close}</td><td class="r num">${isOpen?'—':vnd(x.counted)}</td><td class="r num">${vnd(x.cash)}</td><td class="r num" style="color:${d?'var(--danger)':'var(--success)'};font-weight:600">${isOpen?'—':d?(d>0?'+':'')+vnd(d):'0đ'}</td><td class="r num">${vnd(x.tr)}</td><td>${esc(x.why)||'<span class="muted">—</span>'}</td></tr>`}).join('')}
     </tbody></table></div>`;
-  render(page('tx',crumb(['Giao dịch']),'Giao dịch toàn hệ thống','7.4.3 / L1 / UC-26','Chỉ đọc. Bấm vào một đơn để xem các lần thanh toán.',`<button class="btn" id="xls">${I.dl} Xuất Excel</button>`,`
-    <div class="card"><div class="tabs" role="tablist"><button role="tab" aria-selected="${TF.tab==='orders'}" data-tab="orders">Đơn & giao dịch</button><button role="tab" aria-selected="${TF.tab==='shifts'}" data-tab="shifts">Lịch sử ca đã đóng</button></div>${body}</div>`));
+  render(page('tx',crumb(['Giao dịch']),'Giao dịch toàn hệ thống','7.4.3 / L1 / UC-26','Bấm Chi tiết để xem các lần thanh toán của một đơn.',`<button class="btn" id="xls">${I.dl} Xuất Excel</button>`,`
+    <div class="card"><div class="tabs" role="tablist"><button role="tab" aria-selected="${TF.tab==='orders'}" data-tab="orders">Đơn hàng${needRefund?` <span class="pill p-danger nodot" title="${needRefund} giao dịch cần hoàn tiền">${needRefund}</span>`:''}</button><button role="tab" aria-selected="${TF.tab==='shifts'}" data-tab="shifts">Lịch sử ca</button></div>${body}</div>`));
   $$('[data-tab]').forEach(b=>b.onclick=()=>{TF.tab=b.dataset.tab;viewTx()});
-  $('#xls').onclick=()=>{if(TF.tab==='orders')exportCSV('giao-dich_20-09-2026.csv',['Mã đơn','Thời điểm','Kênh','Khách','Gói','Số tiền','Trong đó VAT','Phương thức','Trạng thái','Cần hoàn tiền','Lý do hủy'],rows.map(o=>[o.id,o.at,o.ch,o.cust,o.pkg,o.amount,Math.round(o.amount-o.amount/(1+vat/100)),o.method,OS[o.status][0],o.refund?(o.refunded?'Đã hoàn':'Cần hoàn'):'',o.reason||'']));
-    else exportCSV('lich-su-ca_20-09-2026.csv',['Ngày','Ca','Lễ tân','Tiền mặt','Chuyển khoản','Thực đếm','Chênh lệch','Lý do chênh lệch'],SHIFTS.map(s=>[s.d,s.s,s.lt,s.cash,s.tr,s.counted,s.counted-s.cash,s.why]))};
-  const tm=$('#tm');if(tm){tm.onchange=e=>{TF.method=e.target.value;viewTx()};$('#ts').onchange=e=>{TF.st=e.target.value;viewTx()};$('#tr').onchange=e=>{TF.refund=e.target.checked;viewTx()}}
+  $('#xls').onclick=()=>{if(TF.tab==='orders')exportCSV('giao-dich_20-09-2026.csv',['Mã đơn','Thời điểm','Kênh','Khách','Gói','Tổng tiền','Trong đó VAT','Phương thức','Trạng thái','Hoàn tiền','Lý do hủy'],rows.map(o=>[o.id,o.at,o.ch==='Quầy'?'Tại quầy':'Trực tuyến',o.cust,o.pkg,o.amount,Math.round(o.amount-o.amount/(1+vat/100)),MLBL(o.method),OS[o.status][0],o.refund?(o.refunded?'Đã hoàn':'Cần hoàn'):'',o.reason||'']));
+    else exportCSV('lich-su-ca_20-09-2026.csv',['Ngày ca','Loại ca','Người mở','Tiền mặt kiểm đếm','Tiền mặt dự tính','Chênh lệch','Chuyển khoản','Lý do chênh lệch'],sh.map(x=>[x.d,x.s,x.lt,x.counted,x.cash,x.counted-x.cash,x.tr,x.why]))};
+  const go=$('#tgo');if(go){go.onclick=()=>{TF.q=val('tq');TF.method=val('tm');TF.st=val('ts');TF.from=val('tf');TF.to=val('tt');TF.refund=$('#tr').checked;viewTx()};$('#tclr').onclick=()=>{Object.assign(TF,{q:'',method:'all',st:'all',from:'',to:'',refund:false});viewTx()}}
   $$('[data-order]').forEach(r=>r.onclick=()=>{const o=ORDERS.find(x=>x.id===r.dataset.order);
-    drawer(`Đơn ${o.id}`,`<dl class="kv" style="margin-bottom:18px"><dt>Khách</dt><dd>${esc(o.cust)}</dd><dt>Gói</dt><dd>${esc(o.pkg)}</dd><dt>Kênh</dt><dd>${o.ch}</dd><dt>Trạng thái</dt><dd>${pill(OS[o.status][0],OS[o.status][1])}</dd>${o.reason?`<dt>Lý do hủy</dt><dd>${esc(o.reason)}</dd>`:''}</dl>
+    drawer(`Đơn ${o.id}`,`<dl class="kv" style="margin-bottom:18px"><dt>Khách</dt><dd>${esc(o.cust)}</dd><dt>Gói</dt><dd>${esc(o.pkg)}</dd><dt>Kênh</dt><dd>${o.ch==='Quầy'?'Tại quầy':'Trực tuyến'}</dd><dt>Trạng thái</dt><dd>${pill(OS[o.status][0],OS[o.status][1])}</dd>${o.reason?`<dt>Lý do hủy</dt><dd>${esc(o.reason)}</dd>`:''}</dl>
       <div class="sum" style="margin-bottom:20px"><span class="muted">Giá trước VAT</span><span class="num">${vnd(o.amount/(1+vat/100))}</span><span class="muted">VAT ${vat}%</span><span class="num">${vnd(o.amount-o.amount/(1+vat/100))}</span><span class="t">Tổng</span><span class="t num">${vnd(o.amount)}</span></div>
       <h3 style="font:600 14px var(--heading);margin:0 0 8px">Các lần thanh toán (${o.att.length})</h3>
-      ${o.att.length?`<table style="min-width:0"><tbody>${o.att.map((a,i)=>`<tr><td class="num">#${i+1}</td><td class="num">${a[0]}</td><td>${a[1]}</td><td>${pill(a[2],AS[a[2]])}</td></tr>`).join('')}</tbody></table>`:'<p class="muted">Chưa có lần thanh toán nào.</p>'}
-      ${o.refund?`<div class="banner b-warn" style="margin-top:18px">${I.warn}<div><b>Cần hoàn tiền thủ công</b>${esc(o.note)}</div></div><label class="check" style="margin-top:12px"><input type="checkbox" id="rf" ${o.refunded?'checked':''}> Đã hoàn tiền cho khách (ghi chú, không đổi trạng thái)</label>`:''}`);
-    const rf=$('#rf');if(rf)rf.onchange=e=>{o.refunded=e.target.checked;toast('','Đã cập nhật ghi chú hoàn tiền.','info');const k=TF;viewTx();}});
+      ${o.att.length?`<table style="min-width:0"><tbody>${o.att.map((a,i)=>`<tr><td class="num">#${i+1}</td><td class="num">${a[0]}</td><td>${MLBL(a[1])}</td><td>${pill(ASV[a[2]],AS[a[2]])}</td></tr>`).join('')}</tbody></table>`:'<p class="muted">Chưa có lần thanh toán nào.</p>'}
+      ${o.refund?`<div class="banner b-warn" style="margin-top:18px">${I.warn}<div><b>${o.refunded?'Đã hoàn tiền ngoài hệ thống':'Cần hoàn tiền thủ công'}</b>${esc(o.refunded?(o.refundNote||''):o.reason||'')}</div></div>`:''}`)});
+  $$('[data-refund]').forEach(b=>b.onclick=()=>{const o=ORDERS.find(x=>x.id===b.dataset.refund);
+    modal({title:'Xác nhận hoàn tiền ngoài hệ thống',text:`<p>Đơn <b>${o.id}</b> · ${esc(o.cust)} · ${vnd(o.amount)}. Hoàn tiền thực hiện ngoài hệ thống; xác nhận chỉ ghi lại việc đã hoàn.</p>`,ok:'Xác nhận đã hoàn',reason:true,reasonLabel:'Ghi chú xác nhận hoàn tiền',reasonErr:'Nhập phương thức hoàn trả, ngày giờ, số tham chiếu (tối thiểu 5 ký tự).',minLen:5,onOk:x=>{o.refunded=true;o.refundNote=x;toast('','Đã ghi nhận hoàn tiền cho '+o.id+'.');viewTx()}})});
 }
 
 /* ---------- 8.1.x FACILITY ---------- */
-let FF={cat:'all',cond:'all'};
-const COND={Available:['Sẵn sàng','ok'],'Under Maintenance':['Đang bảo trì','warn'],Retired:['Ngừng sử dụng','muted']};
+let FF={sel:'G-01',cat:'all'};
+const COND={Available:['Khả dụng','ok'],'Under Maintenance':['Đang bảo trì','warn'],Retired:['Đã thanh lý','muted']};
+const openReq=code=>REQ.find(r=>r.code===code&&(r.status==='Open'||r.status==='In Progress'));
+const grpState=g=>{const it=g.items.filter(i=>i.status!=='Retired');return !g.visible?['Đã ẩn','muted']:it.length&&it.every(i=>i.status==='Under Maintenance')?['Bảo trì','warn']:['Hoạt động','ok']};
 function viewFacility(){
-  const cats=[...new Set(FAC.map(f=>f.cat))];
-  const rows=FAC.filter(f=>f.status==='Active'&&(FF.cat==='all'||f.cat===FF.cat)&&(FF.cond==='all'||f.cond===FF.cond));
-  render(page('facility',crumb(['Cơ sở vật chất']),'Cơ sở vật chất','8.1.1 / L1 / UC-27','Danh mục này là nguồn Lễ tân chọn khi báo hỏng.',`<a class="btn btn-primary" href="#/facility/new">${I.plus} Thêm hạng mục</a>`,`
-    <div class="card"><div class="filters"><select class="select" id="fc"><option value="all">Mọi phân loại</option>${cats.map(c=>`<option ${FF.cat===c?'selected':''}>${c}</option>`).join('')}</select>
-      <select class="select" id="fd"><option value="all">Mọi tình trạng</option>${Object.entries(COND).map(([k,v])=>`<option value="${k}" ${FF.cond===k?'selected':''}>${v[0]}</option>`).join('')}</select></div>
-    <div class="table-wrap"><table><thead><tr><th>Hạng mục</th><th>Phân loại</th><th>Vị trí</th><th class="r">Số lượng</th><th>Tình trạng</th><th></th></tr></thead><tbody>
-    ${rows.map(f=>`<tr class="click" tabindex="0" data-go="#/facility/${f.id}"><td><b>${esc(f.name)}</b><div class="muted" style="font-size:12px">${f.id}</div></td><td>${f.cat}</td><td>${f.loc}</td><td class="r num">${f.qty}</td><td>${pill(COND[f.cond][0],COND[f.cond][1])}</td>
-      <td class="r">${f.open?lockTip('Xóa',`Không xóa được: hạng mục còn ${f.open} yêu cầu bảo trì chưa đóng.`):`<button class="btn btn-sm btn-danger" data-del="${f.id}">Xóa</button>`}</td></tr>`).join('')}
-    </tbody></table></div></div>`));
-  $('#fc').onchange=e=>{FF.cat=e.target.value;viewFacility()};$('#fd').onchange=e=>{FF.cond=e.target.value;viewFacility()};
-  $$('[data-del]').forEach(b=>b.onclick=()=>{const f=FAC.find(x=>x.id===b.dataset.del);modal({title:`Xóa ${esc(f.name)}?`,text:'<p>Hạng mục chuyển sang Ngừng hoạt động và biến khỏi danh mục Lễ tân thấy. Lịch sử bảo trì vẫn được giữ.</p>',ok:'Xóa',danger:true,onOk:()=>{f.status='Inactive';toast('','Đã xóa '+f.name+'.');viewFacility()}})});bindRows();
-}
-function viewFacilityOne(id){
-  const isNew=id==='new';const f=isNew?{name:'',cat:'Cardio',loc:'',qty:1,cond:'Available',open:0}:FAC.find(x=>x.id===id);if(!f){location.hash='#/facility';return}
-  render(page('facility',crumb(['Cơ sở vật chất','#/facility'],[isNew?'Thêm hạng mục':f.name]),isNew?'Thêm hạng mục':esc(f.name),'8.1.2 / L2 / UC-27','','',`
-    <div class="card" style="max-width:760px"><div class="pad"><div class="form-grid">
-      <div class="f full" id="f-fn"><label for="fn">Tên hạng mục<span class="req">*</span></label><input class="input" id="fn" value="${esc(f.name)}"><span class="err">Không được để trống.</span></div>
-      <div class="f"><label for="fcat">Phân loại</label><select class="select" id="fcat">${['Cardio','Tạ tự do','Máy tập','Tiện ích'].map(c=>`<option ${c===f.cat?'selected':''}>${c}</option>`).join('')}</select></div>
-      <div class="f"><label for="floc">Vị trí</label><input class="input" id="floc" value="${esc(f.loc)}"></div>
-      <div class="f"><label for="fq">Số lượng</label><input class="input num" id="fq" value="${f.qty}"></div>
-      <div class="f"><label for="fcond">Tình trạng</label><select class="select" id="fcond">${Object.entries(COND).map(([k,v])=>`<option value="${k}" ${k===f.cond?'selected':''}>${v[0]}</option>`).join('')}</select><span class="hint">Duyệt yêu cầu bảo trì có thể tự chuyển sang Đang bảo trì.</span></div>
-      ${f.open?`<div class="full banner b-warn">${I.lock}<span>Không xóa được: hạng mục còn ${f.open} yêu cầu bảo trì chưa đóng.</span></div>`:''}
-    </div></div><div class="form-actions"><a class="btn" href="#/facility">Hủy</a><button class="btn btn-primary" id="save">Lưu</button></div></div>`));
-  $('#save').onclick=()=>{if(!mark('f-fn',!!val('fn').trim()))return;Object.assign(f,{name:val('fn').trim(),cat:val('fcat'),loc:val('floc'),qty:+val('fq')||1,cond:val('fcond')});if(isNew)FAC.push({...f,id:'CS-'+(20+FAC.length),status:'Active'});toast('','Đã lưu hạng mục.');location.hash='#/facility'};
+  const cats=['Cardio','Tạ tự do','Máy tập','Tiện ích'];
+  const list=FAC.filter(g=>FF.cat==='all'||g.cat===FF.cat);
+  let g=FAC.find(x=>x.id===FF.sel)||list[0]||FAC[0];if(g)FF.sel=g.id;
+  const gs=g?(g.visible?(g.items.filter(i=>i.status!=='Retired').length&&g.items.filter(i=>i.status!=='Retired').every(i=>i.status==='Under Maintenance')?['Tất cả đang bảo trì','warn']:['Đang vận hành','ok']):['Đang ẩn','muted']):null;
+  render(page('facility',crumb(['Cơ sở vật chất']),'Cơ sở vật chất & Thiết bị','8.1.1 / L1 / UC-27','Nhóm máy hiện trong danh mục Lễ tân chọn khi báo hỏng. Thêm, sửa và thanh lý cá thể máy ở khung bên phải.','',`
+    <div class="grid2" style="grid-template-columns:minmax(260px,340px) 1fr;align-items:start">
+    <div class="card"><div class="card-head"><h2>Nhóm máy (${FAC.length})</h2><button class="btn btn-sm btn-primary" id="addG">${I.plus} Thêm nhóm máy</button></div>
+      <div>${list.map(x=>{const st=grpState(x);return `<div class="click" tabindex="0" data-g="${x.id}" style="padding:12px 20px;border-top:1px solid var(--border);cursor:pointer;${x.id===FF.sel?'background:var(--role-bg)':''}"><b>${esc(x.name)}</b><div class="muted" style="font-size:12px">${x.cat} · ${x.items.filter(i=>i.status!=='Retired').length} ${x.unit}</div>${pill(st[0],st[1])}</div>`}).join('')}</div></div>
+    ${g?`<div class="stack"><div class="card"><div class="card-head"><div><h2>${esc(g.name)}</h2><span class="muted">${g.cat} · ${esc(g.loc||'Chưa khai báo khu vực')} · đơn vị tính: ${esc(g.unit)}</span></div>${pill(gs[0],gs[1])}</div>
+      <div class="form-actions" style="border-top:0;justify-content:flex-start"><button class="btn btn-sm" id="editG">Sửa nhóm</button><button class="btn btn-sm" id="visG">${g.visible?'Ẩn khỏi danh mục':'Hiện lại trong danh mục'}</button></div></div>
+    <div class="card"><div class="card-head"><h2>Danh sách cá thể máy (${g.items.length})</h2><button class="btn btn-sm btn-primary" id="addI">${I.plus} Thêm cá thể máy</button></div>
+      <div class="table-wrap"><table><thead><tr><th>Mã máy</th><th>Tên hiển thị / Quy cách</th><th>Vị trí chi tiết</th><th>Trạng thái</th><th class="r">Thao tác</th></tr></thead><tbody>
+      ${g.items.map(i=>{const rq=openReq(i.code);return `<tr><td class="num"><b>${i.code}</b></td><td>${esc(i.label)}</td><td>${esc(i.place||'—')}</td><td>${i.status==='Under Maintenance'&&rq?pill(`Đang bảo trì (${rq.id})`,'warn'):pill(COND[i.status][0],COND[i.status][1])}</td>
+        <td class="r" style="white-space:nowrap">${i.status==='Retired'?'':`<button class="btn btn-sm" data-ei="${i.code}">Sửa</button> ${rq?lockTip('Thanh lý',`Không thanh lý được: còn yêu cầu ${rq.id} chưa đóng.`):`<button class="btn btn-sm btn-danger" data-ri="${i.code}">Thanh lý</button>`}`}</td></tr>`}).join('')}</tbody></table></div></div></div>`:'<div class="card empty">Chưa có nhóm máy nào.</div>'}
+    </div>`));
+  $$('[data-g]').forEach(x=>{x.onclick=()=>{FF.sel=x.dataset.g;viewFacility()};x.onkeydown=e=>{if(e.key==='Enter')x.onclick()}});
+  const gform=(grp)=>{const isNew=!grp;const v=grp||{name:'',cat:'Cardio',loc:'',unit:'máy'};
+    modal({title:isNew?'Thêm nhóm máy mới':'Sửa nhóm máy',text:`<div class="stack"><div class="f" id="f-gn"><label for="gn">Tên nhóm máy<span class="req">*</span></label><input class="input" id="gn" minlength="3" maxlength="100" placeholder="VD: Máy chạy bộ Technogym" value="${esc(v.name)}"><span class="err">Tên nhóm 3–100 ký tự.</span></div>
+      <div class="f"><label for="gc">Phân loại<span class="req">*</span></label><select class="select" id="gc">${cats.map(c=>`<option ${c===v.cat?'selected':''}>${c}</option>`).join('')}</select></div>
+      <div class="f"><label for="gl">Khu vực đặt</label><input class="input" id="gl" maxlength="100" placeholder="VD: Khu cardio tầng 1" value="${esc(v.loc)}"></div>
+      <div class="f" id="f-gu"><label for="gu">Đơn vị tính<span class="req">*</span></label><input class="input" id="gu" maxlength="15" placeholder="máy, bộ, quả, thảm, tủ..." value="${esc(v.unit)}"><span class="err">Nhập đơn vị tính.</span></div>
+      <div class="f"><label>Ảnh đại diện nhóm máy</label><span class="muted">JPG hoặc PNG (mô phỏng)</span></div></div>`,ok:'Lưu nhóm máy',danger:false,
+      validate:()=>mark('f-gn',val('gn').trim().length>=3)&mark('f-gu',!!val('gu').trim()),
+      onOk:()=>{const d={name:val('gn').trim(),cat:val('gc'),loc:val('gl').trim(),unit:val('gu').trim()};if(isNew){const n={...d,id:'G-'+String(FAC.length+1).padStart(2,'0'),visible:true,items:[]};FAC.push(n);FF.sel=n.id}else Object.assign(grp,d);toast('','Đã lưu nhóm máy.');viewFacility()}})};
+  $('#addG').onclick=()=>gform(null);
+  if(g){$('#editG').onclick=()=>gform(g);$('#visG').onclick=()=>modal({title:g.visible?'Ẩn nhóm máy khỏi danh mục?':'Hiện lại nhóm máy?',text:g.visible?'<p>Lễ tân không còn chọn được nhóm này khi báo hỏng. Lịch sử bảo trì vẫn được giữ.</p>':'<p>Lễ tân chọn được nhóm này trở lại.</p>',ok:g.visible?'Ẩn':'Hiện lại',danger:g.visible,onOk:()=>{g.visible=!g.visible;toast('','Đã cập nhật hiển thị nhóm máy.');viewFacility()}});
+    const iform=(it)=>{const isNew=!it;const v=it||{code:'',label:'',place:''};
+      modal({title:isNew?'Thêm cá thể máy':'Sửa cá thể máy',text:`<div class="stack"><div class="f" id="f-ic"><label for="ic">Mã máy cá thể<span class="req">*</span> (duy nhất toàn hệ thống)</label><input class="input num" id="ic" minlength="2" maxlength="20" placeholder="VD: TB-0105" style="text-transform:uppercase" value="${v.code}" ${isNew?'':'readonly'}><span class="err" id="icErr">Mã máy 2–20 ký tự và không trùng.</span></div>
+        <div class="f" id="f-il"><label for="il">Tên hiển thị / Quy cách<span class="req">*</span></label><input class="input" id="il" maxlength="50" placeholder="VD: Số 9, Quả 22 kg, Tủ 51..." value="${esc(v.label)}"><span class="err">Nhập tên hiển thị.</span></div>
+        <div class="f"><label for="ip">Vị trí chi tiết</label><input class="input" id="ip" maxlength="100" placeholder="Chọn hoặc gõ vị trí: Dãy A, hàng trên" value="${esc(v.place||'')}"></div></div>`,ok:'Lưu cá thể',danger:false,
+        validate:()=>{const c=val('ic').trim().toUpperCase();const dup=isNew&&FAC.some(x=>x.items.some(i=>i.code===c));$('#icErr').innerHTML=dup?'Mã máy đã tồn tại.':'Mã máy 2–20 ký tự.';return mark('f-ic',c.length>=2&&!dup)&mark('f-il',!!val('il').trim())},
+        onOk:()=>{const d={label:val('il').trim(),place:val('ip').trim()};if(isNew)g.items.push({code:val('ic').trim().toUpperCase(),status:'Available',...d});else Object.assign(it,d);toast('','Đã lưu cá thể máy.');viewFacility()}})};
+    $('#addI').onclick=()=>iform(null);
+    $$('[data-ei]').forEach(b=>b.onclick=()=>iform(g.items.find(i=>i.code===b.dataset.ei)));
+    $$('[data-ri]').forEach(b=>b.onclick=()=>{const it=g.items.find(i=>i.code===b.dataset.ri);modal({title:`Thanh lý ${it.code}?`,text:'<p>Cá thể máy chuyển sang Đã thanh lý và biến khỏi danh mục Lễ tân thấy. Lịch sử bảo trì vẫn được giữ.</p>',ok:'Thanh lý',danger:true,onOk:()=>{it.status='Retired';toast('','Đã thanh lý '+it.code+'.');viewFacility()}})})}
 }
 
 /* ---------- 8.2.x MAINTENANCE ---------- */
-let MF={tab:'all'};
-const RS={Open:['Open · chờ duyệt','info'],'In Progress':['In Progress · đang xử lý','warn'],Rejected:['Rejected · từ chối','danger'],Closed:['Closed · đã đóng','muted']};
+let MF={tab:'all',q:'',prio:'',date:''};
+const RS={Open:['Chờ duyệt','info'],'In Progress':['Đang xử lý','warn'],Rejected:['Từ chối','danger'],Closed:['Đã đóng','muted']};
+const findItem=code=>{for(const g of FAC){const i=g.items.find(x=>x.code===code);if(i)return {g,i}}return null};
 function viewMaint(){
-  const tabs=[['all','Tất cả'],['Open','Open'],['In Progress','In Progress'],['Rejected','Rejected'],['Closed','Closed']];
-  let rows=REQ.filter(r=>MF.tab==='all'||r.status===MF.tab);rows.sort((a,b)=>(a.status==='Open'?0:1)-(b.status==='Open'?0:1));
+  const tabs=[['all','Tất cả'],['Open','Chờ duyệt'],['In Progress','Đang xử lý'],['Rejected','Từ chối'],['Closed','Đã đóng']];
+  const q=MF.q.trim().toLowerCase();
+  let rows=REQ.filter(r=>(MF.tab==='all'||r.status===MF.tab)&&(!MF.prio||r.prio===MF.prio)&&(!MF.date||r.date===fmtD(fromIso(MF.date)))&&(!q||(r.id+r.code+r.item).toLowerCase().includes(q)));rows.sort((a,b)=>(a.status==='Open'?0:1)-(b.status==='Open'?0:1));
+  const pc={Khẩn:'danger',Thường:'info',Thấp:'muted'};
   render(page('maint',crumb(['Bảo trì']),'Yêu cầu bảo trì','8.2.2 / L1 / UC-29','Quản lý duyệt hoặc từ chối. Lễ tân đóng yêu cầu sau khi kiểm tra đã sửa xong.','',`
-    <div class="card"><div class="tabs" role="tablist">${tabs.map(([k,l])=>`<button role="tab" aria-selected="${MF.tab===k}" data-tab="${k}">${l}<span class="count">${k==='all'?REQ.length:REQ.filter(r=>r.status===k).length}</span></button>`).join('')}</div>
-    <div class="table-wrap"><table><thead><tr><th>Mã</th><th>Hạng mục</th><th>Mô tả sự cố</th><th>Người tạo</th><th>Ngày tạo</th><th>Trạng thái</th></tr></thead><tbody>
-    ${rows.map(r=>`<tr class="click ${r.status==='Open'?'pinned':''}" tabindex="0" data-go="#/maintenance/${r.id}"><td class="num">${r.id}</td><td><b>${esc(r.item)}</b></td><td style="max-width:300px">${esc(r.desc)}</td><td>${r.by}</td><td class="num">${r.date}</td><td>${pill(RS[r.status][0],RS[r.status][1])}</td></tr>`).join('')}
-    </tbody></table></div></div>`));
-  $$('[data-tab]').forEach(b=>b.onclick=()=>{MF.tab=b.dataset.tab;viewMaint()});bindRows();
+    <div class="card"><div class="card-head"><h2>Danh sách yêu cầu</h2></div><div class="tabs" role="tablist">${tabs.map(([k,l])=>`<button role="tab" aria-selected="${MF.tab===k}" data-tab="${k}">${l}<span class="count">${k==='all'?REQ.length:REQ.filter(r=>r.status===k).length}</span></button>`).join('')}</div>
+    <div class="filters"><div class="search">${I.search}<input class="input" id="mq" placeholder="Mã yêu cầu, mã máy hoặc tên thiết bị" aria-label="Tìm yêu cầu" value="${esc(MF.q)}"></div>
+      <label class="muted" for="mp">Mức ưu tiên</label><select class="select" id="mp"><option value="">Tất cả</option>${['Khẩn','Thường','Thấp'].map(p=>`<option ${MF.prio===p?'selected':''}>${p}</option>`).join('')}</select><button class="btn btn-sm btn-primary" id="mgo">Lọc</button><button class="btn btn-sm" id="mclr">Xóa lọc</button></div>
+    <div class="table-wrap">${rows.length?`<table><thead><tr><th>Mã</th><th>Thiết bị · Máy</th><th>Sự cố</th><th>Ưu tiên</th><th>Ngày báo · Người báo</th><th>Trạng thái</th><th class="r">Thao tác</th></tr></thead><tbody>
+    ${rows.map(r=>`<tr class="click ${r.status==='Open'?'pinned':''}" tabindex="0" data-go="#/maintenance/${r.id}"><td class="num">${r.id}</td><td><b>${esc(r.item)}</b><div class="muted" style="font-size:12px">${r.code}</div></td><td style="max-width:300px">${esc(r.desc)}</td><td>${pill(r.prio,pc[r.prio])}</td><td class="num">${r.date}<div class="muted" style="font-size:12px">${r.by}</div></td><td>${pill(RS[r.status][0],RS[r.status][1])}</td><td class="r"><a class="btn btn-sm ${r.status==='Open'?'btn-primary':''}" href="#/maintenance/${r.id}">${r.status==='Open'?'Duyệt':'Xem'}</a></td></tr>`).join('')}
+    </tbody></table>`:'<div class="empty">Không có yêu cầu nào khớp bộ lọc.</div>'}</div></div>`));
+  $$('[data-tab]').forEach(b=>b.onclick=()=>{MF.tab=b.dataset.tab;viewMaint()});
+  $('#mgo').onclick=()=>{MF.q=val('mq');MF.prio=val('mp');MF.date=val('md');viewMaint()};$('#mclr').onclick=()=>{Object.assign(MF,{q:'',prio:'',date:''});viewMaint()};bindRows();
 }
 function viewMaintOne(id){
   const r=REQ.find(x=>x.id===id);if(!r){location.hash='#/maintenance';return}
-  const f=FAC.find(x=>x.name===r.item);
-  render(page('maint',crumb(['Bảo trì','#/maintenance'],[r.id]),`Yêu cầu ${r.id}`,'8.2.3 / L2 / UC-29','Màn này không có nút Đóng: việc đóng yêu cầu thuộc về Lễ tân.','',`
-    <div class="card" style="max-width:760px"><div class="pad">
-      <dl class="kv"><dt>Hạng mục</dt><dd>${esc(r.item)}</dd><dt>Mô tả sự cố</dt><dd>${esc(r.desc)}</dd><dt>Người tạo</dt><dd>${r.by}</dd><dt>Ngày tạo</dt><dd class="num">${r.date}</dd><dt>Trạng thái</dt><dd>${pill(RS[r.status][0],RS[r.status][1])}</dd>${r.why?`<dt>Lý do từ chối</dt><dd>${esc(r.why)}</dd>`:''}</dl>
-      ${r.status==='Open'&&f?`<label class="check" style="margin-top:18px"><input type="checkbox" id="toMaint" checked> Chuyển tình trạng hạng mục sang <b>Đang bảo trì</b> khi duyệt</label>`:''}
-    </div>${r.status==='Open'?`<div class="form-actions"><button class="btn btn-danger" id="rej">Từ chối</button><button class="btn btn-primary" id="apr">Duyệt</button></div>`:''}</div>`));
-  const a=$('#apr');if(a)a.onclick=()=>{r.status='In Progress';if(f&&$('#toMaint').checked)f.cond='Under Maintenance';toast('MSG-132','Đã duyệt. Yêu cầu chuyển sang Đang xử lý; Lễ tân sẽ đóng sau khi sửa xong.');location.hash='#/maintenance'};
-  const rj=$('#rej');if(rj)rj.onclick=()=>modal({title:`Từ chối yêu cầu ${r.id}?`,text:'<p>Lễ tân nhận thông báo kèm lý do.</p>',ok:'Từ chối',danger:true,reason:true,reasonLabel:'Lý do từ chối',reasonErr:'Vui lòng nhập lý do từ chối. ',onOk:x=>{r.status='Rejected';r.why=x;if(f)f.open=Math.max(0,f.open-1);toast('','Đã từ chối yêu cầu '+r.id+'.');location.hash='#/maintenance'}});
+  const fi=findItem(r.code);const g=fi&&fi.g,it=fi&&fi.i;
+  const total=g?g.items.filter(x=>x.status!=='Retired').length:0,avail=g?g.items.filter(x=>x.status==='Available').length:0;
+  const prev=REQ.find(x=>x.code===r.code&&x.id!==r.id&&x.status==='Closed');
+  const pc={Khẩn:'danger',Thường:'info',Thấp:'muted'};
+  render(page('maint',crumb(['Bảo trì','#/maintenance'],[r.id]),'Yêu cầu bảo trì','8.2.3 / L2 / UC-29','Việc đóng yêu cầu thuộc về Lễ tân.','',`
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px"><a class="btn btn-sm" href="#/maintenance" title="Quay lại danh sách">← Quay lại danh sách</a><h2 style="margin:0">Yêu cầu #${r.id}</h2>${pill(RS[r.status][0],RS[r.status][1])}
+      ${r.status==='Open'?`<span style="margin-left:auto;display:flex;gap:8px"><button class="btn btn-danger" id="rej">Từ chối</button><button class="btn btn-primary" id="apr">Duyệt yêu cầu</button></span>`:''}</div>
+    <div class="grid2"><div class="stack">
+      <div class="card pad"><h2>Mô tả sự cố</h2><p style="margin:10px 0">${esc(r.desc)}</p><div style="display:flex;gap:8px;flex-wrap:wrap">${pill('Ưu tiên: '+r.prio,pc[r.prio])}${r.stopped?pill('Đã treo biển ngừng dùng','warn'):''}</div></div>
+      <div class="card pad"><h2>Ảnh sự cố thực tế</h2><p class="muted" style="margin:10px 0 0">Lễ tân không đính kèm ảnh</p></div>
+      <div class="card pad"><h2>Tiến trình xử lý</h2><div style="margin-top:10px">
+        ${r.status==='Open'?'<p style="margin:0">Yêu cầu đang Chờ duyệt. Vui lòng xem xét sự cố và bấm Duyệt yêu cầu hoặc Từ chối ở thanh trên cùng.</p>':''}
+        ${r.status==='In Progress'||r.status==='Closed'?`<p style="margin:0"><b>Đã phê duyệt</b></p><p class="muted" style="margin:6px 0 0">Người duyệt: Nguyễn Văn An${r.mgrNote?`<br>Ghi chú của Quản lý: ${esc(r.mgrNote)}`:''}</p>`:''}
+        ${r.status==='Rejected'?`<p style="margin:0"><b>Đã từ chối</b></p><p class="muted" style="margin:6px 0 0">Người từ chối: Nguyễn Văn An<br>Lý do từ chối: ${esc(r.why||'')}</p>`:''}
+        ${r.status==='Closed'?'<p style="margin:10px 0 0"><b>Đã đóng nghiệm thu</b></p><p class="muted" style="margin:6px 0 0">Người nghiệm thu: Lễ tân<br>Ghi chú nghiệm thu: đã kiểm tra tại chỗ.</p>':''}</div></div>
+    </div><aside class="stack">
+      <div class="card pad"><h2>Thông tin thiết bị</h2><dl class="kv" style="margin-top:10px"><dt>Dòng thiết bị</dt><dd>${g?esc(g.name):esc(r.item)}</dd><dt>Mã máy</dt><dd class="num">${r.code}${it?' · '+esc(it.label):''}</dd><dt>Vị trí</dt><dd>${it?esc(it.place||'—'):'—'}</dd><dt>Khả dụng trong phòng</dt><dd class="num">${avail} / ${total} ${g?g.unit:'máy'}</dd><dt>Tình trạng máy</dt><dd>${it?pill(COND[it.status][0],COND[it.status][1]):'—'}</dd></dl>
+        <p class="muted" style="margin:12px 0 0">${prev?`Lịch sử hỏng trước đó: ngày báo ${prev.date} · ${esc(prev.desc)} ${pill('Đã hoàn thành','ok')}`:'Chưa có lịch sử hỏng trước đó của máy này.'}</p></div>
+      <div class="card pad"><h2>Người gửi yêu cầu</h2><dl class="kv" style="margin-top:10px"><dt>Lễ tân phòng tập</dt><dd>${r.by}</dd><dt>Thời gian báo</dt><dd class="num">${r.date} 08:30</dd></dl></div>
+    </aside></div>`));
+  const a=$('#apr');if(a)a.onclick=()=>modal({title:'Phê duyệt yêu cầu bảo trì',text:`<p>Xác nhận duyệt yêu cầu bảo trì thiết bị <b>${esc(r.item)}</b> (${r.code})?</p><label class="check" style="margin:10px 0"><input type="checkbox" id="toMaint" checked> Chuyển trạng thái máy sang Đang bảo trì (khách không thể sử dụng)</label><div class="f"><label for="mnote">Ghi chú cho lễ tân (không bắt buộc)</label><textarea class="input" id="mnote" rows="3" placeholder="VD: Đã liên hệ bên kỹ thuật bảo hành, sẽ đến kiểm tra vào sáng mai..."></textarea></div>`,ok:'Xác nhận duyệt',danger:false,
+    onOk:()=>{r.status='In Progress';r.mgrNote=val('mnote').trim();if(it&&$('#toMaint')&&$('#toMaint').checked)it.status='Under Maintenance';toast('MSG-132','Đã duyệt. Yêu cầu chuyển sang Đang xử lý; Lễ tân sẽ đóng sau khi sửa xong.');location.hash='#/maintenance'}});
+  const rj=$('#rej');if(rj)rj.onclick=()=>modal({title:'Từ chối yêu cầu bảo trì',text:'<p>Lễ tân nhận thông báo kèm lý do.</p>',ok:'Từ chối yêu cầu',danger:true,reason:true,reasonLabel:'Lý do từ chối',reasonErr:'Vui lòng nhập lý do từ chối, tối thiểu 5 ký tự.',minLen:5,onOk:x=>{r.status='Rejected';r.why=x;toast('','Đã từ chối yêu cầu '+r.id+'.');location.hash='#/maintenance'}});
 }
 
 /* ---------- 10.2.2 FEEDBACK ---------- */
+let FBF={read:'unread',from:'',to:'',q:''};
 function viewFeedback(){
-  render(page('feedback',crumb(['Góp ý']),'Góp ý của khách','10.2.2 / L1 / UC-43','Kênh góp ý duy nhất của hệ thống. Chỉ đọc, không có ô trả lời.','',`
-    <div class="card"><div class="table-wrap"><table><thead><tr><th>Nội dung</th><th>Khách</th><th>Thời điểm</th><th></th></tr></thead><tbody>
-    ${FEEDBACK.map(f=>`<tr class="click" tabindex="0" data-fb="${f.id}" style="${f.read?'':'font-weight:600'}"><td style="max-width:460px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(f.text)}</td><td>${esc(f.cust)}</td><td class="num">${f.at}</td><td>${f.read?pill('Đã đọc','muted'):pill('Chưa đọc','role')}</td></tr>`).join('')}
-    </tbody></table></div></div>`));
+  const q=FBF.q.trim().toLowerCase();const rangeBad=(FBF.from||FBF.to)&&(!FBF.from||!FBF.to||FBF.from>FBF.to);
+  const rows=rangeBad?[]:FEEDBACK.filter(f=>(FBF.read==='all'||(FBF.read==='unread'?!f.read:f.read))&&(!q||(f.cust+' '+f.text).toLowerCase().includes(q))&&(!FBF.from||(D(f.at.slice(0,10))>=fromIso(FBF.from)&&D(f.at.slice(0,10))<=fromIso(FBF.to))));
+  render(page('feedback',crumb(['Góp ý']),'Góp ý của khách','10.2.2 / L1 / UC-43','Kênh góp ý duy nhất của hệ thống. Chỉ đọc, không có ô trả lời. Mở một góp ý sẽ đánh dấu Đã đọc.','',`
+    <div class="card"><div class="filters"><label class="muted" for="fr">Trạng thái đọc</label><select class="select" id="fr"><option value="all" ${FBF.read==='all'?'selected':''}>Tất cả</option><option value="unread" ${FBF.read==='unread'?'selected':''}>Chưa đọc</option><option value="read" ${FBF.read==='read'?'selected':''}>Đã đọc</option></select>
+      <label class="muted" for="ff">Từ ngày</label><input class="input" type="date" id="ff" value="${FBF.from}"><label class="muted" for="ft">Đến ngày</label><input class="input" type="date" id="ft" value="${FBF.to}">
+      <div class="search">${I.search}<input class="input" id="fq" maxlength="100" placeholder="Tên khách hoặc nội dung" aria-label="Tìm góp ý" value="${esc(FBF.q)}"></div><button class="btn btn-sm btn-primary" id="fgo">Lọc</button><button class="btn btn-sm" id="fclr">Xóa lọc</button></div>
+    ${rangeBad?`<div class="banner b-danger" style="margin:12px 16px 0">${I.warn}<span>Khi lọc theo ngày phải nhập cả hai ngày, và Từ ngày không được sau Đến ngày.</span></div>`:''}
+    <div class="table-wrap">${rows.length?`<table><thead><tr><th>Khách hàng</th><th>Thời điểm gửi</th><th>Nội dung</th><th>Trạng thái</th></tr></thead><tbody>
+    ${rows.map(f=>`<tr class="click" tabindex="0" data-fb="${f.id}" style="${f.read?'':'font-weight:600'}"><td>${esc(f.cust)}</td><td class="num">${f.at}</td><td style="max-width:460px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(f.text)}</td><td>${f.read?pill('Đã đọc','muted'):pill('Chưa đọc','role')}</td></tr>`).join('')}
+    </tbody></table>`:'<div class="empty">Không có góp ý nào phù hợp.</div>'}</div></div>`));
+  $('#fgo').onclick=()=>{FBF.read=val('fr');FBF.from=val('ff');FBF.to=val('ft');FBF.q=val('fq');viewFeedback()};$('#fclr').onclick=()=>{Object.assign(FBF,{read:'unread',from:'',to:'',q:''});viewFeedback()};
   $$('[data-fb]').forEach(r=>{r.onclick=()=>{const f=FEEDBACK.find(x=>x.id===+r.dataset.fb);f.read=true;viewFeedback();drawer('Góp ý',`<p class="muted" style="margin:0 0 12px">${esc(f.cust)} · ${f.at}</p><p style="font-size:15px;line-height:1.7;margin:0">${esc(f.text)}</p>`)};r.onkeydown=e=>{if(e.key==='Enter')r.onclick()}});
 }
 
 /* ---------- 11.1.x BLOG ---------- */
-let BF={st:'all'};
+let BF={st:'all',cat:'all',q:'',page:1};
+const BCATS=['Tập luyện','Dinh dưỡng','Tin tức'];
 function unpublish(b,back){modal({title:'Gỡ đăng bài?',text:`<p>Gỡ đăng bài "${esc(b.title)}"? Bài sẽ biến khỏi trang công khai ngay lập tức.</p>`,ok:'Gỡ đăng',danger:true,onOk:()=>{b.status='Inactive';toast('','Đã gỡ đăng bài.');back()}})}
 function viewBlog(){
-  const rows=BLOG.filter(b=>BF.st==='all'||b.status===BF.st);
+  const q=BF.q.trim().toLowerCase();const all=BLOG.filter(b=>(BF.st==='all'||b.status===BF.st)&&(BF.cat==='all'||b.cat===BF.cat)&&(!q||b.title.toLowerCase().includes(q)));
+  const pages=Math.max(1,Math.ceil(all.length/10));if(BF.page>pages)BF.page=pages;const rows=all.slice((BF.page-1)*10,BF.page*10);
   render(page('blog',crumb(['Blog']),'Quản lý blog','11.1.1 / L1 / UC-45','Bài đang đăng hiện ở trang công khai; gỡ đăng thì biến mất ngay, dữ liệu vẫn còn.',`<a class="btn btn-primary" href="#/blog/new">${I.plus} Viết bài</a>`,`
-    <div class="card"><div class="filters"><select class="select" id="bs"><option value="all">Mọi trạng thái</option><option value="Active" ${BF.st==='Active'?'selected':''}>Đang đăng</option><option value="Inactive" ${BF.st==='Inactive'?'selected':''}>Nháp / đã gỡ</option></select></div>
-    <div class="table-wrap"><table><thead><tr><th>Tiêu đề</th><th>Ngày đăng</th><th>Trạng thái</th><th></th></tr></thead><tbody>
-    ${rows.map(b=>`<tr class="click" tabindex="0" data-go="#/blog/${b.id}"><td><b>${esc(b.title)}</b></td><td class="num">${b.date}</td><td>${b.status==='Active'?pill('Đang đăng','ok'):pill('Nháp / đã gỡ','muted')}</td><td class="r">${b.status==='Active'?`<button class="btn btn-sm btn-danger" data-un="${b.id}">Gỡ đăng</button>`:`<button class="btn btn-sm" data-pub="${b.id}">Đăng lại</button>`}</td></tr>`).join('')}
-    </tbody></table></div></div>`));
-  $('#bs').onchange=e=>{BF.st=e.target.value;viewBlog()};
+    <div class="card"><div class="filters"><select class="select" id="bc"><option value="all">Mọi danh mục</option>${BCATS.map(c=>`<option ${BF.cat===c?'selected':''}>${c}</option>`).join('')}</select>
+      <select class="select" id="bs"><option value="all">Mọi trạng thái</option><option value="Active" ${BF.st==='Active'?'selected':''}>Đang đăng</option><option value="Inactive" ${BF.st==='Inactive'?'selected':''}>Nháp / đã gỡ</option></select></div>
+    <div class="table-wrap"><table><thead><tr><th>Tiêu đề</th><th>Danh mục</th><th>Ngày đăng</th><th>Trạng thái</th><th></th></tr></thead><tbody>
+    ${rows.map(b=>`<tr class="click" tabindex="0" data-go="#/blog/${b.id}"><td><b>${esc(b.title)}</b></td><td>${b.cat}</td><td class="num">${b.date}</td><td>${b.status==='Active'?pill('Đang đăng','ok'):pill('Nháp / đã gỡ','muted')}</td><td class="r">${b.status==='Active'?`<button class="btn btn-sm btn-danger" data-un="${b.id}">Gỡ đăng</button>`:`<button class="btn btn-sm" data-pub="${b.id}">Đăng lại</button>`}</td></tr>`).join('')}
+    </tbody></table></div>${pages>1?`<div class="table-foot"><button class="btn btn-sm" id="bp" ${BF.page<=1?'disabled':''}>Trang trước</button> Trang ${BF.page}/${pages} <button class="btn btn-sm" id="bn" ${BF.page>=pages?'disabled':''}>Trang sau</button></div>`:''}</div>`));
+  $('#bs').onchange=e=>{BF.st=e.target.value;BF.page=1;viewBlog()};$('#bc').onchange=e=>{BF.cat=e.target.value;BF.page=1;viewBlog()};
   $$('[data-un]').forEach(x=>x.onclick=()=>unpublish(BLOG.find(b=>b.id===+x.dataset.un),viewBlog));
-  $$('[data-pub]').forEach(x=>x.onclick=()=>{const b=BLOG.find(y=>y.id===+x.dataset.pub);b.status='Active';if(b.date==='—')b.date='20/09/2026';toast('','Đã đăng bài.');viewBlog()});bindRows();
+  $$('[data-pub]').forEach(x=>x.onclick=()=>{const b=BLOG.find(y=>y.id===+x.dataset.pub);b.status='Active';if(b.date==='—')b.date='20/09/2026';toast('','Đã đăng bài.');viewBlog()});
+  const bp=$('#bp');if(bp)bp.onclick=()=>{BF.page--;viewBlog()};const bn=$('#bn');if(bn)bn.onclick=()=>{BF.page++;viewBlog()};bindRows();
 }
 function viewEditor(id){
-  const isNew=id==='new';const b=isNew?{title:'',body:'',status:'Inactive',date:'—'}:BLOG.find(x=>x.id===+id);if(!b){location.hash='#/blog';return}
+  const isNew=id==='new';const b=isNew?{title:'',cat:'Tin tức',excerpt:'',body:'',status:'Inactive',date:'—'}:BLOG.find(x=>x.id===+id);if(!b){location.hash='#/blog';return}
   render(page('blog',crumb(['Blog','#/blog'],[isNew?'Bài mới':b.title]),isNew?'Bài viết mới':'Sửa bài viết','11.1.2 / L2 / UC-45',b.status==='Active'?'Bài đang đăng trên trang công khai.':'Bài đang là nháp, chưa hiện ở trang công khai.','',`
     <div class="grid2"><div class="card"><div class="pad stack">
-      <div class="f" id="f-bt"><label for="bt">Tiêu đề<span class="req">*</span></label><input class="input" id="bt" style="font-size:18px;font-weight:600" value="${esc(b.title)}"><span class="err">Tiêu đề không được để trống.</span></div>
-      <div class="f"><span class="lbl">Nội dung</span>
+      <div class="f" id="f-bt"><label for="bt">Tiêu đề<span class="req">*</span></label><input class="input" id="bt" maxlength="200" style="font-size:18px;font-weight:600" value="${esc(b.title)}"><span class="hint">5–200 ký tự.</span><span class="err">Tiêu đề phải từ 5 đến 200 ký tự.</span></div>
+      <div class="grid-half"><div class="f"><label for="bcat">Danh mục<span class="req">*</span></label><select class="select" id="bcat">${BCATS.map(c=>`<option ${c===b.cat?'selected':''}>${c}</option>`).join('')}</select></div>
+      <div class="f"><label for="bst">Trạng thái<span class="req">*</span></label><select class="select" id="bst"><option value="Inactive" ${b.status==='Inactive'?'selected':''}>Nháp / ẩn</option><option value="Active" ${b.status==='Active'?'selected':''}>Đang đăng</option></select></div></div>
+      <div class="f" id="f-bex"><label for="bex">Tóm tắt</label><textarea class="input" id="bex" rows="2" maxlength="300">${esc(b.excerpt||'')}</textarea><span class="hint">Tối đa 300 ký tự; hiện ở thẻ bài trên trang Blog.</span><span class="err">Tóm tắt tối đa 300 ký tự.</span></div>
+      <div class="f" id="f-bbd"><span class="lbl">Nội dung<span class="req">*</span></span>
         <div style="border:1px solid var(--border);border-radius:var(--r-sm)"><div style="display:flex;gap:4px;padding:6px;border-bottom:1px solid var(--border);background:#FCFCFA">
           ${[['bold','<b>B</b>'],['italic','<i>I</i>'],['formatBlock:h2','H2'],['insertUnorderedList','• Danh sách']].map(([c,l])=>`<button class="btn btn-sm" data-cmd="${c}" type="button">${l}</button>`).join('')}</div>
-        <div id="bb" contenteditable="true" style="min-height:280px;padding:14px 16px;outline:none;font-size:15px;line-height:1.7">${b.body}</div></div></div>
-    </div><div class="form-actions"><a class="btn" href="#/blog">Hủy</a><button class="btn" id="draft">Lưu nháp</button><button class="btn btn-primary" id="pub">Đăng</button></div></div>
-    <aside class="card pad"><h2>Ảnh đại diện</h2><p class="sub">Hiện ở thẻ bài trên trang Blog.</p>
+        <div id="bb" contenteditable="true" style="min-height:240px;padding:14px 16px;outline:none;font-size:15px;line-height:1.7">${b.body}</div></div><span class="hint">Tối đa 20.000 ký tự.</span><span class="err">Nội dung không được để trống và tối đa 20.000 ký tự.</span></div>
+    </div><div class="form-actions"><a class="btn" href="#/blog">Hủy</a><button class="btn btn-primary" id="save">Lưu bài viết</button></div></div>
+    <aside class="card pad"><h2>Ảnh bìa</h2><p class="sub">Tùy chọn. JPG hoặc PNG, tối đa 2000×2000 px.</p>
       <div id="cover" style="aspect-ratio:16/9;border:1px dashed var(--border);border-radius:var(--r-sm);display:grid;place-items:center;color:var(--text2);background:var(--page);cursor:pointer">${b.cover?'<span style="color:var(--role);font-weight:600">anh-bia.jpg · 1200×675</span>':'Bấm để chọn ảnh'}</div></aside></div>`));
   $$('[data-cmd]').forEach(x=>x.onclick=()=>{const[c,a]=x.dataset.cmd.split(':');document.execCommand(c,false,a);$('#bb').focus()});
   $('#cover').onclick=()=>{b.cover=true;$('#cover').innerHTML='<span style="color:var(--role);font-weight:600">anh-bia.jpg · 1200×675</span>'};
-  const save=st=>{if(!mark('f-bt',!!val('bt').trim()))return;
-    const doIt=()=>{Object.assign(b,{title:val('bt').trim(),body:$('#bb').innerHTML,status:st});if(st==='Active'&&b.date==='—')b.date='20/09/2026';if(isNew)BLOG.unshift({...b,id:BLOG.length+10});toast('',st==='Active'?'Đã đăng bài.':'Đã lưu nháp.');location.hash='#/blog'};
-    if(st==='Inactive'&&b.status==='Active'&&!isNew)modal({title:'Gỡ đăng bài?',text:`<p>Lưu nháp sẽ gỡ bài "${esc(b.title)}" khỏi trang công khai ngay lập tức.</p>`,ok:'Gỡ đăng và lưu nháp',danger:true,onOk:doIt});else doIt()};
-  $('#draft').onclick=()=>save('Inactive');$('#pub').onclick=()=>save('Active');
+  $('#save').onclick=()=>{const t=val('bt').trim(),txt=$('#bb').innerText.trim(),st=val('bst');
+    if(!(mark('f-bt',t.length>=5&&t.length<=200)&mark('f-bex',val('bex').length<=300)&mark('f-bbd',txt.length>0&&txt.length<=20000)))return;
+    const doIt=()=>{Object.assign(b,{title:t,cat:val('bcat'),excerpt:val('bex').trim(),body:$('#bb').innerHTML,status:st});if(st==='Active'&&b.date==='—')b.date='20/09/2026';if(isNew)BLOG.unshift({...b,id:BLOG.length+10});toast('',st==='Active'?'Đã đăng bài.':'Đã lưu nháp.');location.hash='#/blog'};
+    if(st==='Inactive'&&b.status==='Active'&&!isNew)modal({title:'Gỡ đăng bài?',text:`<p>Lưu ở trạng thái ẩn sẽ gỡ bài "${esc(b.title)}" khỏi trang công khai ngay lập tức.</p>`,ok:'Gỡ đăng và lưu',danger:true,onOk:doIt});else doIt()};
 }
 
 /* ---------- 11.2.1 NOTIFY ---------- */
 function viewNotify(){
+  const AUD=['Tất cả hội viên','Hội viên đang hoạt động','Huấn luyện viên PT','Lễ tân','Toàn bộ nhân viên'];
   render(page('notify',crumb(['Thông báo']),'Gửi thông báo','11.2.1 / L2 / UC-44','Thông báo do Quản lý chủ động gửi. Thông báo tự động của hệ thống (đổi lịch buổi tập, kết quả duyệt đơn) không đi qua màn này.','',`
     <div class="grid2"><div class="card"><div class="pad stack">
-      <div class="f" id="f-nt"><label for="nt">Tiêu đề<span class="req">*</span></label><input class="input" id="nt"><span class="err">Tiêu đề không được để trống.</span></div>
-      <div class="f" id="f-nc"><label for="nc">Nội dung (chỉ văn bản)<span class="req">*</span></label><textarea class="input" id="nc" rows="6"></textarea><span class="err">Nội dung thông báo không được để trống.</span></div>
-      <div class="f"><span class="lbl">Gửi tới</span><div class="radio-row">${['Tất cả','Hội viên','PT','Lễ tân','Nhân viên (PT và Lễ tân)'].map((x,i)=>`<label class="opt"><input type="radio" name="to" value="${x}" ${i===0?'checked':''}> ${x}</label>`).join('')}</div></div>
+      <div class="f" id="f-nt"><label for="nt">Tiêu đề<span class="req">*</span></label><input class="input" id="nt" maxlength="100"><span class="hint">5–100 ký tự.</span><span class="err">Tiêu đề phải từ 5 đến 100 ký tự.</span></div>
+      <div class="f" id="f-nc"><label for="nc">Nội dung (chỉ văn bản)<span class="req">*</span></label><textarea class="input" id="nc" rows="6" maxlength="500"></textarea><span class="hint">10–500 ký tự.</span><span class="err">Nội dung phải từ 10 đến 500 ký tự.</span></div>
+      <div class="f"><label for="na">Đối tượng nhận<span class="req">*</span></label><select class="select" id="na">${AUD.map(x=>`<option>${x}</option>`).join('')}</select></div>
+      <div class="f"><span class="lbl">Thời điểm gửi<span class="req">*</span></span><div class="radio-row"><label class="opt"><input type="radio" name="nsend" value="now" checked> Gửi ngay</label><label class="opt"><input type="radio" name="nsend" value="later"> Hẹn giờ</label></div></div>
+      <div class="f" id="f-nd" hidden><label for="nd">Ngày giờ gửi<span class="req">*</span></label><input class="input" type="datetime-local" id="nd" min="2026-09-20T16:31"><span class="hint">Định dạng dd/mm/yyyy hh:mm, phải ở tương lai.</span><span class="err">Chọn thời điểm trong tương lai.</span></div>
     </div><div class="form-actions"><button class="btn btn-primary" id="send">Gửi thông báo</button></div></div>
-    <aside class="card"><div class="card-head"><h2>Đã gửi gần đây</h2></div><ul style="list-style:none;margin:0;padding:6px 20px 12px">${SENT.map(s=>`<li style="padding:10px 0;border-bottom:1px solid var(--border)"><b>${esc(s.title)}</b><div class="muted" style="font-size:12px">${s.to} · ${s.at}</div></li>`).join('')}</ul></aside></div>`));
-  $('#send').onclick=()=>{const ok=mark('f-nt',!!val('nt').trim())&mark('f-nc',!!val('nc').trim());if(!ok)return;const to=$('input[name=to]:checked').value;
-    modal({title:`Gửi tới ${to}?`,text:'<p>Thông báo gửi ngay, không thu hồi được.</p>',ok:'Gửi',onOk:()=>{SENT.unshift({title:val('nt').trim(),to,at:'20/09/2026 14:20'});toast('MSG-179',`Đã gửi thông báo tới ${to}.`);viewNotify()}})};
+    <aside class="card"><div class="card-head"><h2>Đã gửi gần đây</h2></div><ul style="list-style:none;margin:0;padding:6px 20px 12px">${SENT.map(s=>`<li style="padding:10px 0;border-bottom:1px solid var(--border)"><b>${esc(s.title)}</b><div class="muted" style="font-size:12px">${s.to} · ${s.at}${s.sched?' · Hẹn giờ':''}</div></li>`).join('')}</ul></aside></div>`));
+  $$('input[name=nsend]').forEach(r=>r.onchange=()=>{$('#f-nd').hidden=$('input[name=nsend]:checked').value!=='later'});
+  $('#send').onclick=()=>{const t=val('nt').trim(),c=val('nc').trim(),later=$('input[name=nsend]:checked').value==='later',d=val('nd');
+    const ok=mark('f-nt',t.length>=5&&t.length<=100)&mark('f-nc',c.length>=10&&c.length<=500)&(!later||mark('f-nd',!!d&&new Date(d)>NOW));if(!ok)return;const to=val('na');
+    modal({title:later?`Hẹn giờ gửi tới ${to}?`:`Gửi tới ${to}?`,text:later?'<p>Thông báo sẽ gửi đúng giờ hẹn.</p>':'<p>Thông báo gửi ngay, không thu hồi được.</p>',ok:later?'Hẹn giờ':'Gửi',onOk:()=>{SENT.unshift({title:t,to,at:later?d.replace('T',' ').split(' ').map((x,i)=>i?x:x.split('-').reverse().join('/')).join(' '):'20/09/2026 16:30',sched:later});toast('MSG-179',later?`Đã hẹn giờ gửi thông báo tới ${to}.`:`Đã gửi thông báo tới ${to}.`);viewNotify()}})};
 }
 
 /* ---------- 12.1.1 REPORT ---------- */
@@ -1035,24 +1263,25 @@ let RP={from:'2026-09-01',to:'2026-09-20'};
 function viewReport(){
   const bad=RP.from>RP.to;
   const days=20;let rev=[18.2,12.4,9.8,15.1,22.6,31.4,26.8,14.9,11.2,13.7,19.5,24.8,33.1,28.4,16.3,12.9,14.4,21.7,27.3,19.6].slice(0,days);
-  const pk=[['Gói 1 tháng',42,18900000],['Gói 3 tháng',31,39990000],['Gói 9 tháng',9,31050000],['Gói 12 tháng',14,58800000],['Vé 1 ngày',186,11160000],['Gói PT (các loại)',17,86400000]];
+  const pk=[['Gói 1 Tháng',42,33558000],['Gói 3 Tháng',31,67890000],['Gói 9 Tháng',9,49410000],['Gói 12 Tháng',14,97860000],['Gói Ngày',186,22320000],['Gói PT (các loại)',17,193600000]];
   const total=pk.reduce((a,p)=>a+p[2],0);const raw=rev.reduce((a,b)=>a+b,0);rev=rev.map(v=>v*total/1e6/raw);
-  const pts=[['Phạm Đức Thắng',70,58,3,2,1],['Hoàng Mai Linh',72,52,4,1,0],['Đinh Công Sơn',70,34,2,3,1],['Mai Phương Thảo',65,29,1,0,2]];
-  const commOf=p=>(p[2]+p[3]+p[4]+p[5])*400000*p[1]/100;const commTotal=pts.reduce((a,p)=>a+commOf(p),0);
+  const pts=[['Phạm Thu Trang',70,58,3,2,1],['Hoàng Long',70,28,0,0,0,8610000],['Đỗ Minh Khoa',70,34,2,3,1],['Vũ Hải Yến',65,29,1,0,2]];
+  const commOf=p=>p[6]||(p[2]+p[3]+p[4]+p[5])*360000*p[1]/100;const commTotal=pts.reduce((a,p)=>a+commOf(p),0);
   const W=680,H=220,pad=34,bw=(W-pad-10)/days;const max=25;
   const svg=`<svg viewBox="0 0 ${W} ${H+24}" role="img" aria-label="Doanh thu theo ngày" style="width:100%;height:auto">
     ${[0,5,10,15,20].map(v=>{const y=H-v/max*(H-16);return `<line x1="${pad}" x2="${W-6}" y1="${y}" y2="${y}" stroke="#E7E5DF"/><text x="${pad-6}" y="${y+4}" font-size="10" text-anchor="end" fill="#6B6960">${v}tr</text>`}).join('')}
     ${rev.map((v,i)=>{const h=v/max*(H-16),x=pad+i*bw+bw*.18;return `<rect x="${x}" y="${H-h}" width="${bw*.64}" height="${h}" rx="3" fill="${i===days-1?'#3B4FA0':'#B9C1E6'}"><title>${i+1}/09: ${v.toFixed(1)} triệu</title></rect>${i%3===0?`<text x="${x+bw*.32}" y="${H+16}" font-size="10" text-anchor="middle" fill="#6B6960">${i+1}/9</text>`:''}`}).join('')}</svg>`;
   const vat=PARAMS.find(p=>p.k==='vat').v;
-  render(page('report',crumb(['Báo cáo']),'Báo cáo vận hành & doanh thu','12.1.1 / L1 / UC-46',`Số liệu cập nhật lúc 14:20 20/09, không theo thời gian thực.`,`
+  render(page('report',crumb(['Báo cáo']),'Báo cáo vận hành & doanh thu','12.1.1 / L1 / UC-46',`Số liệu cập nhật lúc 16:30 20/09, không theo thời gian thực.`,`
     <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap"><div class="f"><label for="rf">Từ ngày</label><input class="input" type="date" id="rf" value="${RP.from}"></div><div class="f"><label for="rt">Đến ngày</label><input class="input" type="date" id="rt" value="${RP.to}"></div><button class="btn btn-primary" id="rgo">Xem</button><button class="btn" id="xls" ${bad?'disabled':''}>${I.dl} Xuất Excel</button></div>`,
     bad?`<div class="card empty">Ngày bắt đầu phải trước ngày kết thúc.</div>`:`
-    <section class="stats" style="grid-template-columns:repeat(5,1fr)">
+    <section class="stats" style="grid-template-columns:repeat(3,1fr)">
       <div class="card stat"><div class="l">Doanh thu</div><div class="v">${(total/1e6).toFixed(1).replace('.',',')} tr</div><div class="d">Đã gồm VAT</div></div>
       <div class="card stat"><div class="l">Hội viên đang hoạt động</div><div class="v">412</div><div class="d">+38 hội viên mới</div></div>
-      <div class="card stat"><div class="l">Gói đang chạy</div><div class="v">340</div><div class="d">Gói tập, không gồm vé ngày</div></div>
+      <div class="card stat"><div class="l">Gói đang chạy</div><div class="v">340</div><div class="d">Gói tập, không gồm Gói Ngày</div></div>
       <div class="card stat"><div class="l">Hoa hồng PT</div><div class="v">${(commTotal/1e6).toFixed(1).replace('.',',')} tr</div><div class="d">Theo % riêng từng PT</div></div>
-      <div class="card stat"><div class="l">Vé 1 ngày</div><div class="v">186</div><div class="d">lượt · 11,2 tr doanh thu</div></div>
+      <div class="card stat"><div class="l">Lượt check-in</div><div class="v">3.420</div><div class="d">20 ngày · trung bình 171 lượt/ngày</div></div>
+      <div class="card stat"><div class="l">Gói Ngày</div><div class="v">186</div><div class="d">lượt · 18,6 tr doanh thu</div></div>
     </section>
     <div class="card pad" style="margin-bottom:16px"><h2>Doanh thu theo ngày</h2><p class="sub">Triệu đồng, đã gồm VAT</p>${svg}</div>
     <div class="grid-half" style="align-items:start">
@@ -1076,7 +1305,7 @@ startApp([
  [/^#\/vouchers$/,viewVouchers],[/^#\/vouchers\/([\w-]+)$/,viewVoucher],
  [/^#\/staff$/,viewStaff],[/^#\/staff\/([\w-]+)$/,viewStaffOne],[/^#\/leaves$/,viewLeaves],[/^#\/leaves\/([\w-]+)$/,viewLeave],
  [/^#\/customers$/,viewCustomers],[/^#\/customers\/([\w-]+)$/,viewCustomer],
- [/^#\/transactions$/,viewTx],[/^#\/facility$/,viewFacility],[/^#\/facility\/([\w-]+)$/,viewFacilityOne],
+ [/^#\/transactions$/,viewTx],[/^#\/facility$/,viewFacility],
  [/^#\/maintenance$/,viewMaint],[/^#\/maintenance\/([\w-]+)$/,viewMaintOne],[/^#\/feedback$/,viewFeedback],
  [/^#\/blog$/,viewBlog],[/^#\/blog\/(\w+)$/,viewEditor],[/^#\/notify$/,viewNotify],[/^#\/report$/,viewReport],
 ]);

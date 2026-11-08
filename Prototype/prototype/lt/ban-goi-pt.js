@@ -33,16 +33,19 @@
 
   /* Lịch rảnh PT theo thứ hằng tuần */
   const AVAIL = {
-    'PT-01': { T2: ['06:00', '09:00', '18:00', '19:30'], T3: ['09:00', '18:00'], T4: ['06:00', '09:00', '18:00', '19:30'], T5: ['09:00', '16:30', '18:00'], T6: ['06:00', '18:00', '19:30'] },
+    // PT-01 Hoàng Long: khớp khung đã công bố ở pt/lich-ranh.html (T2–T6)
+    'PT-01': { T2: ['06:00', '08:00', '19:00'], T3: ['07:00', '10:00', '19:00'], T4: ['06:30', '17:00', '19:00'], T5: ['08:00', '15:00', '19:00'], T6: ['07:30', '18:00'] },
     'PT-02': { T2: ['07:30', '15:00', '16:30'], T3: ['07:30', '09:00', '15:00'], T4: ['07:30', '15:00', '16:30'], T5: ['07:30', '15:00', '16:30'], T6: ['07:30', '15:00', '16:30'] },
     'PT-03': { T2: ['16:30', '18:00', '19:30'], T3: ['16:30', '19:30'], T4: ['16:30', '18:00', '19:30'], T5: ['18:00', '19:30'], T6: ['16:30', '18:00', '19:30'] },
+    'PT-04': { T2: ['06:00', '07:30', '17:00'], T3: ['06:00', '17:00'], T4: ['06:00', '07:30', '17:00'], T5: ['06:00', '17:00'], T6: ['06:00', '17:00'] },
   };
 
   /* Buổi đã bán cố định hằng tuần (lặp lại mỗi tuần) */
   const WEEKLY_TAKEN = {
-    'PT-01': ['T2|18:00', 'T4|18:00', 'T6|19:30'],
+    'PT-01': ['T2|08:00', 'T3|19:00', 'T4|17:00', 'T4|19:00', 'T5|15:00', 'T5|19:00', 'T6|18:00'],
     'PT-02': ['T3|07:30'],
     'PT-03': ['T2|18:00', 'T4|19:30', 'T5|18:00'],
+    'PT-04': [],
   };
 
   /* Buổi lẻ đã bán vào ngày cụ thể */
@@ -88,7 +91,9 @@
   const coupleField = document.querySelector('[data-couple]');
   const partner = document.getElementById('ptPartner');
   const payBtn = document.getElementById('ptPay');
-  const hint = document.getElementById('ptHint');
+  // Một số bản render rút gọn không có vùng gợi ý; dùng no-op object để
+  // update() vẫn chạy bình thường và không làm hỏng toàn bộ màn bán gói PT.
+  const hint = document.getElementById('ptHint') || { hidden: true, textContent: '' };
   const startDateInput = document.getElementById('ptStartDate');
   const dateRangeBox = document.getElementById('ptDateRange');
   const rangeText = document.getElementById('ptRangeText');
@@ -229,10 +234,10 @@
     const k = kind();
     wkWrap.hidden = !coach;
     wkEmpty.hidden = !!coach;
-    wkCount.hidden = !coach || k.id === 'one';
+    wkCount.hidden = !coach;
     
     // Hiện khoảng ngày gói
-    if (startDate && endDate && k.id !== 'one') {
+    if (startDate && endDate) {
       dateRangeBox.hidden = false;
       rangeText.textContent = `${dm(startDate)} – ${dm(endDate)}`;
     } else {
@@ -242,14 +247,7 @@
     if (!coach) return;
 
     const name = coach.dataset.name;
-    wkLead.textContent = k.id === 'one' 
-      ? 'Buổi lẻ - PT chốt giờ trực tiếp với khách.'
-      : `Chọn ngày bắt đầu gói, hệ thống tự tính khoảng theo loại gói. Tick các buổi rảnh của PT trong range (T2-T6, 1 buổi/ngày).`;
-    
-    if (k.id === 'one') {
-      cal.querySelectorAll('.cal-col').forEach(c => c.innerHTML = '');
-      return;
-    }
+    wkLead.textContent = 'Chọn ngày bắt đầu gói, hệ thống tự tính khoảng theo loại gói. Tick các buổi rảnh của PT trong khoảng gói (T2–T6, 1 buổi/ngày), dùng "Lặp tuần đang xem" làm mẫu rồi sửa từng ngày.';
 
     /* Điều hướng tuần — không giới hạn, prev/next tự do */
     wkLabel.textContent = `${weekRange(week)} · ${countWeek(week)} buổi`;
@@ -395,7 +393,7 @@
     const list = [...sel.entries()].map(([date, slot]) => ({ date, slot }))
       .sort((a, b) => a.date.localeCompare(b.date));
     
-    planPanel.hidden = !list.length || k.id === 'one';
+    planPanel.hidden = !list.length;
     if (planPanel.hidden) return;
 
     planList.innerHTML = list.map(({ date, slot }) => {
@@ -444,9 +442,8 @@
     set('cust', c ? c.dataset.name : '—');
     set('kind', k.label + (k.couple && partner.value ? ` · cùng ${partner.selectedOptions[0].textContent.split(' · ')[1]}` : ''));
     set('coach', coach ? coach.dataset.name : '—');
-    set('slots', k.id === 'one' ? 'Chốt giờ trực tiếp' : list.length ? `${list.length} buổi` : '—');
-    set('plan', k.id === 'one' ? 'Một buổi hôm nay'
-      : startDate && endDate ? `${dm(startDate)} – ${dm(endDate)}` : '—');
+    set('slots', list.length ? `${list.length} buổi` : '—');
+    set('plan', startDate && endDate ? `${dm(startDate)} – ${dm(endDate)}` : '—');
     set('sub', vnd(k.price));
     set('net', vnd(net));
     set('vat', vnd(vat));
@@ -458,14 +455,14 @@
     else if (k.couple && !partner.value) block = 'Chọn người tập cùng.';
     else if (k.couple && partner.value === c.value) block = 'Người tập cùng phải khác khách đứng tên.';
     else if (!coach) block = 'Chọn huấn luyện viên.';
-    else if (k.id !== 'one' && !startDate) block = 'Chọn ngày bắt đầu gói.';
-    else if (k.id !== 'one' && !list.length) block = 'Tick ít nhất 1 buổi.';
+    else if (!startDate) block = 'Chọn ngày bắt đầu gói.';
+    else if (!list.length) block = 'Tick ít nhất 1 buổi.';
 
     payBtn.disabled = !c || !!block;
-    hint.hidden = !c;
-    hint.textContent = block || (k.id === 'one'
-      ? 'Buổi lẻ tính ngay hôm nay, PT chốt giờ với khách.'
-      : `Thu tiền là chốt cả ${list.length} buổi.`);
+    if (hint) {
+      hint.hidden = !c;
+      hint.textContent = block || `Thu tiền là chốt cả ${list.length} buổi.`;
+    }
   }
 
   function renderAll() {
@@ -474,26 +471,49 @@
     update();
   }
 
-  payBtn.addEventListener('click', () => {
-    const c = pickedCust();
-    const coach = pickedCoach();
-    const k = kind();
-    const list = [...sel.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+  /* Giữ lịch 15 phút: khung chuyển "Đang giữ" ngay, rồi mới thu tiền hoặc hủy giữ. */
+  const holdBox = document.getElementById('ptHold');
+  const holdClock = document.getElementById('ptHoldClock');
+  const collectBtn = document.getElementById('ptCollect');
+  const HOLD_SECONDS = 15 * 60;
+  let holdLeft = 0, holdTimer = null;
 
+  function stopHold() { clearInterval(holdTimer); holdBox.hidden = true; payBtn.hidden = false; }
+  function tickHold() {
+    holdLeft--;
+    holdClock.textContent = `${p2(Math.floor(holdLeft / 60))}:${p2(holdLeft % 60)}`;
+    if (holdLeft <= 0) {
+      stopHold();
+      showToast('warning', 'Hết 15 phút giữ chỗ chưa thu tiền. Các khung đã trả lại cho PT.');
+    }
+  }
+
+  payBtn.addEventListener('click', () => {
+    holdLeft = HOLD_SECONDS + 1;
+    tickHold();
+    holdTimer = setInterval(tickHold, 1000);
+    payBtn.hidden = true;
+    holdBox.hidden = false;
+    showToast('info', 'Đã giữ lịch 15 phút. Thu tiền trước khi hết giờ.');
+  });
+  document.getElementById('ptRelease').addEventListener('click', () => {
     openConfirmModal({
-      title: 'Xác nhận đơn gói PT',
-      body: `<p><b>${c.dataset.name}</b> · ${k.label}</p>
-             <p>Huấn luyện viên ${coach.dataset.name}.</p>
-             ${k.id === 'one' ? '<p>Buổi lẻ 90 phút hôm nay.</p>'
-             : `<p>${list.length} buổi từ ${dm(startDate)} đến ${dm(endDate)}.</p>`}
-             <p>Thu <b>${vnd(k.price)}</b>.</p>`,
-      confirmLabel: 'Kết đơn',
-      danger: false,
-      onConfirm() {
-        showToast('success', `Đã bán ${k.label} cho ${c.dataset.name}.`);
-        setTimeout(() => { location.href = 'ca-lam-viec.html'; }, 1000);
-      },
+      title: 'Hủy giữ chỗ',
+      body: '<p>Các khung sẽ trả lại cho PT và đơn bị hủy.</p>',
+      confirmLabel: 'Hủy giữ chỗ',
+      onConfirm() { stopHold(); showToast('info', 'Đã hủy giữ chỗ.'); },
     });
+  });
+  collectBtn.addEventListener('click', () => {
+    const c = pickedCust();
+    const k = kind();
+    const method = document.querySelector('input[name="ptpay"]:checked').value === 'cash' ? 'tiền mặt' : 'chuyển khoản';
+    try {
+      sessionStorage.setItem('gms_new_order', JSON.stringify({ code: 'DH-2026-1200', cust: c.dataset.name, pkg: k.label, pay: document.querySelector('input[name="ptpay"]:checked').value, amount: k.price, time: '16:30' }));
+    } catch {}
+    stopHold();
+    showToast('success', `Đã thu ${vnd(k.price)} (${method}) của ${c.dataset.name} cho ${k.label}.`);
+    setTimeout(() => { location.href = 'ca-lam-viec.html'; }, 1000);
   });
 
   filter();

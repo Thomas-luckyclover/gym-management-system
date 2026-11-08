@@ -81,6 +81,7 @@ public class CounterCustomerRow {
      * SĐT chia nhóm cho dễ đọc: 0912345678 thành "0912 345 678". Chỉ để hiển thị; không dùng để so sánh hay lưu.
      * Số không đủ 10 chữ số thì trả nguyên chuỗi.
      */
+    // GETTER TỰ TÍNH — không có field/setter "phoneText"; = SĐT 10 số tách dạng "0901 234 567", khác giữ nguyên; JSP: receptionist/counter-sale-next.jsp:101
     public String getPhoneText() {
         boolean isTenDigits = phone != null && phone.length() == 10;
         if (!isTenDigits) {
@@ -93,6 +94,7 @@ public class CounterCustomerRow {
     }
 
     // JSP đọc ${row.dependent}.
+    // GETTER TỰ TÍNH — không có field/setter "dependent"; = trả thẳng field isDependent; JSP: receptionist/counter-sale-next.jsp:94
     public boolean isDependent() {
         return isDependent;
     }
@@ -111,6 +113,7 @@ public class CounterCustomerRow {
      * Class màu của thẻ trạng thái (GBR-28): Active xanh lá, New xanh dương, Frozen vàng, còn lại xám.
      * JSP ghép vào class="badge …" nên không phải so sánh chữ trạng thái trong JSP.
      */
+    // GETTER TỰ TÍNH — không có field/setter "statusBadgeClass"; = status đổi sang class huy hiệu màu; JSP: receptionist/counter-sale-next.jsp:92
     public String getStatusBadgeClass() {
         if (status == Customer.Status.ACTIVE) {
             return "badge-success";
@@ -138,6 +141,7 @@ public class CounterCustomerRow {
     /**
      * Ngày cuối của gói tập còn hạn dưới dạng dd/MM/yyyy. Rỗng nếu chưa có gói.
      */
+    // GETTER TỰ TÍNH — không có field/setter "currentPackageEndText"; = currentPackageEnd dạng dd/MM/yyyy, null → ""; JSP: không dùng (chỉ Java/test)
     public String getCurrentPackageEndText() {
         if (currentPackageEnd == null) {
             return "";
@@ -145,6 +149,7 @@ public class CounterCustomerRow {
         return DateTimeUtil.formatDate(currentPackageEnd);
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "ownProfile"; = trả thẳng field isOwnProfile; JSP: không dùng (chỉ Java/test)
     public boolean isOwnProfile() {
         return isOwnProfile;
     }

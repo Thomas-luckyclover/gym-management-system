@@ -156,19 +156,4 @@ public class TransactionAttemptView {
         return completedAt;
     }
 
-    public boolean isSuccess() {
-        return "Success".equalsIgnoreCase(status);
-    }
-
-    public boolean isPending() {
-        return "Pending".equalsIgnoreCase(status);
-    }
-
-    public boolean isFailed() {
-        return "Failed".equalsIgnoreCase(status);
-    }
-
-    public boolean isExpired() {
-        return "Expired".equalsIgnoreCase(status);
-    }
 }

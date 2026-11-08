@@ -29,10 +29,8 @@
                 <h1 class="tb-title">Phiếu thu dịch vụ</h1>
             </div>
             <div class="top-right">
-                <a class="tb-user" href="${ctx}/account" title="Cài đặt tài khoản">
-                    <span class="avatar">LT</span>
-                    <span class="tb-user-text"><b><c:out value="${sessionScope.displayName}" default="Lễ tân" /></b><small>Lễ tân quầy</small></span>
-                </a>
+                <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
+                <%@ include file="/WEB-INF/jsp/common/topbar-user.jspf" %>
             </div>
         </header>
 
@@ -95,11 +93,13 @@
                         <div class="receipt-row receipt-row--validity">
                             <span class="receipt-label">Hiệu lực gói:</span>
                             <c:choose>
+                                <%-- startPicker.editable = getter tự tính isEditable() · dto/StartDatePicker.java --%>
                                 <c:when test="${not empty startPicker and startPicker.editable}">
                                     <div class="sdp-anchor receipt-sdp" data-sdp data-sdp-url="${ctx}/receptionist/subscription/start-date"
                                          data-sdp-sub="${startPicker.subscriptionId}" data-sdp-csrf="<c:out value='${csrfToken}' />">
                                         <div class="receipt-validity-line">
                                             <span class="receipt-val">
+                                                <%-- startPicker.startText = getter tự tính getStartText() · dto/StartDatePicker.java --%>
                                                 <span data-sdp-start><c:out value="${startPicker.startText}" /></span> → <span data-sdp-end><c:out value="${startPicker.endText}" /></span>
                                             </span>
                                             <button type="button" class="btn btn-sm sdp-btn no-print" data-sdp-toggle aria-expanded="false" title="Đổi ngày bắt đầu gói">

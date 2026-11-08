@@ -1,0 +1,91 @@
+<%@ page pageEncoding="UTF-8" %>
+<%--
+================================================================================
+ _pt-sale-step1.jspf — BƯỚC 1. GÓI, PT, NGÀY BẮT ĐẦU (cột trái)
+ Nhúng vào: pt-sales.jsp (static include → dùng chung biến với trang cha).
+ Hiện khi:  CHƯA giữ chỗ (not sale.held).
+ Form GET id="sale-form" có data-auto-submit: đổi gói / PT / ngày là pt-sales.js (initSaleAutoSubmit) tự gửi
+   → GET /receptionist/pt-sales?customer=&partner=&package=&pt=&start= → PtSaleServlet.showPage → prepare.
+ Dữ liệu:   sale.choice.packages / sale.choice.pts (PtSaleOption: value · label · note) ← loadPackage / loadPt
+            sale.choice.startDate, minStart, maxStart ← newView · sale.choice.choiceError ← loadPackage / loadPt
+================================================================================ --%>
+
+<%-- ===== BẮT ĐẦU: BƯỚC 1 — GÓI & PT ===== --%>
+            <%-- sale.held = getter tự tính isHeld() · dto/PtSaleView.java --%>
+            <c:if test="${not sale.held}">
+            <%--Hàm initSaleAutoSubmit trong pt-sales.js tìm form này. Hễ lễ tân đổi gói, PT hoặc ngày là JS tự gửi form bằng GET (?package=…&pt=…&start=…), không cần bấm gì.
+            data-auto-submit để JS đọc form có id = sale-form
+            --%>
+            <form id="sale-form" class="sale-flow" method="get" action="${base}" data-auto-submit>
+                <input type="hidden" name="customer" value="${sale.buyer.customerId}">
+                <input type="hidden" name="partner" value="${sale.buyer.partnerId}">
+                <section class="sale-card" aria-labelledby="sale-h2">
+                    <header class="sale-card-head"><h2 id="sale-h2">Gói &amp; PT</h2>
+                        <c:if test="${done2}"><p><c:out value="${gms:formatDate(sale.choice.startDate)}" /> – <c:out value="${gms:formatDate(sale.choice.endDate)}" /> · <c:out value="${sale.choice.months}" /> tháng</p></c:if></header>
+
+                        
+                        
+                        <%-- ===== CHỌN GÓI =====
+                    Dữ liệu: sale.choice.packages = List<PtSaleOption> ← loadPackage (mỗi gói đang bán = 1 PtSaleOption = 1 ô)
+                    o.value = mã gói · o.label = tên gói · o.note = "giá · số tháng · loại" (ghép sẵn lúc new PtSaleOption)
+                    Ô được tích: o.value trùng sale.choice.packageId (gói đang chọn).
+                    Bấm ô khác → pt-sales.js tự gửi form GET ?package=… → prepare chạy lại. --%>
+  
+                    <fieldset class="sale-packages">
+                        <legend class="sale-field-label">Gói</legend>
+                        <div class="sale-tiles">
+                        <c:forEach var="o" items="${sale.choice.packages}">
+                            <label class="sale-tile">
+                                <input type="radio" name="package" value="${o.value}" ${o.value eq sale.choice.packageId ? 'checked' : ''}>
+                                <strong><c:out value="${o.label}" /></strong>
+                                <small><c:out value="${o.note}" /></small>
+                            </label>
+                        </c:forEach>
+                        </div>
+                    </fieldset>
+
+                            
+                            
+                            
+                    <%-- Chỉ hiện khi đã chọn gói hợp lệ: gói chưa ổn thì build dừng trước loadPt → sale.choice.pts rỗng → ẩn cả khối này.
+                    Dữ liệu: sale.choice.pts = List<PtSaleOption> ← loadPt (mỗi PT đang làm việc = 1 PtSaleOption = 1 ô; bỏ PT là chính khách)
+                    o.value = mã PT · o.label = họ tên · o.note = chữ viết tắt làm avatar ("Đinh Công Sơn" → "ĐS", hàm initials)
+                    o.detail = chuyên môn + số năm kinh nghiệm (hàm ptDetail), lễ tân đọc để tư vấn PT hợp với khách
+                    Ô được tích: o.value trùng sale.choice.ptId (PT đang chọn).
+                    Bấm PT khác → pt-sales.js tự gửi form GET ?pt=… → prepare chạy lại → loadPlan đọc lịch của PT mới (trang tải lại). --%>
+                          
+                    <c:if test="${not empty sale.choice.pts}">
+                        <fieldset>
+                            <legend class="sale-field-label">PT khách chọn</legend>
+                            <div class="sale-pts">
+                            <c:forEach var="o" items="${sale.choice.pts}">
+                                <label class="sale-pt">
+                                    <input type="radio" name="pt" value="${o.value}" ${o.value eq sale.choice.ptId ? 'checked' : ''}>
+                                    <span class="sale-avatar" aria-hidden="true"><c:out value="${o.note}" /></span>
+                                    <span class="sale-pt-info">
+                                        <span><c:out value="${o.label}" /></span>
+                                        <c:if test="${not empty o.detail}"><small><c:out value="${o.detail}" /></small></c:if>
+                                    </span>
+                                </label>
+                            </c:forEach>
+                            </div>
+                        </fieldset>
+                                
+                                
+                                
+                              <%-- Chọn ngày bắt đầu, choice.startDate + choice.minStart + choice.maxStart = minStart + 30  --%>   
+                        <label class="sale-field sale-start"><span class="sale-field-label">Ngày bắt đầu kỳ</span>
+                            <input name="start" type="date" value="${sale.choice.startDate}" min="${sale.choice.minStart}" max="${sale.choice.maxStart}"
+                                   aria-describedby="sale-start-error" data-start-field>
+                        </label>
+                                   
+                        <%-- pt-sales.js hiện câu này khi ngày gõ vào nằm ngoài min–max (form KHÔNG gửi đi). --%>
+                        <p class="sale-msg is-error" id="sale-start-error" role="alert" hidden><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> Ngày bắt đầu phải từ <c:out value="${gms:formatDate(sale.choice.minStart)}" /> đến <c:out value="${gms:formatDate(sale.choice.maxStart)}" />.</p>
+                    </c:if>
+                    <c:if test="${not empty sale.choice.choiceError}"><p class="sale-msg is-error" role="alert"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> <c:out value="${sale.choice.choiceError}" /></p></c:if>
+                    <noscript><button class="btn btn-outline" type="submit">Tiếp</button></noscript>
+                </section>
+
+            </form>
+            </c:if>
+<%-- ===== KẾT THÚC: BƯỚC 1 — GÓI & PT ===== --%>
