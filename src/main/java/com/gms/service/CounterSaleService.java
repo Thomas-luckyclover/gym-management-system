@@ -921,9 +921,10 @@ public class CounterSaleService {
         }
         boolean canShowSaving = isLongMembership && months >= MIN_MONTHS_FOR_SAVING && oneMonthPrice > 0;
         if (canShowSaving) {
-            long savedPerMonth = oneMonthPrice - monthlyPrice;
-            if (savedPerMonth > 0) {
-                savingPercent = (int) Math.round((double) savedPerMonth * 100.0 / oneMonthPrice);
+            long priceIfBuyMonthly = oneMonthPrice * months;
+            long saved = priceIfBuyMonthly - price;
+            if (saved > 0) {
+                savingPercent = (int) Math.round((double) saved * 100.0 / priceIfBuyMonthly);
             }
         }
 
