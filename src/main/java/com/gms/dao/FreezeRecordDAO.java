@@ -415,8 +415,6 @@ public class FreezeRecordDAO {
                     EndDate,
                     FixedStartTime,
                     GeneratedSessionCount,
-                    SwapsUsed,
-                    MaxSwapsSnapshot,
                     FreezeUsed,
                     MaxFreezesSnapshot,
                     Status
