@@ -1,3 +1,4 @@
+
 package com.gms.servlet.manager;
 
 import com.gms.constant.Messages;
@@ -28,15 +29,21 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Controller màn hình Giao dịch toàn hệ thống cho Quản lý (Màn #41 - UC-26, SRS 7.4.2).
+ * Controller màn hình Giao dịch toàn hệ thống cho Quản lý (Màn #43 - UC-26, SRS
+ * 7.4.2).
  *
- * <p>Các tính năng hỗ trợ:</p>
+ * <p>
+ * Các tính năng hỗ trợ:
+ * </p>
  * <ul>
- *   <li>Tab 1: Đơn hàng & Giao dịch - Tra cứu, lọc theo kênh/phương thức/trạng thái/ngày/hoàn tiền.</li>
- *   <li>Tab 2: Lịch sử ca làm việc đã đóng - Đối soát tiền mặt & chênh lệch ca.</li>
- *   <li>Chi tiết đơn hàng & lịch sử lần thanh toán (AJAX modal - ?action=detail).</li>
- *   <li>Xuất file Excel danh sách giao dịch (.xlsx - ?action=export).</li>
- *   <li>Ghi nhận xác nhận hoàn tiền offline (POST action=refund).</li>
+ * <li>Tab 1: Đơn hàng & Giao dịch - Tra cứu, lọc theo kênh/phương thức/trạng
+ * thái/ngày/hoàn tiền.</li>
+ * <li>Tab 2: Lịch sử ca làm việc đã đóng - Đối soát tiền mặt & chênh lệch
+ * ca.</li>
+ * <li>Chi tiết đơn hàng & lịch sử lần thanh toán (AJAX modal -
+ * ?action=detail).</li>
+ * <li>Xuất file Excel danh sách giao dịch (.xlsx - ?action=export).</li>
+ * <li>Ghi nhận xác nhận hoàn tiền offline (POST action=refund).</li>
  * </ul>
  *
  * @author Le Cong Minh
@@ -48,7 +55,9 @@ public class SystemTransactionServlet extends HttpServlet {
     private static final String TAB_SHIFTS = "shifts";
     private static final String ACTION_EXPORT = "export";
     private static final String ACTION_DETAIL = "detail";
+    private static final String ACTION_SHIFT_ORDERS = "shiftOrders";
     private static final String ACTION_REFUND = "refund";
+    private static final String ACTION_LOOKUP = "lookup";
 
     private final ManagerTransactionService managerTransactionService = new ManagerTransactionService();
     private final AccountSettingsService accountSettingsService = new AccountSettingsService();
@@ -68,6 +77,18 @@ public class SystemTransactionServlet extends HttpServlet {
         // B2: Xử lý xem chi tiết đơn hàng dạng JSON cho modal AJAX
         if (ACTION_DETAIL.equalsIgnoreCase(action)) {
             handleOrderDetailAjax(request, response);
+            return;
+        }
+
+        // B2b: Tra cứu kết quả thật tại VNPay (API-06, chỉ đọc)
+        if (ACTION_LOOKUP.equalsIgnoreCase(action)) {
+            handleLookupAjax(request, response);
+            return;
+        }
+
+        // B2c: Danh sách các đơn hàng trong ca làm việc dạng JSON cho modal AJAX
+        if (ACTION_SHIFT_ORDERS.equalsIgnoreCase(action)) {
+            handleShiftOrdersAjax(request, response);
             return;
         }
 
@@ -110,7 +131,11 @@ public class SystemTransactionServlet extends HttpServlet {
             throws ServletException, IOException {
 
         HttpSession session = request.getSession(false);
-        Integer accountId = (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
+        if (session == null || session.getAttribute(SessionKey.ACCOUNT_ID) == null) {
+            RequestUtil.redirect(request, response, "/login");
+            return;
+        }
+        int accountId = (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
 
         // B1: Lấy thông tin tài khoản cho topbar header
         ServiceResult<AccountSettingsView> me = accountSettingsService.getAccountSettings(accountId, Role.MANAGER);
@@ -149,15 +174,50 @@ public class SystemTransactionServlet extends HttpServlet {
     private void renderOrdersTab(HttpServletRequest request) {
         String keyword = RequestUtil.getTrimmedParam(request, "search");
         String paymentMethod = RequestUtil.getTrimmedParam(request, "method");
-        String orderStatus = RequestUtil.getTrimmedParam(request, "status");
 
-        String refundParam = RequestUtil.getTrimmedParam(request, "needsRefund");
-        Boolean needsRefundOnly = "1".equals(refundParam) ? Boolean.TRUE : null;
+        // Tình trạng: refund | done | pending | paid | cancelled | "" (tất cả)
+        String state = request.getParameter("state");
+        if (state == null) {
+            // Vào màn lần đầu: còn đơn cần hoàn thì mở sẵn bộ lọc "Cần hoàn"
+            int pendingRefunds = (Integer) request.getAttribute("pendingRefundCount");
+            state = pendingRefunds > 0 ? "refund" : "";
+        }
+        state = state.trim().toLowerCase();
+
+        String orderStatus = null;
+        Boolean needsRefundOnly = null;
+        switch (state) {
+            case "refund":
+                needsRefundOnly = Boolean.TRUE;
+                break;
+            case "done":
+                orderStatus = "refunded";
+                break;
+            case "pending":
+            case "paid":
+            case "cancelled":
+                orderStatus = state;
+                break;
+            default:
+                state = "";
+        }
 
         LocalDate from = DateTimeUtil.parseHtmlDate(request.getParameter("from"));
         LocalDate to = DateTimeUtil.parseHtmlDate(request.getParameter("to"));
         int page = RequestUtil.getIntParam(request, "page", 1);
         int pageSize = RequestUtil.getIntParam(request, "pageSize", 10);
+        if (pageSize != 10 && pageSize != 20 && pageSize != 50) {
+            pageSize = 10;
+        }
+        if (pageSize != 10 && pageSize != 20 && pageSize != 50) {
+            pageSize = 10;
+        }
+        if (pageSize != 10 && pageSize != 20 && pageSize != 50) {
+            pageSize = 10;
+        }
+        if (pageSize != 10 && pageSize != 20 && pageSize != 50) {
+            pageSize = 10;
+        }
 
         ServiceResult<PageResult<ManagerTransactionItem>> result = managerTransactionService.getTransactionPage(
                 keyword, paymentMethod, orderStatus, needsRefundOnly, from, to, page, pageSize);
@@ -165,26 +225,26 @@ public class SystemTransactionServlet extends HttpServlet {
         if (result.isSuccess()) {
             request.setAttribute("orderPage", result.getData());
         } else {
-            request.setAttribute("orderPage", new PageResult<ManagerTransactionItem>(java.util.Collections.emptyList(), page, pageSize, 0));
+            request.setAttribute("orderPage",
+                    new PageResult<ManagerTransactionItem>(java.util.Collections.emptyList(), page, pageSize, 0));
             request.setAttribute("pageError", result.getMessage());
         }
 
         request.setAttribute("searchKeyword", keyword);
         request.setAttribute("filterMethod", paymentMethod);
-        request.setAttribute("filterStatus", orderStatus);
-        request.setAttribute("filterNeedsRefund", "1".equals(refundParam) ? 1 : null);
+        request.setAttribute("filterState", state);
         request.setAttribute("fromDate", from);
         request.setAttribute("toDate", to);
     }
 
-    /**
-     * Tải dữ liệu phân trang cho Tab 2: Lịch sử ca làm việc đã đóng.
-     */
     private void renderClosedShiftsTab(HttpServletRequest request) {
         LocalDate from = DateTimeUtil.parseHtmlDate(request.getParameter("from"));
         LocalDate to = DateTimeUtil.parseHtmlDate(request.getParameter("to"));
         int page = RequestUtil.getIntParam(request, "page", 1);
         int pageSize = RequestUtil.getIntParam(request, "pageSize", 10);
+        if (pageSize != 10 && pageSize != 20 && pageSize != 50) {
+            pageSize = 10;
+        }
 
         ServiceResult<PageResult<ClosedShiftHistoryItem>> shiftResult = managerTransactionService.getClosedShiftsPage(
                 from, to, page, pageSize);
@@ -192,7 +252,8 @@ public class SystemTransactionServlet extends HttpServlet {
         if (shiftResult.isSuccess()) {
             request.setAttribute("shiftPage", shiftResult.getData());
         } else {
-            request.setAttribute("shiftPage", new PageResult<ClosedShiftHistoryItem>(java.util.Collections.emptyList(), page, pageSize, 0));
+            request.setAttribute("shiftPage",
+                    new PageResult<ClosedShiftHistoryItem>(java.util.Collections.emptyList(), page, pageSize, 0));
             request.setAttribute("pageError", shiftResult.getMessage());
         }
 
@@ -203,6 +264,27 @@ public class SystemTransactionServlet extends HttpServlet {
     /**
      * Xử lý AJAX lấy thông tin chi tiết đơn hàng và các lần thanh toán.
      */
+    /**
+     * Xử lý AJAX lấy danh sách các đơn hàng thuộc một ca làm việc cụ thể.
+     */
+    private void handleShiftOrdersAjax(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        int shiftId = RequestUtil.getIntParam(request, "shiftId", 0);
+        if (shiftId <= 0) {
+            JsonUtil.writeJson(response, HttpServletResponse.SC_BAD_REQUEST,
+                    JsonResponse.error("Mã ca làm việc không hợp lệ."));
+            return;
+        }
+
+        ServiceResult<java.util.List<ManagerTransactionItem>> result = managerTransactionService.getOrdersByShift(shiftId);
+        if (result.isSuccess()) {
+            JsonUtil.writeJson(response, HttpServletResponse.SC_OK, JsonResponse.success(result.getData()));
+        } else {
+            JsonUtil.writeJson(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    JsonResponse.error(result.getMessage()));
+        }
+    }
+
     private void handleOrderDetailAjax(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         int orderId = RequestUtil.getIntParam(request, "orderId", 0);
@@ -261,10 +343,27 @@ public class SystemTransactionServlet extends HttpServlet {
 
         String keyword = RequestUtil.getTrimmedParam(request, "search");
         String paymentMethod = RequestUtil.getTrimmedParam(request, "method");
-        String orderStatus = RequestUtil.getTrimmedParam(request, "status");
 
-        String refundParam = RequestUtil.getTrimmedParam(request, "needsRefund");
-        Boolean needsRefundOnly = "1".equals(refundParam) ? Boolean.TRUE : null;
+        String state = request.getParameter("state");
+        state = state == null ? "" : state.trim().toLowerCase();
+
+        String orderStatus = null;
+        Boolean needsRefundOnly = null;
+        switch (state) {
+            case "refund":
+                needsRefundOnly = Boolean.TRUE;
+                break;
+            case "done":
+                orderStatus = "refunded";
+                break;
+            case "pending":
+            case "paid":
+            case "cancelled":
+                orderStatus = state;
+                break;
+            default:
+                break;
+        }
 
         LocalDate from = DateTimeUtil.parseHtmlDate(request.getParameter("from"));
         LocalDate to = DateTimeUtil.parseHtmlDate(request.getParameter("to"));
@@ -277,11 +376,29 @@ public class SystemTransactionServlet extends HttpServlet {
         response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
 
         try (OutputStream out = response.getOutputStream()) {
-            managerTransactionService.exportToExcel(keyword, paymentMethod, orderStatus, needsRefundOnly, from, to, out);
+            managerTransactionService.exportToExcel(keyword, paymentMethod, orderStatus, needsRefundOnly, from, to,
+                    out);
             out.flush();
         } catch (java.sql.SQLException e) {
             e.printStackTrace();
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Lỗi truy vấn cơ sở dữ liệu khi xuất Excel.");
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "Lỗi truy vấn cơ sở dữ liệu khi xuất Excel.");
+        }
+    }
+
+    /**
+     * Tra cứu VNPay cho một lần thanh toán online (nút "Tra cứu"). Chỉ đọc.
+     */
+    private void handleLookupAjax(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        int transactionId = RequestUtil.getIntParam(request, "transactionId", 0);
+
+        ServiceResult<java.util.Map<String, Object>> result = managerTransactionService.lookupGateway(transactionId);
+        if (result.isSuccess()) {
+            JsonUtil.writeJson(response, HttpServletResponse.SC_OK, JsonResponse.success(result.getData()));
+        } else {
+            JsonUtil.writeJson(response, HttpServletResponse.SC_BAD_REQUEST,
+                    JsonResponse.error(result.getMessage()));
         }
     }
 }

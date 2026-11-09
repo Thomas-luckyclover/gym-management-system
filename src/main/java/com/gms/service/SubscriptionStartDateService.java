@@ -213,7 +213,7 @@ String.format(Messages.MSG185_START_DATE_RANGE, DateTimeUtil.formatDate(options.
             options = PackagePeriod.optionsForPurchased(today, subscription.getStartDate(), otherEnd);
             if (options.size() <= 1) {
                 // Gói này nối sau gói khác còn hạn lâu hơn 7 ngày: không còn ngày nào khác để chọn.
-                reason = "Gói này tự nối sau gói đang dùng nên không đổi được ngày bắt đầu.";
+                reason = Messages.MSG332_PACKAGE_CHAINS_NO_DAYS_LEFT;
                 options = List.of();
             }
         }

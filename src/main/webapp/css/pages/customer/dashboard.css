@@ -542,11 +542,28 @@ body.customer-dashboard-page { background: var(--pt-bg); color: var(--pt-text); 
   margin-bottom: var(--space-4);
 }
 .customer-dashboard-page .customer-package-card {
+  position: relative;
   min-width: 0;
   padding: var(--space-4);
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-surface);
+}
+.customer-dashboard-page .customer-package-card .sdp-btn {
+  margin-top: var(--space-2);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+.customer-dashboard-page .customer-package-card .sdp-cal {
+  position: static !important;
+  display: block !important;
+  width: 100% !important;
+  margin-top: var(--space-3) !important;
+  box-sizing: border-box !important;
+}
+.customer-dashboard-page .customer-package-card .sdp-cal[hidden] {
+  display: none !important;
 }
 .customer-dashboard-page .customer-package-card h3 {
   margin: var(--space-2) 0;

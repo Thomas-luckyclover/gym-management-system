@@ -36,13 +36,27 @@ public class CounterCheckoutInput {
     // Cách dùng: Service dùng kiểm tra điều kiện voucher (nếu có nhập) hoặc bỏ qua nếu để trống.
     private final String voucherCode;
 
+    private final boolean transferReceived;
+    private final String transferReference;
+
     public CounterCheckoutInput(int packageId, int customerId, LocalDate startDate,
-            String paymentMethod, String voucherCode) {
+            String paymentMethod, String voucherCode,
+            boolean transferReceived, String transferReference) {
         this.packageId = packageId;
         this.customerId = customerId;
         this.startDate = startDate;
         this.paymentMethod = paymentMethod;
         this.voucherCode = voucherCode;
+        this.transferReceived = transferReceived;
+        this.transferReference = transferReference;
+    }
+
+    public boolean isTransferReceived() {
+        return transferReceived;
+    }
+
+    public String getTransferReference() {
+        return transferReference;
     }
 
     // Mã gói đang mua, CounterSaleService dùng để đọc thông tin gói từ Packages.

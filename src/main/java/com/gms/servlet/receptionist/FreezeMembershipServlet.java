@@ -3,15 +3,11 @@ package com.gms.servlet.receptionist;
 import com.gms.constant.Messages;
 import com.gms.constant.SessionKey;
 import com.gms.dto.CustomerMembershipRow;
-import com.gms.dto.CustomerSearchItem;
 import com.gms.dto.FreezeCustomerView;
 import com.gms.dto.FreezeRecordItemView;
-import com.gms.dto.FreezeSessionImpactView;
-import com.gms.dto.JsonResponse;
 import com.gms.dto.PageResult;
 import com.gms.dto.ServiceResult;
 import com.gms.service.FreezeService;
-import com.gms.util.JsonUtil;
 import com.gms.util.PaginationUtil;
 import com.gms.util.RequestUtil;
 import com.gms.util.ValidationUtil;
@@ -72,66 +68,44 @@ public class FreezeMembershipServlet extends HttpServlet {
         }
         int accountId = (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
 
-        // B2: Nếu là yêu cầu AJAX xem trước buổi PT bị ảnh hưởng thì trả JSON về luôn
-        String action = RequestUtil.getTrimmedParam(request, "action");
-        if (ACTION_PREVIEW_SESSIONS.equalsIgnoreCase(action)) {
-            handleAjaxPreviewSessions(request, response);
-            return;
-        }
-
-        // B3: Xác định tab đang chọn (members hoặc history) để tải dữ liệu và tách độc lập 2 khung tìm kiếm
+        // B2: Xác định tab đang chọn (members hoặc history)
         String currentTab = RequestUtil.getTrimmedParam(request, "tab");
-        if (ValidationUtil.isNullOrEmpty(currentTab)) {
-            if (!ValidationUtil.isNullOrEmpty(RequestUtil.getTrimmedParam(request, "hq"))
-                    || !ValidationUtil.isNullOrEmpty(RequestUtil.getTrimmedParam(request, "hfilter"))) {
-                currentTab = "history";
-            } else {
-                currentTab = "members";
-            }
-        }
-        request.setAttribute("currentTab", currentTab);
-
-        // Lấy từ khóa q (Tab 1), hq (Tab 2) và bộ lọc filter người dùng chọn
-        String query = RequestUtil.getTrimmedParam(request, "q");
         String historyQuery = RequestUtil.getTrimmedParam(request, "hq");
         String historyFilter = RequestUtil.getTrimmedParam(request, "hfilter");
         if (ValidationUtil.isNullOrEmpty(historyFilter)) {
             historyFilter = "ALL";
         }
+        if (ValidationUtil.isNullOrEmpty(currentTab)) {
+            currentTab = (!ValidationUtil.isNullOrEmpty(historyQuery) || !"ALL".equalsIgnoreCase(historyFilter)) ? "history" : "members";
+        }
+        request.setAttribute("currentTab", currentTab);
+
+        // Lấy từ khóa q (Tab 1) và bộ lọc filter
+        String query = RequestUtil.getTrimmedParam(request, "q");
         String filter = RequestUtil.getTrimmedParam(request, "filter");
         if (ValidationUtil.isNullOrEmpty(filter)) {
             filter = "ALL";
         }
-        int page = PaginationUtil.getPageNumber(request); // Lấy số trang hiện tại phục vụ phân trang
-        int pageSize = 10; // Phân trang 10 khách mỗi trang để vừa vặn giao diện
+        int page = PaginationUtil.getPageNumber(request);
+        int pageSize = 10;
 
-        if (!ValidationUtil.isNullOrEmpty(query)) { // Nếu từ khóa tìm kiếm hội viên không rỗng
-            // Gọi hàm lookupCustomerForFreeze để tra cứu khách hàng và gói tập
-            ServiceResult<FreezeCustomerView> lookupResult = freezeService.lookupCustomerForFreeze(query, accountId);
-
-            if (lookupResult.isSuccess()) { // Nếu tìm thấy chính xác theo mã hoặc SĐT
-                request.setAttribute("freezeCustomer", lookupResult.getData());
-            } else {
-                // Nếu tìm chính xác không ra, tìm theo một phần tên có phân trang
-                PageResult<CustomerSearchItem> searchResultsPage = freezeService.searchCustomersPage(query, page,
-                        pageSize);
-                if (!searchResultsPage.isEmpty()) {
-                    request.setAttribute("searchResultsPage", searchResultsPage);
-                    request.setAttribute("searchResults", searchResultsPage.getItems());
-                } else {
-                    request.setAttribute("searchError", lookupResult.getMessage());
-                }
-            }
-            request.setAttribute("query", query); // Gửi lại từ khóa ra JSP
-        }
-        request.setAttribute("currentFilter", filter);
-
-        // B4: Lấy danh sách hội viên & hợp đồng hiển thị ở bảng phong cách GymMaster (chỉ lọc theo query và filter của Tab 1)
+        // B4: Lấy danh sách hội viên & hợp đồng hiển thị ở bảng (Tab 1)
         PageResult<CustomerMembershipRow> membershipsPage = freezeService.getCustomerMembershipsPage(query, filter, page, pageSize);
         request.setAttribute("membershipsPage", membershipsPage);
         request.setAttribute("customerMemberships", membershipsPage.getItems());
 
-        // B5: Lấy toàn bộ lịch sử các đợt bảo lưu hiển thị ở tab "Lịch sử bảo lưu" (lọc theo historyQuery và historyFilter của Tab 2)
+        if (!ValidationUtil.isNullOrEmpty(query)) {
+            ServiceResult<FreezeCustomerView> lookupResult = freezeService.lookupCustomerForFreeze(query, accountId);
+            if (lookupResult.isSuccess()) {
+                request.setAttribute("freezeCustomer", lookupResult.getData());
+            } else if (membershipsPage.isEmpty()) {
+                request.setAttribute("searchError", lookupResult.getMessage());
+            }
+            request.setAttribute("query", query);
+        }
+        request.setAttribute("currentFilter", filter);
+
+        // B5: Lấy toàn bộ lịch sử các đợt bảo lưu (Tab 2)
         List<FreezeRecordItemView> freezeHistoryList = freezeService.getRecentFreezes(historyQuery, historyFilter, 50);
         request.setAttribute("freezeHistoryList", freezeHistoryList);
         request.setAttribute("recentFreezes", freezeHistoryList); // tương thích ngược
@@ -249,33 +223,6 @@ public class FreezeMembershipServlet extends HttpServlet {
         ServiceResult<Void> result = freezeService.cancelFreezeEarly(accountId, freezeRecordId);
         RequestUtil.setFlashToast(request, result.isSuccess() ? "success" : "error", result.getMessage());
         RequestUtil.redirect(request, response, redirectUrl);
-    }
-
-    /**
-     * AJAX xem trước danh sách buổi PT bị ảnh hưởng (dùng JsonUtil).
-     */
-    private void handleAjaxPreviewSessions(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-
-        int customerId = RequestUtil.getIntParam(request, "customerId", 0);
-        String startDateStr = RequestUtil.getTrimmedParam(request, "startDate");
-        String plannedEndDateStr = RequestUtil.getTrimmedParam(request, "plannedEndDate");
-
-        if (customerId <= 0 || ValidationUtil.isNullOrEmpty(startDateStr)
-                || ValidationUtil.isNullOrEmpty(plannedEndDateStr)) {
-            JsonUtil.writeJson(response, JsonResponse.success(List.of()));
-            return;
-        }
-
-        try {
-            LocalDate startDate = parseFlexibleDate(startDateStr);
-            LocalDate plannedEndDate = parseFlexibleDate(plannedEndDateStr);
-            List<FreezeSessionImpactView> sessions = freezeService.previewAffectedSessions(customerId, startDate,
-                    plannedEndDate);
-            JsonUtil.writeJson(response, JsonResponse.success(sessions));
-        } catch (DateTimeParseException e) {
-            JsonUtil.writeJson(response, JsonResponse.success(List.of()));
-        }
     }
 
     private LocalDate parseFlexibleDate(String dateStr) {

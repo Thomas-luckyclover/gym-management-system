@@ -17,7 +17,7 @@
                             defer></script>
                 </head>
 
-                <body class="dock ${themeClass}">
+                <body class="dock ${themeClass} package-selection-page">
                     <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
 
                         <div class="app">

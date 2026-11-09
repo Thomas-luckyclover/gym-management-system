@@ -19,8 +19,8 @@ import java.io.IOException;
 @WebServlet("/customer/payment-result")
 public class PaymentResultServlet extends HttpServlet {
 
-    private final PaymentCallbackService callbackService =
-            new PaymentCallbackService();
+    private final PaymentCallbackService callbackService
+            = new PaymentCallbackService();
 
     @Override
     protected void doGet(
@@ -43,11 +43,15 @@ public class PaymentResultServlet extends HttpServlet {
             return;
         }
 
-        Integer transactionId =
-                RequestUtil.getPositiveIntParam(request, "transaction");
+        Integer transactionId
+                = RequestUtil.getPositiveIntParam(request, "transaction");
 
-        ServiceResult<PaymentResultView> result =
-                callbackService.getPaymentResult(
+        if (transactionId != null) {
+            callbackService.refreshIfWaiting(accountId, transactionId);
+        }
+
+        ServiceResult<PaymentResultView> result
+                = callbackService.getPaymentResult(
                         accountId, transactionId);
 
         if (result.isSuccess()) {

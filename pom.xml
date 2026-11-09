@@ -32,6 +32,8 @@
         <!-- Bắt buộc UTF-8 để không lỗi font tiếng Việt -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <!-- Nhóm test bỏ qua khi build; chạy test DB thật: mvn test -Dgroups=system-db -DexcludedGroups= -->
+        <excludedGroups>system-db</excludedGroups>
     </properties>
 
     <dependencies>
@@ -151,6 +153,10 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.5.0</version>
+                <configuration>
+                    <!-- Test gắn @Tag("system-db") ghi vào DB thật → không chạy khi build thường -->
+                    <excludedGroups>${excludedGroups}</excludedGroups>
+                </configuration>
             </plugin>
         </plugins>
     </build>

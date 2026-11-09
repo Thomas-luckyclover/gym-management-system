@@ -248,6 +248,9 @@ public class CustomerDashboardView {
         private final Integer freezeUsed;
         private final Integer maxFreezes;
 
+        /** Bộ chọn/đổi ngày bắt đầu (nếu gói còn đổi được). */
+        private StartDatePicker startPicker;
+
         public SubscriptionRow(
                 int subscriptionId,
                 String subscriptionType,
@@ -302,6 +305,8 @@ public class CustomerDashboardView {
         public String getPtName() { return ptName; }
         public Integer getFreezeUsed() { return freezeUsed; }
         public Integer getMaxFreezes() { return maxFreezes; }
+        public StartDatePicker getStartPicker() { return startPicker; }
+        public void setStartPicker(StartDatePicker startPicker) { this.startPicker = startPicker; }
 
         /** Gói PT (PTSingle / PTCouple / SingleSession). */
         // GETTER TỰ TÍNH — không có field/setter "ptPackage"; = subscriptionType là PTSingle, PTCouple hoặc SingleSession; JSP: customer/dashboard.jsp:210 …

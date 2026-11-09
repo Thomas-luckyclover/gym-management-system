@@ -352,10 +352,9 @@ class FreezeServiceTest {
         assertEquals(end, record.getPlannedEndDate());
         assertNull(record.getActualEndDate());
 
-        // Kiểm tra CBR-62: Đúng buổi single bị chốt Missed
+        // Kiểm tra CBR-62: Buổi PT trong kỳ bảo lưu KHÔNG bị chốt Missed lúc tạo bảo lưu (giữ Scheduled để JOB-04 chốt sau)
         List<Integer> missedIds = fakeFreezeRecordDAO.getMissedSessionIds();
-        assertEquals(1, missedIds.size());
-        assertEquals(501, missedIds.get(0));
+        assertTrue(missedIds.isEmpty(), "Buổi PT trong kỳ bảo lưu không bị chốt Missed ngay lúc lưu (CBR-62)");
 
         // Kiểm tra AuditLog được ghi lại
         AuditLog log = fakeAuditLogDAO.getLastLog();
@@ -390,7 +389,7 @@ class FreezeServiceTest {
 
         assertTrue(res.isSuccess());
         assertTrue(res.getMessage().contains("2 buổi PT"));
-        assertEquals(List.of(701, 702), fakeFreezeRecordDAO.getMissedSessionIds());
+        assertTrue(fakeFreezeRecordDAO.getMissedSessionIds().isEmpty(), "Các buổi PT không bị chốt Missed ngay lúc lưu (CBR-62)");
     }
 
     @Test
@@ -494,6 +493,189 @@ class FreezeServiceTest {
 
         // Kiểm tra ActualEndDate = PlannedEndDate
         assertEquals(freezePlannedEnd, freeze.getActualEndDate());
+    }
+
+    @Test
+    @DisplayName("Hạn mức bảo lưu độc lập: Gói A đã dùng hết 1 lần bảo lưu, sau khi Gói A hết hạn thì Gói B nối tiếp vẫn có đủ 1 lần bảo lưu của riêng nó")
+    void testEachSubscriptionHasItsOwnIndependentFreezeAllowance() {
+        LocalDate today = LocalDate.now();
+
+        // Gói A (gói hiện tại): bắt đầu từ 2 tháng trước, hết hạn sau 10 ngày nữa
+        // Gói A đã từng bảo lưu 1 lần (FreezeUsed = 1, Max = 1) -> Hết lượt bảo lưu
+        Subscription subA = createSubscription(SUB_ID, CUST_ID, Subscription.Type.MEMBERSHIP,
+                Subscription.Status.ACTIVE, today.minusMonths(2), today.plusDays(10), 1, 1);
+
+        // Gói B (gói nối tiếp): bắt đầu ngay sau khi Gói A hết hạn, kéo dài 1 tháng
+        // Gói B có FreezeUsed = 0, Max = 1 -> Độc lập với Gói A
+        Subscription subB = createSubscription(SUB_ID + 1, CUST_ID, Subscription.Type.MEMBERSHIP,
+                Subscription.Status.ACTIVE, today.plusDays(11), today.plusDays(41), 0, 1);
+
+        fakeFreezeRecordDAO.setSubscription(subA);
+        fakeFreezeRecordDAO.setSubscription(subB);
+
+        // 1. Khi Gói A đang chạy: tra cứu hội viên sẽ thấy Gói A
+        ServiceResult<FreezeCustomerView> lookupResA = freezeService.lookupCustomerForFreeze("KH-1001", STAFF_ACCOUNT_ID);
+        assertTrue(lookupResA.isSuccess());
+        FreezeCustomerView viewA = lookupResA.getData();
+        assertEquals(SUB_ID, viewA.getSubscriptionId());
+        assertEquals(1, viewA.getFreezeUsed());
+        assertFalse(viewA.isEligibleToFreeze(), "Gói A đã dùng hết hạn mức 1/1 lần nên không được bảo lưu tiếp");
+        assertTrue(viewA.getIneligibilityReason().contains("hết hạn mức bảo lưu"));
+
+        // Cố tình gọi applyFreeze cho Gói A -> Bị từ chối
+        ServiceResult<Void> freezeARes = freezeService.applyFreeze(STAFF_ACCOUNT_ID, SUB_ID,
+                today.plusDays(1), today.plusDays(5), "Bảo lưu lần 2");
+        assertFalse(freezeARes.isSuccess());
+        assertTrue(freezeARes.getMessage().contains("hết hạn mức bảo lưu"));
+
+        // 2. Cố tình gọi applyFreeze cho Gói B khi Gói B chưa bắt đầu -> Bị từ chối
+        ServiceResult<Void> freezeBTooEarly = freezeService.applyFreeze(STAFF_ACCOUNT_ID, SUB_ID + 1,
+                today.plusDays(12), today.plusDays(20), "Bảo lưu trước cho gói B");
+        assertFalse(freezeBTooEarly.isSuccess());
+        assertTrue(freezeBTooEarly.getMessage().contains("chưa đến ngày bắt đầu"));
+
+        // 3. Thời gian trôi qua đến khi Gói A đã hết hạn và Gói B bắt đầu có hiệu lực
+        subA.setEndDate(today.minusDays(1)); // Gói A đã hết hạn hôm qua
+        subB.setStartDate(today);           // Gói B bắt đầu từ hôm nay
+
+        // Lúc này Gói B là gói đang sử dụng: tra cứu hội viên sẽ trỏ vào Gói B
+        ServiceResult<FreezeCustomerView> lookupResB = freezeService.lookupCustomerForFreeze("KH-1001", STAFF_ACCOUNT_ID);
+        assertTrue(lookupResB.isSuccess());
+        FreezeCustomerView viewB = lookupResB.getData();
+        assertEquals(SUB_ID + 1, viewB.getSubscriptionId());
+        assertEquals(0, viewB.getFreezeUsed(), "Gói B chưa dùng lần bảo lưu nào");
+        assertEquals(1, viewB.getMaxFreezesSnapshot(), "Gói B có hạn mức 1 lần bảo lưu của riêng nó");
+        assertTrue(viewB.isEligibleToFreeze(), "Gói B đủ điều kiện bảo lưu");
+
+        // Thực hiện bảo lưu Gói B -> Thành công!
+        LocalDate bFreezeStart = today.plusDays(1);
+        LocalDate bFreezeEnd = today.plusDays(10);
+        ServiceResult<Void> freezeBRes = freezeService.applyFreeze(STAFF_ACCOUNT_ID, SUB_ID + 1,
+                bFreezeStart, bFreezeEnd, "Bảo lưu gói nối tiếp B");
+        assertTrue(freezeBRes.isSuccess(), freezeBRes.getMessage());
+        assertEquals(1, fakeFreezeRecordDAO.findSubscription(SUB_ID + 1).getFreezeUsed(),
+                "Gói B đã dùng 1 lần bảo lưu");
+    }
+
+    // ===== 5. GÓI MUA NỐI TIẾP (chỉ bảo lưu gói hiện tại, dời gói sau khi mở lại) =====
+
+    @Test
+    @DisplayName("applyFreeze: Từ chối bảo lưu gói mua nối tiếp chưa đến ngày bắt đầu")
+    void testApplyFreeze_RejectsNotStartedPackage() {
+        LocalDate today = LocalDate.now();
+        Subscription future = createSubscription(SUB_ID, CUST_ID, Subscription.Type.MEMBERSHIP,
+                Subscription.Status.ACTIVE, today.plusDays(5), today.plusDays(5).plusMonths(1), 0, 1);
+        fakeFreezeRecordDAO.setSubscription(future);
+
+        ServiceResult<Void> res = freezeService.applyFreeze(STAFF_ACCOUNT_ID, SUB_ID,
+                today.plusDays(6), today.plusDays(10), "Khách đi công tác");
+
+        assertFalse(res.isSuccess());
+        assertTrue(res.getMessage().contains("chưa đến ngày bắt đầu"));
+        assertEquals(Subscription.Status.ACTIVE, fakeFreezeRecordDAO.findSubscription(SUB_ID).getStatus());
+        assertNull(fakeFreezeRecordDAO.getLastInsertedRecord());
+    }
+
+    @Test
+    @DisplayName("cancelFreezeEarly: Gói nối tiếp được dời đúng số ngày bảo lưu, không chồng lên gói hiện tại")
+    void testCancelFreezeEarly_ShiftsFollowingPackages() {
+        LocalDate today = LocalDate.now();
+        LocalDate aEnd = today.plusDays(20);
+
+        Subscription a = createSubscription(SUB_ID, CUST_ID, Subscription.Type.MEMBERSHIP,
+                Subscription.Status.FROZEN, today.minusDays(40), aEnd, 1, 1);
+        Subscription b = createSubscription(SUB_ID + 1, CUST_ID, Subscription.Type.MEMBERSHIP,
+                Subscription.Status.ACTIVE, aEnd.plusDays(1), aEnd.plusDays(30), 0, 1);
+        Subscription c = createSubscription(SUB_ID + 2, CUST_ID, Subscription.Type.MEMBERSHIP,
+                Subscription.Status.ACTIVE, aEnd.plusDays(31), aEnd.plusDays(60), 0, 1);
+        fakeFreezeRecordDAO.setSubscription(a);
+        fakeFreezeRecordDAO.setSubscription(b);
+        fakeFreezeRecordDAO.setSubscription(c);
+
+        // Bảo lưu từ 9 ngày trước, hủy hôm nay => 10 ngày
+        FreezeRecord freeze = new FreezeRecord(1, SUB_ID, STAFF_EMPLOYEE_ID, today.minusDays(9), today.plusDays(10),
+                null, "Đi công tác", LocalDateTime.now().minusDays(10));
+        fakeFreezeRecordDAO.setFreezeRecord(freeze);
+
+        ServiceResult<Void> res = freezeService.cancelFreezeEarly(STAFF_ACCOUNT_ID, 1);
+        assertTrue(res.isSuccess(), res.getMessage());
+        assertTrue(res.getMessage().contains("Đã dời 2 gói nối tiếp"));
+
+        LocalDate aNewEnd = aEnd.plusDays(10);
+        assertEquals(aNewEnd, fakeFreezeRecordDAO.findSubscription(SUB_ID).getEndDate());
+
+        // Gói B bắt đầu ngay sau hạn mới của A, giữ nguyên độ dài
+        Subscription b2 = fakeFreezeRecordDAO.findSubscription(SUB_ID + 1);
+        assertEquals(aNewEnd.plusDays(1), b2.getStartDate());
+        assertEquals(aEnd.plusDays(40), b2.getEndDate());
+
+        // Gói C dời theo B
+        Subscription c2 = fakeFreezeRecordDAO.findSubscription(SUB_ID + 2);
+        assertEquals(b2.getEndDate().plusDays(1), c2.getStartDate());
+        assertEquals(aEnd.plusDays(70), c2.getEndDate());
+    }
+
+    @Test
+    @DisplayName("JOB-01: Mở lại gói hết bảo lưu thì dời gói nối tiếp; gói cách xa không bị chồng thì giữ nguyên")
+    void testResumeExpiredFreezes_ShiftsOnlyOverlappingPackages() {
+        LocalDate today = LocalDate.now();
+        LocalDate aEnd = today.plusDays(15);
+
+        Subscription a = createSubscription(SUB_ID, CUST_ID, Subscription.Type.MEMBERSHIP,
+                Subscription.Status.FROZEN, today.minusDays(40), aEnd, 1, 1);
+        Subscription b = createSubscription(SUB_ID + 1, CUST_ID, Subscription.Type.MEMBERSHIP,
+                Subscription.Status.ACTIVE, aEnd.plusDays(1), aEnd.plusDays(30), 0, 1);
+        // Gói của khách khác: không được đụng tới
+        Subscription other = createSubscription(SUB_ID + 5, CUST_ID + 1, Subscription.Type.MEMBERSHIP,
+                Subscription.Status.ACTIVE, aEnd.plusDays(1), aEnd.plusDays(30), 0, 1);
+        fakeFreezeRecordDAO.setSubscription(a);
+        fakeFreezeRecordDAO.setSubscription(b);
+        fakeFreezeRecordDAO.setSubscription(other);
+
+        // 5 ngày bảo lưu, đã kết thúc hôm qua
+        FreezeRecord freeze = new FreezeRecord(1, SUB_ID, STAFF_EMPLOYEE_ID, today.minusDays(5), today.minusDays(1),
+                null, "Ốm", LocalDateTime.now().minusDays(6));
+        fakeFreezeRecordDAO.addExpiredFreeze(freeze);
+
+        assertEquals(1, freezeService.resumeExpiredFreezes(today));
+
+        assertEquals(aEnd.plusDays(5), fakeFreezeRecordDAO.findSubscription(SUB_ID).getEndDate());
+        Subscription b2 = fakeFreezeRecordDAO.findSubscription(SUB_ID + 1);
+        assertEquals(aEnd.plusDays(6), b2.getStartDate());
+        assertEquals(aEnd.plusDays(35), b2.getEndDate());
+
+        Subscription other2 = fakeFreezeRecordDAO.findSubscription(SUB_ID + 5);
+        assertEquals(aEnd.plusDays(1), other2.getStartDate());
+
+        AuditLog log = fakeAuditLogDAO.getLastLog();
+        assertEquals("JOB_RESUME_FREEZE", log.getAction());
+    }
+
+    @Test
+    @DisplayName("JOB-01: Gói nối tiếp vốn đã cách xa hơn số ngày bảo lưu thì không bị dời")
+    void testResumeExpiredFreezes_KeepsFarFollowingPackage() {
+        LocalDate today = LocalDate.now();
+        LocalDate aEnd = today.plusDays(15);
+
+        Subscription a = createSubscription(SUB_ID, CUST_ID, Subscription.Type.MEMBERSHIP,
+                Subscription.Status.FROZEN, today.minusDays(40), aEnd, 1, 1);
+        // Khách tự chọn ngày bắt đầu muộn hơn 7 ngày so với hạn gói A
+        Subscription b = createSubscription(SUB_ID + 1, CUST_ID, Subscription.Type.MEMBERSHIP,
+                Subscription.Status.ACTIVE, aEnd.plusDays(8), aEnd.plusDays(38), 0, 1);
+        fakeFreezeRecordDAO.setSubscription(a);
+        fakeFreezeRecordDAO.setSubscription(b);
+
+        // 3 ngày bảo lưu => A hết hạn aEnd + 3, vẫn trước ngày bắt đầu của B
+        FreezeRecord freeze = new FreezeRecord(1, SUB_ID, STAFF_EMPLOYEE_ID, today.minusDays(3), today.minusDays(1),
+                null, "Ốm", LocalDateTime.now().minusDays(4));
+        fakeFreezeRecordDAO.addExpiredFreeze(freeze);
+
+        assertEquals(1, freezeService.resumeExpiredFreezes(today));
+
+        assertEquals(aEnd.plusDays(3), fakeFreezeRecordDAO.findSubscription(SUB_ID).getEndDate());
+        Subscription b2 = fakeFreezeRecordDAO.findSubscription(SUB_ID + 1);
+        assertEquals(aEnd.plusDays(8), b2.getStartDate());
+        assertEquals(aEnd.plusDays(38), b2.getEndDate());
     }
 
     // ===== Tiện ích tạo đối tượng mẫu =====
@@ -655,12 +837,30 @@ class FreezeServiceTest {
 
         @Override
         public Subscription findActiveOrFrozenMembershipByCustomerId(Connection conn, int customerId) {
+            List<Subscription> custSubs = new ArrayList<>();
             for (Subscription s : subs.values()) {
                 if (s.getCustomerId() == customerId && s.getSubscriptionType() == Subscription.Type.MEMBERSHIP) {
-                    return s;
+                    custSubs.add(s);
                 }
             }
-            return null;
+            if (custSubs.size() <= 1) {
+                return custSubs.isEmpty() ? null : custSubs.get(0);
+            }
+            LocalDate today = com.gms.util.DateTimeUtil.today();
+            List<Subscription> activeOrFrozen = new ArrayList<>();
+            for (Subscription s : custSubs) {
+                if (s.getStatus() == Subscription.Status.FROZEN) {
+                    activeOrFrozen.add(s);
+                } else if (s.getStatus() == Subscription.Status.ACTIVE
+                        && (s.getStartDate() == null || !s.getStartDate().isAfter(today))
+                        && (s.getEndDate() == null || !s.getEndDate().isBefore(today))) {
+                    activeOrFrozen.add(s);
+                }
+            }
+            activeOrFrozen.sort(java.util.Comparator.comparingInt((Subscription s) -> s.getStatus() == Subscription.Status.FROZEN ? 1 : 2)
+                    .thenComparing(s -> s.getStartDate() != null ? s.getStartDate() : LocalDate.MIN)
+                    .thenComparing(s -> s.getEndDate() != null ? s.getEndDate() : LocalDate.MIN));
+            return activeOrFrozen.isEmpty() ? null : activeOrFrozen.get(0);
         }
 
         @Override
@@ -684,6 +884,36 @@ class FreezeServiceTest {
             Subscription s = subs.get(subscriptionId);
             if (s != null) {
                 s.setStatus(Subscription.Status.fromDbValue(status));
+                s.setEndDate(newEndDate);
+                return true;
+            }
+            return false;
+        }
+
+        @Override
+        public List<Subscription> findLaterMembershipsForUpdate(Connection conn, int customerId,
+                                                                int excludeSubscriptionId, LocalDate afterDate) {
+            List<Subscription> list = new ArrayList<>();
+            for (Subscription s : subs.values()) {
+                if (s.getCustomerId() == customerId
+                        && s.getSubscriptionType() == Subscription.Type.MEMBERSHIP
+                        && s.getStatus() == Subscription.Status.ACTIVE
+                        && s.getSubscriptionId() != excludeSubscriptionId
+                        && s.getStartDate().isAfter(afterDate)) {
+                    list.add(s);
+                }
+            }
+            list.sort(java.util.Comparator.comparing(Subscription::getStartDate)
+                    .thenComparing(Subscription::getSubscriptionId));
+            return list;
+        }
+
+        @Override
+        public boolean updateSubscriptionDates(Connection conn, int subscriptionId,
+                                               LocalDate newStartDate, LocalDate newEndDate) {
+            Subscription s = subs.get(subscriptionId);
+            if (s != null) {
+                s.setStartDate(newStartDate);
                 s.setEndDate(newEndDate);
                 return true;
             }

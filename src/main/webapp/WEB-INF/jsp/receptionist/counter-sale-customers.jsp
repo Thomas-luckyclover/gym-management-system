@@ -20,7 +20,7 @@
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Chọn khách · Super Gym Lễ tân</title>
     <link rel="stylesheet" href="${ctx}/css/pages/receptionist/counter-sale.css?v=20261105vat">
-    <script src="${ctx}/js/pages/receptionist/counter-sale.js?v=20261031_tempPwd" defer></script>
+    <script src="${ctx}/js/pages/receptionist/counter-sale.js?v=20261109merge" defer></script>
 </head>
 <body class="dock theme-staff counter-sale-page">
 <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>

@@ -18,11 +18,11 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 
 /**
- * Controller màn hình Ca làm việc và Đối soát tiền mặt của Lễ tân (Màn #39 - UC-25, Business Flow BF-03).
+ * Controller màn hình Ca làm việc và Đối soát tiền mặt của Lễ tân (Màn #39 - UC-25, Business Flow BF-06).
  *
  * <p>Mapping URL: {@code @WebServlet("/receptionist/shift")}</p>
  *
- * <p>Triển khai toàn diện theo sơ đồ Business Flow BF-03 trong SRS:</p>
+ * <p>Triển khai toàn diện theo sơ đồ Business Flow BF-06 trong SRS:</p>
  * <ul>
  *   <li><b>Trigger & Main Flow:</b> Lễ tân mở ca trực đúng giờ (openShift: Shift -> Open, UC-25).</li>
  *   <li><b>Alternative Flow A1:</b> Lễ tân xác nhận đã nhận tiền chuyển khoản ngân hàng (confirmTransfer, CBR-77, CBR-105).</li>
@@ -52,6 +52,7 @@ public class ShiftServlet extends HttpServlet {
      * @param rawCash chuỗi thô người dùng nhập
      * @return chuỗi chỉ chứa số, hoặc "0" nếu rỗng
      */
+    // Lọc bỏ dấu chấm/phẩy do JS format (VD: "2.600.000" -> "2600000") để Long.parseLong không bị lỗi NumberFormatException.
     public static String cleanNumericCash(String rawCash) {
         if (rawCash == null) return "0";
         String cleanNum = rawCash.replaceAll("[^0-9]", "");
@@ -115,83 +116,71 @@ public class ShiftServlet extends HttpServlet {
         String action = RequestUtil.getTrimmedParam(request, "action");
         int shiftId = RequestUtil.getIntParam(request, "shiftId", 0);
 
-        if (ACTION_OPEN_SHIFT.equals(action)) {
-            handleOpenShift(request, response, accountId, shiftId);
-            return;
+        switch (action != null ? action : "") {
+            case ACTION_OPEN_SHIFT:
+                handleOpenShift(request, response, accountId, shiftId);
+                return;
+            case ACTION_CLOSE_SHIFT:
+                handleCloseShift(request, response, accountId, shiftId);
+                return;
+            case ACTION_CONFIRM_TRANSFER:
+                handleConfirmTransfer(request, response, accountId, shiftId);
+                return;
+            case ACTION_CANCEL_ORDER:
+                handleCancelOrder(request, response, accountId, shiftId);
+                return;
+            default:
+                RequestUtil.setFlashToast(request, "error", Messages.MSG04_SYSTEM_BUSY);
+                redirectToShift(request, response, shiftId);
         }
-
-        if (ACTION_CLOSE_SHIFT.equals(action)) {
-            handleCloseShift(request, response, accountId, shiftId);
-            return;
-        }
-
-        if (ACTION_CONFIRM_TRANSFER.equals(action)) {
-            handleConfirmTransfer(request, response, accountId, shiftId);
-            return;
-        }
-
-        if (ACTION_CANCEL_ORDER.equals(action)) {
-            handleCancelOrder(request, response, accountId, shiftId);
-            return;
-        }
-
-        RequestUtil.setFlashToast(request, "error", Messages.MSG04_SYSTEM_BUSY);
-        RequestUtil.redirect(request, response, "/receptionist/shift?shiftId=" + shiftId);
     }
 
     /**
      * Xử lý mở ca làm việc mới.
      */
     private void handleOpenShift(HttpServletRequest request, HttpServletResponse response,
-                                int accountId, int shiftId) throws IOException {
+                                 int accountId, int shiftId) throws IOException {
         if (shiftId <= 0) {
             RequestUtil.setFlashToast(request, "error", Messages.MSG271_SHIFT_INVALID);
-            RequestUtil.redirect(request, response, "/receptionist/shift");
+            redirectToShift(request, response, 0);
             return;
         }
 
         ServiceResult<Void> result = shiftService.openShift(accountId, shiftId);
-        if (result.isSuccess()) {
-            RequestUtil.setFlashToast(request, "success", Messages.MSG272_SHIFT_OPENED);
-        } else {
-            RequestUtil.setFlashToast(request, "error", result.getMessage());
-        }
-        RequestUtil.redirect(request, response, "/receptionist/shift?shiftId=" + shiftId);
+        finishAction(request, response, shiftId, result, Messages.MSG272_SHIFT_OPENED);
     }
 
     /**
      * Xử lý chốt ca làm việc và đối soát tiền mặt.
      */
     private void handleCloseShift(HttpServletRequest request, HttpServletResponse response,
-                                 int accountId, int shiftId) throws IOException {
+                                  int accountId, int shiftId) throws IOException {
         if (shiftId <= 0) {
             RequestUtil.setFlashToast(request, "error", Messages.MSG271_SHIFT_INVALID);
-            RequestUtil.redirect(request, response, "/receptionist/shift");
+            redirectToShift(request, response, 0);
             return;
         }
 
         String countedCashStr = RequestUtil.getTrimmedParam(request, "countedCash");
         String varianceReason = RequestUtil.getTrimmedParam(request, "varianceReason");
 
-        long countedCash = 0;
+        long countedCash;
         try {
-            if (countedCashStr != null) {
-                String cleanNum = cleanNumericCash(countedCashStr);
-                countedCash = Long.parseLong(cleanNum);
-            }
+            countedCash = Long.parseLong(cleanNumericCash(countedCashStr));
         } catch (NumberFormatException e) {
             RequestUtil.setFlashToast(request, "error", Messages.MSG273_COUNTED_CASH_INVALID);
-            RequestUtil.redirect(request, response, "/receptionist/shift?shiftId=" + shiftId);
+            redirectToShift(request, response, shiftId);
             return;
         }
 
         ServiceResult<Void> result = shiftService.closeShift(accountId, shiftId, countedCash, varianceReason);
         if (result.isSuccess()) {
             RequestUtil.setFlashToast(request, "success", Messages.MSG274_SHIFT_CLOSED);
+            redirectToShift(request, response, 0);
         } else {
             RequestUtil.setFlashToast(request, "error", result.getMessage());
+            redirectToShift(request, response, shiftId);
         }
-        RequestUtil.redirect(request, response, "/receptionist/shift?shiftId=" + shiftId);
     }
 
     /**
@@ -202,39 +191,43 @@ public class ShiftServlet extends HttpServlet {
         int orderId = RequestUtil.getIntParam(request, "orderId", 0);
         if (orderId <= 0) {
             RequestUtil.setFlashToast(request, "error", Messages.MSG275_ORDER_INVALID);
-            RequestUtil.redirect(request, response, "/receptionist/shift?shiftId=" + shiftId);
+            redirectToShift(request, response, shiftId);
             return;
         }
 
         ServiceResult<Void> result = shiftService.confirmBankTransfer(accountId, orderId);
-        if (result.isSuccess()) {
-            RequestUtil.setFlashToast(request, "success", Messages.MSG276_TRANSFER_CONFIRMED);
-        } else {
-            RequestUtil.setFlashToast(request, "error", result.getMessage());
-        }
-        RequestUtil.redirect(request, response, "/receptionist/shift?shiftId=" + shiftId);
+        finishAction(request, response, shiftId, result, Messages.MSG276_TRANSFER_CONFIRMED);
     }
 
     /**
      * Xử lý Lễ tân hủy đơn hàng tại quầy (CBR-11, CBR-115).
      */
     private void handleCancelOrder(HttpServletRequest request, HttpServletResponse response,
-                                  int accountId, int shiftId) throws IOException {
+                                   int accountId, int shiftId) throws IOException {
         int orderId = RequestUtil.getIntParam(request, "orderId", 0);
         String cancelReason = RequestUtil.getTrimmedParam(request, "cancelReason");
 
         if (orderId <= 0) {
             RequestUtil.setFlashToast(request, "error", Messages.MSG275_ORDER_INVALID);
-            RequestUtil.redirect(request, response, "/receptionist/shift?shiftId=" + shiftId);
+            redirectToShift(request, response, shiftId);
             return;
         }
 
         ServiceResult<Void> result = shiftService.cancelOrder(accountId, orderId, cancelReason);
-        if (result.isSuccess()) {
-            RequestUtil.setFlashToast(request, "success", Messages.MSG277_COUNTER_ORDER_CANCELLED);
-        } else {
-            RequestUtil.setFlashToast(request, "error", result.getMessage());
-        }
-        RequestUtil.redirect(request, response, "/receptionist/shift?shiftId=" + shiftId);
+        finishAction(request, response, shiftId, result, Messages.MSG277_COUNTER_ORDER_CANCELLED);
+    }
+
+    private void finishAction(HttpServletRequest request, HttpServletResponse response,
+                              int shiftId, ServiceResult<Void> result, String successMessage) throws IOException {
+        RequestUtil.setFlashToast(request,
+                result.isSuccess() ? "success" : "error",
+                result.isSuccess() ? successMessage : result.getMessage());
+        redirectToShift(request, response, shiftId);
+    }
+
+    private void redirectToShift(HttpServletRequest request, HttpServletResponse response, int shiftId)
+            throws IOException {
+        String path = shiftId > 0 ? "/receptionist/shift?shiftId=" + shiftId : "/receptionist/shift";
+        RequestUtil.redirect(request, response, path);
     }
 }

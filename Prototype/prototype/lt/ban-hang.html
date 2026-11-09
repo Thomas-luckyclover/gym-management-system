@@ -52,7 +52,7 @@
   <div class="cust-main">
     <header class="cust-topbar">
       <div>
-        <h1>Bán gói tập</h1>
+        <h1 id="shTitle">Chọn gói cho khách</h1>
       </div>
       <div class="cust-topbar-actions">
         <a class="badge badge-ok" href="ca-lam-viec.html" id="shiftChip"><i class="fa-solid fa-circle-check"></i> Ca chiều 20/09 đang mở</a>
@@ -70,8 +70,8 @@
       <div class="split">
         <div class="col-main">
 
-          <section class="panel">
-            <div class="panel-head"><h2>1 · Chọn gói cho khách</h2><span class="badge badge-info">Gói tập</span></div>
+          <section class="panel" data-step="1">
+            <div class="panel-head"><h2>Chọn gói cho khách</h2><span class="badge badge-info">Gói tập</span></div>
             <div class="toolbar">
               <label class="visually-hidden" for="shpq">Tìm gói theo tên</label>
               <div class="search">
@@ -131,8 +131,8 @@
             </div>
           </section>
 
-          <section class="panel" id="singlePanel" hidden>
-            <div class="panel-head"><h2>2 · Chọn PT và khung giờ hôm nay</h2><span class="badge badge-info">Buổi PT lẻ</span></div>
+          <section class="panel" id="singlePanel" data-step="3" hidden>
+            <div class="panel-head"><h2>Chọn PT và khung giờ hôm nay</h2><span class="badge badge-info">Buổi PT lẻ</span></div>
             <div class="form-grid form-grid-2">
               <label class="field"><span class="field-label">Huấn luyện viên</span>
                 <select id="singleCoach"><option value="">Chọn PT</option><option value="PT-01">Hoàng Long</option><option value="PT-02">Phạm Thu Trang</option><option value="PT-03">Đỗ Minh Khoa</option></select>
@@ -144,8 +144,8 @@
             <p class="field-hint" id="singleHint">Chọn PT và khung 90 phút còn trống hôm nay. Khách vãng lai chưa có gói tập: bán Gói Ngày trước rồi mới bán buổi PT lẻ. Slot được giữ 20 phút để thu tiền.</p>
           </section>
 
-          <section class="panel">
-            <div class="panel-head"><h2 data-step-no="cust">2 · Chọn khách</h2></div>
+          <section class="panel" data-step="2">
+            <div class="panel-head"><h2>Chọn khách</h2></div>
             <div class="toolbar">
               <div class="search">
                 <i class="fa-solid fa-magnifying-glass"></i>
@@ -250,8 +250,8 @@
             </div>
           </section>
 
-          <section class="panel">
-            <div class="panel-head"><h2 data-step-no="vc">3 · Voucher và ngày bắt đầu</h2><span class="muted">Mỗi đơn dùng tối đa một mã</span></div>
+          <section class="panel" data-step="3">
+            <div class="panel-head"><h2>Mã ưu đãi và ngày bắt đầu</h2><span class="muted">Mỗi đơn dùng tối đa một mã</span></div>
             <form id="shVcForm" class="toolbar" novalidate>
               <div class="search no-icon">
                 <input id="shVc" type="text" placeholder="Nhập mã ưu đãi..." maxlength="20" autocomplete="off" spellcheck="false" aria-label="Mã ưu đãi / Voucher">
@@ -274,25 +274,36 @@
               <span class="field-label" style="display:block;margin-bottom:var(--space-2)">Ngày bắt đầu</span>
               <div class="pt-picker">
                 <label class="pt-option"><input type="radio" name="shstart" value="auto" checked>
-                  <span class="pt-body"><b id="shStartAuto">Bắt đầu hôm nay</b><small>Gói tập: nối tiếp ngay sau gói hiện tại nếu còn hạn, nếu không thì tính từ ngày thanh toán</small></span></label>
+                  <span class="pt-body"><b id="shStartAuto">Kích hoạt ngay hôm nay</b><small id="shStartAutoHint">20/09/2026</small></span></label>
                 <label class="pt-option"><input type="radio" name="shstart" value="custom">
-                  <span class="pt-body"><b>Chọn ngày bắt đầu</b><small>Tối đa 30 ngày kể từ hôm nay</small></span></label>
+                  <span class="pt-body"><b>Hẹn ngày kích hoạt khác</b><small id="shStartHint">Từ hôm nay đến 7 ngày sau</small></span></label>
               </div>
-              <input id="shStartDate" type="date" min="2026-09-20" max="2026-10-20" value="2026-09-20" hidden>
+              <input id="shStartDate" type="date" min="2026-09-20" max="2026-09-27" value="2026-09-20" hidden>
             </div>
           </section>
 
-          <section class="panel">
-            <div class="panel-head"><h2 data-step-no="pay">4 · Phương thức thanh toán</h2></div>
+          <section class="panel" data-step="3">
+            <div class="panel-head"><h2>Phương thức thanh toán</h2></div>
             <div class="pt-picker">
               <label class="pt-option"><input type="radio" name="shpay" value="cash" checked>
-                <span class="pt-body"><b>Tiền mặt</b><small>Ghi vào ca, đối chiếu khi chốt</small></span></label>
+                <span class="pt-body"><b>Tiền mặt</b><small>Lễ tân đếm tiền mặt tại quầy</small></span></label>
               <label class="pt-option"><input type="radio" name="shpay" value="bank">
-                <span class="pt-body"><b>Chuyển khoản</b><small>Xác nhận biến động số dư rồi mới kết đơn</small></span></label>
+                <span class="pt-body"><b>Chuyển khoản / Quẹt thẻ POS</b><small>Quét VietQR hoặc máy POS quầy</small></span></label>
+            </div>
+            <div id="shBankBox" hidden style="margin-top:var(--space-4)">
+              <label class="field"><span class="field-label">Mã tham chiếu giao dịch (không bắt buộc, tối đa 50 ký tự)</span>
+                <input id="shBankRef" type="text" maxlength="50" placeholder="Mã giao dịch trên biến động số dư"></label>
+              <label class="pt-option" style="margin-top:var(--space-2)"><input type="checkbox" id="shBankOk">
+                <span class="pt-body"><b>Xác nhận thu tiền tại quầy</b><small>Đã nhận đủ tiền trong tài khoản (đúng số tiền của đơn)</small></span></label>
             </div>
           </section>
 
-        </div>
+                  <div class="step-nav" style="display:flex;justify-content:space-between;align-items:center;gap:var(--space-3);margin-top:var(--space-3)">
+            <button class="btn btn-ghost" type="button" id="shBack" hidden>← Quay lại</button>
+            <span class="muted" id="shStepNo">Bước 1 / 3</span>
+            <button class="btn btn-primary" type="button" id="shNext" disabled>Tiếp tục: tìm khách →</button>
+          </div>
+</div>
 
         <aside class="col-side">
           <div class="side-card sticky">
@@ -307,7 +318,7 @@
               <div class="sum-sub"><dt>VAT 8% (đã gồm)</dt><dd class="tabular" data-sum-vat>0đ</dd></div>
               <div class="sum-total"><dt>Tổng thu</dt><dd class="tabular" data-sum-total>0đ</dd></div>
             </dl>
-            <button class="btn btn-primary btn-block" type="button" id="shPay" disabled>Kết đơn</button>
+            <button class="btn btn-primary btn-block" type="button" id="shPay" disabled>Xác nhận đã thu</button>
             <div id="singleHold" class="alert-banner info" hidden>
               <span><i class="fa-solid fa-clock"></i> Đang giữ khung <b id="singleHoldClock">20:00</b></span>
               <button class="btn btn-ghost btn-sm" type="button" id="singleCollect">Thu tiền</button>

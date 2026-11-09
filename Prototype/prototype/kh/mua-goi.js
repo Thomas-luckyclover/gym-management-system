@@ -67,10 +67,36 @@
     btns.append(pgBtn('<i class="fa-solid fa-chevron-right"></i>', page + 1, { disabled: page >= pages }));
   }
 
-  [search, kind, dur, channel, min, max, sort].forEach(el => el.addEventListener('input', () => { page = 1; render(); }));
+  const chips = document.querySelectorAll('#pkgTypeChips button');
+  let activeChip = 'all';
+
+  chips.forEach(b => {
+    b.addEventListener('click', () => {
+      chips.forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      activeChip = b.dataset.chip;
+      if (activeChip === 'saving') {
+        kind.value = 'goi-tap';
+        sort.value = 'saving';
+      } else {
+        kind.value = activeChip;
+        if (sort.value === 'saving') sort.value = 'default';
+      }
+      page = 1;
+      render();
+    });
+  });
+
+  [search, kind, dur, channel, min, max, sort].forEach(el => el.addEventListener('input', () => {
+    if (el === kind) {
+      chips.forEach(b => b.classList.toggle('active', b.dataset.chip === kind.value));
+    }
+    page = 1; render();
+  }));
   document.getElementById('pkgReset').addEventListener('click', () => {
     search.value = ''; kind.value = 'all'; dur.value = 'all'; channel.value = 'all';
     min.value = ''; max.value = ''; sort.value = 'default';
+    chips.forEach(b => b.classList.toggle('active', b.dataset.chip === 'all'));
     page = 1; render();
   });
   render();
