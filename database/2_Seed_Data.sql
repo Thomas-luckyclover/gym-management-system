@@ -552,7 +552,7 @@ INSERT INTO Shifts (ShiftId, WorkDate, ShiftType, OpenedByEmployeeId, ClosedByEm
 SET IDENTITY_INSERT Shifts OFF;
 
 /* ============================================================================
-   Orders — 184 dòng.
+   Orders — 185 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT Orders ON;
 INSERT INTO Orders (OrderId, OrderCode, HolderCustomerId, PartnerCustomerId, PackageId, VoucherId, CreatedByEmployeeId, ShiftId, Channel, PackageNameSnapshot, PackageDescriptionSnapshot, PackageBenefitsSnapshot, UnitPriceSnapshot, DiscountAmount, VatRateSnapshot, VatAmount, Status, PaymentDueAt, CreatedAt, PaidAt, CancelType, CancelledAt, CancelReason) VALUES
@@ -1029,11 +1029,13 @@ Dùng đủ thiết bị khu cardio và khu tạ
 Miễn phí nước uống', 799000, 0, 10, 72636, 'Paid', '2026-11-07 09:20:00', '2026-11-07 09:00:00', '2026-11-07 09:02:00', NULL, NULL, NULL), -- IT-CM-08: dữ liệu test riêng, mật khẩu GmsTest2026!
  (184, 'DH-2026-9009', 247, NULL, 2, NULL, NULL, NULL, 'Online', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
 Dùng đủ thiết bị khu cardio và khu tạ
-Miễn phí nước uống', 799000, 0, 10, 72636, 'Paid', '2026-11-07 09:20:00', '2026-11-07 09:00:00', '2026-11-07 09:02:00', NULL, NULL, NULL); -- IT-CM-09: dữ liệu test riêng, mật khẩu GmsTest2026!
+Miễn phí nước uống', 799000, 0, 10, 72636, 'Paid', '2026-11-07 09:20:00', '2026-11-07 09:00:00', '2026-11-07 09:02:00', NULL, NULL, NULL), -- IT-CM-09: dữ liệu test riêng, mật khẩu GmsTest2026!
+ (185, 'DH-2026-0186', 205, NULL, 8, NULL, 3, 64, 'Counter', N'Gói PT 1 Tháng', N'Gói PT theo kỳ hạn, tập T2–T6 một khung giờ cố định.', N'Huấn luyện viên riêng
+Giáo án và thực đơn cá nhân hóa', 8800000, 0, 10, 800000, 'Paid', NULL, '2026-09-28 11:00:00', '2026-09-28 11:02:00', NULL, NULL, NULL);
 SET IDENTITY_INSERT Orders OFF;
 
 /* ============================================================================
-   Transactions — 184 dòng.
+   Transactions — 185 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT Transactions ON;
 INSERT INTO Transactions (TransactionId, OrderId, Amount, PaymentMethod, GatewayReference, ReceivedByEmployeeId, Status, FailureReason, NeedsRefund, RefundedAt, RefundedByEmployeeId, RefundNote, CreatedAt, ExpiresAt, CompletedAt) VALUES
@@ -1220,11 +1222,12 @@ INSERT INTO Transactions (TransactionId, OrderId, Amount, PaymentMethod, Gateway
  (181, 181, 799000, 'OnlineGateway', 'VNP-00181-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-11-07 09:01:00', '2026-11-07 09:06:00', '2026-11-07 09:02:00'),
  (182, 182, 799000, 'OnlineGateway', 'VNP-00182-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-11-07 09:01:00', '2026-11-07 09:06:00', '2026-11-07 09:02:00'),
  (183, 183, 799000, 'OnlineGateway', 'VNP-00183-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-11-07 09:01:00', '2026-11-07 09:06:00', '2026-11-07 09:02:00'),
- (184, 184, 799000, 'OnlineGateway', 'VNP-00184-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-11-07 09:01:00', '2026-11-07 09:06:00', '2026-11-07 09:02:00');
+ (184, 184, 799000, 'OnlineGateway', 'VNP-00184-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-11-07 09:01:00', '2026-11-07 09:06:00', '2026-11-07 09:02:00'),
+ (185, 185, 8800000, 'Transfer', 'BANK-20260928-185', 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-28 11:02:00', NULL, '2026-09-28 11:02:00');
 SET IDENTITY_INSERT Transactions OFF;
 
 /* ============================================================================
-   Subscriptions — 177 dòng.
+   Subscriptions — 178 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT Subscriptions ON;
 INSERT INTO Subscriptions (SubscriptionId, OrderId, CustomerId, SubscriptionType, PtEmployeeId, StartDate, EndDate, FixedStartTime, GeneratedSessionCount, FreezeUsed, MaxFreezesSnapshot, Status) VALUES
@@ -1309,7 +1312,7 @@ INSERT INTO Subscriptions (SubscriptionId, OrderId, CustomerId, SubscriptionType
  (79, 85, 240, 'DayPass', NULL, '2026-06-18', '2026-06-18', NULL, NULL, 0, NULL, 'Used'),
  (80, 86, 201, 'PTSingle', 13, '2026-09-21', '2026-10-21', '07:30:00', 23, 0, NULL, 'Active'), -- khách thường mua gói PT
  (81, 87, 203, 'PTSingle', 6, '2026-09-21', '2026-10-21', '06:00:00', 23, 0, NULL, 'Active'), -- khách thường mua gói PT
- (82, 88, 205, 'PTSingle', 5, '2026-09-28', '2026-11-04', '15:00:00', 45, 0, NULL, 'Active'), -- gói PT hết hạn 04/11 → buổi sau đó hủy PackageExpired khi nạp seed (JOB-02, CBR-55)
+ (82, 88, 205, 'PTSingle', 5, '2026-09-28', '2026-11-28', '15:00:00', 45, 0, NULL, 'Active'), -- khách thường mua gói PT
  (83, 89, 204, 'PTSingle', 14, '2026-09-14', '2026-10-14', '10:00:00', 23, 0, NULL, 'Active'), -- khách thường mua gói PT
  (84, 90, 206, 'PTSingle', 7, '2026-10-05', '2026-11-05', '19:00:00', 24, 0, NULL, 'Active'), -- khách thường mua gói PT
  (85, 91, 220, 'DayPass', NULL, '2026-09-01', '2026-09-01', NULL, NULL, 0, NULL, 'Used'),
@@ -1404,7 +1407,8 @@ INSERT INTO Subscriptions (SubscriptionId, OrderId, CustomerId, SubscriptionType
  (174, 181, 244, 'Membership', NULL, '2026-11-07', '2026-12-07', NULL, NULL, 0, 1, 'Active'), -- IT-CM-06: dữ liệu test riêng, mật khẩu GmsTest2026!
  (175, 182, 245, 'Membership', NULL, '2026-11-07', '2026-12-07', NULL, NULL, 0, 1, 'Active'), -- IT-CM-07: dữ liệu test riêng, mật khẩu GmsTest2026!
  (176, 183, 246, 'Membership', NULL, '2026-11-07', '2026-12-07', NULL, NULL, 0, 1, 'Active'), -- IT-CM-08: dữ liệu test riêng, mật khẩu GmsTest2026!
- (177, 184, 247, 'Membership', NULL, '2026-11-07', '2026-12-07', NULL, NULL, 0, 1, 'Active'); -- IT-CM-09: dữ liệu test riêng, mật khẩu GmsTest2026!
+ (177, 184, 247, 'Membership', NULL, '2026-11-07', '2026-12-07', NULL, NULL, 0, 1, 'Active'), -- IT-CM-09: dữ liệu test riêng, mật khẩu GmsTest2026!
+ (178, 185, 205, 'PTSingle', 6, '2026-10-05', '2026-11-05', '11:00:00', 24, 0, NULL, 'Active'); -- KH-2005: gói PT thứ hai, hết hạn tự nhiên 05/11 (MBF-04 A6)
 SET IDENTITY_INSERT Subscriptions OFF;
 
 /* ============================================================================
@@ -2252,7 +2256,7 @@ INSERT INTO CustomerDeletionRequests (CustomerDeletionRequestId, CustomerId, Req
 SET IDENTITY_INSERT CustomerDeletionRequests OFF;
 
 /* ============================================================================
-   TimeSlots — 2267 dòng. Lịch PT: slot đã đặt + slot trống công bố dày 05/10–31/10 (có cuối tuần).
+   TimeSlots — 2291 dòng. Lịch PT: slot đã đặt + slot trống công bố dày 05/10–31/10 (có cuối tuần).
    ============================================================================ */
 SET IDENTITY_INSERT TimeSlots ON;
 INSERT INTO TimeSlots (TimeSlotId, PtEmployeeId, SlotDate, StartTime, EndTime, Status, HeldByOrderId, HoldExpiresAt, CreatedAt) VALUES
@@ -4527,11 +4531,35 @@ INSERT INTO TimeSlots (TimeSlotId, PtEmployeeId, SlotDate, StartTime, EndTime, S
  (2264, 6, '2026-10-02', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-09-22 21:00:00'),
  (2265, 13, '2026-10-02', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-09-22 21:00:00'),
  (2266, 5, '2026-10-09', '13:00:00', '14:30:00', 'Withdrawn', NULL, NULL, '2026-10-01 21:00:00'),
- (2267, 8, '2026-08-20', '17:00:00', '18:30:00', 'Free', NULL, NULL, '2026-08-01 08:00:00');
+ (2267, 8, '2026-08-20', '17:00:00', '18:30:00', 'Free', NULL, NULL, '2026-08-01 08:00:00'),
+ (2268, 6, '2026-10-05', '11:00:00', '12:30:00', 'Booked', NULL, NULL, '2026-09-25 21:00:00'),
+ (2269, 6, '2026-10-06', '11:00:00', '12:30:00', 'Booked', NULL, NULL, '2026-09-26 21:00:00'),
+ (2270, 6, '2026-10-07', '11:00:00', '12:30:00', 'Booked', NULL, NULL, '2026-09-27 21:00:00'),
+ (2271, 6, '2026-10-08', '11:00:00', '12:30:00', 'Booked', NULL, NULL, '2026-09-28 21:00:00'),
+ (2272, 6, '2026-10-09', '11:00:00', '12:30:00', 'Booked', NULL, NULL, '2026-09-29 21:00:00'),
+ (2273, 6, '2026-10-12', '11:00:00', '12:30:00', 'Booked', NULL, NULL, '2026-10-02 21:00:00'),
+ (2274, 6, '2026-10-13', '11:00:00', '12:30:00', 'Booked', NULL, NULL, '2026-10-03 21:00:00'),
+ (2275, 6, '2026-10-14', '11:00:00', '12:30:00', 'Booked', NULL, NULL, '2026-10-04 21:00:00'),
+ (2276, 6, '2026-10-15', '11:00:00', '12:30:00', 'Booked', NULL, NULL, '2026-10-05 21:00:00'),
+ (2277, 6, '2026-10-16', '11:00:00', '12:30:00', 'Booked', NULL, NULL, '2026-10-06 21:00:00'),
+ (2278, 6, '2026-10-19', '11:00:00', '12:30:00', 'Booked', NULL, NULL, '2026-10-09 21:00:00'),
+ (2279, 6, '2026-10-20', '11:00:00', '12:30:00', 'Booked', NULL, NULL, '2026-10-10 21:00:00'),
+ (2280, 6, '2026-10-21', '11:00:00', '12:30:00', 'Booked', NULL, NULL, '2026-10-11 21:00:00'),
+ (2281, 6, '2026-10-22', '11:00:00', '12:30:00', 'Booked', NULL, NULL, '2026-10-12 21:00:00'),
+ (2282, 6, '2026-10-23', '11:00:00', '12:30:00', 'Booked', NULL, NULL, '2026-10-13 21:00:00'),
+ (2283, 6, '2026-10-26', '11:00:00', '12:30:00', 'Booked', NULL, NULL, '2026-10-16 21:00:00'),
+ (2284, 6, '2026-10-27', '11:00:00', '12:30:00', 'Booked', NULL, NULL, '2026-10-17 21:00:00'),
+ (2285, 6, '2026-10-28', '11:00:00', '12:30:00', 'Booked', NULL, NULL, '2026-10-18 21:00:00'),
+ (2286, 6, '2026-10-29', '11:00:00', '12:30:00', 'Booked', NULL, NULL, '2026-10-19 21:00:00'),
+ (2287, 6, '2026-10-30', '11:00:00', '12:30:00', 'Booked', NULL, NULL, '2026-10-20 21:00:00'),
+ (2288, 6, '2026-11-02', '11:00:00', '12:30:00', 'Booked', NULL, NULL, '2026-10-23 21:00:00'),
+ (2289, 6, '2026-11-03', '11:00:00', '12:30:00', 'Booked', NULL, NULL, '2026-10-24 21:00:00'),
+ (2290, 6, '2026-11-04', '11:00:00', '12:30:00', 'Booked', NULL, NULL, '2026-10-25 21:00:00'),
+ (2291, 6, '2026-11-05', '11:00:00', '12:30:00', 'Booked', NULL, NULL, '2026-10-26 21:00:00');
 SET IDENTITY_INSERT TimeSlots OFF;
 
 /* ============================================================================
-   Sessions — 484 dòng. Trước 05/10 đã có kết quả; từ 05/10 sinh Scheduled, buổi trước ngày nạp được chốt ở khối cuối file (JOB-02, JOB-04).
+   Sessions — 508 dòng. Trước 05/10 đã có kết quả; từ 05/10 sinh Scheduled, buổi trước ngày nạp được chốt ở khối cuối file (JOB-02, JOB-04).
    ============================================================================ */
 SET IDENTITY_INSERT Sessions ON;
 INSERT INTO Sessions (SessionId, SubscriptionId, TimeSlotId, PtEmployeeId, Status, SessionValue, CommissionAmount, AttendanceMarkedAt, IsAutoClosed, MissedReason, CancelType, CancelReason, CancelledAt, CancelledByAccountId, RefundAgreed) VALUES
@@ -5019,7 +5047,31 @@ INSERT INTO Sessions (SessionId, SubscriptionId, TimeSlotId, PtEmployeeId, Statu
  (481, 170, 487, 7, 'Scheduled', 450000, 270000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (482, 171, 488, 6, 'Scheduled', 450000, 292500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (483, 172, 489, 5, 'Scheduled', 450000, 315000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
- (484, 173, 490, 13, 'Scheduled', 450000, 270000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0);
+ (484, 173, 490, 13, 'Scheduled', 450000, 270000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (485, 178, 2268, 6, 'Scheduled', 366667, 238334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (486, 178, 2269, 6, 'Scheduled', 366667, 238334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (487, 178, 2270, 6, 'Scheduled', 366667, 238334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (488, 178, 2271, 6, 'Scheduled', 366667, 238334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (489, 178, 2272, 6, 'Scheduled', 366667, 238334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (490, 178, 2273, 6, 'Scheduled', 366667, 238334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (491, 178, 2274, 6, 'Scheduled', 366667, 238334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (492, 178, 2275, 6, 'Scheduled', 366667, 238334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (493, 178, 2276, 6, 'Scheduled', 366667, 238334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (494, 178, 2277, 6, 'Scheduled', 366667, 238334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (495, 178, 2278, 6, 'Scheduled', 366667, 238334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (496, 178, 2279, 6, 'Scheduled', 366667, 238334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (497, 178, 2280, 6, 'Scheduled', 366667, 238334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (498, 178, 2281, 6, 'Scheduled', 366667, 238334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (499, 178, 2282, 6, 'Scheduled', 366667, 238334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (500, 178, 2283, 6, 'Scheduled', 366667, 238334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (501, 178, 2284, 6, 'Scheduled', 366667, 238334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (502, 178, 2285, 6, 'Scheduled', 366667, 238334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (503, 178, 2286, 6, 'Scheduled', 366667, 238334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (504, 178, 2287, 6, 'Scheduled', 366667, 238334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (505, 178, 2288, 6, 'Scheduled', 366667, 238334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (506, 178, 2289, 6, 'Scheduled', 366667, 238334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (507, 178, 2290, 6, 'Scheduled', 366667, 238334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (508, 178, 2291, 6, 'Scheduled', 366667, 238334, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0);
 SET IDENTITY_INSERT Sessions OFF;
 
 /* ============================================================================
@@ -5798,6 +5850,16 @@ SELECT NULL, NULL, N'JOB-04', N'Sessions', SessionId, N'Status', N'Scheduled', N
 FROM Sessions WHERE Sessions.Status = 'Scheduled' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) < @Today AND 1 = 1;
 UPDATE Sessions SET Status = 'Missed', MissedReason = 'NoCheckIn', IsAutoClosed = 1, AttendanceMarkedAt = (SELECT DATEADD(MINUTE, 5, CAST(DATEADD(DAY, 1, t.SlotDate) AS DATETIME2(0))) FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId)
 WHERE Sessions.Status = 'Scheduled' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) < @Today AND 1 = 1;
+-- JOB-04 buổi lẻ đã chốt CheckedIn → gói Used
+INSERT INTO AuditLogs (AccountId, ActingRole, Action, EntityName, EntityId, FieldChanged, OldValue, NewValue, Reason, CreatedAt)
+SELECT NULL, NULL, N'JOB-04', N'Subscriptions', SubscriptionId, N'Status', N'Active', N'Used', N'Buổi lẻ đã chốt CheckedIn', (SELECT TOP 1 DATEADD(MINUTE, 5, CAST(DATEADD(DAY, 1, t.SlotDate) AS DATETIME2(0))) FROM Sessions x JOIN TimeSlots t ON t.TimeSlotId = x.TimeSlotId WHERE x.SubscriptionId = Subscriptions.SubscriptionId)
+FROM Subscriptions WHERE SubscriptionType = 'SingleSession' AND Status = 'Active' AND EXISTS (SELECT 1 FROM Sessions x WHERE x.SubscriptionId = Subscriptions.SubscriptionId AND x.Status = 'CheckedIn');
+UPDATE Subscriptions SET Status = 'Used' WHERE SubscriptionType = 'SingleSession' AND Status = 'Active' AND EXISTS (SELECT 1 FROM Sessions x WHERE x.SubscriptionId = Subscriptions.SubscriptionId AND x.Status = 'CheckedIn');
+-- JOB-04 buổi lẻ đã chốt Missed → gói Expired
+INSERT INTO AuditLogs (AccountId, ActingRole, Action, EntityName, EntityId, FieldChanged, OldValue, NewValue, Reason, CreatedAt)
+SELECT NULL, NULL, N'JOB-04', N'Subscriptions', SubscriptionId, N'Status', N'Active', N'Expired', N'Buổi lẻ đã chốt Missed', (SELECT TOP 1 DATEADD(MINUTE, 5, CAST(DATEADD(DAY, 1, t.SlotDate) AS DATETIME2(0))) FROM Sessions x JOIN TimeSlots t ON t.TimeSlotId = x.TimeSlotId WHERE x.SubscriptionId = Subscriptions.SubscriptionId)
+FROM Subscriptions WHERE SubscriptionType = 'SingleSession' AND Status = 'Active' AND EXISTS (SELECT 1 FROM Sessions x WHERE x.SubscriptionId = Subscriptions.SubscriptionId AND x.Status = 'Missed');
+UPDATE Subscriptions SET Status = 'Expired' WHERE SubscriptionType = 'SingleSession' AND Status = 'Active' AND EXISTS (SELECT 1 FROM Sessions x WHERE x.SubscriptionId = Subscriptions.SubscriptionId AND x.Status = 'Missed');
 
 COMMIT TRANSACTION;
 GO

@@ -702,6 +702,17 @@ def close_past_sql(today):
         if cancel:
             sets += [f"CancelType = '{cancel}'", 'CommissionAmount = 0', f'CancelledAt = {RUN}']
         out.append(f"UPDATE Sessions SET {', '.join(sets)}\nWHERE {where};")
+    # Gói buổi lẻ: buổi đã chốt thì gói đóng theo, giống các buổi lẻ đã qua seed tạo sẵn
+    # (single_session: CheckedIn → Used, Missed → Expired; SRS: Used chỉ cho DayPass / SingleSession đã dùng)
+    SRUN = ("(SELECT TOP 1 DATEADD(MINUTE, 5, CAST(DATEADD(DAY, 1, t.SlotDate) AS DATETIME2(0))) FROM Sessions x "
+            "JOIN TimeSlots t ON t.TimeSlotId = x.TimeSlotId WHERE x.SubscriptionId = Subscriptions.SubscriptionId)")
+    for st, new in (('CheckedIn', 'Used'), ('Missed', 'Expired')):
+        w = (f"SubscriptionType = 'SingleSession' AND Status = 'Active' AND EXISTS (SELECT 1 FROM Sessions x "
+             f"WHERE x.SubscriptionId = Subscriptions.SubscriptionId AND x.Status = '{st}')")
+        out.append(f'-- JOB-04 buổi lẻ đã chốt {st} → gói {new}')
+        out.append(f"{AUD}\nSELECT NULL, NULL, N'JOB-04', N'Subscriptions', SubscriptionId, N'Status', N'Active', N'{new}', "
+                   f"N'Buổi lẻ đã chốt {st}', {SRUN}\nFROM Subscriptions WHERE {w};")
+        out.append(f"UPDATE Subscriptions SET Status = '{new}' WHERE {w};")
     out.append('')
     return out
 

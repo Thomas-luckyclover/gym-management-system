@@ -4,6 +4,7 @@ import com.gms.dao.AutoCloseSessionDAO;
 import com.gms.dto.SessionAutoCloseData;
 import com.gms.entity.Package;
 import com.gms.entity.Session;
+import com.gms.entity.Subscription;
 import com.gms.util.DBContext;
 import com.gms.util.DateTimeUtil;
 
@@ -18,6 +19,7 @@ import java.util.List;
  *   phòng đóng / buổi ngoài giờ mở cửa → Cancelled (GymClosed), hoa hồng PT = 0
  *   khách không có quyền vào gym       → Missed (MembershipFrozen | NoMembership)
  *   có check-in trong ngày tập         → CheckedIn · không check-in → Missed (NoCheckIn)
+ * Buổi lẻ (SingleSession): chốt luôn gói — CheckedIn → Used, Missed → Expired (singleSessionStatusAfter).
  * Mỗi buổi 1 transaction riêng: 1 buổi lỗi không làm hỏng các buổi khác.
  */
 public class AutoCloseSessionService {
@@ -116,7 +118,28 @@ public class AutoCloseSessionService {
                                 ? null
                                 : outcome.missedReason().getDbValue());
 
-                // B5: commit → xong 1 buổi
+                // B5: buổi lẻ (SingleSession) — gói chỉ có 1 buổi nên chốt luôn gói:
+                //     CheckedIn → Used · Missed → Expired · Cancelled (GymClosed) → giữ Active (không phải lỗi của khách)
+                Subscription.Status packageStatus = singleSessionStatusAfter(
+                        data.getPtSubscriptionType(), outcome.status());
+                if (packageStatus != null) {
+                    Integer subscriptionId = sessionDAO.closeSingleSessionSubscription(
+                            connection, sessionId, packageStatus);
+                    if (subscriptionId != null) {
+                        auditLogService.logInTransaction(
+                                connection,
+                                null,
+                                "JOB-04",
+                                "Subscriptions",
+                                subscriptionId,
+                                "Status",
+                                Subscription.Status.ACTIVE.getDbValue(),
+                                packageStatus.getDbValue(),
+                                "Buổi lẻ đã chốt " + outcome.status().getDbValue());
+                    }
+                }
+
+                // B6: commit → xong 1 buổi
                 connection.commit();
                 return true;
             } catch (SQLException | RuntimeException exception) {
@@ -190,6 +213,21 @@ public class AutoCloseSessionService {
 
         // B8: có quyền vào gym nhưng không đến → Missed (NoCheckIn)
         return new Outcome(Session.Status.MISSED, Session.MissedReason.NO_CHECK_IN, null);
+    }
+
+    /**
+     * Trạng thái mới của gói buổi lẻ sau khi chốt buổi (không đọc DB — test gọi thẳng).
+     * Trả về: Used (CheckedIn) · Expired (Missed) · null = không đổi gói (không phải buổi lẻ, hoặc buổi bị hủy).
+     */
+    public static Subscription.Status singleSessionStatusAfter(Package.Type type, Session.Status sessionStatus) {
+        if (type != Package.Type.SINGLE_SESSION || sessionStatus == null) {
+            return null;
+        }
+        return switch (sessionStatus) {
+            case CHECKED_IN -> Subscription.Status.USED;
+            case MISSED -> Subscription.Status.EXPIRED;
+            default -> null;
+        };
     }
 
     /**
