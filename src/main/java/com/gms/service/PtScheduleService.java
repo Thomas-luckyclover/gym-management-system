@@ -869,7 +869,7 @@ public class PtScheduleService {
     }
 
     /**
-     * HÀM PHỤ (dùng chung) — P-17 "06:00-22:00" → [06:00, 22:00]; sai dạng / đóng ≤ mở → lỗi cấu hình.
+     * HÀM PHỤ (dùng chung) — P-17 "05:30-22:00" → [05:30, 22:00]; sai dạng / đóng ≤ mở → lỗi cấu hình.
      */
     public static LocalTime[] parseOpeningHours(String value) {
         String[] parts = value.split("-", -1);
