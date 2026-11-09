@@ -47,3 +47,13 @@ outputs/
 .agents/
 skills-lock.json
 *.bkp
+
+# ===== Tài liệu, Deliverables và Prototype cá nhân =====
+docs/deliverables/
+docs/*.py
+docs/*.cjs
+docs/*.docx
+docs/diagrams/Major_Features_Tree.drawio
+*.docx
+*.zip
+

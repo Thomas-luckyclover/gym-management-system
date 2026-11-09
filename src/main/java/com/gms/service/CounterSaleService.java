@@ -646,20 +646,19 @@ public class CounterSaleService {
             if (isDayPassPackage) {
                 // CBR-34: vé ngày có hiệu lực ngay trong ngày thanh toán.
                 startDate = today;
-            } else if (isChained) {
-                // Gói nối tiếp: bắt đầu ngày sau khi gói hiện tại hết hạn, không cho chọn.
-                startDate = customer.getCurrentPackageEnd().plusDays(1);
             } else {
-                // Gói tập mới: hôm nay, hoặc chọn tối đa 7 ngày tới.
-                LocalDate maxAllowedStartDate = today.plusDays(7);
+                // Gói tập (mới hoặc nối tiếp): mặc định bắt đầu ngày sớm nhất có thể (hôm nay hoặc sau khi gói cũ hết hạn),
+                // hoặc lễ tân chọn ngày kích hoạt trong vòng 7 ngày tới.
+                LocalDate minAllowedStartDate = isChained ? customer.getCurrentPackageEnd().plusDays(1) : today;
+                LocalDate maxAllowedStartDate = minAllowedStartDate.plusDays(7);
                 if (input.getStartDate() == null) {
-                    startDate = today;
+                    startDate = minAllowedStartDate;
                 } else {
-                    boolean isBeforeToday = input.getStartDate().isBefore(today);
-                    boolean isAfterMaxDate = input.getStartDate().isAfter(maxAllowedStartDate);
-                    if (isBeforeToday || isAfterMaxDate) {
+                    boolean isBeforeMin = input.getStartDate().isBefore(minAllowedStartDate);
+                    boolean isAfterMax = input.getStartDate().isAfter(maxAllowedStartDate);
+                    if (isBeforeMin || isAfterMax) {
                         return ServiceResult.fail(String.format(Messages.MSG136_COUNTER_START_DATE_RANGE,
-                                DateTimeUtil.formatDate(today),
+                                DateTimeUtil.formatDate(minAllowedStartDate),
                                 DateTimeUtil.formatDate(maxAllowedStartDate)));
                     }
                     startDate = input.getStartDate();
