@@ -47,7 +47,7 @@ public class AutoCloseSessionDAO {
 
     // Đọc 1 buổi + mọi thứ cần để chốt, KHÓA dòng buổi tới hết transaction (UPDLOCK, HOLDLOCK).
     // Bảng: Sessions, TimeSlots, Subscriptions (gói PT + gói gym), Orders (người tập cùng), FreezeRecords, CheckIns,
-    //       OperatingHourExceptions (ngày nghỉ / giờ riêng) + SystemConfigs P-19 (giờ mở cửa mặc định).
+    //       OperatingHourExceptions (ngày nghỉ / giờ riêng) + SystemConfigs P-17 (giờ mở cửa mặc định).
     // Trả về: SessionAutoCloseData; null = buổi không còn Scheduled / chưa qua ngày.
     public SessionAutoCloseData findDataForClosing(Connection connection, int sessionId, LocalDate today)
             throws SQLException {
@@ -119,7 +119,7 @@ public class AutoCloseSessionDAO {
                 JOIN Subscriptions pt ON pt.SubscriptionId = s.SubscriptionId
                 JOIN Orders o ON o.OrderId = pt.OrderId
                 LEFT JOIN OperatingHourExceptions ex ON ex.ApplyDate = t.SlotDate
-                LEFT JOIN SystemConfigs cfg ON cfg.ConfigKey = 'P-19'
+                LEFT JOIN SystemConfigs cfg ON cfg.ConfigKey = 'P-17'
                 WHERE s.SessionId = ?
                   AND s.Status = 'Scheduled'
                   AND t.SlotDate < ?
@@ -171,7 +171,7 @@ public class AutoCloseSessionDAO {
     }
 
     /**
-     * HÀM PHỤ — cột time có thể NULL (cấu hình P-19 lỗi) → null.
+     * HÀM PHỤ — cột time có thể NULL (cấu hình P-17 lỗi) → null.
      */
     private static java.time.LocalTime toLocalTime(Time value) {
         return value == null ? null : value.toLocalTime();

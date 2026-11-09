@@ -220,7 +220,7 @@ public final class Messages {
         // another colleague.
         public static final String MSG76_STAFF_OWN_CUSTOMER_PROFILE = "Bạn không thể thao tác trên hồ sơ khách hàng của chính mình. Vui lòng nhờ đồng nghiệp khác.";
 
-        /** CBR-84, P-12: nộp đơn nghỉ phép quá hạn cut-off. */
+        /** CBR-84, P-10: nộp đơn nghỉ phép quá hạn cut-off. */
         // EN: Submission deadline passed. Leave on %s had to be submitted before %s on
         // the previous day.
         public static final String MSG77_LEAVE_SUBMISSION_DEADLINE = "Đã quá hạn nộp. Đơn nghỉ ngày %s phải nộp trước %s của ngày hôm trước.";
@@ -554,7 +554,7 @@ public final class Messages {
         public static final String MSG170_ORDER_CODE_INVALID_FULL = "Mã đơn hàng không hợp lệ.";
 
         /** Xác nhận hoàn tiền: ghi chú sai độ dài. */
-        public static final String MSG171_REFUND_NOTE_LENGTH = "Ghi chú hoàn tiền phải từ 5 đến 480 ký tự (ghi rõ số TK hoặc mã giao dịch hoàn).";
+        public static final String MSG171_REFUND_NOTE_LENGTH = "Ghi chú hoàn tiền phải từ 5 đến 500 ký tự (ghi rõ số TK hoặc mã giao dịch hoàn).";
 
         /** Không phải Quản lý mà xác nhận hoàn tiền. */
         public static final String MSG172_REFUND_NO_PERMISSION = "Bạn không có quyền thực hiện xác nhận hoàn tiền.";
@@ -1049,7 +1049,7 @@ public final class Messages {
 
     /** CBR-119: Đã đổi ngày bắt đầu một lần rồi. */
     public static final String MSG329_START_DATE_ALREADY_CHANGED =
-            "Start date already changed once (CBR-119)";
+            "Gói đã được đổi ngày bắt đầu một lần, không đổi thêm được.";
 
     /** CBR-119: Gói đã bắt đầu sử dụng hoặc đã check-in. */
     public static final String MSG330_PACKAGE_ALREADY_STARTED =

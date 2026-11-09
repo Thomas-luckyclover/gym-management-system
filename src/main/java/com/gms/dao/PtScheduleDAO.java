@@ -24,7 +24,7 @@ import java.util.List;
  *                  · PtSaleService (đơn nghỉ, ngày giờ đặc biệt khi dựng lịch bán gói).
  * BỐ CỤC: xếp theo HÀM CHÍNH của PtScheduleService dùng tới (getWeek → publish).
  *   PHỤC VỤ getWeek    ĐỌC, không khóa (+ bản trong transaction của findLeaves / findHourExceptions)
- *   PHỤC VỤ publish    trong transaction, có KHÓA: khóa PT, khóa P-06 / P-19, đọc khung, gỡ khung, thêm / mở lại khung
+ *   PHỤC VỤ publish    trong transaction, có KHÓA: khóa PT, khóa P-06 / P-17, đọc khung, gỡ khung, thêm / mở lại khung
  */
 public class PtScheduleDAO {
     // Buổi có khách của PT trong khoảng ngày: Sessions JOIN TimeSlots, Subscriptions, Orders, khách (+ người tập cùng PTCouple).
@@ -303,11 +303,11 @@ public class PtScheduleDAO {
         }
     }
 
-    // Khóa đọc P-06, P-19 trong SystemConfigs tới hết transaction.
+    // Khóa đọc P-06, P-17 trong SystemConfigs tới hết transaction.
     public void lockScheduleConfigs(Connection connection) throws SQLException {
         String sql = """
                 SELECT ConfigKey FROM SystemConfigs WITH (HOLDLOCK)
-                WHERE ConfigKey IN ('P-06', 'P-19')
+                WHERE ConfigKey IN ('P-06', 'P-17')
                 """;
 
         try (PreparedStatement statement = connection.prepareStatement(sql);

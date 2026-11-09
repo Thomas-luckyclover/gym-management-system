@@ -25,7 +25,7 @@ public class SessionReminderDAO {
     }
 
     // Đọc khách có buổi Scheduled vào sessionDate (người đứng tên + người tập cùng của gói đôi).
-    //   Bỏ: ngày phòng nghỉ cả ngày, buổi ngoài giờ mở cửa (OperatingHourExceptions / P-19) — JOB-04 sẽ tự hủy GymClosed.
+    //   Bỏ: ngày phòng nghỉ cả ngày, buổi ngoài giờ mở cửa (OperatingHourExceptions / P-17) — JOB-04 sẽ tự hủy GymClosed.
     //   Mỗi người: IsFrozen (gói thành viên bị bảo lưu ngày đó) + HasMembership (gói thành viên phủ ngày)
     //   + HasDayPass (vé ngày phủ ngày).
     // Trả về: List<Reminder> — CHỈ người không vào gym được theo CBR-117:
@@ -39,7 +39,7 @@ public class SessionReminderDAO {
                     JOIN TimeSlots t      ON t.TimeSlotId = s.TimeSlotId
                     JOIN Subscriptions pt ON pt.SubscriptionId = s.SubscriptionId
                     LEFT JOIN OperatingHourExceptions ex ON ex.ApplyDate = t.SlotDate
-                    LEFT JOIN SystemConfigs cfg ON cfg.ConfigKey = 'P-19'
+                    LEFT JOIN SystemConfigs cfg ON cfg.ConfigKey = 'P-17'
                     WHERE s.Status = 'Scheduled' AND t.SlotDate = ?
                       -- CBR-56: bỏ ngày nghỉ cả ngày VÀ buổi nằm ngoài giờ mở cửa ngày đó (JOB-04 sẽ hủy GymClosed)
                       AND ISNULL(ex.IsClosedAllDay, 0) = 0
@@ -55,7 +55,7 @@ public class SessionReminderDAO {
                     JOIN Subscriptions pt ON pt.SubscriptionId = s.SubscriptionId
                     JOIN Orders o         ON o.OrderId = pt.OrderId
                     LEFT JOIN OperatingHourExceptions ex ON ex.ApplyDate = t.SlotDate
-                    LEFT JOIN SystemConfigs cfg ON cfg.ConfigKey = 'P-19'
+                    LEFT JOIN SystemConfigs cfg ON cfg.ConfigKey = 'P-17'
                     WHERE s.Status = 'Scheduled' AND t.SlotDate = ?
                       AND pt.SubscriptionType = 'PTCouple' AND o.PartnerCustomerId IS NOT NULL
                       -- CBR-56: bỏ ngày nghỉ cả ngày VÀ buổi nằm ngoài giờ mở cửa ngày đó (JOB-04 sẽ hủy GymClosed)

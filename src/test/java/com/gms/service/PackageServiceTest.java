@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Unit Test Suite cho PackageService kiểm tra các ràng buộc nghiệp vụ:
  * - Gói hội viên & Vé ngày (DBR-06, DBR-11, DBR-15, P-04).
- * - Gói PT & Buổi lẻ (DBR-06, DBR-11, DBR-15, P-21, CK_Packages_EstSession).
+ * - Gói PT & Buổi lẻ (DBR-06, DBR-11, DBR-15, P-18, CK_Packages_EstSession).
  * - Kiểm soát đồng thời (optimistic concurrency - MSG22) & Thay đổi trạng thái bán (Commit 20).
  */
 class PackageServiceTest {
@@ -215,14 +215,14 @@ class PackageServiceTest {
     }
 
     @Test
-    @DisplayName("Thời hạn gói PT không thuộc P-21 (1, 3, 6, 12 tháng) bị từ chối")
+    @DisplayName("Thời hạn gói PT không thuộc P-18 (1, 3, 6, 12 tháng) bị từ chối")
     void testPtDurationWhitelistValidation() {
         PackageFormInput input = new PackageFormInput();
         input.setName("PT 24 Tháng");
         input.setType("PTSingle");
         input.setPrice("50000000");
         input.setDurationUnit("Month");
-        input.setDurationValue("24"); // 24 tháng không có trong P-21
+        input.setDurationValue("24"); // 24 tháng không có trong P-18
         input.setEstimatedSessionCount("200");
 
         ServiceResult<Integer> result = service.createPtPackage(MANAGER_ACCOUNT_ID, input);

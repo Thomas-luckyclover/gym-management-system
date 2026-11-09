@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
  * <li>Phương thức thanh toán: Cash (tiền mặt), Transfer (chuyển khoản tại
  * quầy), OnlineGateway (cổng VNPay).</li>
  * <li>Cổng Online bắt buộc có hạn ExpiresAt (5 phút, không vượt hạn đơn CBR-69,
- * P-08, CK_Transactions_Online).</li>
+ * P-07, CK_Transactions_Online).</li>
  * <li>Thanh toán tại quầy thành công phải ghi nhận Lễ tân thu tiền
  * (ReceivedByEmployeeId, CBR-77).</li>
  * <li>Vòng đời trạng thái: Pending → Success, Failed, hoặc Expired. CompletedAt
@@ -99,7 +99,7 @@ public class Transaction {
     private LocalDateTime createdAt;
 
     /**
-     * Hạn chót của phiên thanh toán online (5 phút, không vượt hạn đơn P-09).
+     * Hạn chót của phiên thanh toán online (5 phút, không vượt hạn đơn P-07).
      */
     private LocalDateTime expiresAt;
 

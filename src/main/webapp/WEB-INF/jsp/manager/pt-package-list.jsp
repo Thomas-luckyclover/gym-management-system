@@ -20,7 +20,7 @@
       <header class="topbar">
         <div class="tb-left">
           <h1 class="tb-title">Danh mục gói dịch vụ</h1>
-          <span class="tb-subtitle">Quản lý bảng giá, thời hạn P-21, số buổi tập ước tính và trạng thái kinh doanh của gói PT (#19 - UC-10).</span>
+          <span class="tb-subtitle">Quản lý bảng giá, thời hạn P-18, số buổi tập ước tính và trạng thái kinh doanh của gói PT (#19 - UC-10).</span>
         </div>
 
         <div class="top-right">

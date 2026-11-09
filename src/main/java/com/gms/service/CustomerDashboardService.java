@@ -54,11 +54,11 @@ import java.util.Set;
  */
 public class CustomerDashboardService {
 
-    /** Mốc "sắp hết hạn" mặc định (ngày) khi P-21 chưa có trong SystemConfigs. */
+    /** Mốc "sắp hết hạn" mặc định (ngày) khi P-18 chưa có trong SystemConfigs. */
     private static final int DEFAULT_EXPIRING_SOON_DAYS = 7;
 
-    /** Mã tham số P-21: số ngày cảnh báo gói sắp hết hạn ([CHỐT-D1]). */
-    private static final String EXPIRING_SOON_DAYS_KEY = "P-21";
+    /** Mã tham số P-18: số ngày cảnh báo gói sắp hết hạn ([CHỐT-D1]). */
+    private static final String EXPIRING_SOON_DAYS_KEY = "P-18";
 
     /** Chuỗi từ mức này trở lên thì được chào bằng màn "chuỗi tập" sau khi đăng nhập (mở rộng ngoài SRS). */
     private static final int STREAK_INTRO_MIN_DAYS = 3;
@@ -273,7 +273,7 @@ public class CustomerDashboardService {
      * Quyết định thẻ gói tập hiện kiểu nào. Dashboard chỉ đọc trạng thái đã lưu (GBR-14).
      *
      * - FROZEN: gói tập đang bảo lưu.
-     * - EXPIRING: gói Active còn không quá P-21 ngày và chưa có gói nối tiếp (DBR-52), nút Gia hạn nổi.
+     * - EXPIRING: gói Active còn không quá P-18 ngày và chưa có gói nối tiếp (DBR-52), nút Gia hạn nổi.
      * - ACTIVE: gói Active còn dài hạn, hoặc đã có gói nối tiếp.
      * - EXPIRED: không còn gói chạy nhưng từng có gói đã hết hạn.
      * - NONE: chưa từng có gói tập.
@@ -312,7 +312,7 @@ public class CustomerDashboardService {
         return expiringSoon && !hasNext ? CARD_EXPIRING : CARD_ACTIVE;
     }
 
-    /** Đọc P-21 (số ngày coi là "sắp hết hạn"); chưa có hoặc lỗi đọc thì dùng mặc định 7 ngày. */
+    /** Đọc P-18 (số ngày coi là "sắp hết hạn"); chưa có hoặc lỗi đọc thì dùng mặc định 7 ngày. */
     private int readExpiringSoonDays() {
         try {
             return systemConfigService.getInt(EXPIRING_SOON_DAYS_KEY);
@@ -505,7 +505,7 @@ public class CustomerDashboardService {
             dangerBanners.add(new BannerItem("danger", message, "MISSING_MEMBERSHIP"));
         }
 
-        // Banner 4 (vàng): gói tập sắp hết hạn (≤ P-21 ngày), không hiện nếu đã có gói
+        // Banner 4 (vàng): gói tập sắp hết hạn (≤ P-18 ngày), không hiện nếu đã có gói
         // nối tiếp (DBR-52)
         buildExpiringSoonBanner(subscriptions, now.toLocalDate(), warningBanners);
 
@@ -537,7 +537,7 @@ public class CustomerDashboardService {
     private void buildExpiringSoonBanner(List<SubscriptionRow> subscriptions, LocalDate today,
             List<BannerItem> warningBanners) throws SQLException {
 
-        // B1: đọc P-21, nếu chưa seed hoặc lỗi đọc thì dùng mặc định 7 ngày
+        // B1: đọc P-18, nếu chưa seed hoặc lỗi đọc thì dùng mặc định 7 ngày
         int expiringSoonDays = readExpiringSoonDays();
 
         // B2: kiểm tra có gói nối tiếp (chưa bắt đầu) không

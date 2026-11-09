@@ -63,7 +63,7 @@ Vị trí file: theo cấu trúc package bên dưới và thư mục `src/` hi�
              └── auth/ guest/ customer/ pt/ receptionist/ staff/ manager/ admin/
   ```
   `<vai-trò>` dùng đúng 1 bộ tên ở mọi nơi (package Servlet, thư mục JSP, CSS, JS). VD màn Đặt buổi lẻ: `servlet/customer/BookSingleSessionServlet.java` → `jsp/customer/book-session.jsp` → `css/pages/customer/book-session.css` → `js/pages/customer/book-session.js`.
-- **Cấu hình theo máy:** `src/main/resources/application.properties` (copy từ `.example`, không commit) — chỉ chứa thông tin triển khai (DB, SMTP, VNPay). Tham số nghiệp vụ còn hiệu lực nằm trong SystemConfigs (v26 có P-22; P-07 đã bỏ).
+- **Cấu hình theo máy:** `src/main/resources/application.properties` (copy từ `.example`, không commit) — chỉ chứa thông tin triển khai (DB, SMTP, VNPay). Tham số nghiệp vụ còn hiệu lực nằm trong SystemConfigs (19 tham số P-01…P-19).
 - **Xếp đúng chỗ:** mỗi class/file phải nằm đúng package/thư mục theo vai trò của nó (Phần 8 sẽ nhắc lại nguyên tắc này) — không tiện đâu để đó, không để Entity lẫn trong `servlet/`, không để ảnh lẫn trong `css/`.
 
 ## Phần 3: Tài Liệu Tham Chiếu Bắt Buộc
@@ -73,7 +73,7 @@ Khi thực hiện bất kỳ nhiệm vụ nào, AI phải đối chiếu và bá
 - **SRS (Software Requirements Specification):** xây dựng **trước khi code**. Là nguồn chuẩn cho yêu cầu nghiệp vụ, use case, luồng chức năng, ràng buộc phi chức năng.
 - **SDS (Software Design Specification):** xây dựng **song song với quá trình code**. Mô tả thiết kế kỹ thuật: class diagram, sequence diagram, database schema, kiến trúc chi tiết.
 - **Ghi chú cá nhân (nếu user cung cấp):** lưu ngoài repository, chỉ dùng bổ trợ khi đối chiếu quyết định và thay đổi thực tế. Không yêu cầu thành viên khác có tài liệu cá nhân này; các quyết định chung phải đối chiếu với SRS/SDS và xác nhận trong chat.
-- **Rule & tham số SRS:** đối chiếu tài liệu luật và quyết định mới trong chat. Bản v25 là nguồn nền; schema hiện tại là v26, đã bỏ P-07 và thêm P-22. Dẫn mã luật đã xác minh, không dùng phiên bản cũ để ghi đè quyết định mới.
+- **Rule & tham số SRS:** đối chiếu tài liệu luật và quyết định mới trong chat. Bản v25 là nguồn nền; schema hiện tại là v26; tham số hệ thống gồm 19 tham số đánh số liền P-01…P-19 (đổi số 09/11/2026, xem notes.md). Dẫn mã luật đã xác minh, không dùng phiên bản cũ để ghi đè quyết định mới.
 - **Hồ sơ module `docs/handoff/`:** nếu có, đọc file, rule và case test trước khi code. Nếu tài liệu đã chuyển/xóa thì tìm vị trí mới; không tự đoán quyết định nghiệp vụ còn thiếu.
 - **Database:** `database/1_Init_Schema.sql` (schema v26), `database/2_Seed_Data.sql` (sinh từ `database/tools/seeddata.py`), danh mục case + tài khoản test `docs/database/SEED_CASES.md`, thay đổi schema `docs/database/SCHEMA_CHANGES_v25.md`.
 - **Tài liệu dự án khác:** chỉ còn `docs/notes.md` (nhật ký quyết định). Tra tài liệu phân công/Git đang tồn tại; không tự đoán quyết định nghiệp vụ còn thiếu.
@@ -339,5 +339,5 @@ Trước mỗi khối, viết bốn dòng: **khối nào → cần dữ liệu g
 - Chỉ Admin đổi vị trí nhân viên và khóa / mở tài khoản (CBR-109).
 - Tài khoản Lễ tân tạo không có mật khẩu, không gửi link; khách đặt qua Quên mật khẩu (CBR-24, CBR-31).
 - Schema/seed hiện tại là v26 trong `database/`. Tài liệu thay đổi v25 trong `docs/database/` là lịch sử, không thay thế schema đang dùng.
-- Sessions dùng CheckedIn thay Completed; không còn MissedReason MarkedAbsent. Subscriptions dùng Used cho gói ngày/buổi lẻ khi phù hợp; P-07 đã bỏ, P-22 là ngưỡng số khách để hiển thị rating PT.
+- Sessions dùng CheckedIn thay Completed; không còn MissedReason MarkedAbsent. Subscriptions dùng Used cho gói ngày/buổi lẻ khi phù hợp; SystemConfigs có 19 tham số P-01…P-19.
 - Chỉ JOB-04 và nghiệp vụ freeze ghi Sessions.Status sang CheckedIn/Missed; PTDashboard đọc kết quả, không thêm điểm danh thủ công.

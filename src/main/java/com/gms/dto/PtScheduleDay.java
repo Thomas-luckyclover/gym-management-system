@@ -35,7 +35,7 @@ public class PtScheduleDay {
     private List<PtScheduleItem> items = List.of();
 
     // ===== DÙNG ĐỂ TÍNH (không in thẳng) =====
-    // ← P-19 hoặc giờ ngoại lệ của ngày → setAddRange, trục giờ
+    // ← P-17 hoặc giờ ngoại lệ của ngày → setAddRange, trục giờ
     private LocalTime openTime;
     // ← như trên
     private LocalTime closeTime;

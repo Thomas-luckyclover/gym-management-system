@@ -69,7 +69,7 @@ public class StaffLeaveService {
      *
      * @param accountId AccountId của nhân viên từ session, không lấy từ request
      *                  parameter
-     * @return view gồm thông tin nhân viên, hạn nộp P-12 và các đơn đã nộp; hoặc
+     * @return view gồm thông tin nhân viên, hạn nộp P-10 và các đơn đã nộp; hoặc
      *         thông báo lỗi
      */
     public ServiceResult<StaffLeaveFormView> getStaffLeaveForm(int accountId) {
@@ -90,7 +90,7 @@ public class StaffLeaveService {
             Person person = personDAO.findById(employee.getPersonId());
             String fullName = person == null ? "" : person.getFullName();
 
-            // B3: đọc giờ chốt nộp đơn P-12 từ SystemConfigs.
+            // B3: đọc giờ chốt nộp đơn P-10 từ SystemConfigs.
             LocalTime submissionCutoff = LocalTime.parse(
                     systemConfigService.getString(
                             SystemConfigService.LEAVE_SUBMIT_DEADLINE));
@@ -155,7 +155,7 @@ public class StaffLeaveService {
 
     /**
      * Nhân viên nộp đơn xin nghỉ phép (màn #25, UC-14).
-     * Kiểm tra: hạn chốt nộp P-12 (CBR-84), trùng lịch nghỉ, và buổi dạy Scheduled
+     * Kiểm tra: hạn chốt nộp P-10 (CBR-84), trùng lịch nghỉ, và buổi dạy Scheduled
      * của PT (CBR-83).
      *
      * @param accountId AccountId của nhân viên từ session
@@ -204,7 +204,7 @@ public class StaffLeaveService {
                         String.format(Messages.MSG08_NOT_FOUND, "nhân viên"));
             }
 
-            // B3: kiểm tra hạn chốt nộp đơn P-12 (CBR-84: mặc định 15:00 ngày liền trước
+            // B3: kiểm tra hạn chốt nộp đơn P-10 (CBR-84: mặc định 15:00 ngày liền trước
             // ngày nghỉ)
             LocalTime submissionCutoff = LocalTime.parse(
                     systemConfigService.getString(

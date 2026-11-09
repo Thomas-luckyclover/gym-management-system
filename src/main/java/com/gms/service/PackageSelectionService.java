@@ -120,7 +120,7 @@ public class PackageSelectionService {
     public ServiceResult<PackageSelectionView> getPackageSelection(PackageSearchCriteria criteria,
             Set<String> imageFileNames) {
         try {
-            // B1: gói đang bán (gồm cả PT để hiện thông tin), số phút giữ đơn P-09 và giờ mở cửa P-19
+            // B1: gói đang bán (gồm cả PT để hiện thông tin), số phút giữ đơn P-07 và giờ mở cửa P-17
             List<Package> activePackages = packageDAO.findActiveForHomepage();
             int paymentDueMinutes = systemConfigService.getInt(SystemConfigService.PAYMENT_DUE_MINUTES);
             String openingHours = formatOpeningHours(systemConfigService.getString(SystemConfigService.OPENING_HOURS));
@@ -134,7 +134,7 @@ public class PackageSelectionService {
             e.printStackTrace();
             return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
         } catch (IllegalStateException e) {
-            // Thiếu hoặc sai tham số P-09 / P-19 trong SystemConfigs: lỗi cấu hình, không phải lỗi khách
+            // Thiếu hoặc sai tham số P-07 / P-17 trong SystemConfigs: lỗi cấu hình, không phải lỗi khách
             e.printStackTrace();
             return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
         }
@@ -775,7 +775,7 @@ public class PackageSelectionService {
      *
      * @param card thẻ giá đã có badge
      * @param originalPrice giá nếu mua từng tháng; null nếu gói không tiết kiệm
-     * @param paymentDueMinutes số phút giữ đơn, tham số P-09
+     * @param paymentDueMinutes số phút giữ đơn, tham số P-07
      * @param openingHours giờ mở cửa đã định dạng, null nếu chưa cấu hình
      * @param imageFileNames tên file có trong images/packages, null nếu không đọc được
      * @return thẻ để JSP in ra; savedAmount = originalPrice - giá bán, null khi originalPrice null
@@ -858,7 +858,7 @@ public class PackageSelectionService {
 
     /**
      * Câu giải thích đầy đủ cách mua (tooltip của nút và đoạn hướng dẫn trong
-     * popup). paymentDueMinutes lấy từ tham số P-09, openingHours từ P-19;
+     * popup). paymentDueMinutes lấy từ tham số P-07, openingHours từ P-17;
      * không viết cứng số trong chữ.
      */
     private String buildPurchaseHint(Package.Type packageType, int paymentDueMinutes, String openingHours) {

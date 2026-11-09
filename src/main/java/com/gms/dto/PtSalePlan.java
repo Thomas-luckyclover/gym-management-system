@@ -67,7 +67,7 @@ public class PtSalePlan {
     private List<Integer> unpublished = new ArrayList<>();
     // ← giờ PT đã công bố → giờ KHÔNG nằm trong đây ghi "PT chưa mở"
     private List<String> published = new ArrayList<>();
-    // ← giờ mở cửa P-19 → min của ô "+ Thêm giờ"
+    // ← giờ mở cửa P-17 → min của ô "+ Thêm giờ"
     private String open;
     // ← giờ bắt đầu muộn nhất (đóng cửa − thời lượng buổi) → max của ô "+ Thêm giờ"
     private String close;

@@ -7,7 +7,7 @@ import java.util.List;
 
 /**
  * DTO chứa dữ liệu submit từ biểu mẫu thêm mới / chỉnh sửa gói dịch vụ (#18, #20).
- * Lưu dạng chuỗi gốc để tầng Service thực hiện validate định dạng chuẩn chỉ (DBR-06, DBR-11, DBR-15, P-04, P-21).
+ * Lưu dạng chuỗi gốc để tầng Service thực hiện validate định dạng chuẩn chỉ (DBR-06, DBR-11, DBR-15, P-04, P-18).
  */
 public class PackageFormInput {
 

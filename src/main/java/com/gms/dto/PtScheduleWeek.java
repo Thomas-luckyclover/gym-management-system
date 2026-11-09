@@ -22,7 +22,7 @@ public class PtScheduleWeek {
     private LocalDate nextWeek;
     // ← tuần chứa hôm nay → ẩn nút "Tuần này" khi đang ở tuần này
     private boolean currentWeek;
-    // ← giờ mở cửa sớm nhất trong tuần (P-19 / ngày ngoại lệ / khung có sẵn) → hàng giờ đầu của trục
+    // ← giờ mở cửa sớm nhất trong tuần (P-17 / ngày ngoại lệ / khung có sẵn) → hàng giờ đầu của trục
     private int axisStartHour;
     // ← giờ đóng cửa muộn nhất (làm tròn lên) → hàng giờ cuối
     private int axisEndHour;

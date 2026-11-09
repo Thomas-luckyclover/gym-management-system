@@ -40,7 +40,7 @@ public class MyBookingView {
     private String hotline;
     // ← fillCounterInfo: số dạng tel: → href="tel:…" của nút "Gọi lễ tân"
     private String hotlineTel;
-    // ← fillCounterInfo: SystemConfigs P-19 "06:00 – 22:00" → giờ mở cửa trong câu gia hạn tại quầy
+    // ← fillCounterInfo: SystemConfigs P-17 "06:00 – 22:00" → giờ mở cửa trong câu gia hạn tại quầy
     private String openingHours;
 
     // ===== IN RA MÀN — "Lịch cố định" (chỉ khi xem 1 gói) =====

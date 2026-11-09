@@ -1,5 +1,36 @@
 # File notes — mâu thuẫn tài liệu & quyết định đã chốt
 
+## Đánh số lại tham số hệ thống liền P-01 → P-19 (09/11/2026, ĐÃ CODE, CÓ SỬA DB)
+- Bảng SystemConfigs còn **19 tham số**, đánh số liền P-01…P-19. P-07, P-08, P-20, P-22 cũ là tham số đã bỏ; số của chúng được dùng lại cho tham số khác (xem bảng). **Các mục nhật ký bên dưới giữ số CŨ** (lịch sử, không sửa).
+- Bảng đổi số (cũ → mới), P-01…P-06 giữ nguyên:
+
+| Cũ | Mới | Tham số |
+|---|---|---|
+| P-09 | P-07 | Hạn thanh toán đơn online = thời gian giữ slot (phút) |
+| P-10 | P-08 | Thuế VAT (%) |
+| P-11 | P-09 | Hoa hồng mặc định PT (%) |
+| P-12 | P-10 | Giờ chốt nộp đơn nghỉ |
+| P-13 | P-11 | Số PT tối thiểu mỗi ca |
+| P-14 | P-12 | Số lễ tân tối thiểu mỗi ca |
+| P-15 | P-13 | Hiệu lực mã xác thực (phút) |
+| P-16 | P-14 | Đầu số di động |
+| P-17 | P-15 | Số lần sai trước khi khóa tạm |
+| P-18 | P-16 | Thời gian khóa tạm (phút) |
+| P-19 | P-17 | Giờ mở cửa mặc định |
+| P-21 | P-18 | Thời hạn gói PT |
+| P-23 | P-19 | Định mức phép năm |
+
+- Cách đổi: 1 script Python thay **một lượt** bằng regex `(?<![A-Za-z0-9_])P-(\d\d)(?!\d)` + dict (không thay tuần tự từng cặp để tránh đổi chồng), giữ nguyên UTF-8 / BOM / kiểu xuống dòng. Không chạy trên `Prototype/` và các mục cũ của file này.
+- DB đang chạy phải nạp lại: `0_Reset_Database.sql` → `1_Init_Schema.sql` → `2_Seed_Data.sql`; sau đó `SELECT * FROM SystemConfigs` phải ra đúng 19 dòng P-01…P-19 (khối A4 trong `3_Queries.sql` kiểm việc này).
+- Ngoài repo: file Excel System_Test / Integration_Test còn ghi P-17, P-18, P-19 cũ → đổi thành P-15, P-16, P-17 (P-05, P-06 giữ nguyên). Trong repo, `docs/tests/Feature7-Integration-Test-Report.xlsx` và `docs/tests/SWP_IntegrationTest_GMS_v2.xlsx` còn ghi P-09 cũ (hạn thanh toán) → sửa tay thành P-07 (bản `.csv` cùng tên đã đổi).
+- File đã sửa:
+- `database/`: `1_Init_Schema.sql`, `2_Seed_Data.sql` (sinh lại bằng `seeddata.py`, không sửa tay), `3_Queries.sql` (A4 kiểm đủ 19 tham số; bỏ khối C dọn P-07 cũ), `tools/seeddata.py` (key + SystemConfigId 1..19), `tools/seedgen.py`, `tools/seed_header.sql`.
+- `docs/`: `agents.md` (bỏ câu "v26 có P-22 / P-07 đã bỏ"), `diagrams/Feature7-sequence-13.drawio` (+ file `.bkp`), `tests/Feature7-Integration-Test-Report.csv`.
+- `src/main/resources/application.properties.example`.
+- `src/main/java` — constant: `AppConstants`, `Messages`, `package-info`; dao: `AutoCloseSessionDAO`, `PtDashboardDAO`, `PtScheduleDAO`, `SessionReminderDAO`, `SystemConfigDAO`, `VerificationCodeDAO`; dto: `CounterPackageCard`, `LeaveBalance`, `ManagerTransactionItem`, `MyBookingView`, `PackageFormInput`, `PackageOptionView`, `PackageSelectionView`, `PtSaleChoiceBlock`, `PtSalePlan`, `PtScheduleDay`, `PtScheduleWeek`, `SessionAutoCloseData`, `ShiftStaffingRow`, `StaffLeaveFormView`; entity: `LeaveRequest`, `Order`, `SystemConfig`, `Transaction` (chỗ hạn thanh toán online ghi nhầm "P-08" → P-07); integration: `EmailGateway`; job: `CancelOverdueOnlineOrdersJob`; service: `AuthService`, `CounterSaleService`, `CustomerDashboardService`, `HomeService`, `LeaveApprovalService`, `MyBookingService`, `PackageSelectionService`, `PackageService`, `PaymentService`, `PtSaleService`, `PtScheduleService`, `PtSessionHandleService`, `StaffLeaveService`, `SystemConfigService` (hằng số + 1 dòng "19 tham số P-01…P-19"), `VerificationCodeService`, `package-info`; servlet: `manager/PtPackageFormServlet`; util: `AppConfig`, `ValidationUtil`.
+- `src/main/webapp/WEB-INF/jsp`: `auth/login.jsp`, `guest/home.jsp`, `manager/pt-package-form.jsp`, `manager/pt-package-list.jsp`, `receptionist/pt-sales.jsp`.
+- `src/test/java/com/gms/service`: `AuthServiceTest`, `LeaveApprovalSafetyTest`, `PackageServiceTest`, `PtScheduleServiceTest`, `ReceptionistAccountSettingsTest`.
+
 ## Ca làm việc dùng chung + không tự mở ca (31/10/2026, ĐÃ CHỐT)
 - Mỗi ngày 2 ca (sáng trước 13:00, chiều từ 13:00), mỗi ca là **1 két dùng chung** cho mọi lễ tân đang trực: 1 người mở thì người khác làm chung, không mở lại. Mỗi lúc chỉ 1 ca mở; ca trước chưa chốt thì ca sau không mở được.
 - Lễ tân nào đang trực cũng mở / chốt được; hệ thống ghi người mở, người chốt, người nhận từng khoản tiền. Người chốt đếm toàn bộ tiền mặt của ca; lệch phải ghi lý do. Ca bị bỏ quên → lễ tân ca sau chốt hộ khi bàn giao (có ghi nhật ký).
