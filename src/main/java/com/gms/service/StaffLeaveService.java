@@ -280,7 +280,7 @@ public class StaffLeaveService {
         }
     }
 
-    /** Xem số ngày từng phần và lịch PT trước khi gửi; không ghi hoặc giữ chỗ từ GET. */
+    /** Xem số ngày từng phần và lịch PT trước khi gửi; chỉ đọc, không lưu hoặc giữ chỗ. */
     public ServiceResult<LeaveSubmissionPreview> previewSubmission(int accountId, LeaveRequest.LeaveType leaveType,
             LocalDate fromDate, LocalDate toDate, LeaveRequest.ShiftType shiftType) {
         ServiceResult<Void> validation = validateLeavePeriod(leaveType, fromDate, toDate, shiftType);

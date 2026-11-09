@@ -146,7 +146,6 @@
                     <input id="leaveDate"
                            name="leaveDate"
                            type="date"
-                           data-cutoff="<c:out value='${formView.submissionCutoffTime}' default='' />"
                            value="<c:out value='${paramLeaveDate}' />"
                            required>
                     <c:if test="${not empty fieldErrors.leaveDate}">
