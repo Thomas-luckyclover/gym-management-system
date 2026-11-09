@@ -34,7 +34,7 @@ vnpay.query-url=https://sandbox.vnpayment.vn/merchant_webapi/api/transaction
 # IP public của máy chạy backend
 vnpay.server-ip=0.0.0.0
 # true: JOB-06 hỏi VNPay trước khi đóng giao dịch quá hạn
-vnpay.query-enabled=true
+vnpay.query-enabled=false
 
 # ===== Số điện thoại (DBR-17, P-16) — đầu số nhà mạng hợp lệ, cách nhau bởi dấu phẩy =====
 phone.valid-prefixes=032,033,034,035,036,037,038,039,086,096,097,098,070,076,077,078,079,089,090,093,081,082,083,084,085,088,091,094,052,056,058,092,059,099,087,055

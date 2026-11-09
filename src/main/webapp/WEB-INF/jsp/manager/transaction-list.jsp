@@ -8,10 +8,10 @@
         <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
         <title>Giao dịch toàn hệ thống · Super Gym</title>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css?v=20261106_v2">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/transaction-list.css?v=20261102">
 
-        <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
+        <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js?v=20261106_v2" defer></script>
         <script src="${pageContext.request.contextPath}/js/pages/manager/transaction-list.js?v=<%= System.currentTimeMillis() %>" defer></script>
     </head>
 
@@ -42,13 +42,7 @@
                     <div class="top-right">
                         <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
 
-                        <a class="tb-user" href="${pageContext.request.contextPath}/account">
-                            <span class="avatar">QL</span>
-                            <span>
-                                <b><c:out value="${sessionScope.displayName}" default="Quản lý" /></b>
-                                <small>Quản lý</small>
-                            </span>
-                        </a>
+                        <%@ include file="/WEB-INF/jsp/common/topbar-user.jspf" %>
                     </div>
                 </header>
 
