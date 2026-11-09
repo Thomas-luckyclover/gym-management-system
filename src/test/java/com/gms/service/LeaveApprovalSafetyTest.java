@@ -108,7 +108,7 @@ class LeaveApprovalSafetyTest {
         when(configs.getInt(SystemConfigService.LEAVE_ANNUAL_QUOTA)).thenThrow(new IllegalStateException("missing"));
         var result = service.validateApproval(connection, request, "PT");
         assertFalse(result.isSuccess());
-        assertTrue(result.getMessage().contains("P-23"));
+        assertTrue(result.getMessage().contains("P-19"));
     }
 
     @Test

@@ -234,7 +234,7 @@ public class VerificationCodeDAO {
      * Sau đó findLockedUntil sẽ trả về 10:10 cho tới khi qua giờ đó.
      *
      * @param verificationCodeId Id của dòng mã cần ghi khóa
-     * @param lockedUntil        giờ hết khóa = giờ hiện tại + số phút khóa (P-18)
+     * @param lockedUntil        giờ hết khóa = giờ hiện tại + số phút khóa (P-16)
      * @throws SQLException lỗi kết nối hoặc lỗi câu SQL
      */
     public void lockCode(int verificationCodeId, LocalDateTime lockedUntil) throws SQLException {

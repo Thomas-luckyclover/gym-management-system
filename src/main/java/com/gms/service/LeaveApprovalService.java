@@ -85,7 +85,7 @@ public class LeaveApprovalService {
         try {
             quota = systemConfigService.getInt(SystemConfigService.LEAVE_ANNUAL_QUOTA);
         } catch (IllegalStateException e) {
-            check.setMessage("Chưa cấu hình quỹ phép năm P-23. Cần thiết lập chính sách trước khi duyệt.");
+            check.setMessage("Chưa cấu hình quỹ phép năm P-19. Cần thiết lập chính sách trước khi duyệt.");
             return check;
         }
         int excludedRequestId = 0;

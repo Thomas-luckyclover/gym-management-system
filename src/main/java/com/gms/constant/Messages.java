@@ -220,7 +220,7 @@ public final class Messages {
         // another colleague.
         public static final String MSG76_STAFF_OWN_CUSTOMER_PROFILE = "Bạn không thể thao tác trên hồ sơ khách hàng của chính mình. Vui lòng nhờ đồng nghiệp khác.";
 
-        /** CBR-84, P-12: nộp đơn nghỉ phép quá hạn cut-off. */
+        /** CBR-84, P-10: nộp đơn nghỉ phép quá hạn cut-off. */
         // EN: Submission deadline passed. Leave on %s had to be submitted before %s on
         // the previous day.
         public static final String MSG77_LEAVE_SUBMISSION_DEADLINE = "Đã quá hạn nộp. Đơn nghỉ ngày %s phải nộp trước %s của ngày hôm trước.";

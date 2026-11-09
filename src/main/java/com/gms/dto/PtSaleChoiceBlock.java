@@ -52,10 +52,10 @@ public class PtSaleChoiceBlock {
     // ← loadPackage (giá đã gồm VAT) → "Phải thu", giá 1 buổi
     private long price;
 
-    // ← loadPackage → fillVatPreview: P-10 hiện tại (đơn chưa có, số tạm; đọc lỗi = null) → dòng "Thuế VAT x%"
+    // ← loadPackage → fillVatPreview: P-08 hiện tại (đơn chưa có, số tạm; đọc lỗi = null) → dòng "Thuế VAT x%"
     private Integer vatRate;
 
-    // ← fillVatPreview = vatAmount(giá, P-10), cùng hàm lúc hold lưu vào đơn → dòng "Thuế VAT x%"
+    // ← fillVatPreview = vatAmount(giá, P-08), cùng hàm lúc hold lưu vào đơn → dòng "Thuế VAT x%"
     private Long vatAmount;
 
     // ← fillVatPreview = giá − vatAmount → dòng "Trước thuế VAT"

@@ -134,7 +134,7 @@ class ReceptionistAccountSettingsTest {
     }
 
     @Test
-    @DisplayName("DBR-17 (P-16): Kiểm tra đầu số nhà mạng hợp lệ của SĐT Receptionist")
+    @DisplayName("DBR-17 (P-14): Kiểm tra đầu số nhà mạng hợp lệ của SĐT Receptionist")
     void testPhonePrefixValidation() {
         List<String> validPrefixes = List.of("086", "096", "097", "098", "032", "033", "034", "035", "036", "037", "038", "039",
                 "088", "091", "094", "083", "084", "085", "081", "082", "089", "090", "093", "070", "079", "077", "076", "078");

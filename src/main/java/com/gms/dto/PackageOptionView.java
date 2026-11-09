@@ -39,7 +39,7 @@ public class PackageOptionView {
     // điện thoại (không có hover) vẫn thấy được.
     private final String channelLabel;
 
-    // Service: câu giải thích đầy đủ cách mua gói này (có số phút giữ đơn P-09 hoặc giờ mở cửa).
+    // Service: câu giải thích đầy đủ cách mua gói này (có số phút giữ đơn P-07 hoặc giờ mở cửa).
     // JSP in trong tooltip của nút và trong popup chi tiết.
     private final String purchaseHint;
 

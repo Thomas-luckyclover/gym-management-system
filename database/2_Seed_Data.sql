@@ -1,7 +1,8 @@
 /* ============================================================================
    GMS — FILE: 2_Seed_Data.sql  ·  v26
    SINH TỰ ĐỘNG bởi database/tools/seeddata.py — muốn sửa dữ liệu thì sửa file .py rồi sinh lại.
-   v26    : CheckedIn/Used, tự chốt JOB-04, đánh giá PT theo tháng, P-22 thay P-07.
+   v26    : CheckedIn/Used, tự chốt JOB-04, đánh giá PT theo tháng.
+   THAM SỐ: 19 tham số SystemConfigs đánh số liền P-01…P-19 (09/11/2026).
    CHẠY   : 0_Reset_Database.sql → 1_Init_Schema.sql → 2_Seed_Data.sql (database rỗng).
    MỐC    : lịch sử cố định quanh Thứ Bảy 03/10/2026 (tháng 6 → tháng 11/2026).
             Dữ liệu "sống" (mã xác thực, khóa tạm 5 phút, đơn online còn hạn, slot đang giữ,
@@ -5453,19 +5454,19 @@ INSERT INTO SystemConfigs (SystemConfigId, ConfigKey, ConfigValue, Description, 
  (4, 'P-04', '1D,1M,3M,9M,12M', N'Thời hạn gói tập: D = ngày, M = tháng', '2026-09-01 09:00:00', 2),
  (5, 'P-05', '10', N'Tuổi tối thiểu dùng dịch vụ PT', '2026-09-01 09:00:00', 2),
  (6, 'P-06', '90', N'Độ dài một buổi PT (phút)', '2026-09-01 09:00:00', 2),
- (9, 'P-09', '20', N'Hạn thanh toán đơn online = thời gian giữ slot (phút)', '2026-09-01 09:00:00', 2),
- (10, 'P-10', '10', N'Thuế VAT (%) đã nằm trong giá bán', '2026-09-01 09:00:00', 2),
- (11, 'P-11', '70', N'Tỷ lệ hoa hồng mặc định cho PT mới (%)', '2026-09-01 09:00:00', 2),
- (12, 'P-12', '15:00', N'Giờ chốt nộp đơn nghỉ (ngày hôm trước)', '2026-09-01 09:00:00', 2),
- (13, 'P-13', '2', N'Số PT tối thiểu còn lại mỗi ca', '2026-09-01 09:00:00', 2),
- (14, 'P-14', '1', N'Số lễ tân tối thiểu còn lại mỗi ca', '2026-09-01 09:00:00', 2),
- (15, 'P-15', '15', N'Hiệu lực mã xác thực / mã khôi phục (phút)', '2026-09-01 09:00:00', 2),
- (16, 'P-16', '032,033,034,035,036,037,038,039,052,056,058,059,070,076,077,078,079,081,082,083,084,085,086,088,089,090,091,092,093,094,096,097,098,099', N'Đầu số di động hợp lệ (cấu hình triển khai, Manager không sửa)', '2026-09-01 09:00:00', 2),
- (17, 'P-17', '5', N'Số lần sai trước khi khóa tạm (đăng nhập và mã xác thực)', '2026-09-01 09:00:00', 2),
- (18, 'P-18', '5', N'Thời gian khóa tạm (phút)', '2026-09-01 09:00:00', 2),
- (19, 'P-19', '05:30-22:00', N'Giờ mở cửa mặc định hằng ngày', '2026-09-01 09:00:00', 2),
- (21, 'P-21', '1M,2M,3M', N'Thời hạn gói PT (tháng)', '2026-09-01 09:00:00', 2),
- (23, 'P-23', '14', N'Định mức phép năm demo (ngày/năm)', '2026-09-01 09:00:00', 2);
+ (7, 'P-07', '20', N'Hạn thanh toán đơn online = thời gian giữ slot (phút)', '2026-09-01 09:00:00', 2),
+ (8, 'P-08', '10', N'Thuế VAT (%) đã nằm trong giá bán', '2026-09-01 09:00:00', 2),
+ (9, 'P-09', '70', N'Tỷ lệ hoa hồng mặc định cho PT mới (%)', '2026-09-01 09:00:00', 2),
+ (10, 'P-10', '15:00', N'Giờ chốt nộp đơn nghỉ (ngày hôm trước)', '2026-09-01 09:00:00', 2),
+ (11, 'P-11', '2', N'Số PT tối thiểu còn lại mỗi ca', '2026-09-01 09:00:00', 2),
+ (12, 'P-12', '1', N'Số lễ tân tối thiểu còn lại mỗi ca', '2026-09-01 09:00:00', 2),
+ (13, 'P-13', '15', N'Hiệu lực mã xác thực / mã khôi phục (phút)', '2026-09-01 09:00:00', 2),
+ (14, 'P-14', '032,033,034,035,036,037,038,039,052,056,058,059,070,076,077,078,079,081,082,083,084,085,086,088,089,090,091,092,093,094,096,097,098,099', N'Đầu số di động hợp lệ (cấu hình triển khai, Manager không sửa)', '2026-09-01 09:00:00', 2),
+ (15, 'P-15', '5', N'Số lần sai trước khi khóa tạm (đăng nhập và mã xác thực)', '2026-09-01 09:00:00', 2),
+ (16, 'P-16', '5', N'Thời gian khóa tạm (phút)', '2026-09-01 09:00:00', 2),
+ (17, 'P-17', '05:30-22:00', N'Giờ mở cửa mặc định hằng ngày', '2026-09-01 09:00:00', 2),
+ (18, 'P-18', '1M,2M,3M', N'Thời hạn gói PT (tháng)', '2026-09-01 09:00:00', 2),
+ (19, 'P-19', '14', N'Định mức phép năm demo (ngày/năm)', '2026-09-01 09:00:00', 2);
 SET IDENTITY_INSERT SystemConfigs OFF;
 
 /* ============================================================================
@@ -5770,9 +5771,9 @@ UPDATE Subscriptions SET Status = 'Expired' WHERE SubscriptionType IN ('Membersh
 -- JOB-04 B1 GymClosed: phòng nghỉ cả ngày / buổi ngoài giờ mở cửa
 INSERT INTO AuditLogs (AccountId, ActingRole, Action, EntityName, EntityId, FieldChanged, OldValue, NewValue, Reason, CreatedAt)
 SELECT NULL, NULL, N'JOB-04', N'Sessions', SessionId, N'Status', N'Scheduled', N'Cancelled', NULL, (SELECT DATEADD(MINUTE, 5, CAST(DATEADD(DAY, 1, t.SlotDate) AS DATETIME2(0))) FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId)
-FROM Sessions WHERE Sessions.Status = 'Scheduled' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) < @Today AND EXISTS (SELECT 1 FROM TimeSlots t LEFT JOIN OperatingHourExceptions ex ON ex.ApplyDate = t.SlotDate WHERE t.TimeSlotId = Sessions.TimeSlotId AND (ex.IsClosedAllDay = 1 OR t.StartTime < COALESCE(ex.OpenTime, (SELECT CAST(SUBSTRING(c.ConfigValue, 1, 5) AS TIME(0)) FROM SystemConfigs c WHERE c.ConfigKey = 'P-19')) OR t.EndTime > COALESCE(ex.CloseTime, (SELECT CAST(SUBSTRING(c.ConfigValue, 7, 5) AS TIME(0)) FROM SystemConfigs c WHERE c.ConfigKey = 'P-19'))));
+FROM Sessions WHERE Sessions.Status = 'Scheduled' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) < @Today AND EXISTS (SELECT 1 FROM TimeSlots t LEFT JOIN OperatingHourExceptions ex ON ex.ApplyDate = t.SlotDate WHERE t.TimeSlotId = Sessions.TimeSlotId AND (ex.IsClosedAllDay = 1 OR t.StartTime < COALESCE(ex.OpenTime, (SELECT CAST(SUBSTRING(c.ConfigValue, 1, 5) AS TIME(0)) FROM SystemConfigs c WHERE c.ConfigKey = 'P-17')) OR t.EndTime > COALESCE(ex.CloseTime, (SELECT CAST(SUBSTRING(c.ConfigValue, 7, 5) AS TIME(0)) FROM SystemConfigs c WHERE c.ConfigKey = 'P-17'))));
 UPDATE Sessions SET Status = 'Cancelled', MissedReason = NULL, IsAutoClosed = 1, AttendanceMarkedAt = (SELECT DATEADD(MINUTE, 5, CAST(DATEADD(DAY, 1, t.SlotDate) AS DATETIME2(0))) FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId), CancelType = 'GymClosed', CommissionAmount = 0, CancelledAt = (SELECT DATEADD(MINUTE, 5, CAST(DATEADD(DAY, 1, t.SlotDate) AS DATETIME2(0))) FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId)
-WHERE Sessions.Status = 'Scheduled' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) < @Today AND EXISTS (SELECT 1 FROM TimeSlots t LEFT JOIN OperatingHourExceptions ex ON ex.ApplyDate = t.SlotDate WHERE t.TimeSlotId = Sessions.TimeSlotId AND (ex.IsClosedAllDay = 1 OR t.StartTime < COALESCE(ex.OpenTime, (SELECT CAST(SUBSTRING(c.ConfigValue, 1, 5) AS TIME(0)) FROM SystemConfigs c WHERE c.ConfigKey = 'P-19')) OR t.EndTime > COALESCE(ex.CloseTime, (SELECT CAST(SUBSTRING(c.ConfigValue, 7, 5) AS TIME(0)) FROM SystemConfigs c WHERE c.ConfigKey = 'P-19'))));
+WHERE Sessions.Status = 'Scheduled' AND (SELECT t.SlotDate FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId) < @Today AND EXISTS (SELECT 1 FROM TimeSlots t LEFT JOIN OperatingHourExceptions ex ON ex.ApplyDate = t.SlotDate WHERE t.TimeSlotId = Sessions.TimeSlotId AND (ex.IsClosedAllDay = 1 OR t.StartTime < COALESCE(ex.OpenTime, (SELECT CAST(SUBSTRING(c.ConfigValue, 1, 5) AS TIME(0)) FROM SystemConfigs c WHERE c.ConfigKey = 'P-17')) OR t.EndTime > COALESCE(ex.CloseTime, (SELECT CAST(SUBSTRING(c.ConfigValue, 7, 5) AS TIME(0)) FROM SystemConfigs c WHERE c.ConfigKey = 'P-17'))));
 -- JOB-04 B5 không ai vào gym được + có người bảo lưu
 INSERT INTO AuditLogs (AccountId, ActingRole, Action, EntityName, EntityId, FieldChanged, OldValue, NewValue, Reason, CreatedAt)
 SELECT NULL, NULL, N'JOB-04', N'Sessions', SessionId, N'Status', N'Scheduled', N'Missed', 'MembershipFrozen', (SELECT DATEADD(MINUTE, 5, CAST(DATEADD(DAY, 1, t.SlotDate) AS DATETIME2(0))) FROM TimeSlots t WHERE t.TimeSlotId = Sessions.TimeSlotId)

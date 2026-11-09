@@ -32,7 +32,7 @@ import java.util.Set;
  *
  * AI GỌI SERVICE NÀY?  PtScheduleServlet (getWeek, publish, parseDate). Hàm static dùng lại ở màn khác:
  *                      parseOpeningHours, isOnLeave, weekStartOf → PtSaleService, PtSessionHandleService.
- * SERVICE GỌI AI?      PtScheduleDAO (PT, buổi, khung, đơn nghỉ, ngày giờ đặc biệt, ghi TimeSlots) · SystemConfigService (P-06, P-19).
+ * SERVICE GỌI AI?      PtScheduleDAO (PT, buổi, khung, đơn nghỉ, ngày giờ đặc biệt, ghi TimeSlots) · SystemConfigService (P-06, P-17).
  *
  * BỐ CỤC FILE — mỗi HÀM CHÍNH đứng trước, các hàm phụ của nó nằm ngay bên dưới:
  *   HÀM CHÍNH 1  getWeek   dựng lịch 1 tuần (T2 → CN)        → buildEmptyWeek, buildDay, dayName, buildLeaveLabel, buildLeaveDetails,
@@ -168,7 +168,7 @@ public class PtScheduleService {
     }
 
     /**
-     * HÀM PHỤ (buildEmptyWeek, validateDrafts) — 1 ngày: tên thứ, hôm nay / đã qua, giờ mở cửa theo P-19;
+     * HÀM PHỤ (buildEmptyWeek, validateDrafts) — 1 ngày: tên thứ, hôm nay / đã qua, giờ mở cửa theo P-17;
      * ngày có OperatingHourExceptions → đổi giờ hoặc "Phòng nghỉ" cả ngày. Giờ ngoại lệ sai → lỗi.
      */
     static PtScheduleDay buildDay(
@@ -816,7 +816,7 @@ public class PtScheduleService {
 
 
     // ============================================================================================================
-    // DÙNG CHUNG — ca nghỉ, ngày tuần, giờ mở cửa P-19, đổi giờ ↔ phút (một số hàm public cho Servlet / Service khác)
+    // DÙNG CHUNG — ca nghỉ, ngày tuần, giờ mở cửa P-17, đổi giờ ↔ phút (một số hàm public cho Servlet / Service khác)
     // ============================================================================================================
 
     /**
@@ -869,18 +869,18 @@ public class PtScheduleService {
     }
 
     /**
-     * HÀM PHỤ (dùng chung) — P-19 "06:00-22:00" → [06:00, 22:00]; sai dạng / đóng ≤ mở → lỗi cấu hình.
+     * HÀM PHỤ (dùng chung) — P-17 "06:00-22:00" → [06:00, 22:00]; sai dạng / đóng ≤ mở → lỗi cấu hình.
      */
     public static LocalTime[] parseOpeningHours(String value) {
         String[] parts = value.split("-", -1);
         if (parts.length != 2) {
-            throw new IllegalStateException("P-19 không đúng dạng HH:mm-HH:mm");
+            throw new IllegalStateException("P-17 không đúng dạng HH:mm-HH:mm");
         }
 
         LocalTime open = LocalTime.parse(parts[0].trim());
         LocalTime close = LocalTime.parse(parts[1].trim());
         if (!close.isAfter(open)) {
-            throw new IllegalStateException("P-19 có giờ đóng cửa không sau giờ mở cửa");
+            throw new IllegalStateException("P-17 có giờ đóng cửa không sau giờ mở cửa");
         }
         return new LocalTime[]{open, close};
     }

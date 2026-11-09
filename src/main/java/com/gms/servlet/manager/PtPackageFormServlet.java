@@ -18,7 +18,7 @@ import java.util.Base64;
 
 /**
  * Controller màn hình Biểu mẫu thêm mới / Chỉnh sửa gói PT & Buổi lẻ (#20 - UC-10).
- * Quản lý thời hạn P-21, số buổi ước tính (1-255), phân quyền thư viện, kiểm soát đồng thời (MSG22) và cảnh báo đơn đang chạy.
+ * Quản lý thời hạn P-18, số buổi ước tính (1-255), phân quyền thư viện, kiểm soát đồng thời (MSG22) và cảnh báo đơn đang chạy.
  */
 @WebServlet(urlPatterns = {"/manager/pt-packages/form"})
 public class PtPackageFormServlet extends HttpServlet {

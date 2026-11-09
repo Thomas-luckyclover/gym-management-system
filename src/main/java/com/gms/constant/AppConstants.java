@@ -7,7 +7,7 @@ import java.util.List;
  * Hằng số cố định của hệ thống — những giá trị SRS chốt "Fixed by design" hoặc
  * quy ước giao diện chung.
  *
- * KHÔNG đặt ở đây các tham số P-01…P-20 (SRS System Parameters): các giá trị đó
+ * KHÔNG đặt ở đây các tham số P-01…P-19 (SRS System Parameters): các giá trị đó
  * Manager sửa được
  * trên màn 4.1.2, nên phải đọc từ bảng SystemConfig trong DB qua Service, không
  * hard-code.

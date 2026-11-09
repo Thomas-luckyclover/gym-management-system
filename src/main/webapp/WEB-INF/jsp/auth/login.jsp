@@ -10,7 +10,7 @@
        đúng  → lưu session (accountId, vai trò, displayName = Persons.FullName) rồi chuyển trang, KHÔNG quay lại JSP này
        sai   → forward lại JSP này với các biến dưới đây.
    DAO: AccountDAO đọc Accounts JOIN Persons (Email hoặc Phone, PasswordHash, Status, FailedLoginCount, LockedUntil);
-        sai mật khẩu thì ghi lại FailedLoginCount / LockedUntil (P-17 = 5 lần, P-18 = 5 phút).
+        sai mật khẩu thì ghi lại FailedLoginCount / LockedUntil (P-15 = 5 lần, P-16 = 5 phút).
 
  BIẾN JSP
    loginStep        "form" | "blocked-lock" (MSG35); GET mặc định là form
@@ -137,7 +137,7 @@
 
                 <%-- ==========================================================
                      BẢNG 3. TÀI KHOẢN TẠM KHÓA — BẮT ĐẦU   (loginStep = "blocked-lock", MSG35)
-                     Sai mật khẩu 5 lần (P-17) → Accounts.LockedUntil = bây giờ + 5 phút (P-18).
+                     Sai mật khẩu 5 lần (P-15) → Accounts.LockedUntil = bây giờ + 5 phút (P-16).
                      ========================================================== --%>
                 <div class="step-panel" data-step="blocked-lock" <c:if test="${loginStep ne 'blocked-lock'}">hidden</c:if>>
                     <div class="auth-head">

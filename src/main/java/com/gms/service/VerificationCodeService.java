@@ -25,16 +25,16 @@ import java.time.LocalDateTime;
  * mã không, mã đúng không, có khóa không.
  *
  * Luật (CBR-94, số trong ngoặc là giá trị mặc định trong bảng SystemConfigs):
- * - Mã sống P-15 phút (15), mỗi mã chỉ dùng được 1 lần, chỉ mã GỬI GẦN NHẤT còn
+ * - Mã sống P-13 phút (15), mỗi mã chỉ dùng được 1 lần, chỉ mã GỬI GẦN NHẤT còn
  * hiệu lực
- * - Nhập sai P-17 lần (5) → mã bị hủy + email bị khóa xác thực P-18 phút (5)
+ * - Nhập sai P-15 lần (5) → mã bị hủy + email bị khóa xác thực P-16 phút (5)
  * - 2 lần xin mã phải cách nhau ít nhất 60 giây
- * - Xin mã lần thứ 5 trong vòng 60 phút → email bị khóa P-18 phút (5)
+ * - Xin mã lần thứ 5 trong vòng 60 phút → email bị khóa P-16 phút (5)
  *
  * THAM SỐ CẤU HÌNH (giá trị hiện tại — đổi ở đâu)
- *   P-15 = 15   mã sống 15 phút                                     (bảng SystemConfigs, biến validMinutes)
- *   P-17 = 5    sai mã 5 lần → khóa; xin mã lần thứ 5 / 60 phút → khóa (SystemConfigs, biến maxAttempts)
- *   P-18 = 5    khóa xác thực 5 phút                                (SystemConfigs, biến lockMinutes)
+ *   P-13 = 15   mã sống 15 phút                                     (bảng SystemConfigs, biến validMinutes)
+ *   P-15 = 5    sai mã 5 lần → khóa; xin mã lần thứ 5 / 60 phút → khóa (SystemConfigs, biến maxAttempts)
+ *   P-16 = 5    khóa xác thực 5 phút                                (SystemConfigs, biến lockMinutes)
  *   CODE_RESEND_GAP_SECONDS    = 60   2 lần xin mã cách nhau ≥ 60 giây  (AppConstants)
  *   CODE_REQUEST_WINDOW_MINUTES = 60  cửa sổ đếm số lần xin mã          (AppConstants)
  *   VERIFICATION_CODE_LENGTH   = 6    mã 6 chữ số                       (AppConstants)
@@ -79,8 +79,8 @@ public class VerificationCodeService {
     public ServiceResult<Void> sendCode(String email, VerificationCode.Purpose purpose, Integer accountId) {
         try {
             // B1: lấy giờ hiện tại + đọc 3 tham số từ bảng SystemConfigs
-            // validMinutes = mã sống bao lâu (P-15), maxAttempts = mốc 5 lần (P-17),
-            // lockMinutes = khóa bao lâu (P-18)
+            // validMinutes = mã sống bao lâu (P-13), maxAttempts = mốc 5 lần (P-15),
+            // lockMinutes = khóa bao lâu (P-16)
             LocalDateTime now = DateTimeUtil.now();
             int validMinutes = systemConfigService.getInt(SystemConfigService.VERIFICATION_VALID_MINUTES);
             int maxAttempts = systemConfigService.getInt(SystemConfigService.MAX_FAILED_ATTEMPTS);
@@ -199,7 +199,7 @@ public class VerificationCodeService {
         String trimmedCode = inputCode.trim();
 
         try {
-            // B2: lấy giờ hiện tại + tham số P-17 (mốc 5 lần sai), P-18 (khóa bao nhiêu
+            // B2: lấy giờ hiện tại + tham số P-15 (mốc 5 lần sai), P-16 (khóa bao nhiêu
             // phút)
             LocalDateTime now = DateTimeUtil.now();
             int maxAttempts = systemConfigService.getInt(SystemConfigService.MAX_FAILED_ATTEMPTS);
@@ -268,7 +268,7 @@ public class VerificationCodeService {
      * Hàm chỉ ĐỌC sổ, không ghi gì — việc khóa thật vẫn do sendCode / verifyCode
      * làm.
      *
-     * VD (P-17 = 5): thao.luong vừa nhận mã, chưa gõ sai lần nào, trong 60 phút đã
+     * VD (P-15 = 5): thao.luong vừa nhận mã, chưa gõ sai lần nào, trong 60 phút đã
      * có 2 mã được gửi
      * → còn 5 - 0 = 5 lần nhập; còn (5 - 1) - 2 = 2 lần gửi lại
      *
@@ -284,7 +284,7 @@ public class VerificationCodeService {
      */
     public ServiceResult<VerificationAttemptInfo> getAttemptInfo(String email, VerificationCode.Purpose purpose) {
         try {
-            // B1: giờ hiện tại + tham số P-17 (mốc 5 lần), P-18 (khóa bao nhiêu phút)
+            // B1: giờ hiện tại + tham số P-15 (mốc 5 lần), P-16 (khóa bao nhiêu phút)
             LocalDateTime now = DateTimeUtil.now();
             int maxAttempts = systemConfigService.getInt(SystemConfigService.MAX_FAILED_ATTEMPTS);
             int lockMinutes = systemConfigService.getInt(SystemConfigService.LOCK_MINUTES);

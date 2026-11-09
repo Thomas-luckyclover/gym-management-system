@@ -13,7 +13,7 @@
                        % tiết kiệm, nhãn "Phổ biến nhất"/"Tiết kiệm"    Packages (IsActive = 1)
    home.ptPackages     cùng câu DAO trên, Service tách nhóm gói PT     (như trên)
    home.pts, ptCount   EmployeeDAO.findWorkingPts                      Employees + Persons (tên, chuyên môn, năm kinh nghiệm)
-   home.openingHours   Service đọc P-19 "05:30-22:00" → "05:30 – 22:00" SystemConfigs
+   home.openingHours   Service đọc P-17 "05:30-22:00" → "05:30 – 22:00" SystemConfigs
    home.latestPosts    BlogService.getLatestPosts(3)                   BlogPosts (Status = Active, 3 bài mới nhất)
    Mọi con số (giá, năm kinh nghiệm…) lấy từ DB.
 
@@ -59,7 +59,7 @@
           <a class="cine-btn cine-btn--hot" href="${ctx}/register">Bắt đầu tập <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 12h14m-7-7 7 7-7 7"/></svg></a>
           <a class="cine-btn cine-btn--ghost" href="#pricing">Xem bảng giá</a>
         </div>
-        <%-- 2 con số dưới nút: "Mở cửa mỗi ngày 05:30 – 22:00" (home.openingHours, P-19)
+        <%-- 2 con số dưới nút: "Mở cửa mỗi ngày 05:30 – 22:00" (home.openingHours, P-17)
              và "Huấn luyện viên 6" (home.ptCount = số PT đang làm). Thiếu dữ liệu thì ẩn ô đó. --%>
         <dl class="cine-meta" data-fade>
           <c:if test="${not empty home.openingHours}">

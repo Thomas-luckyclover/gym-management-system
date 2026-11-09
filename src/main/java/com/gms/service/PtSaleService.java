@@ -52,7 +52,7 @@ import java.util.TreeSet;
  *
  * AI GỌI SERVICE NÀY?  Chỉ PtSaleServlet. Servlet đưa chữ thô (Input) + accountId; Service tự kiểm tra hết.
  * SERVICE GỌI AI?      PtSaleDAO (đọc / ghi đơn, khung, buổi) · PtScheduleDAO (ngày nghỉ PT, giờ mở cửa ngoại lệ)
- *                      · ShiftDAO (ca đang mở) · NotificationDAO (thông báo sau thu tiền) · SystemConfigService (P-05, P-06, P-10, P-19).
+ *                      · ShiftDAO (ca đang mở) · NotificationDAO (thông báo sau thu tiền) · SystemConfigService (P-05, P-06, P-08, P-17).
  *
  * BỐ CỤC FILE — mỗi HÀM CHÍNH đứng trước, các hàm phụ của nó nằm ngay bên dưới:
  *   HÀM CHÍNH 1  search    ô gợi ý khách (AJAX)                         → whyCannotBuy
@@ -392,8 +392,8 @@ public class PtSaleService {
     }
 
     /**
-     * HÀM PHỤ (loadPackage) — tách thuế tạm cho trang chọn theo P-10 hiện tại (đơn chưa tồn tại), cùng công thức lúc hold.
-     * Đọc P-10 lỗi → để 3 field null: chỉ ẩn 2 dòng thuế, không chặn trang (lúc giữ lịch vẫn báo lỗi như cũ).
+     * HÀM PHỤ (loadPackage) — tách thuế tạm cho trang chọn theo P-08 hiện tại (đơn chưa tồn tại), cùng công thức lúc hold.
+     * Đọc P-08 lỗi → để 3 field null: chỉ ẩn 2 dòng thuế, không chặn trang (lúc giữ lịch vẫn báo lỗi như cũ).
      */
     private void fillVatPreview(PtSaleChoiceBlock choice, long price) {
         if (price <= 0) {
@@ -760,8 +760,8 @@ public class PtSaleService {
 
     /**
      * HÀM PHỤ (mergeCustomTimes) — giờ bắt đầu hợp lệ cho 1 buổi PT do LỄ TÂN TỰ NHẬP (không cần PT đã công bố khung):
-     *   trong giờ mở cửa (P-19), đúng mốc 15 phút, và khung (giờ → giờ + minutes) vẫn kết thúc trước giờ đóng cửa.
-     * open/close null (P-19 lỗi cấu hình) → không giờ nào hợp lệ.
+     *   trong giờ mở cửa (P-17), đúng mốc 15 phút, và khung (giờ → giờ + minutes) vẫn kết thúc trước giờ đóng cửa.
+     * open/close null (P-17 lỗi cấu hình) → không giờ nào hợp lệ.
      */
     static boolean isValidStartTime(
             LocalTime time,
@@ -1047,7 +1047,7 @@ public class PtSaleService {
         heldBlock.setOrderCode(held.orderCode);
         // số giây còn lại
         heldBlock.setHoldSeconds(Math.max(0, Duration.between(now, held.expiresAt).getSeconds()));
-        // Tách thuế lấy từ SNAPSHOT trên đơn, không tính lại theo P-10 hiện tại (CBR-09, DBR-57).
+        // Tách thuế lấy từ SNAPSHOT trên đơn, không tính lại theo P-08 hiện tại (CBR-09, DBR-57).
         heldBlock.setVatRate(held.vatRate);
         heldBlock.setVatAmount(held.vatAmount);
         heldBlock.setPreTaxAmount(held.price - held.vatAmount);

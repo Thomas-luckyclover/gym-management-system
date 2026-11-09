@@ -56,7 +56,7 @@ public class ManagerTransactionItem {
     // JSP hiển thị tại cột Tổng tiền; nếu đơn bị hủy thì gạch ngang (strikethrough).
     private final long totalAmount;
 
-    // DAO: Orders.VatRateSnapshot, phần trăm thuế VAT lúc tạo đơn (mặc định P-10).
+    // DAO: Orders.VatRateSnapshot, phần trăm thuế VAT lúc tạo đơn (mặc định P-08).
     // JSP hiển thị tỷ lệ VAT.
     private final int vatRate;
 

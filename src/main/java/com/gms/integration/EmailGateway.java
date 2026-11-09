@@ -59,7 +59,7 @@ public class EmailGateway {
     /**
      * HÀM CHÍNH — gửi mã xác thực 6 số.
      *   AI GỌI   VerificationCodeService.sendCode (B6), ngay TRƯỚC khi ghi mã vào bảng VerificationCodes
-     *   VÀO      toEmail = người nhận · code = mã 6 số, VD "246810" · validMinutes = hạn mã (P-15 = 15)
+     *   VÀO      toEmail = người nhận · code = mã 6 số, VD "246810" · validMinutes = hạn mã (P-13 = 15)
      *            · purpose = cụm chữ mục đích, VD "khôi phục mật khẩu" (VerificationCodeService.getPurposeLabel)
      *   RA       không trả gì; gửi lỗi → ném EmailSendException
      *   VD       tiêu đề "[Super Gym] Mã xác thực khôi phục mật khẩu", thân thư có ô mã cam to "246810"
