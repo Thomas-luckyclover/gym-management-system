@@ -234,4 +234,35 @@ public class AutoCloseSessionDAO {
             return statement.executeUpdate() == 1;
         }
     }
+
+    // Buổi lẻ: gói SingleSession còn Active của buổi vừa chốt → newStatus (Used | Expired). Cùng transaction với buổi.
+    // Trả về: SubscriptionId đã đổi; null = buổi không thuộc gói buổi lẻ, hoặc gói không còn Active.
+    public Integer closeSingleSessionSubscription(Connection connection, int sessionId,
+            com.gms.entity.Subscription.Status newStatus) throws SQLException {
+        String findSql = """
+                SELECT sub.SubscriptionId
+                FROM Subscriptions sub WITH (UPDLOCK, HOLDLOCK)
+                JOIN Sessions s ON s.SubscriptionId = sub.SubscriptionId
+                WHERE s.SessionId = ?
+                  AND sub.SubscriptionType = 'SingleSession'
+                  AND sub.Status = 'Active'
+                """;
+        int subscriptionId;
+        try (PreparedStatement statement = connection.prepareStatement(findSql)) {
+            statement.setInt(1, sessionId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (!resultSet.next()) {
+                    return null;
+                }
+                subscriptionId = resultSet.getInt("SubscriptionId");
+            }
+        }
+
+        String updateSql = "UPDATE Subscriptions SET Status = ? WHERE SubscriptionId = ? AND Status = 'Active'";
+        try (PreparedStatement statement = connection.prepareStatement(updateSql)) {
+            statement.setString(1, newStatus.getDbValue());
+            statement.setInt(2, subscriptionId);
+            return statement.executeUpdate() == 1 ? subscriptionId : null;
+        }
+    }
 }
