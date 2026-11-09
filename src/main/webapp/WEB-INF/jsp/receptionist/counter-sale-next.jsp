@@ -155,7 +155,7 @@
                                             </c:choose>
                                         </span>
                                     </label>
-                                    <%-- CBR-119: chỉ gói tập mới (chưa có gói nối tiếp) được hẹn ngày; vé ngày và gói nối tiếp thì không. --%>
+                                    <%-- Gói tập (mới hoặc nối tiếp) được hẹn ngày trong 7 ngày tới; vé ngày thì có hiệu lực ngay trong ngày. --%>
                                     <c:if test="${canPickDate}">
                                         <label class="validity-option-radio">
                                             <input type="radio" name="startDateMode" id="modeCustom" value="custom">

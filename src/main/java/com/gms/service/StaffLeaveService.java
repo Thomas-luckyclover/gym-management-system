@@ -12,6 +12,7 @@ import com.gms.dto.LeaveSubmissionPreview;
 import com.gms.dto.LeaveRequestGroupView;
 import com.gms.dto.StaffLeaveFormView;
 import com.gms.dto.StaffingPreview;
+import com.gms.dto.PageResult;
 import com.gms.entity.Account;
 import com.gms.entity.Employee;
 import com.gms.entity.LeaveRequest;
@@ -72,6 +73,11 @@ public class StaffLeaveService {
      *         thông báo lỗi
      */
     public ServiceResult<StaffLeaveFormView> getStaffLeaveForm(int accountId) {
+        return getStaffLeaveForm(accountId, 1, 10);
+    }
+
+    /** Lịch sử phân trang theo đợt nghỉ, không giới hạn tổng số đơn đã xử lý. */
+    public ServiceResult<StaffLeaveFormView> getStaffLeaveForm(int accountId, int page, int pageSize) {
         try {
             // B1: tìm nhân viên từ tài khoản đăng nhập
             Employee employee = findEmployeeForAccount(accountId);
@@ -92,30 +98,30 @@ public class StaffLeaveService {
             LocalDate tomorrow = DateTimeUtil.today().plusDays(1);
             StaffingPreview preview = loadStaffingPreview(employee, tomorrow, tomorrow, "FullDay");
 
-            // B5: mọi Pending và 10 đơn đã xử lý gần nhất của chính nhân viên.
-            List<LeaveRequest> myRequests = leaveRequestDAO.findByEmployeeId(employee.getEmployeeId(), 10);
+            // B5: đếm toàn bộ đợt nghỉ, rồi chỉ đọc các đợt thuộc trang được chọn.
+            int size = Math.max(1, Math.min(pageSize, 50));
+            int totalGroups = leaveRequestDAO.countHistoryGroups(employee.getEmployeeId());
+            int totalPages = Math.max(1, (totalGroups + size - 1) / size);
+            int currentPage = Math.max(1, Math.min(page, totalPages));
+            int offset = (currentPage - 1) * size;
+            List<LeaveRequest> myRequests = leaveRequestDAO.findHistoryPage(employee.getEmployeeId(), offset, size);
 
-            // Nhóm đủ hai phần kể cả khi phần đã xử lý nằm ngoài giới hạn gần đây.
-            Map<String, LeaveRequestGroupView> groups = new LinkedHashMap<>();
+            // DAO đã lấy đủ các phần của mỗi đợt; không cần truy vấn lại từng đợt.
+            Map<String, List<LeaveRequest>> groups = new LinkedHashMap<>();
             for (LeaveRequest request : myRequests) {
                 String key = request.getLeaveGroupId();
                 if (key == null) {
                     key = "single-" + request.getLeaveRequestId();
                 }
-                if (!groups.containsKey(key)) {
-                    List<LeaveRequest> parts;
-                    if (request.getLeaveGroupId() == null) {
-                        parts = new ArrayList<>();
-                        parts.add(request);
-                    } else {
-                        parts = leaveRequestDAO.findByLeaveGroup(request.getLeaveGroupId(), employee.getEmployeeId());
-                    }
-                    groups.put(key, new LeaveRequestGroupView(parts));
-                }
+                groups.computeIfAbsent(key, ignored -> new ArrayList<>()).add(request);
+            }
+            List<LeaveRequestGroupView> requestGroups = new ArrayList<>();
+            for (List<LeaveRequest> parts : groups.values()) {
+                requestGroups.add(new LeaveRequestGroupView(parts));
             }
             StaffLeaveFormView view = new StaffLeaveFormView(employee.getEmployeeCode(),
                     fullName, employee.getPosition().getDbValue(), submissionCutoff, preview,
-                    new ArrayList<>(groups.values()));
+                    new PageResult<>(requestGroups, currentPage, size, totalGroups));
             return ServiceResult.ok(view);
 
         } catch (SQLException e) {
@@ -125,6 +131,7 @@ public class StaffLeaveService {
     }
 
     /** Lấy quân số thấp nhất toàn khoảng nghỉ; chỉ trừ người nộp ở đúng chức vụ. */
+    // dự kiến sau khi nhân viên này nghỉ thì còn bao nhiêu PT / lễ tân lấy ngày ít người nhất
     private StaffingPreview loadStaffingPreview(Employee employee, LocalDate fromDate, LocalDate toDate,
             String shiftType) throws SQLException {
         int remainingPt = Integer.MAX_VALUE;
@@ -274,7 +281,7 @@ public class StaffLeaveService {
         }
     }
 
-    /** Xem số ngày từng phần và lịch PT trước khi gửi; không ghi hoặc giữ chỗ từ GET. */
+    /** Xem số ngày từng phần và lịch PT trước khi gửi; chỉ đọc, không lưu hoặc giữ chỗ. */
     public ServiceResult<LeaveSubmissionPreview> previewSubmission(int accountId, LeaveRequest.LeaveType leaveType,
             LocalDate fromDate, LocalDate toDate, LeaveRequest.ShiftType shiftType) {
         ServiceResult<Void> validation = validateLeavePeriod(leaveType, fromDate, toDate, shiftType);

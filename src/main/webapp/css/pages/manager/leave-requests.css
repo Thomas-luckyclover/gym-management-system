@@ -45,6 +45,51 @@
   margin-inline: auto;
 }
 
+.staff-leave-page .leave-staff-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+  padding: var(--space-2);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.staff-leave-page .leave-staff-tab {
+  flex: 1;
+  padding: var(--space-3);
+  border-bottom: 2px solid transparent;
+  color: var(--color-text);
+  text-align: center;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.staff-leave-page .leave-staff-tab:is(:hover, :focus-visible) {
+  background: var(--color-surface-hover);
+}
+
+.staff-leave-page .leave-staff-tab.is-active {
+  border-bottom-color: var(--color-primary);
+}
+
+.staff-leave-page .leave-history-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: var(--border-width) solid var(--color-border);
+  color: var(--color-text-soft);
+}
+
+.staff-leave-page .leave-history-pagination [aria-disabled="true"] {
+  opacity: .5;
+}
+
 .staff-leave-page .leave-form-heading {
   display: flex;
   justify-content: space-between;
@@ -52,7 +97,7 @@
   gap: var(--space-3);
 }
 
-/* Dùng HintBox chung; các ID bên trong vẫn do leave-request-form.js cập nhật. */
+/* Dùng HintBox chung cho phần hướng dẫn gửi đơn. */
 .staff-leave-page .pt-info-popover {
   left: auto;
   right: var(--space-2);
@@ -688,7 +733,7 @@ html body.dock.staff-leave-page #leaveBalanceText {
   border-top: var(--border-width) solid var(--color-border);
   color: var(--color-text-soft);
 }
-/* leave-request-form.js: renderPlan/resetPlan ẩn/hiện #leaveScheduleWarning và cập nhật message. */
+/* JSP hiện cảnh báo lịch PT theo kết quả Service trả về. */
 html body.dock.staff-leave-page .leave-schedule-warning {
   display: flex;
   align-items: center;
@@ -705,7 +750,7 @@ html body.dock.staff-leave-page .leave-schedule-warning {
 html body.dock.staff-leave-page .leave-schedule-warning[hidden] {
   display: none;
 }
-/* leave-request-form.js: renderPlan thêm các buổi trùng vào #leaveConflictingSessions. */
+/* Danh sách buổi dạy trùng do JSP hiển thị. */
 html body.dock.staff-leave-page .leave-conflicting-sessions {
   flex-basis: 100%;
   margin: 0;

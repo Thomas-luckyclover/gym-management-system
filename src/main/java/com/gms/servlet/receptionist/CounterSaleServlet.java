@@ -349,7 +349,7 @@ public class CounterSaleServlet extends HttpServlet {
         LocalDate maxStartDate = minStartDate.plusDays(7);
 
         boolean isDayPass = card != null && (card.getPackageType() == Package.Type.DAY_PASS || card.getDurationMonths() == 0);
-        boolean canPickDate = !isDayPass && !isChained;
+        boolean canPickDate = !isDayPass;
 
         request.setAttribute("isDayPass", isDayPass);
         request.setAttribute("canPickDate", canPickDate);

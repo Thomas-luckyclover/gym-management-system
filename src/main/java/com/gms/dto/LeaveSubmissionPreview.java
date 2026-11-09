@@ -5,7 +5,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 
-/** Service tính từ quỹ còn sau giữ chỗ Pending; Servlet trả JSON, JS hiện bản chia ngày trước khi gửi. */
+/** Service tính phương án nghỉ; FormServlet chuyển DTO sang JSP khi bấm Xem dự kiến. */
 public class LeaveSubmissionPreview {
 
     // Hai biên do Service xác thực, tính số ngày gồm cả hai biên.
@@ -17,9 +17,9 @@ public class LeaveSubmissionPreview {
     // Quỹ của năm nghỉ, đã trừ Approved và các đơn Pending khác.
     private final BigDecimal remainingAnnualDays;
     private final boolean needsUnpaidConsent;
-    // Scheduled trong toàn khoảng nghỉ; JS chặn gửi và dẫn PT tới lịch hiện có.
+    // Số buổi Scheduled trong khoảng nghỉ; JSP hiện cảnh báo và khóa nút nộp.
     private final int sessionConflicts;
-    // DAO đọc các buổi Scheduled trùng ngày/ca; JS liệt kê dưới cảnh báo của PT.
+    // DAO đọc các buổi Scheduled trùng ngày/ca; JSP lặp để hiện từng buổi.
     private final List<ConflictingSession> conflictingSessions;
     // Quân số thấp nhất toàn khoảng nghỉ; chỉ là dự báo, khi duyệt sẽ kiểm tra lại.
     private final StaffingPreview staffing;
@@ -66,11 +66,11 @@ public class LeaveSubmissionPreview {
         return conflictingSessions;
     }
 
-    /** Một buổi chặn gửi đơn: DAO đọc TimeSlots, JS hiện ngày và khoảng giờ. */
+    /** Một buổi chặn gửi đơn: DAO đọc TimeSlots, JSP hiện ngày và khoảng giờ. */
     public static class ConflictingSession {
-        // TimeSlots.SlotDate: ngày dạy, JS hiện dd/MM/yyyy.
+        // TimeSlots.SlotDate: ngày dạy.
         private final LocalDate slotDate;
-        // TimeSlots.StartTime/EndTime: khoảng giờ dạy, JS hiện HH:mm.
+        // TimeSlots.StartTime/EndTime: khoảng giờ dạy.
         private final LocalTime startTime;
         private final LocalTime endTime;
 
