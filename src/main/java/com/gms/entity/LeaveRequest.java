@@ -47,7 +47,7 @@ public class LeaveRequest {
     // DAO: LeaveRequests.RejectReason; chỉ có khi Rejected, 5-500 ký tự.
     private String rejectReason;
 
-    // DAO: LeaveRequests.SubmittedAt, thời điểm nộp; dùng đối chiếu hạn nộp P-12 (CBR-84).
+    // DAO: LeaveRequests.SubmittedAt, thời điểm nộp; dùng đối chiếu hạn nộp P-10 (CBR-84).
     private LocalDateTime submittedAt;
 
     // DAO: LeaveRequests.ReviewedAt; có khi Approved hoặc Rejected.

@@ -3,7 +3,7 @@ package com.gms.entity;
 import java.time.LocalDateTime;
 
 /**
- * Entity ánh xạ bảng SystemConfigs — 20 tham số P-01…P-20 lưu dạng key-value (agents.md Phần 13).
+ * Entity ánh xạ bảng SystemConfigs — 19 tham số P-01…P-19 lưu dạng key-value (agents.md Phần 13).
  * Không hard-code giá trị tham số ở nơi khác, luôn đọc qua SystemConfigService.
  *
  * @author Le Cong Minh

@@ -109,7 +109,7 @@ public class PtDashboardDAO {
                 JOIN Customers c ON c.CustomerId = sub.CustomerId
                 JOIN Persons p ON p.PersonId = c.PersonId
                 LEFT JOIN OperatingHourExceptions ex ON ex.ApplyDate = t.SlotDate
-                LEFT JOIN SystemConfigs cfg ON cfg.ConfigKey = 'P-19'
+                LEFT JOIN SystemConfigs cfg ON cfg.ConfigKey = 'P-17'
                 WHERE s.Status = 'Scheduled' AND s.PtEmployeeId = ?
                   AND t.SlotDate BETWEEN ? AND ?
                   AND (   ISNULL(ex.IsClosedAllDay, 0) = 1

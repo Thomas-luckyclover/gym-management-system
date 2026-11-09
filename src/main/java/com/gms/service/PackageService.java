@@ -20,7 +20,7 @@ import java.util.Set;
 
 /**
  * Service quản lý danh mục gói tập và gói PT dành cho Quản lý (#17, #18, #19, #20, UC-10).
- * Đảm bảo các ràng buộc nghiệp vụ DBR-06, DBR-11, DBR-15, P-04, P-21 và kiểm soát đồng thời (MSG22).
+ * Đảm bảo các ràng buộc nghiệp vụ DBR-06, DBR-11, DBR-15, P-04, P-18 và kiểm soát đồng thời (MSG22).
  */
 public class PackageService {
 
@@ -295,7 +295,7 @@ public class PackageService {
                         return ServiceResult.fail("Không thể mở bán lại: Hiện đang có một gói khác cùng tên đang bán.");
                     }
 
-                    // Kiểm tra thời hạn có còn hợp lệ theo quy định hiện hành P-04 / P-21 hay không
+                    // Kiểm tra thời hạn có còn hợp lệ theo quy định hiện hành P-04 / P-18 hay không
                     if (!isDurationValidForReactivation(pkg)) {
                         conn.rollback();
                         return ServiceResult.fail("Không thể mở bán lại: Thời hạn gói (" + pkg.getDurationValue() + " " + pkg.getDurationUnit() + ") không nằm trong danh mục thời hạn cho phép hiện tại.");
@@ -396,7 +396,7 @@ public class PackageService {
         return errors;
     }
 
-    // ===== Validate nghiệp vụ cho Gói PT & Buổi lẻ (DBR-06, DBR-11, DBR-15, P-21, CK_Packages_EstSession) =====
+    // ===== Validate nghiệp vụ cho Gói PT & Buổi lẻ (DBR-06, DBR-11, DBR-15, P-18, CK_Packages_EstSession) =====
 
     /**
      * Kiểm tra tính hợp lệ của biểu mẫu gói PT / buổi lẻ.
@@ -440,7 +440,7 @@ public class PackageService {
                 input.setEstimatedSessionCount(null);
             }
         } else {
-            // PTSingle hoặc PTCouple: thời hạn theo P-21 (1, 3, 6, 12 tháng)
+            // PTSingle hoặc PTCouple: thời hạn theo P-18 (1, 3, 6, 12 tháng)
             String durationUnit = input.getDurationUnit();
             if (!"Month".equalsIgnoreCase(durationUnit)) {
                 errors.put("durationUnit", "Gói PT bắt buộc tính thời hạn theo tháng.");
@@ -448,7 +448,7 @@ public class PackageService {
 
             Integer durationVal = input.parseDurationValue();
             if (durationVal == null || !ALLOWED_PT_MONTHS.contains(durationVal)) {
-                errors.put("durationValue", "Thời hạn gói PT chỉ chấp nhận: 1, 3, 6 hoặc 12 tháng (P-21).");
+                errors.put("durationValue", "Thời hạn gói PT chỉ chấp nhận: 1, 3, 6 hoặc 12 tháng (P-18).");
             }
 
             // Số buổi tập ước tính: 1 - 255 buổi (DB TINYINT, CK_Packages_EstSession)

@@ -89,7 +89,7 @@ public class CounterSaleService {
             List<Package> packages = counterSaleDAO.findActivePackages(connection);
 
             // B3: tìm giá gói 1 tháng để tính % tiết kiệm của các gói dài hơn, và đọc thuế
-            // suất VAT (P-10) một lần.
+            // suất VAT (P-08) một lần.
             long oneMonthPrice = findOneMonthPrice(packages);
             int vatRate = configService.getInt(SystemConfigService.VAT_PERCENT);
 
@@ -547,7 +547,7 @@ public class CounterSaleService {
      * quyền Lễ tân đang làm việc. B2: kiểm tra ca trực đang mở (SRS 7.2.1 ghi
      * chú 1). B3: kiểm tra hồ sơ khách hàng và gói dịch vụ còn bán. B4: tính
      * toán ngày bắt đầu và ngày hết hạn theo DBR-52. B5: tính toán số tiền và
-     * thuế suất VAT P-10 (gồm kiểm tra & giữ lượt Voucher). B6: mở transaction
+     * thuế suất VAT P-08 (gồm kiểm tra & giữ lượt Voucher). B6: mở transaction
      * ghi nhận Orders, Transactions, Subscriptions, AuditLogs. B7: đóng gói
      * CounterSaleReceipt trả về.
      *
@@ -673,7 +673,7 @@ public class CounterSaleService {
                 endDate = DateTimeUtil.calculateEndDateByMonths(startDate, pkg.getDurationMonths());
             }
 
-            // B5: tính số tiền, giảm giá và thuế VAT (P-10).
+            // B5: tính số tiền, giảm giá và thuế VAT (P-08).
             long unitPrice = pkg.getPrice();
             long discountAmount = 0;
             Integer voucherId = null;
@@ -894,7 +894,7 @@ public class CounterSaleService {
      *
      * @param pkg gói do DAO đọc
      * @param oneMonthPrice giá gói 1 tháng (0 nếu không có)
-     * @param vatRate thuế suất % (P-10), dùng tách VAT ra khỏi giá đã gồm VAT
+     * @param vatRate thuế suất % (P-08), dùng tách VAT ra khỏi giá đã gồm VAT
      * (DBR-57)
      * @return thẻ gói hoàn chỉnh
      */

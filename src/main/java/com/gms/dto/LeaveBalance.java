@@ -7,7 +7,7 @@ import java.math.BigDecimal;
  */
 public class LeaveBalance {
 
-    private final int quota;                   // Định mức P-23 được Service truyền vào.
+    private final int quota;                   // Định mức P-19 được Service truyền vào.
     private final BigDecimal usedDays;         // DAO cộng ngày phép năm đã duyệt trong năm.
     private final BigDecimal pendingDays;      // DAO cộng ngày phép năm đang chờ trong năm.
     private final BigDecimal remainingDays;    // Còn lại = Quota - Used - Pending

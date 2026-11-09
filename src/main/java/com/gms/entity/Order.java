@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
  * <li>Áp dụng tối đa 1 voucher (BR-42); chỉ giảm giá khi có voucher
  * (CK_Orders_VoucherDiscount).</li>
  * <li>Kênh bán: Online (khách tự mua qua VNPay, có hạn giữ đơn PaymentDueAt
- * P-09) hoặc Counter (Lễ tân lập tại quầy, gắn ShiftId).</li>
+ * P-07) hoặc Counter (Lễ tân lập tại quầy, gắn ShiftId).</li>
  * <li>Vòng đời trạng thái: Pending → Paid, Pending → Cancelled, Paid →
  * Cancelled (chỉ do Lễ tân hủy tại quầy CBR-11). Cancelled là trạng thái cuối
  * cùng (DBR-39, DBR-40).</li>
@@ -80,7 +80,7 @@ public class Order {
     /** Số tiền được giảm từ voucher (VND), mặc định 0. */
     private long discountAmount;
 
-    /** Thuế suất VAT (%) tại thời điểm mua (P-10). */
+    /** Thuế suất VAT (%) tại thời điểm mua (P-08). */
     private int vatRateSnapshot;
 
     /**
@@ -95,7 +95,7 @@ public class Order {
      */
     private Status status;
 
-    /** Hạn chót thanh toán đơn online (CreatedAt + P-09); null với đơn tại quầy. */
+    /** Hạn chót thanh toán đơn online (CreatedAt + P-07); null với đơn tại quầy. */
     private LocalDateTime paymentDueAt;
 
     /** Thời điểm tạo đơn hàng (bất biến sau khi ghi nhận). */

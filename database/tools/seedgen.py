@@ -284,9 +284,9 @@ def subscription(oid, start, status=None, pt=None, fixed=None, end=None, note=No
     pkg = get('Packages', o['PackageId'])
     t = pkg['PackageType']
     end = end or (start if t == 'SingleSession' else end_of(start, pkg))
-    # Gói PT luôn tính theo tháng (P-21).
+    # Gói PT luôn tính theo tháng (P-18).
     if t in ('PTSingle', 'PTCouple'):
-        assert pkg['DurationUnit'] == 'Month', 'Gói PT phải tính theo tháng (P-21)'
+        assert pkg['DurationUnit'] == 'Month', 'Gói PT phải tính theo tháng (P-18)'
     r = dict(OrderId=oid, CustomerId=o['HolderCustomerId'], SubscriptionType=t, PtEmployeeId=pt,
              StartDate=start, EndDate=end, FixedStartTime=fixed,
              GeneratedSessionCount=1 if t == 'SingleSession' else None, FreezeUsed=0,
@@ -642,8 +642,8 @@ def close_past_sql(today):
 
     CLOSED = ("EXISTS (SELECT 1 FROM TimeSlots t LEFT JOIN OperatingHourExceptions ex ON ex.ApplyDate = t.SlotDate "
               "WHERE t.TimeSlotId = Sessions.TimeSlotId AND (ex.IsClosedAllDay = 1 "
-              "OR t.StartTime < COALESCE(ex.OpenTime, (SELECT CAST(SUBSTRING(c.ConfigValue, 1, 5) AS TIME(0)) FROM SystemConfigs c WHERE c.ConfigKey = 'P-19')) "
-              "OR t.EndTime > COALESCE(ex.CloseTime, (SELECT CAST(SUBSTRING(c.ConfigValue, 7, 5) AS TIME(0)) FROM SystemConfigs c WHERE c.ConfigKey = 'P-19'))))")
+              "OR t.StartTime < COALESCE(ex.OpenTime, (SELECT CAST(SUBSTRING(c.ConfigValue, 1, 5) AS TIME(0)) FROM SystemConfigs c WHERE c.ConfigKey = 'P-17')) "
+              "OR t.EndTime > COALESCE(ex.CloseTime, (SELECT CAST(SUBSTRING(c.ConfigValue, 7, 5) AS TIME(0)) FROM SystemConfigs c WHERE c.ConfigKey = 'P-17'))))")
     NOONE = f"(NOT {can_use(HOLDER)} AND (NOT {COUPLE} OR NOT {can_use(PARTNER)}))"
     FROZEN_ANY = f"({frozen(HOLDER)} OR ({COUPLE} AND {frozen(PARTNER)}))"
     CHECKIN = ("EXISTS (SELECT 1 FROM CheckIns ci JOIN Subscriptions g ON g.SubscriptionId = ci.SubscriptionId "

@@ -15,6 +15,6 @@
  * </pre>
  *
  * <p>Dùng chung, ai cũng gọi: AuditLogService.log(...) cho mọi thao tác nhạy cảm (GBR-07, GBR-08),
- * SystemConfigService.getInt("P-09") để đọc tham số P-01…P-20 (không hard-code).</p>
+ * SystemConfigService.getInt("P-07") để đọc tham số P-01…P-19 (không hard-code).</p>
  */
 package com.gms.service;

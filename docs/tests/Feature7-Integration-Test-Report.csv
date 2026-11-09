@@ -27,7 +27,7 @@ Effective Date,Version,Change Item,"*A,D,M",Change description,Reference,,,,,,,,
    - Receptionist: tam.le@gms.vn (NV-0003), lam.pham@gms.vn (NV-0004). Manager: viet.tran@gms.vn (NV-0002).
 7. GÓI (Packages): Gói Ngày 120.000đ; Gói 1 Tháng 799.000đ; Gói 3 Tháng 2.190.000đ; Gói 9 Tháng 5.490.000đ; Gói 12 Tháng 6.990.000đ; Gói 6 Tháng (ngừng bán, IsActive=0).
 8. VOUCHER: WELCOME10 (giảm 10%, đơn tối thiểu 500.000đ, 1 lượt/khách, hạn 31/12/2026); SUMMER200K (hết hạn); OLDCAMPAIGN (đã tắt); TET2027 (chưa tới ngày); FULLBOOKED (hết lượt); DAYPASS20K.
-9. Cấu hình P-09 (Hạn thanh toán) = 20 phút. Khi test hết hạn nhanh: UPDATE SystemConfigs SET ConfigValue='2' WHERE ConfigKey='P-09' rồi restart app; test xong đặt lại '20'.
+9. Cấu hình P-07 (Hạn thanh toán) = 20 phút. Khi test hết hạn nhanh: UPDATE SystemConfigs SET ConfigValue='2' WHERE ConfigKey='P-07' rồi restart app; test xong đặt lại '20'.
 10. Ca làm việc: Seed mở sẵn Ca sáng hôm nay cho tam.le@gms.vn và có đơn quầy Pending DH-2026-0035. Muốn test 'chưa mở ca' thì UPDATE Shifts SET Status='NotOpened' cho ca hôm nay.",,,,,,,,,,,,,,,
 ,,,,,,,,,,,,,,,,,,,
 ,No,Function Name,Sheet Name,Description,Pre-Condition,,,,,,,,,,,,,,
@@ -167,9 +167,9 @@ IT-OP-28,"""Tiến hành thanh toán"" → tạo Transaction Pending + chuyển 
 - DB: 1 Transaction Pending.","Đã cấu hình vnpay.tmn-code, hash-secret.",Passed,07/11/2026,ALOHA,,,,,,,,,,"Luồng chính · Use case testing · Servlet→PaymentService→VNPay · API-01, CBR-70",,,
 IT-OP-29,Bấm thanh toán lần nữa khi đã có Transaction Pending,"1. Làm IT-OP-28 rồi dừng ở VNPay, bấm Back về trang thanh toán.
 2. Bấm ""Tiến hành thanh toán"" lần nữa.","MSG150 ""Đơn đang có giao dịch thanh toán xử lý. Không tạo thêm giao dịch."" DB vẫn 1 Transaction Pending.",Sau IT-OP-28.,Passed,07/11/2026,ALOHA,,,,,,,,,,State transition · Service→DB · DBR-42,,,
-IT-OP-30,Thanh toán khi đơn đã quá hạn,"1. Đặt P-09 = 2 phút (SQL ở mục 9), restart app, tạm dừng JOB-05.
+IT-OP-30,Thanh toán khi đơn đã quá hạn,"1. Đặt P-07 = 2 phút (SQL ở mục 9), restart app, tạm dừng JOB-05.
 2. Tạo đơn Pending, chờ quá 2 phút.
-3. Bấm ""Tiến hành thanh toán"".","MSG146 ""Đơn đã hết hạn thanh toán. Vui lòng tạo đơn mới."" Không có Transaction.",Có thể tạm dừng JOB-05 để thấy nhánh này.,Passed,07/11/2026,ALOHA,,,,,,,,,,"Boundary value · Service→DB · CBR-70, P-09",,,
+3. Bấm ""Tiến hành thanh toán"".","MSG146 ""Đơn đã hết hạn thanh toán. Vui lòng tạo đơn mới."" Không có Transaction.",Có thể tạm dừng JOB-05 để thấy nhánh này.,Passed,07/11/2026,ALOHA,,,,,,,,,,"Boundary value · Service→DB · CBR-70, P-07",,,
 IT-OP-31,Cấu hình VNPay sai,"1. Xóa vnpay.hash-secret (hoặc sai tmn-code), restart app.
 2. Bấm ""Tiến hành thanh toán"".","- MSG152 ""Chưa mở được VNPay. Vui lòng kiểm tra cấu hình merchant và kết nối hệ thống.""
 - Không để lại Transaction Pending treo.
@@ -203,13 +203,13 @@ IT-OP-41,"Khách hủy ở VNPay (mã 24) → Transaction Failed, đơn vẫn Pe
 3. Xem DB.","- Transaction: Failed; Order: vẫn Pending.
 - Trang kết quả báo chưa thanh toán thành công, có nút ""Quay lại thanh toán"".
 - Không có Subscription.",Sau IT-OP-28.,Passed,07/11/2026,ALOHA,,,,,,,,,,State transition · VNPay→Servlet→DB · API-02,,,
-IT-OP-42,"Thanh toán lại sau khi thất bại, còn trong hạn P-09","1. Sau IT-OP-41, bấm ""Quay lại thanh toán"" rồi ""Tiến hành thanh toán"" lần nữa.
+IT-OP-42,"Thanh toán lại sau khi thất bại, còn trong hạn P-07","1. Sau IT-OP-41, bấm ""Quay lại thanh toán"" rồi ""Tiến hành thanh toán"" lần nữa.
 2. Trả tiền thành công ở sandbox và gửi IPN thành công.","- Có Transaction mới (TxnRef khác); Transaction cũ vẫn Failed.
 - Order Paid, Subscription chỉ tạo 1 lần.",Sau IT-OP-41.,Passed,07/11/2026,ALOHA,,,,,,,,,,"State transition · Service→DB · DBR-41, CBR-70",,,
-IT-OP-43,Thanh toán lại khi đã quá hạn P-09,"1. Sau IT-OP-41, đặt P-09 = 2 phút, chờ quá hạn và JOB-05 chạy.
+IT-OP-43,Thanh toán lại khi đã quá hạn P-07,"1. Sau IT-OP-41, đặt P-07 = 2 phút, chờ quá hạn và JOB-05 chạy.
 2. Mở lại /customer/checkout?order=<id>.","Đơn đã Cancelled (quá hạn); MSG98 ""Đã quá hạn thanh toán và đơn đã bị hủy. Vui lòng tạo đơn mới.""",Sau IT-OP-41.,Passed,07/11/2026,ALOHA,,,,,,,,,,Boundary value · Service→DB · CBR-70,,,
 5. Thanh toán không hợp lệ và hoàn tiền (CBR-72),,,,,,,,,,,,,,,,,,
-IT-OP-44,IPN thành công nhưng đơn đã bị hủy do quá hạn,"1. Đặt P-09 = 2 phút. Tạo đơn Pending + Transaction Pending, tạm dừng JOB-06 rồi để JOB-05 hủy đơn.
+IT-OP-44,IPN thành công nhưng đơn đã bị hủy do quá hạn,"1. Đặt P-07 = 2 phút. Tạo đơn Pending + Transaction Pending, tạm dừng JOB-06 rồi để JOB-05 hủy đơn.
 2. Gửi IPN thành công cho TxnRef đó.","- Phản hồi RspCode=00.
 - Transaction: Success + NeedsRefund=1; Order vẫn Cancelled; KHÔNG có Subscription.
 - Thông báo MSG335 ""Thanh toán cần đối soát: Đơn ... chưa được cấp gói...""
@@ -227,7 +227,7 @@ IT-OP-47,Manager thấy giao dịch cần hoàn tiền,"1. Sau IT-OP-44, login v
 2. Xem huy hiệu số trên tab ""Đơn hàng"" và dòng giao dịch.","- Huy hiệu hiện số giao dịch cần hoàn tiền (tăng 1).
 - Dòng giao dịch có tình trạng ""Cần hoàn tiền"", có nút ""Hoàn tiền"".",Sau IT-OP-44.,Passed,07/11/2026,ALOHA,,,,,,,,,,Luồng chính · Integration UC-PAY→UC-26 · Service→DB→UI · CBR-72,,,
 6. Hết hạn thanh toán và job nền (JOB-05 / JOB-06),,,,,,,,,,,,,,,,,,
-IT-OP-48,JOB-05 hủy đơn Pending quá hạn,"1. Đặt P-09 = 2 phút. Tạo đơn Pending có áp WELCOME10 + Transaction Pending.
+IT-OP-48,JOB-05 hủy đơn Pending quá hạn,"1. Đặt P-07 = 2 phút. Tạo đơn Pending có áp WELCOME10 + Transaction Pending.
 2. Chờ quá 2 phút + 1 chu kỳ job (1 phút).
 3. Xem DB và thông báo của khách.","- Order: Cancelled (quá hạn thanh toán).
 - Transaction Pending → Expired.

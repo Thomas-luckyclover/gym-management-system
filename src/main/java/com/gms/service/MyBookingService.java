@@ -33,7 +33,7 @@ import java.util.TreeMap;
  *
  * AI GỌI SERVICE NÀY?  Chỉ MyBookingServlet.loadBookings.
  * SERVICE GỌI AI?      MyPtSessionDAO (gói, buổi — dùng chung với màn Lịch tập) · MyBookingDAO (lịch sử dời buổi)
- *                      · MyPtSessionService.fillDisplay (nhãn / lý do từng buổi) · SystemConfigService (hotline, giờ mở cửa P-19).
+ *                      · MyPtSessionService.fillDisplay (nhãn / lý do từng buổi) · SystemConfigService (hotline, giờ mở cửa P-17).
  *
  * BỐ CỤC FILE — mỗi HÀM CHÍNH đứng trước, các hàm phụ của nó nằm ngay bên dưới:
  *   HÀM CHÍNH 1  getMyBookings   dựng cả màn   → fillPackage, countRecentSingles, pickPackage, countSessions, buildWatchList,
@@ -486,7 +486,7 @@ public class MyBookingService {
     }
 
     /**
-     * HÀM PHỤ (getMyBookings B8) — gợi ý ra quầy (renew / rejoin / ptPackage) → điền hotline + giờ mở cửa (P-19).
+     * HÀM PHỤ (getMyBookings B8) — gợi ý ra quầy (renew / rejoin / ptPackage) → điền hotline + giờ mở cửa (P-17).
      */
     private void fillCounterInfo(MyBookingView view) throws SQLException {
         String cta = view.getCtaKind();

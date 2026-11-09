@@ -24,7 +24,7 @@
             <span class="text-muted">${isEdit ? 'Chỉnh sửa' : 'Thêm mới'}</span>
           </div>
           <h1 class="tb-title">${isEdit ? 'Chỉnh sửa gói PT' : 'Thêm mới gói PT'}</h1>
-          <span class="tb-subtitle">Thiết lập thời hạn theo P-21, số buổi ước tính và lộ trình huấn luyện (#20 - UC-10).</span>
+          <span class="tb-subtitle">Thiết lập thời hạn theo P-18, số buổi ước tính và lộ trình huấn luyện (#20 - UC-10).</span>
         </div>
 
         <div class="top-right">
@@ -120,7 +120,7 @@
                       <div class="invalid-feedback d-block">${fieldErrors['durationValue']}</div>
                     </c:when>
                     <c:otherwise>
-                      <small class="form-text text-muted">Chỉ chấp nhận 1, 3, 6 hoặc 12 tháng (P-21).</small>
+                      <small class="form-text text-muted">Chỉ chấp nhận 1, 3, 6 hoặc 12 tháng (P-18).</small>
                     </c:otherwise>
                   </c:choose>
                 </div>

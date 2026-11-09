@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * DAO cho bảng SystemConfigs — 20 tham số P-01…P-20 (agents.md Phần 13).
+ * DAO cho bảng SystemConfigs — 19 tham số P-01…P-19 (agents.md Phần 13).
  * Chỉ truy vấn, không nghiệp vụ; SystemConfigService gọi DAO này rồi tự parse int/List theo nhu cầu.
  *
  * @author Le Cong Minh
@@ -19,7 +19,7 @@ import java.util.List;
 public class SystemConfigDAO {
 
     /**
-     * Tìm 1 tham số theo mã (VD "P-15").
+     * Tìm 1 tham số theo mã (VD "P-13").
      * @param configKey mã tham số
      * @return SystemConfig tương ứng, null nếu không tìm thấy
      * @throws SQLException lỗi truy vấn
@@ -45,11 +45,11 @@ public class SystemConfigDAO {
 
     /**
      * Lấy toàn bộ tham số hệ thống (màn Manager 4.1.2 sửa tham số).
-     * @return danh sách đủ 20 tham số, sắp theo ConfigKey
+     * @return danh sách đủ 19 tham số, sắp theo ConfigKey
      * @throws SQLException lỗi truy vấn
      */
     
-    // Lấy đủ danh sách P-01 đến P-20
+    // Lấy đủ danh sách P-01 đến P-19
     public List<SystemConfig> findAll() throws SQLException {
         String sql = "SELECT SystemConfigId, ConfigKey, ConfigValue, Description, UpdatedAt, UpdatedByEmployeeId "
                 + "FROM SystemConfigs "

@@ -135,7 +135,7 @@
                     <div><dt>PT</dt><dd><c:out value="${not empty sale.choice.ptName ? sale.choice.ptName : '—'}" /></dd></div>
                     <div><dt>Kỳ</dt><dd><c:choose><c:when test="${done2}"><c:out value="${gms:formatDate(sale.choice.startDate)}" /> – <c:out value="${gms:formatDate(sale.choice.endDate)}" /></c:when><c:otherwise>—</c:otherwise></c:choose></dd></div>
                     <div><dt>Buổi</dt><dd data-plan-count><c:choose><c:when test="${sale.plan.sessionCount gt 0}"><c:out value="${sale.plan.sessionCount}" /> buổi · <c:out value="${gms:formatMoney(sale.plan.sessionValue)}" />/buổi</c:when><c:otherwise>—</c:otherwise></c:choose></dd></div>
-                    <%-- Tách thuế (DBR-57): đang giữ → sale.heldOrder (snapshot trên đơn) · chưa giữ → sale.choice (tạm theo P-10). Giá đã gồm VAT. --%>
+                    <%-- Tách thuế (DBR-57): đang giữ → sale.heldOrder (snapshot trên đơn) · chưa giữ → sale.choice (tạm theo P-08). Giá đã gồm VAT. --%>
                     <c:set var="saleTax" value="${sale.held ? sale.heldOrder : sale.choice}" />
                     <c:if test="${sale.choice.price gt 0 and not empty saleTax.vatAmount and not empty saleTax.preTaxAmount}">
                         <div class="sale-fact-tax"><dt>Trước thuế VAT<small>Đã bao gồm trong tổng hóa đơn</small></dt><dd><c:out value="${gms:formatMoney(saleTax.preTaxAmount)}" /></dd></div>

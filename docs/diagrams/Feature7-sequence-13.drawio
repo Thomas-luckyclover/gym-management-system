@@ -82,7 +82,7 @@
             <mxPoint x="465" y="230" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="p0_5" edge="1" parent="1" style="html=1;endArrow=block;endFill=1;fontSize=10;verticalAlign=bottom;labelBackgroundColor=none;" value="getInt(P-09), getString(opening hours)">
+        <mxCell id="p0_5" edge="1" parent="1" style="html=1;endArrow=block;endFill=1;fontSize=10;verticalAlign=bottom;labelBackgroundColor=none;" value="getInt(P-07), getString(opening hours)">
           <mxGeometry relative="1" as="geometry">
             <mxPoint x="465" y="270" as="sourcePoint" />
             <mxPoint x="855" y="270" as="targetPoint" />
@@ -308,7 +308,7 @@
             <mxPoint x="1255" y="580" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="p1_12" edge="1" parent="1" style="html=1;endArrow=block;endFill=1;fontSize=10;verticalAlign=bottom;labelBackgroundColor=default;" value="insert(conn, order: Pending, paymentDueAt = now + P-09)">
+        <mxCell id="p1_12" edge="1" parent="1" style="html=1;endArrow=block;endFill=1;fontSize=10;verticalAlign=bottom;labelBackgroundColor=default;" value="insert(conn, order: Pending, paymentDueAt = now + P-07)">
           <mxGeometry relative="1" as="geometry">
             <mxPoint x="865" y="610" as="sourcePoint" />
             <mxPoint x="1255" y="610" as="targetPoint" />
@@ -3554,7 +3554,7 @@
             <mxPoint x="465" y="804" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="p12_17" edge="1" parent="1" style="html=1;endArrow=block;endFill=1;fontSize=10;align=left;verticalAlign=middle;labelPosition=right;verticalLabelPosition=middle;edgeStyle=orthogonalEdgeStyle;rounded=0;labelBackgroundColor=default;" value="amount, discount, VAT (P-10)">
+        <mxCell id="p12_17" edge="1" parent="1" style="html=1;endArrow=block;endFill=1;fontSize=10;align=left;verticalAlign=middle;labelPosition=right;verticalLabelPosition=middle;edgeStyle=orthogonalEdgeStyle;rounded=0;labelBackgroundColor=default;" value="amount, discount, VAT (P-08)">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
               <mxPoint x="505" y="836" />

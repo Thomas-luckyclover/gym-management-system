@@ -26,7 +26,7 @@ import java.util.List;
  *
  * AI GỌI SERVICE NÀY?  Chỉ PtScheduleServlet (loadHandle, handleSession). dayLabel còn được PtSaleService dùng lại.
  * SERVICE GỌI AI?      PtSessionHandleDAO (buổi, khung trống, ghi buổi / khung / SessionMoveLogs) · PtScheduleDAO (khóa PT, tạo khung)
- *                      · NotificationDAO (báo khách / PT nhận) · SystemConfigService (P-06, P-19) · PtScheduleService (luật khung như Công bố).
+ *                      · NotificationDAO (báo khách / PT nhận) · SystemConfigService (P-06, P-17) · PtScheduleService (luật khung như Công bố).
  *
  * BỐ CỤC FILE — mỗi HÀM CHÍNH đứng trước, các hàm phụ của nó nằm ngay bên dưới:
  *   HÀM CHÍNH 1  getHandleForm   mở hộp: đầu hộp + khung dời được + PT nhận thay được  → whySessionLocked, findMoveDays, groupByDay, whyNotAllowed

@@ -43,7 +43,7 @@ public class PaymentService {
     private final OrderDAO orderDAO;
     private final VoucherDAO voucherDAO;
 
-    // Đọc P-09/P-10 và ghi nhật ký theo tiện ích chung của project.
+    // Đọc P-07/P-08 và ghi nhật ký theo tiện ích chung của project.
     private final SystemConfigService configService;
     private final AuditLogService auditLogService;
 
@@ -123,7 +123,7 @@ public class PaymentService {
                 int dueMinutes = configService.getInt(SystemConfigService.PAYMENT_DUE_MINUTES);
                 int vatRate = configService.getInt(SystemConfigService.VAT_PERCENT);
                 if (dueMinutes <= 0 || vatRate < 0 || vatRate > 20) {
-                    throw new SQLException("Cấu hình P-09/P-10 không hợp lệ");
+                    throw new SQLException("Cấu hình P-07/P-08 không hợp lệ");
                 }
 
                 // B4: chỉ hủy Pending online cùng khách + gói, không chạm Paid/tại quầy.

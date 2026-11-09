@@ -35,7 +35,7 @@ public class SessionAutoCloseData {
 
     // ===== KẾT QUẢ ĐI TẬP + GIỜ MỞ CỬA =====
     // hasCheckInOnSessionDate ← có dòng CheckIns trong ngày tập (evaluate B7)
-    // gymClosedAllDay / gymOpenTime / gymCloseTime ← OperatingHourExceptions, không có thì P-19 (evaluate B1)
+    // gymClosedAllDay / gymOpenTime / gymCloseTime ← OperatingHourExceptions, không có thì P-17 (evaluate B1)
     // slotStartTime / slotEndTime ← giờ của khung TimeSlots (so với giờ mở cửa)
     private final boolean hasCheckInOnSessionDate;
 

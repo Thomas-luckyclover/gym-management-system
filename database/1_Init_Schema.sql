@@ -2,7 +2,7 @@
    GMS — Gym Management System
    FILE    : 1_Init_Schema.sql  ·  bản v26 (06/10/2026)
    MỤC ĐÍCH: Tạo toàn bộ schema SQL Server, chuẩn 3NF, khớp thay đổi nghiệp vụ v26
-             (GBR / CBR / DBR / BR / P-01…P-23). 30 bảng, 7 cluster A–G.
+             (GBR / CBR / DBR / BR / P-01…P-19). 30 bảng, 7 cluster A–G.
    CHẠY    : Trên SQL Server 2019+. Muốn làm lại từ đầu: chạy 0_Reset_Database.sql trước.
              Thứ tự: 0_Reset_Database.sql → 1_Init_Schema.sql → 2_Seed_Data.sql
    v26    : JOB-04 chốt tự động, CheckedIn/Used, đánh giá PT theo tháng (DBR-66/67).
@@ -49,7 +49,7 @@ CREATE TABLE Persons (
     RowVer      ROWVERSION,
 
     CONSTRAINT PK_Persons PRIMARY KEY (PersonId),
-    CONSTRAINT CK_Persons_Phone    CHECK (Phone IS NULL OR Phone LIKE '0[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'), -- DBR-17 (đầu số nhà mạng: P-16, kiểm ở Service)
+    CONSTRAINT CK_Persons_Phone    CHECK (Phone IS NULL OR Phone LIKE '0[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'), -- DBR-17 (đầu số nhà mạng: P-14, kiểm ở Service)
     CONSTRAINT CK_Persons_Email    CHECK (Email IS NULL OR Email LIKE '%_@_%._%'),   -- DBR-18
     CONSTRAINT CK_Persons_FullName CHECK (LEN(LTRIM(RTRIM(FullName))) >= 2),
     CONSTRAINT CK_Persons_Dob      CHECK (DateOfBirth >= '1900-01-01')               -- "không ở tương lai, ≤ 100 tuổi" phụ thuộc ngày hiện tại → kiểm ở Service
@@ -171,8 +171,8 @@ CREATE TABLE VerificationCodes (
     Purpose            VARCHAR(15)  NOT NULL, -- SignUp | Claim | Recovery | EmailChange | PhoneChange
     Code               CHAR(6)      NOT NULL, -- DBR-03
     SentAt             DATETIME2(0) NOT NULL,
-    ExpiresAt          DATETIME2(0) NOT NULL, -- SentAt + P-15
-    FailedAttempts     TINYINT      NOT NULL CONSTRAINT DF_VerificationCodes_Failed DEFAULT (0), -- CBR-94: đủ P-17 → hủy mã + khóa P-18
+    ExpiresAt          DATETIME2(0) NOT NULL, -- SentAt + P-13
+    FailedAttempts     TINYINT      NOT NULL CONSTRAINT DF_VerificationCodes_Failed DEFAULT (0), -- CBR-94: đủ P-15 → hủy mã + khóa P-16
     LockedUntil        DATETIME2(0) NULL,
     UsedAt             DATETIME2(0) NULL,
 
@@ -213,7 +213,7 @@ CREATE TABLE Packages (
     Benefits              NVARCHAR(1000) NULL,     -- DBR-15: tối đa 10 dòng, mỗi dòng 3–100 ký tự (kiểm ở Service)
     PackageType           VARCHAR(15)    NOT NULL, -- Membership | DayPass | PTSingle | PTCouple | SingleSession
     DurationUnit          VARCHAR(5)     NULL,     -- Day | Month (DBR-19)
-    DurationValue         TINYINT        NULL,     -- gói ngày = 1 Day; gói tập: tháng theo P-04; gói PT: tháng theo P-21
+    DurationValue         TINYINT        NULL,     -- gói ngày = 1 Day; gói tập: tháng theo P-04; gói PT: tháng theo P-18
     EstimatedSessionCount TINYINT        NULL,     -- CHỈ để hiển thị "khoảng n buổi" cho gói PT (DBR-53)
     Price                 INT            NOT NULL, -- VND, đã gồm VAT (GBR-02)
     IsActive              BIT            NOT NULL CONSTRAINT DF_Packages_IsActive  DEFAULT (1), -- 0 = ngừng bán (CBR-97)
@@ -325,10 +325,10 @@ CREATE TABLE Orders (
     PackageBenefitsSnapshot    NVARCHAR(1000) NULL,      -- v25: DBR-50 chép cả quyền lợi
     UnitPriceSnapshot          INT            NOT NULL,  -- giá lúc mua, đã gồm VAT
     DiscountAmount             INT            NOT NULL CONSTRAINT DF_Orders_Discount  DEFAULT (0),
-    VatRateSnapshot            TINYINT        NOT NULL,  -- P-10 lúc mua
+    VatRateSnapshot            TINYINT        NOT NULL,  -- P-08 lúc mua
     VatAmount                  INT            NOT NULL,  -- DBR-57: (giá − giảm) × VAT ÷ (100 + VAT), làm tròn đồng
     Status                     VARCHAR(10)    NOT NULL CONSTRAINT DF_Orders_Status    DEFAULT ('Pending'), -- DBR-39, DBR-40
-    PaymentDueAt               DATETIME2(0)   NULL,      -- online: CreatedAt + P-09, cũng là hạn giữ slot (CBR-40). Tại quầy: NULL
+    PaymentDueAt               DATETIME2(0)   NULL,      -- online: CreatedAt + P-07, cũng là hạn giữ slot (CBR-40). Tại quầy: NULL
     CreatedAt                  DATETIME2(0)   NOT NULL CONSTRAINT DF_Orders_CreatedAt DEFAULT (SYSDATETIME()),
     PaidAt                     DATETIME2(0)   NULL,
     CancelType                 VARCHAR(25)    NULL,      -- DBR-43
@@ -1037,10 +1037,10 @@ GO
    CLUSTER G — CẤU HÌNH & LƯU VẾT
    ============================================================================ */
 
--- SystemConfigs: P-01…P-23 dạng key–value (GBR-04)
+-- SystemConfigs: P-01…P-19 dạng key–value (GBR-04)
 CREATE TABLE SystemConfigs (
     SystemConfigId      INT IDENTITY(1,1) NOT NULL,
-    ConfigKey           VARCHAR(10)   NOT NULL,  -- P-01 … P-23
+    ConfigKey           VARCHAR(10)   NOT NULL,  -- P-01 … P-19
     ConfigValue         NVARCHAR(200) NOT NULL,
     Description         NVARCHAR(255) NOT NULL,
     UpdatedAt           DATETIME2(0)  NOT NULL CONSTRAINT DF_SystemConfigs_UpdatedAt DEFAULT (SYSDATETIME()),
