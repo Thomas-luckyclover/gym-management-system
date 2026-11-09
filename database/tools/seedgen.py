@@ -564,6 +564,7 @@ def lit(v, now=None):
 
 
 SECTION = {}
+EXTRA_SQL = []   # khối SQL viết tay, chép nguyên văn ngay trước khối chốt buổi (vd. tools/seed_st_bf05.sql)
 
 
 def render(now=None, header=''):
@@ -593,6 +594,8 @@ def render(now=None, header=''):
                 out.append(f' ({vals}){sep}{note}')
         out.append(f'SET IDENTITY_INSERT {t} OFF;')
         out.append('')
+    for extra in EXTRA_SQL:
+        out += [extra.rstrip(), '']
     out += close_past_sql('@Today' if now is None else f"'{now.date():%Y-%m-%d}'")
     if now is None:
         out += ['COMMIT TRANSACTION;', 'GO', '', "PRINT N'>>> Nạp seed GMS v26 thành công.';",
