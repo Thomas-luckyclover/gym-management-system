@@ -448,7 +448,7 @@ public class ShiftDAO {
                             rs.getString("CustomerName"),
                             null, null, null, "Transfer", 0L, "Pending",
                             null, null, null, true, true));
-                }
+                }//mục tiêu là hiển thị cảnh báo thì k cần phải lấy hết các trường dữ liệu, chỉ cần OrderId, OrderCode, CustomerName là đủ
             }
         }
         return list;

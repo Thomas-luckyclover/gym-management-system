@@ -103,7 +103,7 @@ public class ShiftService {
             return unclosedPast;
         }
 
-        List<Shift> shifts = shiftDAO.findTodayShifts(today);
+        List<Shift> shifts = shiftDAO.findTodayShifts(today);//lấy 2 ca trong ngày hôm nay
         if (shifts == null || shifts.isEmpty()) {
             return null;
         }
@@ -111,7 +111,7 @@ public class ShiftService {
         Shift morning = null;
         Shift afternoon = null;
         for (Shift s : shifts) {
-            if (s.isOpen()) {
+            if (s.isOpen()) {//nếu có ca đang mở thì ưu tiên hiển thị ca đó
                 return s;
             }
             if (s.getShiftType() == Shift.ShiftType.MORNING) {
@@ -122,9 +122,14 @@ public class ShiftService {
         }
 
         if (afternoon != null && (afternoon.isClosed() || (morning != null && morning.isClosed()))) {
+            //nếu ca chiều đã chốt hoặc ca sáng đã chốt thì ưu tiên hiển thị ca chiều
             return afternoon;
         }
 
+
+        // Khi cả 2 ca đều chưa mở/chưa chốt: xét theo giờ thực tế
+        // - Từ 13:00 trở đi: nhân viên vào quầy buổi chiều -> gợi ý Ca Chiều
+        // - Trước 13:00: gợi ý Ca Sáng (nếu thiếu ca sáng thì lấy ca đầu tiên)
         boolean isAfternoonTime = !LocalDateTime.now(DateTimeUtil.GYM_ZONE)
                 .toLocalTime().isBefore(AppConstants.AFTERNOON_SHIFT_START);
         if (isAfternoonTime && afternoon != null) {
@@ -155,6 +160,7 @@ public class ShiftService {
                     ? shiftDAO.findById(requestedShiftId)
                     : null;
             if (shift == null) {
+                //tìm ca hiện tại hoặc ca đang mở trong ngày hôm nay (CBR-104)
                 shift = findCurrentOrActiveShift(today);
             }
             if (shift == null) {
@@ -162,17 +168,22 @@ public class ShiftService {
             }
 
             // B4: Tải thông tin nhân viên, KPI, đơn chờ xử lý và danh sách ca trong ngày
+            //lấy tên người mở ca (nếu có) để hiển thị trên màn hình chi tiết ca làm việc
             String openedByName = shiftDAO.findEmployeeFullName(shift.getOpenedByEmployeeId());
+            //lấy tên người chốt ca (nếu có) để hiển thị trên màn hình chi tiết ca làm việc
             String closedByName = shiftDAO.findEmployeeFullName(shift.getClosedByEmployeeId());
+            //hển thị 4 thẻ kpi: tổng tiền mặt, tổng chuyển khoản, tổng thu, tổng đơn chờ xử lý
             ShiftMetrics metrics = shiftDAO.calculateShiftMetrics(shift.getShiftId());
+            //Lấy danh sách đơn Pending trong ca để hiển thị cảnh báo và chặn chốt ca
             List<ShiftTransactionItem> pendingOrders = shiftDAO.findPendingOrdersInShift(shift.getShiftId());
+            //Lấy 2 ca trong ngày hôm nay thứ tự sáng > chiều để hiển thị danh sách ca làm việc trên màn hình chi tiết ca
             List<Shift> todayShifts = shiftDAO.findTodayShifts(shift.getWorkDate());
 
             // B5: Tải danh sách giao dịch có lọc và phân trang
-            int validPage = Math.max(page, 1);
-            int validPageSize = pageSize > 0 ? pageSize : AppConstants.DEFAULT_PAGE_SIZE;
+            int validPage = Math.max(page, 1);//chuẩn hóa số trang hiện tại
+            int validPageSize = pageSize > 0 ? pageSize : AppConstants.DEFAULT_PAGE_SIZE;//chuẩn hóa số dòng hiển thị mỗi trang
             int totalItems = shiftDAO.countTransactions(shift.getShiftId(), search, method, status);
-            int offset = (validPage - 1) * validPageSize;
+            int offset = (validPage - 1) * validPageSize;//số dòng cần bỏ qua để phân trang
 
             List<ShiftTransactionItem> items = shiftDAO.findTransactionsPage(
                     shift.getShiftId(), search, method, status, offset, validPageSize);
