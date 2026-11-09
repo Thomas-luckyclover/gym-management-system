@@ -362,7 +362,7 @@
                                                                     <c:when test="${shift.shiftType == 'Evening'}">Ca tối</c:when>
                                                                     <c:otherwise><c:out value="${shift.shiftType}" /></c:otherwise>
                                                                 </c:choose>
-                                                                · <c:out value="${gms:formatTime(shift.openedAt)}" /> &rarr; <c:out value="${gms:formatTime(shift.closedAt)}" />
+                                                                · <c:out value="${gms:formatTime(shift.openedAt.toLocalTime())}" /> &rarr; <c:out value="${gms:formatTime(shift.closedAt.toLocalTime())}" />
                                                             </div>
                                                         </td>
                                                         <td><span class="tx-name"><c:out value="${shift.openedByName}" default="---" /></span></td>
