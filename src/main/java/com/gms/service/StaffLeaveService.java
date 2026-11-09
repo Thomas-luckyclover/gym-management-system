@@ -131,6 +131,7 @@ public class StaffLeaveService {
     }
 
     /** Lấy quân số thấp nhất toàn khoảng nghỉ; chỉ trừ người nộp ở đúng chức vụ. */
+    // dự kiến sau khi nhân viên này nghỉ thì còn bao nhiêu PT / lễ tân lấy ngày ít người nhất
     private StaffingPreview loadStaffingPreview(Employee employee, LocalDate fromDate, LocalDate toDate,
             String shiftType) throws SQLException {
         int remainingPt = Integer.MAX_VALUE;
