@@ -7,11 +7,15 @@ import com.gms.dao.TransactionDAO;
 import com.gms.entity.Order;
 import com.gms.entity.Transaction;
 import com.gms.util.DBContext;
+import com.gms.util.AppConfig;
 import com.gms.util.DateTimeUtil;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
+import com.gms.integration.VnPayClient;
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 /**
  * SERVICE CỦA JOB-05 VÀ JOB-06 — dọn các thanh toán online quá hạn (SRS 13.5, 13.6).
@@ -22,7 +26,7 @@ import java.util.List;
  *                                    -> Cancelled/PaymentTimeout, đóng giao dịch Pending, nhả slot,
  *                                    trả voucher, thông báo khách (CBR-70, BR-44).
  *
- * Mỗi bản ghi một transaction riêng, một bản ghi lỗi không chặn các bản ghi khác. Không gọi VNPay.
+ * Mỗi bản ghi một transaction riêng, một bản ghi lỗi không chặn các bản ghi khác. JOB-06 hỏi VNPay (CBR-125) trước khi đóng giao dịch; JOB-05 không gọi VNPay..
  */
 public class PaymentMaintenanceService {
 
@@ -31,10 +35,13 @@ public class PaymentMaintenanceService {
     private final PaymentDAO paymentDAO;
     private final NotificationDAO notificationDAO;
     private final AuditLogService auditService;
+    private final VnPayClient vnPayClient;
+    private final PaymentCallbackService callbackService;
 
     public PaymentMaintenanceService() {
         this(new TransactionDAO(), new OrderDAO(), new PaymentDAO(),
-                new NotificationDAO(), new AuditLogService());
+                new NotificationDAO(), new AuditLogService(),
+                new VnPayClient(), new PaymentCallbackService());
     }
 
     public PaymentMaintenanceService(
@@ -43,14 +50,28 @@ public class PaymentMaintenanceService {
             PaymentDAO paymentDAO,
             NotificationDAO notificationDAO,
             AuditLogService auditService) {
+        this(transactionDAO, orderDAO, paymentDAO, notificationDAO, auditService,
+                new VnPayClient(), new PaymentCallbackService());
+    }
+
+    public PaymentMaintenanceService(
+            TransactionDAO transactionDAO,
+            OrderDAO orderDAO,
+            PaymentDAO paymentDAO,
+            NotificationDAO notificationDAO,
+            AuditLogService auditService,
+            VnPayClient vnPayClient,
+            PaymentCallbackService callbackService) {
         this.transactionDAO = transactionDAO;
         this.orderDAO = orderDAO;
         this.paymentDAO = paymentDAO;
         this.notificationDAO = notificationDAO;
         this.auditService = auditService;
+        this.vnPayClient = vnPayClient;
+        this.callbackService = callbackService;
     }
 
-    // ===================== JOB-06: ĐÓNG GIAO DỊCH QUÁ HẠN LINK =====================
+// ===================== JOB-06: ĐÓNG GIAO DỊCH QUÁ HẠN LINK =====================
 
     /** ExpireTimedOutTransactionsJob gọi mỗi phút. Trả số giao dịch đã Expired. */
     public int expireTimedOutTransactions() throws SQLException {
@@ -63,6 +84,10 @@ public class PaymentMaintenanceService {
 
         int count = 0;
         for (int transactionId : ids) {
+            // MỚI (CBR-125): hỏi VNPay trước khi đóng.
+            if (keepForGateway(transactionId)) {
+                continue;
+            }
             if (expireOneTransaction(transactionId)) {
                 count++;
             }
@@ -72,6 +97,60 @@ public class PaymentMaintenanceService {
             System.out.println("[JOB-06] Đã đóng " + count + " giao dịch quá hạn link.");
         }
         return count;
+    }
+
+    /**
+     * CBR-125: hỏi VNPay về giao dịch Pending quá hạn link.
+     *
+     * @return true nếu giao dịch cần GIỮ NGUYÊN, không đóng lúc này:
+     *         - VNPay báo đã thu tiền và đã xử lý như IPN, hoặc
+     *         - giao dịch đã có người xử lý, hoặc
+     *         - chưa hỏi được VNPay mà đơn vẫn còn hạn (phút sau thử lại).
+     *         false nếu nên đóng Expired như cũ.
+     */
+    private boolean keepForGateway(int transactionId) {
+        // Công tắc: tắt thì chạy như cũ.
+        if (!"true".equalsIgnoreCase(AppConfig.get("vnpay.query-enabled", "false"))) {
+            return false;
+        }
+
+        Transaction tx;
+        LocalDateTime dueAt;
+
+        // Đọc dữ liệu, không giữ kết nối khi gọi API.
+        try (Connection conn = openConnection()) {
+            tx = transactionDAO.findById(conn, transactionId, false);
+            if (tx == null || !tx.isPending()) {
+                return true;
+            }
+            Order order = orderDAO.findForCallback(conn, tx.getOrderId(), false);
+            dueAt = order == null ? null : order.getPaymentDueAt();
+        } catch (SQLException e) {
+            System.err.println("[JOB-06] Không đọc được TransactionId=" + transactionId);
+            e.printStackTrace();
+            return true;
+        }
+
+        try {
+            Map<String, String> result = vnPayClient.queryTransaction(
+                    tx.getGatewayReference(), tx.getCreatedAt());
+
+            // true: VNPay báo đã thu tiền và đã ghi nhận như IPN, không đóng.
+            return callbackService.handleQueryResult(result);
+
+        } catch (IOException | InterruptedException e) {
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+            boolean beforeDeadline = dueAt != null
+                    && DateTimeUtil.now().isBefore(dueAt);
+
+            System.err.println("[JOB-06] Chưa hỏi được VNPay, TransactionId="
+                    + transactionId
+                    + (beforeDeadline ? ": thử lại phút sau" : ": quá hạn đơn, đóng luôn"));
+
+            return beforeDeadline;
+        }
     }
 
     private boolean expireOneTransaction(int transactionId) {

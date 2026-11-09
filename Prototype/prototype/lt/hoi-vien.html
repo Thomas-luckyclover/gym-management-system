@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
@@ -68,7 +68,12 @@
     </header>
 
     <main class="cust-content">
-      <div class="toolbar">
+      <div class="chip-filter" id="custTabs" style="margin-bottom:var(--space-3)">
+        <button type="button" class="active" data-tab="profiles">Danh sách khách hàng</button>
+        <button type="button" data-tab="my-requests">Yêu cầu xóa của tôi <span class="badge badge-warn" id="reqBadge" style="font-size:11px;margin-left:4px">2</span></button>
+      </div>
+
+      <div class="toolbar" id="profileToolbar">
         <label for="clq">Tìm hội viên</label>
         <div class="search">
           <i class="fa-solid fa-magnifying-glass"></i>
@@ -186,6 +191,44 @@
           <div class="empty-icon"><i class="fa-solid fa-box-open"></i></div>
           <p>Không có hồ sơ nào khớp bộ lọc.</p>
         </div>
+      </div>
+
+      <div id="reqList" hidden>
+        <table class="tx-table">
+          <thead><tr><th>Hội viên / Yêu cầu</th><th>Thời điểm gửi</th><th>Lý do yêu cầu</th><th>Kết quả duyệt</th></tr></thead>
+          <tbody id="reqBody">
+            <tr class="req-row">
+              <td data-label="Hội viên"><b>Bùi Thanh Hà</b><br><span class="muted tabular">KH-1008 · Yêu cầu #042</span></td>
+              <td data-label="Gửi lúc" class="tabular">20/09/2026 09:12</td>
+              <td data-label="Lý do">Hội viên chuyển nơi cư trú ra nước ngoài, yêu cầu đóng hồ sơ và xóa thông tin.</td>
+              <td data-label="Kết quả"><span class="badge badge-warn">Chờ duyệt</span></td>
+            </tr>
+            <tr class="req-row">
+              <td data-label="Hội viên"><b>Trịnh Quốc Bảo</b><br><span class="muted tabular">KH-1009 · Yêu cầu #041</span></td>
+              <td data-label="Gửi lúc" class="tabular">19/09/2026 14:30</td>
+              <td data-label="Lý do">Trùng thông tin với số điện thoại cũ của khách, đã gộp vào tài khoản chính.</td>
+              <td data-label="Kết quả"><span class="badge badge-warn">Chờ duyệt</span></td>
+            </tr>
+            <tr class="req-row">
+              <td data-label="Hội viên"><b>Nguyễn Văn Hùng</b><br><span class="muted tabular">KH-0982 · Yêu cầu #038</span></td>
+              <td data-label="Gửi lúc" class="tabular">15/09/2026 10:15</td>
+              <td data-label="Lý do">Khách không còn nhu cầu và yêu cầu huỷ tài khoản theo chính sách bảo mật.</td>
+              <td data-label="Kết quả">
+                <span class="badge badge-ok">Đã duyệt</span><br>
+                <small class="muted">Quản lý An · 15/09/2026 16:00</small>
+              </td>
+            </tr>
+            <tr class="req-row">
+              <td data-label="Hội viên"><b>Lê Thu Thảo</b><br><span class="muted tabular">KH-0975 · Yêu cầu #035</span></td>
+              <td data-label="Gửi lúc" class="tabular">10/09/2026 11:20</td>
+              <td data-label="Lý do">Khách yêu cầu xóa tạm để đăng ký lại.</td>
+              <td data-label="Kết quả">
+                <span class="badge badge-danger">Từ chối</span><br>
+                <small class="muted">Quản lý An: "Gói còn hạn đến tháng 12, hướng dẫn khách bảo lưu thay vì xóa."</small>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
       <div class="pager" data-pager>

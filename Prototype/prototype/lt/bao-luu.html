@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
@@ -96,6 +96,24 @@
                 <span id="fzBlockText"></span>
               </div>
 
+              <div id="fzResumeSection" hidden style="background:var(--page,#f8f9fa);border:1px solid var(--border,#e5e7eb);border-radius:var(--radius,8px);padding:var(--space-4,16px);margin-block:var(--space-3,12px)">
+                <div class="alert-banner ok" style="margin-bottom:var(--space-3,12px)">
+                  <i class="fa-solid fa-snowflake"></i>
+                  <div>
+                    <b>Gói tập đang trong thời gian bảo lưu (05/09/2026 – 05/10/2026)</b>
+                    <div class="muted" style="font-size:12px">Lý do: Chấn thương cổ chân nhẹ cần nghỉ ngơi · Lễ tân: Nguyễn Thị Hoa</div>
+                  </div>
+                </div>
+                <h4 style="margin:0 0 6px"><i class="fa-solid fa-clock-rotate-left"></i> Mở lại thẻ tập trước hạn</h4>
+                <p class="desc" style="font-size:13px;color:var(--text-soft,#6b7280);margin:0 0 10px">Khi mở lại thẻ trước hạn, hội viên có thể tiếp tục tập luyện ngay hôm nay. Hạn thẻ được gia hạn thêm đúng số ngày thực tế đã bảo lưu tính đến hôm nay.</p>
+                <div style="display:flex;gap:var(--space-4,16px);margin-bottom:var(--space-3,12px);padding:10px 14px;background:#fff;border-radius:var(--radius,8px);border:1px solid var(--border,#e5e7eb)">
+                  <div><span class="muted" style="font-size:12px;display:block">Số ngày đã bảo lưu thực tế:</span><b id="fzActualDays" style="font-size:16px;color:var(--primary,#6c4e31)">15 ngày</b></div>
+                  <div style="margin-left:auto"><span class="muted" style="font-size:12px;display:block">Hạn thẻ mới sau khi mở lại:</span><b id="fzProjectedNewEnd" style="font-size:16px;color:var(--success,#107e3e)">16/03/2027</b></div>
+                </div>
+                <button class="btn btn-primary" type="button" id="btnResumeEarly"><i class="fa-solid fa-play"></i> Mở lại thẻ hôm nay</button>
+              </div>
+
+              <div id="fzFormFields">
               <div class="form-grid">
                 <label class="field"><span class="field-label">Ngày bắt đầu *</span>
                   <input id="fzStart" type="date" value="2026-09-21" min="2026-09-21">
@@ -121,6 +139,7 @@
 
               <div class="btn-row">
                 <button class="btn btn-primary" type="submit" id="fzSave" disabled>Lưu bảo lưu</button>
+              </div>
               </div>
             </form>
           </section>

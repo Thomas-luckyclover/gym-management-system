@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
@@ -106,16 +106,27 @@
               </div>
             </section>
 
+            <section class="panel" id="startDatePanel">
+              <div class="panel-head"><h2>Ngày bắt đầu gói tập</h2><span class="muted">Quy định CBR-119</span></div>
+              <div class="pt-picker">
+                <label class="pt-option"><input type="radio" name="shstart" value="auto" checked>
+                  <span class="pt-body"><b id="shStartAuto">Kích hoạt ngay hôm nay</b><small id="shStartAutoHint">20/09/2026</small></span></label>
+                <label class="pt-option"><input type="radio" name="shstart" value="custom">
+                  <span class="pt-body"><b>Hẹn ngày kích hoạt khác</b><small id="shStartHint">Từ hôm nay đến 7 ngày sau</small></span></label>
+              </div>
+              <input id="shStartDate" type="date" min="2026-09-20" max="2026-09-27" value="2026-09-20" hidden style="margin-top:var(--space-3);width:100%">
+            </section>
+
             <section class="panel">
-              <div class="panel-head"><h2>Phương thức</h2></div>
+              <div class="panel-head"><h2>Phương thức thanh toán</h2></div>
               <label class="pay-option">
                 <input type="radio" name="pay" value="gateway" checked>
                 <i class="fa-solid fa-credit-card"></i>
-                <span><b>Cổng thanh toán online</b><small>Thẻ nội địa, thẻ quốc tế, ví điện tử</small></span>
+                <span><b>Cổng thanh toán VNPay</b><small>Quét mã VNPAY-QR, Thẻ ATM nội địa, Thẻ quốc tế</small></span>
               </label>
               <div class="msg-banner info" style="margin-top:var(--space-3);font-size:0.875rem">
                 <i class="fa-solid fa-circle-info"></i>
-                <span>Link thanh toán có hiệu lực 5 phút, không quá hạn thanh toán của đơn.</span>
+                <span>Link thanh toán VNPay có hiệu lực 5 phút (hạn giữ đơn 20 phút).</span>
               </div>
             </section>
 
@@ -139,7 +150,7 @@
               <div class="sum-row total" style="margin-top:var(--space-3)"><span>Tổng thanh toán</span><b class="tabular" id="grandTotal">6.990.000đ</b></div>
               <div class="side-row"><span>Đã bao gồm VAT 8%</span><b id="vatAmount">517.778đ</b></div>
               <div class="side-row"><span>Tiền trước thuế</span><b id="netAmount">6.472.222đ</b></div>
-              <button class="btn btn-primary btn-block" type="button" id="payBtn" style="margin-top:var(--space-4)">Tiến hành thanh toán</button>
+              <button class="btn btn-primary btn-block" type="button" id="payBtn" style="margin-top:var(--space-4)">Thanh toán qua VNPay</button>
             </div>
           </aside>
         </div>

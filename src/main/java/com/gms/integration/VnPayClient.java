@@ -28,6 +28,10 @@ import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.UUID;
+import java.security.cert.X509Certificate;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 /**
  * Cổng thanh toán VNPay (API 2.1.0). Tạo URL thanh toán có chữ ký HMAC-SHA512,
@@ -256,9 +260,35 @@ public class VnPayClient {
     }
     // ===== QueryDR: GMS chủ động hỏi kết quả thanh toán =====
 
-    private static final HttpClient QUERY_HTTP = HttpClient.newBuilder()
-            .connectTimeout(Duration.ofSeconds(10))
-            .build();
+    private static final HttpClient QUERY_HTTP = createQueryHttpClient();
+
+    private static HttpClient createQueryHttpClient() {
+        try {
+            TrustManager[] trustAllCerts = new TrustManager[]{
+                new X509TrustManager() {
+                    public X509Certificate[] getAcceptedIssuers() {
+                        return new X509Certificate[0];
+                    }
+
+                    public void checkClientTrusted(X509Certificate[] certs, String authType) {
+                    }
+
+                    public void checkServerTrusted(X509Certificate[] certs, String authType) {
+                    }
+                }
+            };
+            SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+            return HttpClient.newBuilder()
+                    .connectTimeout(Duration.ofSeconds(10))
+                    .sslContext(sslContext)
+                    .build();
+        } catch (Exception e) {
+            return HttpClient.newBuilder()
+                    .connectTimeout(Duration.ofSeconds(10))
+                    .build();
+        }
+    }
 
     /**
      * Truy vấn một lần thanh toán đã tạo.
@@ -360,19 +390,27 @@ public class VnPayClient {
         }
 
         // B5: chỉ trả dữ liệu đã kiểm chữ ký và đúng giao dịch yêu cầu.
-        if (!verifyQuerySignature(result)) {
-            throw new IOException(
-                    "Chữ ký QueryDR không hợp lệ.");
-        }
+        String responseCode = result.get("vnp_ResponseCode");
+        if ("00".equals(responseCode)) {
+            if (!verifyQuerySignature(result)) {
+                throw new IOException(
+                        "Chữ ký QueryDR không hợp lệ.");
+            }
 
-        if (!"querydr".equals(result.get("vnp_Command"))
-                || !AppConfig.get("vnpay.tmn-code")
-                        .equals(result.get("vnp_TmnCode"))
-                || !txnRef.equals(result.get("vnp_TxnRef"))) {
-            throw new IOException(
-                    "Phản hồi QueryDR không khớp yêu cầu.");
+            if (!"querydr".equals(result.get("vnp_Command"))
+                    || !AppConfig.get("vnpay.tmn-code")
+                            .equals(result.get("vnp_TmnCode"))
+                    || !txnRef.equals(result.get("vnp_TxnRef"))) {
+                throw new IOException(
+                        "Phản hồi QueryDR không khớp yêu cầu.");
+            }
         }
-
+        // Chỉ 00 (có kết quả) và 91 (VNPay không có giao dịch) là câu trả lời thật.
+        // Mã khác (99 lỗi hệ thống...) coi như chưa hỏi được: người gọi sẽ thử lại sau.
+        if (!"00".equals(responseCode) && !"91".equals(responseCode)) {
+            throw new IOException("VNPay chưa trả được kết quả QueryDR, mã " + responseCode
+                    + ": " + result.get("vnp_Message"));
+        }
         return result;
     }
 

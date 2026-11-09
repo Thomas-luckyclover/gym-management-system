@@ -17,25 +17,56 @@
                             defer></script>
                 </head>
 
-                <body class="dock ${themeClass}">
+                <body class="dock ${themeClass} package-selection-page">
                     <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
 
                         <div class="app">
                             <%@ include file="/WEB-INF/jsp/common/layout-customer.jspf" %>
 
                                 <div class="main">
+                                    <%--=====Thanh trên cùng (dashboard: thông tin khách, do Servlet lấy từ CustomerDashboardService)=====--%>
                                     <header class="topbar">
                                         <div class="tb-left">
-                                            <h1 class="tb-title">Chọn gói tập</h1>
+                                            <h1 class="tb-title">Mua gói</h1>
                                             <p class="tb-subtitle">Chọn gói tập hoặc vé ngày, giá đã gồm VAT.</p>
                                         </div>
+
                                         <div class="top-right">
                                             <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
-                                            <%@ include file="/WEB-INF/jsp/common/topbar-user.jspf" %>
+                                            <c:choose>
+                                                <c:when test="${not empty dashboard}">
+                                                    <a class="tb-user" href="${pageContext.request.contextPath}/account"
+                                                        title="Cài đặt tài khoản">
+                                                        <c:choose>
+                                                            <c:when test="${not empty dashboard.avatar}">
+                                                                <img class="avatar"
+                                                                    src="${pageContext.request.contextPath}${dashboard.avatar}"
+                                                                    alt="Ảnh đại diện">
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                <span class="avatar">
+                                                                    <c:out value="${dashboard.initials}" />
+                                                                </span>
+                                                            </c:otherwise>
+                                                        </c:choose>
+                                                        <span class="tb-user-text">
+                                                            <b>
+                                                                <c:out value="${dashboard.fullName}" />
+                                                            </b>
+                                                            <span>
+                                                                <c:out value="${dashboard.customerCode}" />
+                                                            </span>
+                                                        </span>
+                                                    </a>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <%@ include file="/WEB-INF/jsp/common/topbar-user.jspf" %>
+                                                </c:otherwise>
+                                            </c:choose>
                                         </div>
                                     </header>
 
-                                    <main class="content package-selection">
+<main class="content package-selection">
 
                                             <%--=====Thông báo lỗi (dashboardError, selectionError: chuỗi do Servlet đặt
                                                 khi Service thất bại)=====--%>
@@ -604,7 +635,6 @@
                                                                                                                                     </c:if>
                                                                                                                                 </ul>
                                                                                                                             </c:if>
-                                                                                                                                <%-- option.singleSession = getter tự tính isSingleSession() · dto/PackageOptionView.java (option = PackageOptionView) --%>
                                                                                                                                 <div
                                                                                                                                     class="package-card__actions${option.purchasableOnline or option.singleSession ? '' : ' package-card__actions--single'}">
                                                                                                                                     <c:choose>

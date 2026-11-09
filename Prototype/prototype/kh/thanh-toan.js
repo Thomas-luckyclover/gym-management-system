@@ -160,3 +160,13 @@ el('voucherClear').addEventListener('click', () => {
 });
 // Gói Ngày không có gói nối tiếp
 el('chainNote').hidden = !!PKG.day;
+
+// CBR-119: Gói Ngày không chọn ngày bắt đầu; Gói tập cho phép hẹn ngày trong 7 ngày
+if (el('startDatePanel')) {
+  el('startDatePanel').hidden = !!PKG.day;
+  const radios = document.querySelectorAll('input[name="shstart"]');
+  const dateInput = el('shStartDate');
+  radios.forEach(r => r.addEventListener('change', () => {
+    dateInput.hidden = r.value !== 'custom';
+  }));
+}
