@@ -178,7 +178,16 @@ public class CustomerMembershipRow {
             return false;
         }
         int max = maxFreezesSnapshot != null ? maxFreezesSnapshot : 1;
+        // Chỉ gói đang sử dụng mới được bảo lưu; gói mua nối tiếp chưa đến ngày bắt đầu thì chưa bảo lưu được
+        if (isNotStartedYet()) {
+            return false;
+        }
         return freezeUsed < max && endDate != null && !endDate.isBefore(LocalDate.now());
+    }
+
+    /** Gói Membership đang hiển thị chưa đến ngày bắt đầu (gói mua nối tiếp, khách chưa có gói đang dùng). */
+    public boolean isNotStartedYet() {
+        return hasMembership() && startDate != null && startDate.isAfter(LocalDate.now());
     }
 
     // GETTER TỰ TÍNH — không có field/setter "freezeStatusBadgeClass"; = class huy hiệu theo đang bảo lưu / đủ điều kiện / còn lại; JSP: receptionist/freeze-membership.jsp:502
@@ -202,6 +211,9 @@ public class CustomerMembershipRow {
         }
         if (isEligibleToFreeze()) {
             return "Đủ ĐK (" + freezeUsed + "/" + (maxFreezesSnapshot != null ? maxFreezesSnapshot : 1) + " lần)";
+        }
+        if (isNotStartedYet()) {
+            return "Gói chưa bắt đầu";
         }
         if (hasMembership() && maxFreezesSnapshot != null && freezeUsed >= maxFreezesSnapshot) {
             return "Hết lượt (" + freezeUsed + "/" + maxFreezesSnapshot + ")";

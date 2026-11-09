@@ -64,28 +64,11 @@ public class ShiftDetailView {
     public ShiftDetailView(Shift shift, String openedByEmployeeName, String closedByEmployeeName,
                            ShiftMetrics metrics, PageResult<ShiftTransactionItem> transactionsPage,
                            List<ShiftTransactionItem> pendingOrders, List<Shift> todayShifts,
-                           String searchKeyword, String methodFilter, String statusFilter) {
-        this(shift, openedByEmployeeName, closedByEmployeeName, metrics, transactionsPage,
-                pendingOrders, todayShifts, searchKeyword, methodFilter, statusFilter, true, null, false);
-    }
-
-    public ShiftDetailView(Shift shift, String openedByEmployeeName, String closedByEmployeeName,
-                           ShiftMetrics metrics, PageResult<ShiftTransactionItem> transactionsPage,
-                           List<ShiftTransactionItem> pendingOrders, List<Shift> todayShifts,
                            String searchKeyword, String methodFilter, String statusFilter,
                            boolean canOpen, String shiftNotOpenedReason) {
         this(shift, openedByEmployeeName, closedByEmployeeName, metrics, transactionsPage,
-                pendingOrders, todayShifts, searchKeyword, methodFilter, statusFilter, canOpen, shiftNotOpenedReason, false);
-    }
-
-    public ShiftDetailView(Shift shift, String openedByEmployeeName, String closedByEmployeeName,
-                           ShiftMetrics metrics, PageResult<ShiftTransactionItem> transactionsPage,
-                           List<ShiftTransactionItem> pendingOrders, List<Shift> todayShifts,
-                           String searchKeyword, String methodFilter, String statusFilter,
-                           boolean canOpen, String shiftNotOpenedReason, boolean pastShift) {
-        this(shift, openedByEmployeeName, closedByEmployeeName, metrics, transactionsPage,
                 pendingOrders, todayShifts, searchKeyword, methodFilter, statusFilter,
-                canOpen, shiftNotOpenedReason, pastShift, false, false, null);
+                canOpen, shiftNotOpenedReason, false, false, false, null);
     }
 
     public ShiftDetailView(Shift shift, String openedByEmployeeName, String closedByEmployeeName,
@@ -183,6 +166,6 @@ public class ShiftDetailView {
     // GETTER TỰ TÍNH — không có field/setter "pastDate"; = workDate của ca trước hôm nay; JSP: receptionist/shift.jsp:146
     public boolean isPastDate() {
         return shift != null && shift.getWorkDate() != null
-                && shift.getWorkDate().isBefore(com.gms.util.DateTimeUtil.today());
+                && !shift.getWorkDate().equals(com.gms.util.DateTimeUtil.today());
     }
 }

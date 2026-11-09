@@ -347,6 +347,7 @@
                                                     <th>Chênh lệch</th>
                                                     <th class="r">Chuyển khoản</th>
                                                     <th class="r">Số hóa đơn</th>
+                                                    <th><span class="visually-hidden">Thao tác</span></th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -380,6 +381,13 @@
                                                         </td>
                                                         <td class="r"><span class="tx-pay"><c:out value="${gms:formatMoney(shift.totalBankTransfer)}" /></span></td>
                                                         <td class="r"><span class="tx-pay"><c:out value="${shift.totalInvoiceCount}" /></span></td>
+                                                        <%-- Nút xem các đơn bán trong ca → transaction-list.js gọi GET ?action=shiftOrders&shiftId= (SystemTransactionServlet) --%>
+                                                        <td>
+                                                            <button type="button" class="btn btn-outline btn-sm btn-view-shift-orders"
+                                                                    data-shift-id="${shift.shiftId}"
+                                                                    data-shift-label="<c:out value='${shift.shiftType == "Morning" ? "Ca sáng" : (shift.shiftType == "Afternoon" ? "Ca chiều" : shift.shiftType)}' /> <c:out value='${gms:formatDate(shift.workDate)}' />"
+                                                                    title="Xem danh sách đơn hàng trong ca này">Chi tiết đơn</button>
+                                                        </td>
                                                     </tr>
                                                 </c:forEach>
                                             </tbody>
@@ -484,6 +492,44 @@
                 <div class="tx-mf">
                     <button type="button" class="btn btn-ghost" data-modal-close>Đóng</button>
                     <button type="button" class="btn btn-primary" id="txdRefundBtn" hidden>Hoàn tiền</button>
+                </div>
+            </div>
+        </div>
+
+        <%-- =====================================================================
+             POPUP 3: ĐƠN HÀNG TRONG CA — mở từ nút "Chi tiết đơn" ở tab Lịch sử chốt ca
+             Dữ liệu: transaction-list.js gọi GET ?action=shiftOrders&shiftId= → JSON danh sách đơn
+             ===================================================================== --%>
+        <div class="tx-overlay" id="shiftOrdersModal" aria-hidden="true" role="dialog" aria-labelledby="txsTitle">
+            <div class="tx-modal">
+                <div class="tx-mh">
+                    <div>
+                        <h3 id="txsTitle">Đơn hàng trong ca · <span id="txsShiftInfo">---</span></h3>
+                    </div>
+                    <button type="button" class="tx-x" data-modal-close aria-label="Đóng">&times;</button>
+                </div>
+
+                <div class="tx-mb">
+                    <div class="tx-table-wrap">
+                        <table class="tx-table">
+                            <thead>
+                                <tr>
+                                    <th>Mã đơn</th>
+                                    <th>Lúc tạo</th>
+                                    <th>Khách</th>
+                                    <th>Gói</th>
+                                    <th class="r">Số tiền</th>
+                                    <th>Thanh toán</th>
+                                    <th>Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody id="shiftOrdersModalBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tx-mf">
+                    <button type="button" class="btn btn-ghost" data-modal-close>Đóng</button>
                 </div>
             </div>
         </div>

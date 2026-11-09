@@ -1002,6 +1002,11 @@ function validateField(input) {
     }
     const label = getFieldLabel(input);
 
+    // B2.5: nếu người dùng nhập sai định dạng cấp trình duyệt (VD: ngày 31/02 không tồn tại trong ô date)
+    if (input.validity && input.validity.badInput) {
+        return label + " không hợp lệ.";
+    }
+
     // B3: kiểm tra bắt buộc
     const isCheckbox = input.type === "checkbox";
     if (input.required && isCheckbox && !input.checked) {

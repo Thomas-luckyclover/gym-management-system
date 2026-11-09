@@ -1,15 +1,13 @@
 package com.gms.job;
 
+import com.gms.service.ExpireDayPassService;
 import java.sql.SQLException;
 
 /**
- * JOB-03 — Expire unused day passes (SRS 5.3 Background Job Inventory).
+ * JOB-03 — Expire unused day passes (SRS 13.3 & 16.3).
  *
- * Lịch chạy: hằng ngày, ngay sau JOB-02
- * Luật: vé ngày đã qua ngày hiệu lực mà chưa check-in → Expired.
- *
- * Người phụ trách gợi ý: TV4 (xem docs/team-plan.md).
- * TODO: gọi Service tương ứng trong run(); job KHÔNG tự viết SQL.
+ * Lịch chạy: hằng ngày lúc 00:05, ngay sau JOB-02.
+ * Luật: vé ngày đã qua ngày hiệu lực mà chưa check-in -> Expired.
  */
 public class ExpireUnusedDayPassesJob implements BackgroundJob {
 
@@ -20,6 +18,7 @@ public class ExpireUnusedDayPassesJob implements BackgroundJob {
 
     @Override
     public void run() throws SQLException {
-        // TODO(JOB-03): gọi Service xử lý, VD: new XxxService().runJob();
+        int expiredCount = new ExpireDayPassService().runJob();
+        System.out.println("[JOB-03] Đã chuyển Expired " + expiredCount + " vé ngày quá hạn chưa sử dụng.");
     }
 }

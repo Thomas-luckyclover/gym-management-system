@@ -35,28 +35,35 @@
         <div class="top-right">
           <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
 
-          <c:choose>
-            <c:when test="${detail.shift.open}">
-              <span class="badge badge-ok">
-                <i class="fa-solid fa-circle-check"></i> <c:out value="${detail.shift.shiftType.displayName}"/> đang mở
-              </span>
-            </c:when>
-            <c:when test="${detail.shift.closed}">
-              <span class="badge badge-muted">
-                <i class="fa-solid fa-lock"></i> <c:out value="${detail.shift.shiftType.displayName}"/> đã chốt
-              </span>
-            </c:when>
-            <c:when test="${detail.shift.notOpened and not detail.canOpen}">
-              <span class="badge badge-muted">
-                <i class="fa-solid fa-clock-rotate-left"></i> <c:out value="${detail.shift.shiftType.displayName}"/> đã qua
-              </span>
-            </c:when>
-            <c:otherwise>
-              <span class="badge badge-warn">
-                <i class="fa-solid fa-hourglass-start"></i> <c:out value="${detail.shift.shiftType.displayName}"/> chưa mở
-              </span>
-            </c:otherwise>
-          </c:choose>
+          <c:if test="${not empty detail}">
+            <c:choose>
+              <c:when test="${detail.shift.open}">
+                <span class="badge badge-ok">
+                  <i class="fa-solid fa-circle-check"></i> <c:out value="${detail.shift.shiftType.displayName}"/> đang mở
+                </span>
+              </c:when>
+              <c:when test="${detail.shift.closed}">
+                <span class="badge badge-muted">
+                  <i class="fa-solid fa-lock"></i> <c:out value="${detail.shift.shiftType.displayName}"/> đã chốt
+                </span>
+              </c:when>
+              <c:when test="${detail.shift.notOpened and detail.pastShift}">
+                <span class="badge badge-muted">
+                  <i class="fa-solid fa-clock-rotate-left"></i> <c:out value="${detail.shift.shiftType.displayName}"/> đã qua
+                </span>
+              </c:when>
+              <c:when test="${detail.shift.notOpened and not detail.canOpen}">
+                <span class="badge badge-warn">
+                  <i class="fa-solid fa-hourglass-start"></i> <c:out value="${detail.shift.shiftType.displayName}"/> chưa thể mở
+                </span>
+              </c:when>
+              <c:otherwise>
+                <span class="badge badge-warn">
+                  <i class="fa-solid fa-hourglass-start"></i> <c:out value="${detail.shift.shiftType.displayName}"/> chưa mở
+                </span>
+              </c:otherwise>
+            </c:choose>
+          </c:if>
 
           <%@ include file="/WEB-INF/jsp/common/topbar-user.jspf" %>
         </div>
@@ -70,6 +77,7 @@
           </div>
         </c:if>
 
+        <c:if test="${not empty detail}">
         <%-- ===== BANNER CẢNH BÁO CA QUÁ KHỨ CHƯA CHỐT SỔ ===== --%>
         <c:if test="${detail.unclosedPastShift}">
           <div class="alert-banner danger" data-reveal style="margin-bottom: 16px;">
@@ -203,19 +211,11 @@
               </c:choose>
             </c:if>
             <c:if test="${detail.shift.open}">
-              <c:choose>
-                <c:when test="${detail.hasPendingOrders()}">
-                  <button class="btn btn-primary" type="button" id="btnCloseShiftModal" disabled
-                          title="Không thể chốt ca: còn ${detail.pendingOrders.size()} đơn quầy chờ xử lý">
-                    <i class="fa-solid fa-cash-register"></i> Chốt ca
-                  </button>
-                </c:when>
-                <c:otherwise>
-                  <button class="btn btn-primary" type="button" id="btnCloseShiftModal">
-                    <i class="fa-solid fa-cash-register"></i> Chốt ca
-                  </button>
-                </c:otherwise>
-              </c:choose>
+              <button class="btn btn-primary" type="button" id="btnCloseShiftModal"
+                      ${detail.hasPendingOrders() ? 'disabled' : ''}
+                      title="${detail.hasPendingOrders() ? 'Không thể chốt ca: còn đơn quầy chờ xử lý' : ''}">
+                <i class="fa-solid fa-cash-register"></i> Chốt ca
+              </button>
             </c:if>
             <c:if test="${detail.shift.closed}">
               <span class="badge badge-muted badge-lg">
@@ -336,33 +336,18 @@
                         </c:if>
 
                         <%-- Trạng thái đơn --%>
-                        <c:choose>
-                          <%-- item.paid = getter tự tính isPaid() · dto/ShiftTransactionItem.java (item = ShiftTransactionItem) --%>
-                          <c:when test="${item.paid}">
-                            <span class="badge badge-ok">Đã thanh toán</span>
-                          </c:when>
-                          <%-- item.pending = getter tự tính isPending() · dto/ShiftTransactionItem.java (item = ShiftTransactionItem) --%>
-                          <c:when test="${item.pending}">
-                            <span class="badge badge-warn">Chờ xác nhận</span>
-                          </c:when>
-                          <c:when test="${item.cancelled}">
-                            <span class="badge badge-danger">Đã hủy</span>
-                          </c:when>
-                        </c:choose>
+                        <span class="badge ${item.statusBadgeClass}">
+                          <c:out value="${item.statusDisplayName}"/>
+                        </span>
                       </div>
 
                       <div class="row-meta">
                         <span><i class="fa-solid fa-clock"></i> <c:out value="${gms:formatDateTime(item.createdAt)}"/></span>
                         <span><i class="fa-solid fa-dumbbell"></i> <c:out value="${item.packageName}"/></span>
-                        <c:choose>
-                          <%-- item.cash = getter tự tính isCash() · dto/ShiftTransactionItem.java (item = ShiftTransactionItem) --%>
-                          <c:when test="${item.cash}">
-                            <span class="badge badge-muted"><i class="fa-solid fa-money-bill-wave"></i> Tiền mặt</span>
-                          </c:when>
-                          <c:otherwise>
-                            <span class="badge badge-muted"><i class="fa-solid fa-building-columns"></i> Chuyển khoản</span>
-                          </c:otherwise>
-                        </c:choose>
+                        <span class="badge badge-muted">
+                          <i class="fa-solid ${item.cash ? 'fa-money-bill-wave' : 'fa-building-columns'}"></i>
+                          <c:out value="${item.paymentMethodDisplayName}"/>
+                        </span>
 
                         <c:if test="${item.cancelled and not empty item.cancelReason}">
                           <span class="cancel-reason-text">
@@ -411,6 +396,12 @@
 
           <%-- Phân trang --%>
           <c:if test="${detail.transactionsPage.totalPages > 1}">
+            <c:url var="basePageUrl" value="/receptionist/shift">
+              <c:param name="shiftId" value="${detail.shift.shiftId}"/>
+              <c:if test="${not empty detail.searchKeyword}"><c:param name="q" value="${detail.searchKeyword}"/></c:if>
+              <c:if test="${not empty detail.methodFilter}"><c:param name="method" value="${detail.methodFilter}"/></c:if>
+              <c:if test="${not empty detail.statusFilter}"><c:param name="status" value="${detail.statusFilter}"/></c:if>
+            </c:url>
             <div class="pager">
               <div class="pager-info">
                 Trang <c:out value="${detail.transactionsPage.page}"/> / <c:out value="${detail.transactionsPage.totalPages}"/>
@@ -418,24 +409,22 @@
               </div>
               <div class="pager-btns">
                 <c:if test="${detail.transactionsPage.page > 1}">
-                  <a class="btn btn-ghost btn-sm"
-                     href="${pageContext.request.contextPath}/receptionist/shift?shiftId=${detail.shift.shiftId}&q=${detail.searchKeyword}&method=${detail.methodFilter}&status=${detail.statusFilter}&page=${detail.transactionsPage.page - 1}">
+                  <a class="btn btn-ghost btn-sm" href="${basePageUrl}&page=${detail.transactionsPage.page - 1}">
                     <i class="fa-solid fa-chevron-left"></i> Trước
                   </a>
                 </c:if>
 
                 <c:forEach var="p" begin="1" end="${detail.transactionsPage.totalPages}">
-                  <c:if test="${p == detail.transactionsPage.page or (p >= detail.transactionsPage.page - 2 and p <= detail.transactionsPage.page + 2)}">
+                  <c:if test="${p >= detail.transactionsPage.page - 2 and p <= detail.transactionsPage.page + 2}">
                     <a class="btn btn-sm ${p == detail.transactionsPage.page ? 'btn-primary' : 'btn-ghost'}"
-                       href="${pageContext.request.contextPath}/receptionist/shift?shiftId=${detail.shift.shiftId}&q=${detail.searchKeyword}&method=${detail.methodFilter}&status=${detail.statusFilter}&page=${p}">
+                       href="${basePageUrl}&page=${p}">
                       <c:out value="${p}"/>
                     </a>
                   </c:if>
                 </c:forEach>
 
                 <c:if test="${detail.transactionsPage.page < detail.transactionsPage.totalPages}">
-                  <a class="btn btn-ghost btn-sm"
-                     href="${pageContext.request.contextPath}/receptionist/shift?shiftId=${detail.shift.shiftId}&q=${detail.searchKeyword}&method=${detail.methodFilter}&status=${detail.statusFilter}&page=${detail.transactionsPage.page + 1}">
+                  <a class="btn btn-ghost btn-sm" href="${basePageUrl}&page=${detail.transactionsPage.page + 1}">
                     Sau <i class="fa-solid fa-chevron-right"></i>
                   </a>
                 </c:if>
@@ -443,12 +432,13 @@
             </div>
           </c:if>
         </section>
+        </c:if>
       </main>
     </div>
   </div>
 
   <%-- ===== MODAL 1: MỞ CA LÀM VIỆC ===== --%>
-  <c:if test="${detail.shift.notOpened and detail.canOpen}">
+  <c:if test="${not empty detail and detail.shift.notOpened and detail.canOpen}">
   <div class="modal" id="modalOpenShift" role="dialog" aria-modal="true" aria-labelledby="modalOpenTitle">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -478,6 +468,7 @@
   </c:if>
 
   <%-- ===== MODAL 2: ĐỐI SOÁT & CHỐT CA LÀM VIỆC ===== --%>
+  <c:if test="${not empty detail and detail.shift.open}">
   <div class="modal" id="modalCloseShift" role="dialog" aria-modal="true" aria-labelledby="modalCloseTitle" aria-describedby="modalCloseDesc">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -491,12 +482,6 @@
           <input type="hidden" id="expectedCashRaw" value="${detail.metrics.cashTotal}">
 
           <div class="modal-body">
-            <c:if test="${detail.hasPendingOrders()}">
-              <div class="alert-banner danger" style="margin-bottom: var(--space-4);">
-                <i class="fa-solid fa-circle-exclamation"></i>
-                <span>Không thể chốt ca: còn <b>${detail.pendingOrders.size()}</b> đơn hàng quầy đang chờ xử lý. Vui lòng xác nhận hoặc hủy đơn trước khi chốt ca.</span>
-              </div>
-            </c:if>
             <p class="modal-desc" id="modalCloseDesc">Đếm số tiền mặt thực tế trong két quầy Lễ tân và nhập vào bên dưới. Nếu có chênh lệch so với số liệu sổ sách, bắt buộc phải nêu rõ lý do giải trình.</p>
 
             <div class="reconcile-card">
@@ -511,7 +496,6 @@
               <input id="inputCountedCash" name="countedCash" type="text" inputmode="numeric"
                      class="field-input tabular" placeholder="Ví dụ: 2.600.000" required
                      value="${detail.metrics.cashTotal}">
-              <div class="field-error" id="countedCashError" hidden></div>
             </div>
 
             <%-- Khung hiển thị chênh lệch --%>
@@ -533,7 +517,7 @@
 
           <div class="modal-foot">
             <button class="btn btn-ghost" type="button" data-close-modal>Bỏ qua</button>
-            <button class="btn btn-primary" type="submit" id="btnSubmitCloseShift" ${detail.hasPendingOrders() ? 'disabled' : ''}>
+            <button class="btn btn-primary" type="submit" id="btnSubmitCloseShift">
               <i class="fa-solid fa-lock"></i> Xác nhận chốt ca
             </button>
           </div>
@@ -581,6 +565,7 @@
       </div>
     </div>
   </div>
+  </c:if>
 
 </body>
 </html>

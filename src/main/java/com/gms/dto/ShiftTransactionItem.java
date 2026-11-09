@@ -59,11 +59,10 @@ public class ShiftTransactionItem {
     private final LocalDateTime cancelledAt;
 
     // Service: Tính toán xem Lễ tân hiện tại có quyền hủy đơn này không (CBR-11, CBR-115).
-    // True nếu: ca đang Open, đơn tại quầy, chưa hủy, và không phải hồ sơ của chính lễ tân.
-    private final boolean canCancel;
+    private boolean canCancel;
 
     // Service: Tính toán xem đơn này có phải chuyển khoản đang chờ duyệt không (CBR-77).
-    private final boolean canConfirmTransfer;
+    private boolean canConfirmTransfer;
 
     public ShiftTransactionItem(int orderId, String orderCode, String customerName,
                                 String customerPhone, String packageName,
@@ -139,8 +138,16 @@ public class ShiftTransactionItem {
         return canCancel;
     }
 
+    public void setCanCancel(boolean canCancel) {
+        this.canCancel = canCancel;
+    }
+
     public boolean isCanConfirmTransfer() {
         return canConfirmTransfer;
+    }
+
+    public void setCanConfirmTransfer(boolean canConfirmTransfer) {
+        this.canConfirmTransfer = canConfirmTransfer;
     }
 
     // GETTER TỰ TÍNH — không có field/setter "paid"; = orderStatus == "Paid"; JSP: receptionist/shift.jsp:341
