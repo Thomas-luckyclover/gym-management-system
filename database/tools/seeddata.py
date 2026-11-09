@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Dữ liệu seed GMS v26 — chạy: python3 seeddata.py  → in ra 2_Seed_Data.sql"""
+import os
 import sys
 from seedgen import *
 import seedgen as G
@@ -1041,6 +1042,11 @@ SECTION.update({
     'TimeSlots': 'Lịch PT: slot đã đặt + slot trống công bố dày 05/10–31/10 (có cuối tuần).',
     'Sessions': 'Trước 05/10 đã có kết quả; từ 05/10 sinh Scheduled, buổi trước ngày nạp được chốt ở khối cuối file (JOB-02, JOB-04).',
 })
+
+# ============================================================ 17. DỮ LIỆU SYSTEM TEST BF-05 (SQL viết tay)
+# Các việc làm ngày 06/11/2026 khi chạy System Test BF-05: đơn DH-2026-0181…0185, dời / chuyển / hủy buổi,
+# thông báo nhắc buổi 21/10 của Mai, KH-2029 đang bảo lưu. Viết bằng SQL tra ID nên để riêng file.
+G.EXTRA_SQL.append(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'seed_st_bf05.sql'), encoding='utf-8').read())
 
 if __name__ == '__main__':
     HEADER = open('seed_header.sql', encoding='utf-8').read() if len(sys.argv) < 2 else ''
