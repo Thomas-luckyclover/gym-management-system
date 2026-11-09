@@ -59,6 +59,57 @@ class StaffLeaveServiceTest {
     }
 
     // ===== Dự báo nhân sự khi mở form và đổi lựa chọn =====
+    @Test
+    void historyPageKeepsSplitPartsTogetherAndIncludesProcessedRequests() throws Exception {
+        String groupId = UUID.randomUUID().toString();
+        LeaveRequest annual = new LeaveRequest();
+        annual.setLeaveRequestId(101);
+        annual.setLeaveGroupId(groupId);
+        annual.setStatus(LeaveRequest.Status.APPROVED);
+        LeaveRequest unpaid = new LeaveRequest();
+        unpaid.setLeaveRequestId(102);
+        unpaid.setLeaveGroupId(groupId);
+        unpaid.setStatus(LeaveRequest.Status.REJECTED);
+        LeaveRequest oldSingle = new LeaveRequest();
+        oldSingle.setLeaveRequestId(1);
+        oldSingle.setStatus(LeaveRequest.Status.APPROVED);
+        when(dao.countHistoryGroups(50)).thenReturn(12);
+        when(dao.findHistoryPage(50, 10, 10)).thenReturn(List.of(annual, unpaid, oldSingle));
+
+        try (MockedStatic<DBContext> db = mockStatic(DBContext.class)) {
+            db.when(DBContext::getConnection).thenReturn(connection);
+            var result = service.getStaffLeaveForm(10, 2, 10);
+            assertTrue(result.isSuccess());
+            var page = result.getData().getHistoryPage();
+            assertEquals(2, page.getPageNumber());
+            assertEquals(2, page.getTotalPages());
+            assertEquals(12, page.getTotalItems());
+            assertEquals(2, page.getItems().size());
+            assertEquals(List.of(annual, unpaid), page.getItems().get(0).getRequests());
+            assertEquals(oldSingle, page.getItems().get(1).getRequests().get(0));
+            verify(dao).findHistoryPage(50, 10, 10);
+            verify(dao, never()).findByLeaveGroup(anyString(), anyInt());
+        }
+    }
+
+    @Test
+    void historyPageClampsToTheLastExistingPageAndHandlesEmptyHistory() throws Exception {
+        when(dao.countHistoryGroups(50)).thenReturn(21, 0);
+        try (MockedStatic<DBContext> db = mockStatic(DBContext.class)) {
+            db.when(DBContext::getConnection).thenReturn(connection);
+            var last = service.getStaffLeaveForm(10, Integer.MAX_VALUE, 10).getData().getHistoryPage();
+            assertEquals(3, last.getPageNumber());
+            verify(dao).findHistoryPage(50, 20, 10);
+            var empty = service.getStaffLeaveForm(10, -3, 10).getData().getHistoryPage();
+            assertEquals(1, empty.getPageNumber());
+            assertEquals(1, empty.getTotalPages());
+            assertTrue(empty.isEmpty());
+            assertFalse(empty.isHasPrevious());
+            assertFalse(empty.isHasNext());
+            verify(dao).findHistoryPage(50, 0, 10);
+        }
+    }
+
     @ParameterizedTest
     @EnumSource(value = Role.class, names = {"PT", "RECEPTIONIST"})
     void formAndPreviewOnlyDeductTheApplicantsPosition(Role role) throws Exception {
