@@ -684,22 +684,36 @@ public class LeaveRequestDAO {
         return sessions;
     }
 
-    /**
-     * Lấy mọi đơn Pending và các đơn đã xử lý gần đây của nhân viên (màn #25).
-     *
-     * @param employeeId mã nhân viên
-     * @param limit số đơn đã xử lý tối đa; Pending không bị giới hạn
-     * @return Pending trước, sau đó các đơn đã xử lý; mỗi nhóm xếp mới nhất trước
-     * @throws SQLException lỗi kết nối hoặc truy vấn DB
-     */
-    public List<LeaveRequest> findByEmployeeId(int employeeId, int limit) throws SQLException {
-        // B1: câu SQL lấy danh sách đơn của nhân viên theo ngày nộp mới nhất
-        String sql = SELECT_COLUMNS
-                + "WHERE EmployeeId = ? AND (Status = 'Pending' OR LeaveRequestId IN ("
-                + " SELECT TOP (?) LeaveRequestId FROM LeaveRequests WHERE EmployeeId = ? AND Status <> 'Pending' "
-                + " ORDER BY SubmittedAt DESC, LeaveRequestId DESC)) "
-                + "ORDER BY CASE WHEN Status = 'Pending' THEN 0 ELSE 1 END, SubmittedAt DESC, LeaveRequestId DESC";
+    /** Đơn lẻ là một nhóm; các phần có cùng LeaveGroupId chỉ tính một nhóm. */
+    public int countHistoryGroups(int employeeId) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM (SELECT LeaveGroupId, "
+                + "CASE WHEN LeaveGroupId IS NULL THEN LeaveRequestId ELSE 0 END AS SingleRequestId "
+                + "FROM LeaveRequests WHERE EmployeeId = ? "
+                + "GROUP BY LeaveGroupId, CASE WHEN LeaveGroupId IS NULL THEN LeaveRequestId ELSE 0 END) g";
+        try (Connection connection = DBContext.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, employeeId);
+            try (ResultSet rs = statement.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        }
+    }
 
+    /** Cắt trang theo nhóm trước, sau đó lấy đủ các phần của những nhóm trên trang. */
+    public List<LeaveRequest> findHistoryPage(int employeeId, int offset, int pageSize) throws SQLException {
+        String sql = "WITH RequestGroups AS ("
+                + " SELECT LeaveGroupId, CASE WHEN LeaveGroupId IS NULL THEN LeaveRequestId ELSE 0 END AS SingleRequestId, "
+                + " MIN(CASE WHEN Status = 'Pending' THEN 0 ELSE 1 END) AS SortStatus, "
+                + " MAX(SubmittedAt) AS LatestSubmittedAt, MAX(LeaveRequestId) AS LatestId "
+                + " FROM LeaveRequests WHERE EmployeeId = ? "
+                + " GROUP BY LeaveGroupId, CASE WHEN LeaveGroupId IS NULL THEN LeaveRequestId ELSE 0 END"
+                + "), PageGroups AS (SELECT * FROM RequestGroups "
+                + " ORDER BY SortStatus, LatestSubmittedAt DESC, LatestId DESC "
+                + " OFFSET ? ROWS FETCH NEXT ? ROWS ONLY) "
+                + "SELECT lr.* FROM LeaveRequests lr JOIN PageGroups g ON "
+                + "(lr.LeaveGroupId = g.LeaveGroupId OR (g.LeaveGroupId IS NULL AND lr.LeaveRequestId = g.SingleRequestId)) "
+                + "WHERE lr.EmployeeId = ? "
+                + "ORDER BY g.SortStatus, g.LatestSubmittedAt DESC, g.LatestId DESC, lr.FromDate, lr.LeaveRequestId";
         List<LeaveRequest> list = new ArrayList<>();
 
         // B2: thực thi và map từng dòng kết quả
@@ -707,8 +721,9 @@ public class LeaveRequestDAO {
                 PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setInt(1, employeeId);
-            statement.setInt(2, limit);
-            statement.setInt(3, employeeId);
+            statement.setInt(2, offset);
+            statement.setInt(3, pageSize);
+            statement.setInt(4, employeeId);
 
             try (ResultSet resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {

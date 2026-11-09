@@ -74,6 +74,22 @@
   border-bottom-color: var(--color-primary);
 }
 
+.staff-leave-page .leave-history-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: var(--border-width) solid var(--color-border);
+  color: var(--color-text-soft);
+}
+
+.staff-leave-page .leave-history-pagination [aria-disabled="true"] {
+  opacity: .5;
+}
+
 .staff-leave-page .leave-form-heading {
   display: flex;
   justify-content: space-between;

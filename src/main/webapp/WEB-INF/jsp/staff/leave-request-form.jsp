@@ -13,7 +13,7 @@
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Nghỉ phép · Super Gym</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css?v=20261018">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-requests.css?v=20261109-staff-tabs">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-requests.css?v=20261109-history-pages">
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css?v=20261018">
   <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
 </head>
@@ -102,8 +102,7 @@
                 </div>
               </div>
 
-              <form action="${submitActionUrl}" method="post" id="leaveForm"
-                    data-preview-url="${submitActionUrl}/preview">
+              <form action="${submitActionUrl}" method="post" id="leaveForm">
                 <input type="hidden" name="csrfToken" value="${csrfToken}">
 
                 <div class="leave-form-grid">
@@ -150,7 +149,6 @@
                            data-cutoff="<c:out value='${formView.submissionCutoffTime}' default='' />"
                            value="<c:out value='${paramLeaveDate}' />"
                            required>
-                    <div class="field-error" id="leaveDateClientErr" hidden></div>
                     <c:if test="${not empty fieldErrors.leaveDate}">
                       <div class="field-error">
                         <c:out value="${fieldErrors.leaveDate}" />
@@ -168,13 +166,21 @@
                   </div>
 
                 </div>
-                <%-- PT: JS renderPlan/resetPlan cập nhật cảnh báo lịch ngay dưới ngày; lễ tân không có khối này. --%>
-                <c:if test="${not isReceptionist}">
-                  <div id="leaveScheduleWarning" class="leave-schedule-warning" role="alert" ${empty fieldErrors.sessions ? 'hidden' : ''}>
-                    <span><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> <span id="leaveScheduleMessage"><c:out value="${fieldErrors.sessions}" /></span></span>
+                <%-- JSP in các buổi dạy trùng do Service trả về. --%>
+                <c:if test="${not isReceptionist and (preview.sessionConflicts gt 0 or not empty fieldErrors.sessions)}">
+                  <div id="leaveScheduleWarning" class="leave-schedule-warning" role="alert">
+                    <span><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+                      <c:choose>
+                        <c:when test="${not empty fieldErrors.sessions}"><c:out value="${fieldErrors.sessions}" /></c:when>
+                        <c:otherwise>Trùng ${preview.sessionConflicts} buổi dạy. Xử lý lịch trước khi gửi đơn.</c:otherwise>
+                      </c:choose>
+                    </span>
                     <a id="leaveScheduleLink" class="btn btn-sm btn-outline" href="${pageContext.request.contextPath}/pt/schedule">Xem lịch dạy →</a>
-                    <%-- renderPlan/resetPlan trong leave-request-form.js thêm/xóa từng buổi từ preview.conflictingSessions. --%>
-                    <ul id="leaveConflictingSessions" class="leave-conflicting-sessions"></ul>
+                    <ul class="leave-conflicting-sessions">
+                      <c:forEach var="session" items="${preview.conflictingSessions}">
+                        <li>${gms:formatDate(session.slotDate)} · ${session.startTime}–${session.endTime}</li>
+                      </c:forEach>
+                    </ul>
                   </div>
                 </c:if>
                 <div class="field leave-reason-field">
@@ -195,26 +201,51 @@
                   </c:if>
                 </div>
 
-                <%-- JSON preview chỉ dự báo; Service tính lại cùng phương án trong transaction khi POST. --%>
-                <div id="leavePlan" class="leave-submission-plan" aria-live="polite" hidden>
-                  <b id="leavePlanTitle">Dự kiến gửi</b>
-                  <div id="leavePlanParts"></div>
-                  <small id="leaveBalanceText"></small>
-                  <label id="unpaidConsentRow" class="leave-consent" hidden>
-                    <input type="checkbox" id="acceptUnpaid" name="acceptUnpaid" value="true">
-                    <span>Tôi đồng ý gửi phần vượt phép thành đơn không lương.</span>
-                  </label>
-                  <small id="unpaidConsentHint" hidden>Không đồng ý: giảm số ngày nghỉ hoặc đổi loại nghỉ.</small>
-                  <input type="hidden" id="expectedAnnualDays" name="expectedAnnualDays" value="-1">
-                  <input type="hidden" id="expectedUnpaidDays" name="expectedUnpaidDays" value="-1">
+                <%-- Xem dự kiến dùng POST rồi forward về JSP; chỉ nút Nộp đơn mới lưu. --%>
+                <c:if test="${not empty preview}">
+                <div id="leavePlan" class="leave-submission-plan">
+                  <b>Dự kiến gửi ${previewPartCount} đơn<c:if test="${previewPartCount eq 2}"> cùng đợt</c:if></b>
+                  <div id="leavePlanParts">
+                    <c:if test="${preview.annualDays gt 0}">
+                      <div class="leave-plan-part">
+                        <b>Phép năm · ${preview.annualDays} ngày</b>
+                        <span>${gms:formatDate(preview.fromDate)} → ${gms:formatDate(annualToDate)}</span>
+                      </div>
+                    </c:if>
+                    <c:if test="${preview.unpaidDays gt 0}">
+                      <div class="leave-plan-part">
+                        <b>Không lương · ${preview.unpaidDays} ngày</b>
+                        <span>${gms:formatDate(unpaidFromDate)} → ${gms:formatDate(preview.toDate)}</span>
+                      </div>
+                    </c:if>
+                  </div>
+                  <small id="leaveBalanceText">
+                    <c:choose>
+                      <c:when test="${paramLeaveType eq 'Annual'}">Còn ${preview.remainingAnnualDays} ngày phép năm (đã tính các đơn đang chờ).</c:when>
+                      <c:otherwise>Không sử dụng quỹ phép năm.</c:otherwise>
+                    </c:choose>
+                  </small>
+                  <c:if test="${preview.needsUnpaidConsent}">
+                    <label class="leave-consent">
+                      <input type="checkbox" id="acceptUnpaid" name="acceptUnpaid" value="true">
+                      <span>Tôi đồng ý gửi phần vượt phép thành đơn không lương.</span>
+                    </label>
+                    <small>Không đồng ý: giảm số ngày nghỉ hoặc đổi loại nghỉ.</small>
+                  </c:if>
+                  <input type="hidden" name="expectedAnnualDays" value="${preview.annualDays}">
+                  <input type="hidden" name="expectedUnpaidDays" value="${preview.unpaidDays}">
+                  <input type="hidden" name="previewSelection" value="<c:out value='${previewSelection}' />">
                   <c:if test="${not empty fieldErrors.acceptUnpaid}">
                     <div class="field-error"><c:out value="${fieldErrors.acceptUnpaid}" /></div>
                   </c:if>
-                  <p id="leavePlanError" class="field-error" hidden></p>
-
                 </div>
+                </c:if>
 
-                <button class="btn btn-primary" type="submit" id="leaveSubmit">
+                <button class="btn btn-outline" type="submit" name="action" value="preview" formnovalidate>
+                  Xem dự kiến
+                </button>
+                <button class="btn btn-primary" type="submit" name="action" value="submit" id="leaveSubmit"
+                        ${empty preview or preview.sessionConflicts gt 0 ? 'disabled' : ''}>
                   <i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Nộp đơn nghỉ phép
                 </button>
               </form>
@@ -227,7 +258,6 @@
               <div class="panel-head" style="display:flex;align-items:center;justify-content:space-between">
                 <div>
                   <h2>Đơn đã nộp</h2>
-                  <p>Tất cả đơn đang chờ và 10 đơn đã xử lý gần nhất.</p>
                 </div>
               </div>
 
@@ -289,6 +319,7 @@
                               <input type="hidden" name="csrfToken" value="${csrfToken}">
                               <input type="hidden" name="action" value="withdraw">
                               <input type="hidden" name="leaveRequestId" value="${req.leaveRequestId}">
+                              <input type="hidden" name="page" value="${formView.historyPage.pageNumber}">
                               <button type="submit" class="btn btn-sm btn-outline danger"
                                       data-confirm-title="Rút đơn nghỉ phép"
                                       data-confirm-message="Xác nhận rút đơn nghỉ ${gms:formatDate(req.fromDate)}–${gms:formatDate(req.toDate)} (${req.days} ngày)?">
@@ -304,6 +335,23 @@
                   </div>
                 </c:otherwise>
               </c:choose>
+              <c:if test="${not empty formView}">
+                <nav class="leave-history-pagination" aria-label="Phân trang đơn đã nộp">
+                  <c:choose>
+                    <c:when test="${formView.historyPage.hasPrevious}">
+                      <a class="btn btn-sm btn-outline" href="${submitActionUrl}?tab=history&amp;page=${formView.historyPage.pageNumber - 1}">Trang trước</a>
+                    </c:when>
+                    <c:otherwise><span class="btn btn-sm btn-outline" aria-disabled="true">Trang trước</span></c:otherwise>
+                  </c:choose>
+                  <span>Trang ${formView.historyPage.pageNumber}/${formView.historyPage.totalPages} · ${formView.historyPage.totalItems} đợt nghỉ / đơn lẻ</span>
+                  <c:choose>
+                    <c:when test="${formView.historyPage.hasNext}">
+                      <a class="btn btn-sm btn-outline" href="${submitActionUrl}?tab=history&amp;page=${formView.historyPage.pageNumber + 1}">Trang sau</a>
+                    </c:when>
+                    <c:otherwise><span class="btn btn-sm btn-outline" aria-disabled="true">Trang sau</span></c:otherwise>
+                  </c:choose>
+                </nav>
+              </c:if>
             </section>
             </c:if>
         </div>
@@ -311,6 +359,5 @@
     </div>
   </div>
 
-  <script src="${pageContext.request.contextPath}/js/pages/staff/leave-request-form.js?v=20261102-conflicts"></script>
 </body>
 </html>
