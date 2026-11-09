@@ -4,6 +4,8 @@
 <%@ taglib prefix="gms" uri="/WEB-INF/gms-functions.tld" %>
 
 <c:set var="isReceptionist" value="${sessionScope.role eq 'Receptionist' or formView.position eq 'Receptionist'}" />
+<c:set var="historyTab" value="${param.tab eq 'history' and empty submitError and empty fieldErrors}" />
+<c:set var="submitActionUrl" value="${pageContext.request.contextPath}${isReceptionist ? '/receptionist/leave-requests' : '/pt/leave-requests'}" />
 
 <!DOCTYPE html>
 <html lang="vi">
@@ -11,7 +13,7 @@
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Nghỉ phép · Super Gym</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css?v=20261018">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-requests.css?v=20261107-linked-history">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-requests.css?v=20261109-staff-tabs">
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css?v=20261018">
   <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
 </head>
@@ -68,8 +70,15 @@
           </div>
         </c:if>
 
-        <%-- Form và lịch sử một cột (formView: StaffLeaveFormView do Service tạo). --%>
+        <%-- Hai tab dùng chung Servlet; tham số tab chỉ chọn phần cần hiển thị. --%>
         <div class="leave-staff-content">
+            <nav class="leave-staff-tabs" aria-label="Đơn nghỉ phép">
+              <a href="${submitActionUrl}" class="leave-staff-tab ${historyTab ? '' : 'is-active'}"
+                 aria-current="${historyTab ? 'false' : 'page'}">Tạo đơn nghỉ phép</a>
+              <a href="${submitActionUrl}?tab=history" class="leave-staff-tab ${historyTab ? 'is-active' : ''}"
+                 aria-current="${historyTab ? 'page' : 'false'}">Đơn đã nộp</a>
+            </nav>
+            <c:if test="${not historyTab}">
             <%-- ===== Panel 1: Form nộp đơn xin nghỉ phép ===== --%>
             <section class="panel leave-panel">
               <div class="panel-head leave-form-heading">
@@ -93,7 +102,6 @@
                 </div>
               </div>
 
-              <c:set var="submitActionUrl" value="${pageContext.request.contextPath}${isReceptionist ? '/receptionist/leave-requests' : '/pt/leave-requests'}" />
               <form action="${submitActionUrl}" method="post" id="leaveForm"
                     data-preview-url="${submitActionUrl}/preview">
                 <input type="hidden" name="csrfToken" value="${csrfToken}">
@@ -211,7 +219,9 @@
                 </button>
               </form>
             </section>
+            </c:if>
 
+            <c:if test="${historyTab}">
             <%-- ===== Panel 2: Lịch sử theo đợt nghỉ (formView.requestGroups do Service tạo) ===== --%>
             <section class="panel leave-panel">
               <div class="panel-head" style="display:flex;align-items:center;justify-content:space-between">
@@ -295,6 +305,7 @@
                 </c:otherwise>
               </c:choose>
             </section>
+            </c:if>
         </div>
       </main>
     </div>

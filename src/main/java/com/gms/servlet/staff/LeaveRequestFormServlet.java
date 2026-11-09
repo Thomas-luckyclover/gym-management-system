@@ -101,7 +101,7 @@ public class LeaveRequestFormServlet extends HttpServlet {
             } else {
                 RequestUtil.setFlashToast(request, "danger", withdrawResult.getMessage());
             }
-            RequestUtil.redirect(request, response, RequestUtil.getPathWithinApp(request));
+            RequestUtil.redirect(request, response, RequestUtil.getPathWithinApp(request) + "?tab=history");
             return;
         }
 
@@ -150,9 +150,9 @@ public class LeaveRequestFormServlet extends HttpServlet {
             return;
         }
 
-        // B5: nếu thành công, gắn flash toast và redirect (PRG pattern) về lại trang hiện tại
+        // B5: nộp thành công thì mở tab Đơn đã nộp để xem kết quả.
         RequestUtil.setFlashToast(request, "success",
                 Messages.MSG216_LEAVE_SUBMITTED);
-        RequestUtil.redirect(request, response, RequestUtil.getPathWithinApp(request));
+        RequestUtil.redirect(request, response, RequestUtil.getPathWithinApp(request) + "?tab=history");
     }
 }
