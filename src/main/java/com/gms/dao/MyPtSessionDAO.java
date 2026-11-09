@@ -16,14 +16,16 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * DAO buổi PT của khách — dùng chung cho 2 màn:
- *   "Lịch tập"     (/customer/pt-sessions) : findSessionsInRange
- *   "Gói của tôi"  (/customer/bookings)    : findMyPackages, findSessionsOfPackage, findSingleSessions
+ * DAO BUỔI PT CỦA KHÁCH — dùng chung cho 2 màn: "Lịch tập" (/customer/pt-sessions) và "Gói của tôi" (/customer/bookings).
+ *
+ * AI GỌI DAO NÀY?  MyPtSessionService (getWeek, getMonth, fillDisplay) · MyBookingService (getMyBookings).
  * Chỉ ĐỌC DB, không tính nghiệp vụ (việc đó ở Service).
+ * BỐ CỤC: xếp theo HÀM CHÍNH của Service dùng tới.
+ *   PHỤC VỤ getWeek / getMonth / getMyBookings   các buổi của khách (3 hàm find dùng chung querySessions, readSessionRow)
+ *   PHỤC VỤ getMyBookings                        gói PT của khách (cột trái màn Gói của tôi)
+ *   PHỤC VỤ fillDisplay                          quyền vào gym (Membership / DayPass / bảo lưu) + ngày phòng nghỉ
  */
 public class MyPtSessionDAO {
-
-
     /**
      * Câu SQL gốc lấy buổi của khách (đứng tên gói, hoặc đi kèm gói đôi). 2 dấu ?: customerId, customerId.
      *   Bước 1 (CTE): lấy MỌI buổi của các gói đã thanh toán, đánh số #1, #2… theo ngày giờ trong từng gói.
@@ -66,15 +68,22 @@ public class MyPtSessionDAO {
 
     private static final String ORDER_BY = " ORDER BY ms.SlotDate, ms.StartTime, ms.SessionId";
 
-    // ================================================================================================================
-    // 1. CÁC BUỔI CỦA KHÁCH — ba hàm find dùng chung querySessions / readSessionRow ngay dưới
-    // ================================================================================================================
 
-    /** Lịch tập: buổi có ngày tập trong [fromDate, toDate] (1 tuần hoặc 1 tháng). */
+
+    // ============================================================================================================
+    // PHỤC VỤ HÀM CHÍNH getWeek / getMonth (findSessionsInRange) + getMyBookings (findSessionsOfPackage, findSingleSessions)
+    //   Ba hàm find dùng chung querySessions → readSessionRow → getNullableInt ngay dưới
+    // ============================================================================================================
+
+    /** Lịch tập (getWeek, getMonth): buổi có ngày tập trong [fromDate, toDate] (1 tuần hoặc 1 tháng). */
     public List<MyPtSessionRow> findSessionsInRange(int customerId, LocalDate fromDate, LocalDate toDate)
             throws SQLException {
         String sql = SESSIONS_SQL + " WHERE ms.SlotDate BETWEEN ? AND ?" + ORDER_BY;
-        return querySessions(sql, customerId, Date.valueOf(fromDate), Date.valueOf(toDate));
+        return querySessions(
+                sql,
+                customerId,
+                Date.valueOf(fromDate),
+                Date.valueOf(toDate));
     }
 
     /** Gói của tôi: mọi buổi của 1 gói (#1 → #N). Gói không phải của khách → danh sách rỗng. */
@@ -90,7 +99,7 @@ public class MyPtSessionDAO {
     }
 
     /**
-     * Chạy SESSIONS_SQL + WHERE riêng.
+     * HÀM PHỤ (findSessionsInRange, findSessionsOfPackage, findSingleSessions) — chạy SESSIONS_SQL + WHERE riêng.
      * B1: gán 2 dấu ? đầu = customerId → B2: gán các dấu ? còn lại theo thứ tự → B3: đọc từng dòng.
      */
     private List<MyPtSessionRow> querySessions(String sql, int customerId, Object... extraParams) throws SQLException {
@@ -99,11 +108,11 @@ public class MyPtSessionDAO {
         try (Connection connection = DBContext.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
 
-            // B1: 2 dấu ? trong CTE (người đứng tên / người đi kèm)
+            // B1: 2 dấu ? đầu = mã khách
             statement.setInt(1, customerId);
             statement.setInt(2, customerId);
 
-            // B2: dấu ? của WHERE riêng (ngày hoặc mã gói)
+            // B2: các dấu ? còn lại (ngày hoặc mã gói)
             for (int i = 0; i < extraParams.length; i++) {
                 statement.setObject(i + 3, extraParams[i]);
             }
@@ -118,15 +127,15 @@ public class MyPtSessionDAO {
         return rows;
     }
 
-    /** Đọc 1 dòng của SESSIONS_SQL thành 1 buổi. */
+    /** HÀM PHỤ (querySessions) — đọc 1 dòng của SESSIONS_SQL thành 1 buổi. */
     private MyPtSessionRow readSessionRow(ResultSet rs) throws SQLException {
-        // B1: đọc các cột DAO lấy trực tiếp từ một dòng JOIN.
+        // B1: đọc các cột
         Timestamp cancelledAt = rs.getTimestamp("CancelledAt");
         String type = rs.getString("SubscriptionType");
         java.sql.Date startDate = rs.getDate("StartDate");
         java.sql.Date endDate = rs.getDate("EndDate");
 
-        // B2: constructor gom toàn bộ field DAO đọc; Service sẽ tính field hiển thị ở bước sau.
+        // B2: gom thành 1 buổi (Service điền phần hiển thị sau)
         return new MyPtSessionRow(
                 rs.getInt("SessionId"), rs.getString("Status"), rs.getString("MissedReason"),
                 rs.getString("CancelType"), rs.getString("CancelReason"),
@@ -142,14 +151,21 @@ public class MyPtSessionDAO {
                 rs.getString("PartnerFullName"));
     }
 
-    // ================================================================================================================
-    // 2. GÓI PT CỦA KHÁCH — findMyPackages đọc dữ liệu cho cột trái MyBookings
-    // ================================================================================================================
+    /** HÀM PHỤ (readSessionRow, findMyPackages) — rs.getInt trả 0 khi NULL → hàm này trả đúng null. */
+    private Integer getNullableInt(ResultSet rs, String column) throws SQLException {
+        int value = rs.getInt(column);
+        return rs.wasNull() ? null : value;
+    }
+
+
+
+    // ============================================================================================================
+    // PHỤC VỤ HÀM CHÍNH getMyBookings — mọi gói PT cá nhân / đôi đã thanh toán của khách (cột trái màn Gói của tôi)
+    // ============================================================================================================
 
     /**
-     * Mọi gói PT cá nhân / đôi đã thanh toán của khách (đang tập và đã kết thúc), 1 câu SQL.
-     * PastSessions = số buổi có ngày tập TRƯỚC hôm nay → thanh tiến độ "đã qua 30/45 buổi".
-     * 3 dấu ?: hôm nay, customerId, customerId.
+     * Gói của tôi (getMyBookings B2): mọi gói PT cá nhân / đôi đã thanh toán của khách (đang tập và đã kết thúc), 1 câu SQL.
+     * PastSessions = số buổi có ngày tập TRƯỚC hôm nay → thanh tiến độ "đã qua 30/45 buổi". 3 dấu ?: hôm nay, customerId, customerId.
      */
     public List<MyPtPackageView> findMyPackages(int customerId, LocalDate today) throws SQLException {
         String sql = """
@@ -213,11 +229,14 @@ public class MyPtSessionDAO {
         return packages;
     }
 
-    // ================================================================================================================
-    // 3. QUYỀN VÀO GYM — hasGymPass / isFrozen dùng chung hàm COUNT ngay dưới
-    // ================================================================================================================
 
-    /** Khách có Membership HOẶC DayPass phủ ngày này không? */
+
+    // ============================================================================================================
+    // PHỤC VỤ HÀM CHÍNH fillDisplay — quyền vào gym (buildGymWarning, canUseGym) + ngày phòng nghỉ (B1)
+    //   hasGymPass / hasDayPass / isFrozen dùng chung câu COUNT countByCustomerAndDate ngay dưới
+    // ============================================================================================================
+
+    /** fillDisplay (canUseGym): khách có Membership HOẶC DayPass phủ ngày này không? */
     public boolean hasGymPass(int customerId, LocalDate date) throws SQLException {
         String sql = """
                 SELECT COUNT(*)
@@ -226,6 +245,18 @@ public class MyPtSessionDAO {
                   AND ? BETWEEN StartDate AND EndDate
                   AND (   (SubscriptionType = 'Membership' AND Status IN ('Active', 'Frozen', 'Expired'))
                        OR (SubscriptionType = 'DayPass'    AND Status IN ('Active', 'Used', 'Expired')))
+                """;
+        return countByCustomerAndDate(sql, customerId, date) > 0;
+    }
+
+    /** Khách có VÉ NGÀY phủ ngày này không? (vé ngày không bị bảo lưu chặn — CBR-117) */
+    public boolean hasDayPass(int customerId, LocalDate date) throws SQLException {
+        String sql = """
+                SELECT COUNT(*)
+                FROM Subscriptions
+                WHERE CustomerId = ?
+                  AND ? BETWEEN StartDate AND EndDate
+                  AND SubscriptionType = 'DayPass' AND Status IN ('Active', 'Used', 'Expired')
                 """;
         return countByCustomerAndDate(sql, customerId, date) > 0;
     }
@@ -243,7 +274,7 @@ public class MyPtSessionDAO {
         return countByCustomerAndDate(sql, customerId, date) > 0;
     }
 
-    /** Chạy câu COUNT có 2 dấu ?: customerId, ngày. */
+    /** HÀM PHỤ (hasGymPass, hasDayPass, isFrozen) — chạy câu COUNT có 2 dấu ?: customerId, ngày. */
     private int countByCustomerAndDate(String sql, int customerId, LocalDate date) throws SQLException {
         try (Connection connection = DBContext.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -258,11 +289,7 @@ public class MyPtSessionDAO {
         }
     }
 
-    // ================================================================================================================
-    // 4. NGÀY PHÒNG NGHỈ — đọc ngoại lệ nghỉ cả ngày trong khoảng đang xem
-    // ================================================================================================================
-
-    /** Các ngày phòng NGHỈ CẢ NGÀY (Manager khai báo) trong [fromDate, toDate]. */
+    /** fillDisplay B1: các ngày phòng NGHỈ CẢ NGÀY (Manager khai báo) trong [fromDate, toDate]. */
     public Set<LocalDate> findClosedDays(LocalDate fromDate, LocalDate toDate) throws SQLException {
         String sql = """
                 SELECT ApplyDate
@@ -287,15 +314,4 @@ public class MyPtSessionDAO {
         }
         return days;
     }
-
-    // ================================================================================================================
-    // 5. ĐỌC MÃ CÓ THỂ NULL — readSessionRow và findMyPackages dùng chung
-    // ================================================================================================================
-
-    /** rs.getInt trả 0 khi NULL → hàm này trả đúng null. */
-    private Integer getNullableInt(ResultSet rs, String column) throws SQLException {
-        int value = rs.getInt(column);
-        return rs.wasNull() ? null : value;
-    }
-
 }

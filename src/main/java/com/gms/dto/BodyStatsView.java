@@ -101,10 +101,12 @@ public class BodyStatsView {
     public void setLastHeight(BigDecimal lastHeight) { this.lastHeight = lastHeight; }
 
     /** Chiều cao điền sẵn vào ô (dấu chấm cho ô nhập): 160.0 → "160"; chưa đo lần nào → "". */
+    // GETTER TỰ TÍNH — không có field/setter "lastHeightText"; = lastHeight bỏ số 0 thừa, null → ""; JSP: customer/body-stats.jsp:125
     public String getLastHeightText() {
         return lastHeight == null ? "" : lastHeight.stripTrailingZeros().toPlainString();
     }
 
     /** JSP: biểu đồ cần ít nhất 2 lần đo có chỉ số đang chọn. */
+    // GETTER TỰ TÍNH — không có field/setter "hasChart"; = có ít nhất 2 lần đo (chartPoints.size() >= 2); JSP: customer/body-stats.jsp:80 …
     public boolean isHasChart() { return chartPoints.size() >= 2; }
 }

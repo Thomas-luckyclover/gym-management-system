@@ -24,7 +24,7 @@ import java.util.List;
  * THAM SỐ CẤU HÌNH (giá trị hiện tại)
  *   LATEST_POST_LIMIT = 3              số bài blog mới nhất ở cuối trang          (hằng số dưới đây)
  *   BADGE_POPULAR / BADGE_BEST_SAVING  chữ trên nhãn: "Phổ biến nhất" / "Tiết kiệm nhất"
- *   P-19 = "05:30-22:00"               giờ mở cửa, hiện "05:30 – 22:00"            (bảng SystemConfigs)
+ *   P-17 = "05:30-22:00"               giờ mở cửa, hiện "05:30 – 22:00"            (bảng SystemConfigs)
  *
  * @author Le Cong Minh
  */

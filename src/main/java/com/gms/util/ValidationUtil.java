@@ -132,7 +132,7 @@ public final class ValidationUtil {
     }
 
     /**
-     * DBR-17 (phần đầu số nhà mạng — P-16): 3 số đầu nằm trong danh sách đầu số hợp lệ.
+     * DBR-17 (phần đầu số nhà mạng — P-14): 3 số đầu nằm trong danh sách đầu số hợp lệ.
      * Danh sách do Service đọc từ cấu hình rồi truyền vào, để hàm này vẫn là hàm thuần.
      * @param phone số điện thoại đã qua isValidPhone
      * @param validPrefixes danh sách đầu số, VD ["032", "090", "091"]

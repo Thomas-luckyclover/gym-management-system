@@ -11,7 +11,7 @@
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Quản lý đơn nghỉ phép · Super Gym</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-request-list.css?v=20261027-local-dropdown">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-request-list.css?v=20261107-theme-text">
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
   <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
   <script src="${pageContext.request.contextPath}/js/pages/manager/leave-request-list.js?v=20261027-local-dropdown" defer></script>
@@ -151,7 +151,7 @@
             <div class="leave-list-caption">
               <form id="leave-bulk-form" class="leave-bulk-actions" action="${pageContext.request.contextPath}/manager/leave-requests/review" method="post">
                 <input type="hidden" name="csrfToken" value="<c:out value='${csrfToken}' />">
-                <input type="hidden" name="action" value="approveMany">
+                <input type="hidden" name="action" value="approveMany"> <%-- Here many  --%>
                 <input type="hidden" name="returnUrl" value="<c:out value='${listReturnUrl}' />">
                 <span id="leave-selection-count" aria-live="polite" hidden>Đã chọn 0 đơn</span>
                 <button id="leave-approve-selected" type="submit" class="btn btn-sm btn-primary" disabled
@@ -166,11 +166,13 @@
           </c:if>
 
           <%-- Tất cả: employeePage mở lịch sử từng người. Các tab trạng thái: requestPage hiện từng đơn. --%>
+          
           <c:choose>
             <c:when test="${employeeView and not empty employeePage.items}">
               <div class="leave-employee-list">
                 <c:forEach var="employee" items="${employeePage.items}">
                   <c:choose>
+                      
                     <c:when test="${employee.totalRequestCount > 0}">
                       <details class="leave-employee-group ${employee.nearLeaveDate ? 'leave-employee-near' : ''}">
                         <summary class="leave-employee-summary">
@@ -178,6 +180,7 @@
                         </summary>
                         <div class="leave-employee-requests">
                           <c:choose>
+                              <%-- Hiện tất cả các đơn của nhân viên (ALL) --%>
                             <c:when test="${not empty employee.requests}">
                               <c:set var="requestItems" value="${employee.requests}" />
                               <c:set var="showEmployee" value="${false}" />
@@ -190,6 +193,7 @@
                         </div>
                       </details>
                     </c:when>
+                      
                     <c:otherwise>
                       <div class="leave-employee-group leave-employee-no-requests">
                         <div class="leave-employee-summary">
@@ -201,11 +205,14 @@
                 </c:forEach>
               </div>
             </c:when>
+            
+            <%-- Hiện tất cả đơn thường --%>
             <c:when test="${not employeeView and not empty requestPage.items}">
               <c:set var="requestItems" value="${requestPage.items}" />
               <c:set var="showEmployee" value="${true}" />
               <%@ include file="/WEB-INF/jsp/manager/leave-request-table.jspf" %>
             </c:when>
+            
             <c:otherwise>
               <c:if test="${empty pageError}">
                 <div class="leave-empty">Không tìm thấy ${employeeView ? 'nhân viên' : 'đơn nghỉ phép'} phù hợp bộ lọc đã chọn.</div>
@@ -214,6 +221,7 @@
           </c:choose>
 
           <%-- Phân trang --%>
+          
           <c:if test="${listPage.totalPages > 1}">
             <div class="leave-pager">
               <c:if test="${listPage.hasPrevious}">

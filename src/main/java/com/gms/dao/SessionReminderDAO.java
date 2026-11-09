@@ -13,41 +13,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * DAO CỦA JOB-08 — tự nhắc khách có buổi PT ngày mai nhưng chưa vào được phòng tập.
- *
- *   findCustomersToRemind   tìm những người cần nhắc (đọc)
- *   sendOnce                gửi 1 thông báo hệ thống cho 1 tài khoản, nếu chưa gửi (ghi)
- *
- * DAO chỉ đọc/ghi. Quyết định câu chữ lời nhắc nằm ở SessionReminderService.
+ * DAO của JOB-08 — tìm khách cần nhắc + ghi thông báo.
  */
 public class SessionReminderDAO {
-
-    /**
-     * Một người cần nhắc. record = lớp chỉ chứa dữ liệu, Java tự tạo getter: row.accountId(), row.startTime()...
-     *
-     * @param accountId  tài khoản của khách (nhận thông báo ở chuông)
-     * @param startTime  giờ bắt đầu buổi PT ngày mai
-     * @param ptName     tên PT dạy buổi đó
-     * @param frozen     true = membership đang bảo lưu đúng ngày tập; false = chưa có membership / vé ngày
-     */
-    public record Reminder(int accountId, LocalTime startTime, String ptName, boolean frozen) {
+    // 1 khách cần nhắc: tài khoản nhận · giờ bắt đầu buổi · tên PT · đang bảo lưu? (để chọn câu nhắc)
+    public record Reminder(
+            int accountId,
+            LocalTime startTime,
+            String ptName,
+            boolean frozen) {
     }
 
-
-    /**
-     * HÀM CHÍNH — SessionReminderService gọi ở B2 của runJob.
-     * Những khách có buổi PT Scheduled vào ngày sessionDate mà KHÔNG dùng được gym ngày đó.
-     *
-     * Quy tắc "dùng được gym" giống hệt JOB-04 (AutoCloseSessionService.canUseGym):
-     *   có Membership HOẶC vé ngày (DayPass) phủ ngày tập   VÀ   không đang bảo lưu ngày đó.
-     *
-     * Gói PT đôi: cả người đứng tên lẫn người tập cùng đều phải dùng được gym, nên xét cả hai.
-     * Chỉ lấy khách có tài khoản Active (người không có tài khoản thì không có chuông để nhận).
-     * BỎ QUA ngày phòng nghỉ cả ngày và buổi nằm ngoài giờ mở cửa ngày đó (ngoại lệ OperatingHourExceptions,
-     * không có thì P-19): theo CBR-56 PT phải dời các buổi này, buổi còn sót bị JOB-04 hủy GymClosed
-     * → không khuyên khách mua gói / vé ngày cho buổi không thể diễn ra.
-     * 4 dấu ?: ngày tập (dùng 4 lần).
-     */
+    // Đọc khách có buổi Scheduled vào sessionDate (người đứng tên + người tập cùng của gói đôi).
+    //   Bỏ: ngày phòng nghỉ cả ngày, buổi ngoài giờ mở cửa (OperatingHourExceptions / P-17) — JOB-04 sẽ tự hủy GymClosed.
+    //   Mỗi người: IsFrozen (gói thành viên bị bảo lưu ngày đó) + HasMembership (gói thành viên phủ ngày)
+    //   + HasDayPass (vé ngày phủ ngày).
+    // Trả về: List<Reminder> — CHỈ người không vào gym được theo CBR-117:
+    //   vào được = (HasMembership VÀ không bảo lưu) HOẶC HasDayPass (bảo lưu không chặn vé ngày).
     public List<Reminder> findCustomersToRemind(LocalDate sessionDate) throws SQLException {
         String sql = """
                 WITH Attendees AS (
@@ -57,7 +39,7 @@ public class SessionReminderDAO {
                     JOIN TimeSlots t      ON t.TimeSlotId = s.TimeSlotId
                     JOIN Subscriptions pt ON pt.SubscriptionId = s.SubscriptionId
                     LEFT JOIN OperatingHourExceptions ex ON ex.ApplyDate = t.SlotDate
-                    LEFT JOIN SystemConfigs cfg ON cfg.ConfigKey = 'P-19'
+                    LEFT JOIN SystemConfigs cfg ON cfg.ConfigKey = 'P-17'
                     WHERE s.Status = 'Scheduled' AND t.SlotDate = ?
                       -- CBR-56: bỏ ngày nghỉ cả ngày VÀ buổi nằm ngoài giờ mở cửa ngày đó (JOB-04 sẽ hủy GymClosed)
                       AND ISNULL(ex.IsClosedAllDay, 0) = 0
@@ -73,7 +55,7 @@ public class SessionReminderDAO {
                     JOIN Subscriptions pt ON pt.SubscriptionId = s.SubscriptionId
                     JOIN Orders o         ON o.OrderId = pt.OrderId
                     LEFT JOIN OperatingHourExceptions ex ON ex.ApplyDate = t.SlotDate
-                    LEFT JOIN SystemConfigs cfg ON cfg.ConfigKey = 'P-19'
+                    LEFT JOIN SystemConfigs cfg ON cfg.ConfigKey = 'P-17'
                     WHERE s.Status = 'Scheduled' AND t.SlotDate = ?
                       AND pt.SubscriptionType = 'PTCouple' AND o.PartnerCustomerId IS NOT NULL
                       -- CBR-56: bỏ ngày nghỉ cả ngày VÀ buổi nằm ngoài giờ mở cửa ngày đó (JOB-04 sẽ hủy GymClosed)
@@ -92,10 +74,17 @@ public class SessionReminderDAO {
                        CASE WHEN EXISTS (
                            SELECT 1 FROM Subscriptions gym
                            WHERE gym.CustomerId = a.CustomerId
-                             AND gym.SubscriptionType IN ('Membership', 'DayPass')
+                             AND gym.SubscriptionType = 'Membership'
                              AND gym.Status IN ('Active', 'Frozen')
                              AND ? BETWEEN gym.StartDate AND gym.EndDate
-                       ) THEN 1 ELSE 0 END AS HasAccess
+                       ) THEN 1 ELSE 0 END AS HasMembership,
+                       CASE WHEN EXISTS (
+                           SELECT 1 FROM Subscriptions gym
+                           WHERE gym.CustomerId = a.CustomerId
+                             AND gym.SubscriptionType = 'DayPass'
+                             AND gym.Status IN ('Active', 'Used')
+                             AND ? BETWEEN gym.StartDate AND gym.EndDate
+                       ) THEN 1 ELSE 0 END AS HasDayPass
                 FROM Attendees a
                 JOIN Customers c        ON c.CustomerId = a.CustomerId
                 JOIN Accounts acc       ON acc.PersonId = c.PersonId AND acc.Status = 'Active'
@@ -108,20 +97,23 @@ public class SessionReminderDAO {
 
         try (Connection connection = DBContext.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
-
             Date date = Date.valueOf(sessionDate);
-            statement.setDate(1, date);   // người đứng tên
-            statement.setDate(2, date);   // người tập cùng
-            statement.setDate(3, date);   // có đang bảo lưu ngày đó?
-            statement.setDate(4, date);   // có membership / vé ngày phủ ngày đó?
+            // ? 1, ? 2 = ngày tập (2 nhánh UNION) · ? 3, ? 4, ? 5 = ngày tập (bảo lưu / gói thành viên / vé ngày)
+            statement.setDate(1, date);
+            statement.setDate(2, date);
+            statement.setDate(3, date);
+            statement.setDate(4, date);
+            statement.setDate(5, date);
 
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
                     boolean frozen = rs.getBoolean("IsFrozen");
-                    boolean hasAccess = rs.getBoolean("HasAccess");
+                    boolean hasMembership = rs.getBoolean("HasMembership");
+                    boolean hasDayPass = rs.getBoolean("HasDayPass");
 
-                    // Dùng được gym (có quyền và không bảo lưu) → không cần nhắc.
-                    if (hasAccess && !frozen) {
+                    // Vào gym được (CBR-117) → không cần nhắc. Bảo lưu nhưng có vé ngày cũng vào được.
+                    boolean canUseGym = (hasMembership && !frozen) || hasDayPass;
+                    if (canUseGym) {
                         continue;
                     }
                     reminders.add(new Reminder(
@@ -135,16 +127,11 @@ public class SessionReminderDAO {
         return reminders;
     }
 
-
-    /**
-     * HÀM CHÍNH — SessionReminderService gọi ở B3 của runJob, mỗi người một lần.
-     * Gửi 1 thông báo HỆ THỐNG (SentByEmployeeId = NULL) cho 1 tài khoản, NẾU tài khoản đó chưa có
-     * thông báo cùng tiêu đề. Tiêu đề chứa ngày tập, nên mỗi khách được nhắc tối đa 1 lần cho 1 ngày tập,
-     * kể cả khi job bị chạy lại.
-     *
-     * Trả true = đã gửi; false = đã gửi trước đó rồi, bỏ qua.
-     * 2 câu INSERT nằm trong 1 transaction: lỗi giữa chừng thì không để lại thông báo không người nhận.
-     */
+    // Gửi 1 thông báo cho 1 tài khoản, KHÔNG gửi trùng (cùng tiêu đề, do hệ thống gửi). Trả về: true = vừa gửi mới.
+    // Notifications (1 dòng = 1 thông báo)
+    // NotificationId, SentByEmployeeId (NULL = System Send), Title, Content, Audience (Individual = gửi riêng 1 ngày), SendAt (Thời điểm gửi)
+    // NotificationRecipents (Ai nhận, 1 dòng = 1 người), NotificationId trỏ về thông báo, AccountId (Tài khoản nhận), ReadAt (NULL = chưa đọc)
+    // Tách 2 bảng vì một thông báo có thể gửi cho nhiều người. Ví dụ quản lý gửi “Tết nghỉ 3 ngày” cho mọi khách: chỉ 1 dòng nội dung, nhưng nhiều dòng người nhận, mỗi người có ReadAt riêng.
     public boolean sendOnce(int accountId, String title, String content) throws SQLException {
         String checkSql = """
                 SELECT 1
@@ -162,9 +149,10 @@ public class SessionReminderDAO {
                 """;
 
         try (Connection connection = DBContext.getConnection()) {
+            // Mở transaction
             connection.setAutoCommit(false);
             try {
-                // B1: đã nhắc rồi thì thôi.
+                // B1: đã có thông báo cùng tiêu đề cho tài khoản này → rollback, trả false
                 try (PreparedStatement check = connection.prepareStatement(checkSql)) {
                     check.setInt(1, accountId);
                     check.setString(2, title);
@@ -176,7 +164,7 @@ public class SessionReminderDAO {
                     }
                 }
 
-                // B2: tạo thông báo, lấy mã vừa sinh.
+                // B2: Notifications: thêm 1 dòng (Audience = Individual, người gửi = hệ thống) → lấy NotificationId
                 int notificationId;
                 try (PreparedStatement insert = connection.prepareStatement(notificationSql, Statement.RETURN_GENERATED_KEYS)) {
                     insert.setString(1, title);
@@ -188,16 +176,18 @@ public class SessionReminderDAO {
                     }
                 }
 
-                // B3: gắn người nhận, rồi chốt cả hai câu.
+                // B3: NotificationRecipients: thêm 1 dòng (người nhận, chưa đọc)
                 try (PreparedStatement insert = connection.prepareStatement(recipientSql)) {
                     insert.setInt(1, notificationId);
                     insert.setInt(2, accountId);
                     insert.executeUpdate();
                 }
+                // B4: commit
                 connection.commit();
                 return true;
 
             } catch (SQLException exception) {
+                // Lỗi → rollback cả 2 lệnh INSERT
                 connection.rollback();
                 throw exception;
             }

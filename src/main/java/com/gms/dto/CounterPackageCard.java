@@ -38,7 +38,7 @@ public class CounterPackageCard {
     // Cách dùng: JSP in bằng gms:formatMoney ở thẻ gói và bill thanh toán.
     private final long price;
 
-    // SystemConfigs: P-10 lúc dựng thẻ, ví dụ 8.
+    // SystemConfigs: P-08 lúc dựng thẻ, ví dụ 8.
     // Ý nghĩa: phần trăm thuế giá trị gia tăng áp dụng cho gói.
     // Cách dùng: hiện trong "VAT 8% (đã gồm)" ở cột Tóm tắt đơn.
     private final int vatRate;
@@ -187,6 +187,7 @@ public class CounterPackageCard {
     }
 
     // Quyền được bấm tiếp tục với gói này tại quầy (false thì vô hiệu hóa nút).
+    // GETTER TỰ TÍNH — không có field/setter "continueAllowed"; = trả thẳng field isContinueAllowed; JSP: receptionist/_counter-card.jspf:16 …
     public boolean isContinueAllowed() {
         return isContinueAllowed;
     }

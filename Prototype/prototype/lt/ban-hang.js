@@ -59,42 +59,99 @@
     update();
   }));
   startDate.addEventListener('input', update);
+  const addDays = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+  const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  /* ngày kết thúc gói hiện tại của khách (nếu còn hạn và là gói tập) → gói mới nối tiếp */
+  function chainedFrom() {
+    const c = pickedCust();
+    const rm = c && c.closest('.pick-row').dataset.renew;
+    const m = rm && /Gói \d+ Tháng/.test(rm) && rm.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+    if (!m) return null;
+    const end = new Date(+m[3], +m[2] - 1, +m[1]);
+    return end >= sampleNow() ? end : null;
+  }
+  /* CBR-119: Gói Ngày bắt đầu ngay hôm nay; gói tập nối tiếp gói đang dùng (ngày sớm nhất = hôm sau ngày hết hạn)
+     hoặc bắt đầu hôm nay; tại quầy có thể hẹn ngày khác trong 7 ngày kể từ ngày sớm nhất */
+  function earliest() { const e = chainedFrom(); return e ? addDays(e, 1) : sampleNow(); }
+  function applyStartRules() {
+    const customOpt = document.querySelector('input[name="shstart"][value="custom"]');
+    const autoOpt = document.querySelector('input[name="shstart"][value="auto"]');
+    if (!customOpt) return;
+    const e = earliest(), chained = !!chainedFrom();
+    const dayPass = isDayPass();
+    document.getElementById('shStartAuto').textContent = chained ? 'Kích hoạt nối tiếp sau gói hiện tại' : 'Kích hoạt ngay hôm nay';
+    document.getElementById('shStartAutoHint').textContent = dmy(e);
+    const hint = document.getElementById('shStartHint');
+    hint.textContent = dayPass ? 'Gói Ngày luôn bắt đầu ngay ngày thanh toán' : `Chọn từ ${dmy(e)} đến ${dmy(addDays(e, 7))} (trong 7 ngày)`;
+    customOpt.disabled = dayPass;
+    if (dayPass) { autoOpt.checked = true; startDate.hidden = true; }
+    startDate.min = iso(e); startDate.max = iso(addDays(e, 7));
+    if (!startDate.value || startDate.value < startDate.min || startDate.value > startDate.max) startDate.value = startDate.min;
+  }
+  function startIso() {
+    if (isDayPass()) return iso(sampleNow());
+    if (document.querySelector('input[name="shstart"]:checked').value === 'custom' && startDate.value) return startDate.value;
+    return iso(earliest());
+  }
   function startText() {
     if (isDayPass()) return 'Hôm nay ' + dmy(sampleNow());
-    if (document.querySelector('input[name="shstart"]:checked').value === 'custom' && startDate.value) {
-      const [y, m, d] = startDate.value.split('-').map(Number); return dmy(new Date(y, m - 1, d));
-    }
-    const c = pickedCust();
-    const m = c && c.closest('.pick-row').dataset.renew?.match(/(\d{2})\/(\d{2})\/(\d{4})/);
-    if (m && new Date(+m[3], +m[2] - 1, +m[1]) >= sampleNow()) {
-      const n = new Date(+m[3], +m[2] - 1, +m[1] + 1); return dmy(n) + ' (nối tiếp gói hiện tại)';
-    }
-    return 'Hôm nay ' + dmy(sampleNow());
+    const [y, m, d] = startIso().split('-').map(Number), dt = new Date(y, m - 1, d);
+    if (document.querySelector('input[name="shstart"]:checked').value === 'custom') return dmy(dt);
+    return chainedFrom() ? dmy(dt) + ' (nối tiếp gói hiện tại)' : 'Hôm nay ' + dmy(dt);
   }
+
+  document.addEventListener('change', e => {
+    if (e.target.name === 'qcType') {
+      const dep = e.target.value === 'dep';
+      document.getElementById('qcEmailWrap').hidden = dep;
+      document.getElementById('qcGuardWrap').hidden = !dep;
+    }
+  });
 
   /* tạo hồ sơ nhanh kèm tài khoản, chọn luôn khách vừa tạo */
   document.getElementById('shQuick').addEventListener('click', () => {
     openConfirmModal({
       title: 'Tạo hồ sơ',
-      body: `<label class="field"><span class="field-label">Họ và tên *</span>
+      body: `<fieldset class="field" style="border:0;padding:0"><span class="field-label">Loại hồ sơ *</span>
+               <label class="pt-option"><input type="radio" name="qcType" value="self" checked><span class="pt-body"><b>Tự sở hữu (Độc lập)</b><small>Có tài khoản đăng nhập, mật khẩu tạm gửi qua email</small></span></label>
+               <label class="pt-option"><input type="radio" name="qcType" value="dep"><span class="pt-body"><b>Phụ thuộc (Trẻ em/Người thân)</b><small>Không có tài khoản, cần thông tin người giám hộ</small></span></label>
+               <small class="muted">Loại hồ sơ không thể thay đổi sau khi tạo.</small></fieldset>
+             <label class="field"><span class="field-label">Họ và tên *</span>
                <input id="qcName" type="text" maxlength="50" placeholder="Ví dụ: Nguyễn Văn An">
                <span class="field-error" id="qcNameErr" hidden></span></label>
              <label class="field"><span class="field-label">Số điện thoại *</span>
                <input id="qcPhone" type="tel" maxlength="10" placeholder="0901234567">
                <span class="field-error" id="qcPhoneErr" hidden></span></label>
-             <label class="field"><span class="field-label">Email *</span>
+             <label class="field"><span class="field-label">Ngày sinh *</span>
+               <input id="qcDob" type="date" max="2026-09-20">
+               <span class="field-error" id="qcDobErr" hidden></span></label>
+             <label class="field" id="qcEmailWrap"><span class="field-label">Email *</span>
                <input id="qcEmail" type="email" maxlength="100" placeholder="ten@gmail.com" autocomplete="off">
-               <span class="field-error" id="qcEmailErr" hidden></span></label>`,
+               <span class="field-hint">Hệ thống tạo tài khoản và gửi mật khẩu tạm tới email này. Nhắc khách kiểm tra cả mục Spam.</span>
+               <span class="field-error" id="qcEmailErr" hidden></span></label>
+             <div id="qcGuardWrap" hidden>
+               <label class="field"><span class="field-label">Tên người giám hộ *</span><input id="qcGName" type="text" maxlength="50"><span class="field-error" id="qcGNameErr" hidden></span></label>
+               <label class="field"><span class="field-label">Mối quan hệ *</span><input id="qcGRel" type="text" maxlength="30" placeholder="Bố, mẹ, anh, chị…"><span class="field-error" id="qcGRelErr" hidden></span></label>
+               <label class="field"><span class="field-label">SĐT người giám hộ *</span><input id="qcGPhone" type="tel" maxlength="10"><span class="field-error" id="qcGPhoneErr" hidden></span></label>
+             </div>`,
       confirmLabel: 'Tạo hồ sơ',
       danger: false,
       onConfirm() {
         const n = document.getElementById('qcName'), ph = document.getElementById('qcPhone'), em = document.getElementById('qcEmail');
-        ['qcNameErr', 'qcPhoneErr', 'qcEmailErr'].forEach(clearErr);
+        const dep = document.querySelector('input[name="qcType"]:checked').value === 'dep';
+        ['qcNameErr', 'qcPhoneErr', 'qcEmailErr', 'qcDobErr', 'qcGNameErr', 'qcGRelErr', 'qcGPhoneErr'].forEach(clearErr);
         let ok = true;
         if (n.value.trim().length < 2) { fieldError(n, 'qcNameErr', 'Nhập họ tên đầy đủ.'); ok = false; }
         if (!/^0\d{9}$/.test(ph.value.trim())) { fieldError(ph, 'qcPhoneErr', 'Số điện thoại phải gồm 10 chữ số và bắt đầu bằng 0.'); ok = false; }
         else if (custRows.some(r => r.dataset.q.includes(ph.value.trim()))) { fieldError(ph, 'qcPhoneErr', 'Số điện thoại này đã có hồ sơ.'); ok = false; }
-        if (!/^\S+@\S+\.\S+$/.test(em.value.trim())) { fieldError(em, 'qcEmailErr', 'Email không hợp lệ.'); ok = false; }
+        if (!document.getElementById('qcDob').value) { fieldError(document.getElementById('qcDob'), 'qcDobErr', 'Chọn ngày sinh.'); ok = false; }
+        if (!dep && !/^\S+@\S+\.\S+$/.test(em.value.trim())) { fieldError(em, 'qcEmailErr', 'Email không hợp lệ.'); ok = false; }
+        if (dep) {
+          const gn = document.getElementById('qcGName'), gr = document.getElementById('qcGRel'), gp = document.getElementById('qcGPhone');
+          if (gn.value.trim().length < 2) { fieldError(gn, 'qcGNameErr', 'Nhập tên người giám hộ.'); ok = false; }
+          if (!gr.value.trim()) { fieldError(gr, 'qcGRelErr', 'Nhập mối quan hệ.'); ok = false; }
+          if (!/^0\d{9}$/.test(gp.value.trim())) { fieldError(gp, 'qcGPhoneErr', 'Số điện thoại người giám hộ không hợp lệ.'); ok = false; }
+        }
         if (!ok) return false;
         const name = n.value.trim(), phone = ph.value.trim();
         const row = document.createElement('label');
@@ -112,7 +169,7 @@
         row.querySelector('input').checked = true;
         renewBox.hidden = true; photoDone = false;
         update();
-        showToast('success', 'Đã tạo hồ sơ KH-1012 và tài khoản đăng nhập. Chụp ảnh check-in trước khi kết đơn.');
+        showToast('success', 'Đã tạo hồ sơ KH-1012. Chụp ảnh check-in trước khi kết đơn.');
       },
     });
   });
@@ -233,12 +290,7 @@
     const set = (k, v) => { document.querySelector(`[data-sum-${k}]`).textContent = v; };
     set('cust', c ? c.dataset.name : '—');
     set('pkg', p ? p.dataset.name : '—');
-    /* đánh số lại các bước: buổi PT lẻ có thêm bước chọn PT và khung giờ */
-    const names = { cust: 'Chọn khách', vc: 'Voucher và ngày bắt đầu', pay: 'Phương thức thanh toán' };
-    ['cust', 'vc', 'pay'].forEach((k, i) => {
-      const h = document.querySelector(`[data-step-no="${k}"]`);
-      if (h) h.textContent = `${i + 2 + (single ? 1 : 0)} · ${names[k]}`;
-    });
+    applyStartRules();
     const startBox = document.getElementById('shStartBox');
     if (startBox) startBox.hidden = single;
     set('start', !p ? '—' : single
@@ -259,11 +311,21 @@
     if (!c || !p) block = '';                     // chưa chọn gì thì nút mờ là đủ, không nhắc
     else if (single && (!singleCoach?.value || !singleTime?.value)) block = 'Chọn PT và khung giờ hôm nay.';
     else if (needPhoto) block = 'Chụp ảnh check-in trước khi kết đơn.';
+    else if (isBank() && !bankOk.checked) block = 'Vui lòng tick xác nhận đã nhận đủ tiền trong tài khoản trước khi hoàn tất.';  // MSG326
 
     payBtn.disabled = !c || !p || !!block;
     blockNote.hidden = !c || !p;
     blockNote.textContent = block || 'Kiểm tra lại số tiền với khách trước khi thu.';
   }
+
+  /* chuyển khoản: cần mã tham chiếu và xác nhận đã nhận đủ tiền */
+  const bankBox = document.getElementById('shBankBox');
+  const bankRef = document.getElementById('shBankRef');
+  const bankOk = document.getElementById('shBankOk');
+  const isBank = () => document.querySelector('input[name="shpay"]:checked').value === 'bank';
+  document.querySelectorAll('input[name="shpay"]').forEach(r => r.addEventListener('change', () => { bankBox.hidden = !isBank(); update(); }));
+  bankRef.addEventListener('input', update);
+  bankOk.addEventListener('change', update);
 
   /* ---------- kết đơn ---------- */
   function confirmOrder() {
@@ -283,10 +345,10 @@
       danger: false,
       onConfirm() {
         try {
-          sessionStorage.setItem('gms_new_order', JSON.stringify({ code: 'DH-2026-1200', cust: c.dataset.name, pkg: p.dataset.name, pay, amount: t.total, time: '16:30' }));
+          sessionStorage.setItem('gms_new_order', JSON.stringify({ code: 'DH-2026-1200', cust: c.dataset.name, custCode: c.value, pkg: p.dataset.name, pkgCode: p.value, pay, ref: pay === 'bank' ? bankRef.value.trim() : '', voucher: voucher ? voucher.code : '', sub: t.sub, discount: t.off, vat: t.vat, amount: t.total, start: startText(), startIso: startIso(), earliestIso: iso(earliest()), phone: (c.closest('.pick-row').dataset.q.match(/0\d{9}/) || [''])[0], pkgPrice: t.sub, time: '16:30' }));
         } catch {}
         showToast('success', `Đã thu ${vnd(t.total)} của ${c.dataset.name}.`);
-        setTimeout(() => { location.href = 'ca-lam-viec.html'; }, 1000);
+        setTimeout(() => { location.href = 'bien-nhan.html'; }, 800);
       },
     });
   }
@@ -308,6 +370,33 @@
   singleCollect?.addEventListener('click', () => { clearInterval(singleHoldTimer); singleHold.hidden = true; confirmOrder(); });
   singleRelease?.addEventListener('click', () => { clearInterval(singleHoldTimer); singleHold.hidden = true; payBtn.hidden = false; showToast('info', 'Đã trả lại khung giờ.'); });
 
+  /* ---------- 3 bước giống hệ thống: chọn gói → chọn khách → xác nhận & thu tiền ---------- */
+  let step = 1;
+  const STEP_TITLES = { 1: 'Chọn gói cho khách', 2: 'Chọn khách', 3: 'Xác nhận thanh toán' };
+  const STEP_LABELS = { 1: 'Bước 1 / 3: Chọn gói', 2: 'Bước 2 / 3: Chọn khách', 3: 'Bước 3 / 3: Xác nhận đơn hàng & Thu tiền' };
+  const backBtn = document.getElementById('shBack');
+  const nextBtn = document.getElementById('shNext');
+  function syncStep() {
+    document.querySelectorAll('[data-step]').forEach(sec => {
+      let show = Number(sec.dataset.step) === step;
+      if (sec.id === 'singlePanel') show = show && isSingle();
+      sec.hidden = !show;
+    });
+    document.getElementById('shTitle').textContent = STEP_TITLES[step];
+    document.getElementById('shStepNo').textContent = STEP_LABELS[step];
+    backBtn.hidden = step === 1;
+    nextBtn.hidden = step === 3;
+    nextBtn.textContent = step === 1 ? 'Tiếp tục: tìm khách →' : 'Tiếp tục: xác nhận & thu tiền →';
+    nextBtn.disabled = step === 1 ? !pickedPkg() : !pickedCust();
+    payBtn.closest('.side-card').querySelector('#shPay').hidden = step !== 3 || !!singleHold && !singleHold.hidden;
+  }
+  nextBtn.addEventListener('click', () => { step = Math.min(3, step + 1); syncStep(); update(); window.scrollTo(0, 0); });
+  backBtn.addEventListener('click', () => { step = Math.max(1, step - 1); syncStep(); window.scrollTo(0, 0); });
+  document.addEventListener('change', () => setTimeout(syncStep, 0));
+  document.addEventListener('click', () => setTimeout(syncStep, 0));
+  document.addEventListener('input', () => setTimeout(syncStep, 0));
+
   filter();
   update();
+  syncStep();
 })();

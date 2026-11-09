@@ -7,7 +7,6 @@ import com.gms.dto.JsonResponse;
 import com.gms.dto.PtHandleView;
 import com.gms.dto.PtScheduleWeek;
 import com.gms.dto.ServiceResult;
-import com.gms.service.PtDashboardService;
 import com.gms.service.PtScheduleService;
 import com.gms.service.PtSessionHandleService;
 import com.gms.util.DateTimeUtil;
@@ -24,188 +23,188 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
- * SERVLET MÀN LỊCH DẠY PT — URL /pt/schedule
+ * SERVLET MÀN LỊCH DẠY PT + HỘP XỬ LÝ BUỔI — /pt/schedule (UC-29 công bố khung rảnh, UC-30 dời / chuyển / hủy buổi).
  *
- *   GET  /pt/schedule?date=2026-10-27&view=week        mở trang: Service dựng tuần → schedule.jsp
- *   GET  /pt/schedule?date=…&view=…&handle=120         như trên + mở hộp "Xử lý buổi" của buổi 120
- *   POST /pt/schedule                                  bấm Công bố (JS gửi AJAX): Service lưu → trả JSON
- *   POST /pt/schedule  action=reschedule|transfer|cancel   form trong hộp Xử lý buổi (POST thường, không AJAX)
+ * VIỆC CỦA SERVLET: đọc tham số → gọi PtScheduleService / PtSessionHandleService → đặt attribute / toast → forward JSP, redirect hoặc JSON.
+ *   Servlet KHÔNG kiểm luật (giờ mở cửa, ca nghỉ, chồng khung, lịch khách…): Service làm hết.
+ * TRƯỚC SERVLET: PtAreaFilter chặn vai trò khác khi GET; POST tự kiểm vai trò PT + CSRF (isPtWithValidToken).
  *
- *   doGet   HÀM CHÍNH: getAccountId → showPage (loadWeek, loadView, loadHandle, setPageInfo) → JSP
- *   doPost  HÀM CHÍNH: getAccountId → isPtWithValidToken → có action? handleSession : scheduleService.publish
+ *   URL / nút                                              Servlet gọi                                   Kết quả
+ *   GET  /pt/schedule?date=&view=week|list                  doGet → showPage → scheduleService.getWeek    forward schedule.jsp (attribute "week")
+ *   GET  /pt/schedule?…&handle=<SessionId>                  showPage → handleService.getHandleForm        như trên + hộp Xử lý buổi ("handle")
+ *   POST (không action, fetch từ schedule.js) "Công bố"     doPost → scheduleService.publish              JSON {success, message} (+ toast lần tải sau)
+ *   POST action=reschedule  "Dời buổi"                      handleSession → handleService.reschedule      toast + redirect về tuần có buổi
+ *   POST action=transfer    "Chuyển PT"                     handleSession → handleService.transfer        toast + redirect / vẽ lại hộp kèm lỗi
+ *   POST action=cancel      "Hủy buổi"                      handleSession → handleService.cancel          toast + redirect / vẽ lại hộp kèm lỗi
  *
- * Quyền PT cho GET do PtAreaFilter (@WebFilter "/pt/*") kiểm tra trước.
- * POST tự kiểm tra lại vai trò + CSRF vì đây là thao tác GHI.
+ * BỐ CỤC FILE — mỗi HÀM CHÍNH đứng trước, các hàm phụ của nó nằm ngay bên dưới:
+ *   HÀM CHÍNH 1  doGet    vẽ lịch tuần (+ hộp Xử lý buổi)    → showPage, loadWeek, loadView, loadHandle, setPageInfo
+ *   HÀM CHÍNH 2  doPost   Công bố (JSON) / 3 form xử lý buổi  → isPtWithValidToken, handleSession
+ *   DÙNG CHUNG            getAccountId
  */
 @WebServlet("/pt/schedule")
 public class PtScheduleServlet extends HttpServlet {
-
-    private static final String VIEW = "pt/schedule";       // file JSP: /WEB-INF/jsp/pt/schedule.jsp
-    private static final String PAGE_URL = "/pt/schedule";  // URL trang, để quay lại sau khi đăng nhập
+    private static final String VIEW = "pt/schedule";
+    private static final String PAGE_URL = "/pt/schedule";
 
     private final PtScheduleService scheduleService = new PtScheduleService();
-    private final PtDashboardService dashboardService = new PtDashboardService(); // chỉ để lấy mã nhân viên NV-xxxx
-    private final PtSessionHandleService handleService = new PtSessionHandleService(); // hộp Xử lý buổi
+    private final PtSessionHandleService handleService = new PtSessionHandleService();
 
 
-    // ================================================================================================================
-    // 1. MỞ TRANG (GET)
-    // ================================================================================================================
+
+    // ============================================================================================================
+    // HÀM CHÍNH 1. doGet — vẽ lịch tuần, mở hộp Xử lý buổi khi có ?handle=
+    //   Ai gọi: menu "Lịch dạy", nút "Xử lý buổi" ở Dashboard PT, redirect sau POST  ·  Ra: forward schedule.jsp
+    //   Hàm phụ ngay dưới, theo thứ tự showPage gọi: showPage → loadWeek → loadView → loadHandle → setPageInfo
+    // ============================================================================================================
 
     /**
-     * HÀM CHÍNH — trình duyệt gọi khi mở /pt/schedule hoặc bấm ‹ › / Tuần / Danh sách.
-     * Chỉ ĐỌC dữ liệu, không ghi gì.
+     * HÀM CHÍNH 1 — vẽ lịch dạy 1 tuần (+ hộp Xử lý buổi khi có ?handle=).
+     *   Ai gọi: menu "Lịch dạy", nút "Xử lý buổi" ở Dashboard, redirect sau POST
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
-        // B1: chưa đăng nhập → về trang đăng nhập, xong quay lại đây.
+        // B1: chưa đăng nhập → về trang đăng nhập
         Integer accountId = getAccountId(request);
         if (accountId == null) {
             RequestUtil.redirect(request, response, "/login?returnUrl=" + PAGE_URL);
             return;
         }
 
-        // B2: ?handle=120 (link trên thẻ buổi, hoặc nút "Xử lý buổi" ở PT Dashboard) → mở sẵn hộp của buổi đó.
-        //     Thiếu / không phải số dương → null → không mở hộp.
+        // B2: có ?handle= → sẽ mở hộp Xử lý buổi
         Integer handleId = RequestUtil.getPositiveIntParam(request, "handle");
 
-        // B3: dựng trang (cùng hàm doPost dùng lại khi Lưu bị từ chối).
-        showPage(request, response, accountId, handleId);
+        // B3: dựng trang
+        showPage(
+                request,
+                response,
+                accountId,
+                handleId);
     }
 
     /**
-     * HÀM PHỤ — gọi ở B3 của doGet, và ở doPost (handleSession) khi Lưu bị từ chối để mở lại hộp kèm câu lỗi.
-     * Thứ tự: tuần → kiểu xem → hộp xử lý (nếu có) → thông tin đầu trang → JSP.
+     * HÀM PHỤ (doGet B3; handleSession B4 khi xử lý buổi bị từ chối) — đặt dữ liệu rồi forward schedule.jsp:
+     *   loadWeek → loadView → [loadHandle] → setPageInfo.
      */
-    private void showPage(HttpServletRequest request, HttpServletResponse response, int accountId, Integer handleId)
+    private void showPage(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            int accountId,
+            Integer handleId)
             throws ServletException, IOException {
-        // B1: nhờ Service dựng tuần; đọc kiểu xem (week / list).
+        // B1: lịch tuần
         loadWeek(request, accountId);
+
+        // B2: kiểu xem Tuần / Danh sách
         loadView(request);
 
-        // B2: có mã buổi cần xử lý → nhờ Service chuẩn bị hộp.
+        // B3: dữ liệu hộp Xử lý buổi (nếu có)
         if (handleId != null) {
             loadHandle(request, accountId, handleId);
         }
 
-        // B3: dữ liệu phụ cho JSP và thanh đầu trang (giống PT Dashboard: tên + mã nhân viên + nút i).
+        // B4: tiêu đề, CSRF → hiện trang
         setPageInfo(request, accountId);
 
-        // B4: mở JSP.
         RequestUtil.forward(request, response, VIEW);
     }
 
-    /** HÀM PHỤ — gọi ở B1 của doGet và doPost. Mã tài khoản trong session; chưa đăng nhập → null. */
-    private Integer getAccountId(HttpServletRequest request) {
-        HttpSession session = request.getSession(false);   // false = không tạo session mới
-        if (session == null) {
-            return null;
+    /**
+     * HÀM PHỤ (showPage B1) — ?date= (sai / trống → hôm nay) → PtScheduleService.getWeek → "week" | "scheduleError";
+     * đặt thêm "today" và "viewDate" (ngày đang xem).
+     */
+    private void loadWeek(HttpServletRequest request, int accountId) {
+        LocalDateTime now = DateTimeUtil.now();
+        LocalDate today = now.toLocalDate();
+
+        LocalDate date = PtScheduleService.parseDate(request.getParameter("date"), today);
+        request.setAttribute("today", today);
+        request.setAttribute("viewDate", date);
+
+        ServiceResult<PtScheduleWeek> result = scheduleService.getWeek(accountId, date, now);
+        if (result.isSuccess()) {
+            request.setAttribute("week", result.getData());
+        } else {
+            request.setAttribute("scheduleError", result.getMessage());
         }
-        return (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
     }
 
     /**
-     * HÀM PHỤ — gọi ở B1 của showPage.
-     * Đọc ?date= trên URL → gọi Service.getWeek → đặt "week" (thành công) hoặc "scheduleError" (lỗi).
+     * HÀM PHỤ (showPage B2) — ?view=list → "list", còn lại "week".
      */
-    private void loadWeek(HttpServletRequest request, int accountId) {
-        // B1: giờ Việt Nam lấy MỘT lần, dùng chung cho cả trang.
-        LocalDateTime now = DateTimeUtil.now(); // thời gian hiện taik
-        LocalDate today = now.toLocalDate(); // Ngày hôm nay
-
-        // B2: ngày muốn xem; Nếu thiếu hoặc sai trả về today: hôm nay.
-        //   ?date= đến từ schedule.jsp dòng 77–78 (‹ tuần trước / tuần sau ›), 80–81 (công tắc Tuần / Danh sách giữ ngày).
-        //   Nút "Tuần này" dòng 79 không gửi date → hôm nay.
-        LocalDate date = PtScheduleService.parseDate(request.getParameter("date"), today);
-        request.setAttribute("today", today);      // → _header.jspf dòng 37 ngày ở topbar (nhúng ở schedule.jsp dòng 55)
-        request.setAttribute("viewDate", date);    // → schedule.jsp dòng 80–81 (link Tuần / Danh sách giữ đúng ngày), _handle-dialog.jspf (nút Đóng + ô ẩn date)
-
-        // B3: Service dựng tuần. Lỗi thì JSP hiện thông báo, KHÔNG hiện lịch trống.
-        ServiceResult<PtScheduleWeek> result = scheduleService.getWeek(accountId, date, now);
-        if (result.isSuccess()) {
-            // → schedule.jsp dòng 46 (có week mới nạp schedule.js), 77–78 (‹ ›), 86–95 (data-… cho JS),
-            //   107–135 (tiêu đề tuần, form Thêm khung), 168–179 (trục giờ + 7 cột ngày), 301 (duration gửi khi Công bố)
-            request.setAttribute("week", result.getData());
-        } else {
-            request.setAttribute("scheduleError", result.getMessage());   // → schedule.jsp dòng 63–66 khung đỏ + nút Tải lại
-        }
-    }
-
-    /** HÀM PHỤ — gọi ở B1 của showPage. Chỉ nhận "list"; mọi giá trị khác (kể cả thiếu) → "week". */
     private void loadView(HttpServletRequest request) {
-        // ?view= đến từ schedule.jsp dòng 77–79 (‹ › và "Tuần này" giữ kiểu xem), 80–81 (công tắc Tuần / Danh sách)
         String view = "week";
         if ("list".equals(request.getParameter("view"))) {
             view = "list";
         }
-        // → schedule.jsp dòng 77–79 (giữ kiểu xem khi đổi tuần), 92 (class is-list), 148–149 (công tắc tô đậm),
-        //   link thẻ buổi ?handle= (dòng 239), _handle-dialog.jspf (ô ẩn view)
+
         request.setAttribute("view", view);
     }
 
     /**
-     * HÀM PHỤ — gọi ở B2 của showPage.
-     * Gọi handleService.getHandleForm MỘT lần → đặt "handle" (hộp mở) hoặc "handleError" (buổi không xử lý được).
+     * HÀM PHỤ (showPage B3) — PtSessionHandleService.getHandleForm → "handle" (PtHandleView) | "handleError" (buổi không còn xử lý được).
      */
     private void loadHandle(HttpServletRequest request, int accountId, int sessionId) {
         ServiceResult<PtHandleView> result = handleService.getHandleForm(accountId, sessionId, DateTimeUtil.now());
         if (result.isSuccess()) {
-            request.setAttribute("handle", result.getData());          // → _handle-dialog.jspf (nhúng ở schedule.jsp dòng 337, KHỐI 4)
+            request.setAttribute("handle", result.getData());
         } else {
-            request.setAttribute("handleError", result.getMessage());  // → schedule.jsp dòng 156–159 dòng báo lỗi đỏ trên lịch
+            request.setAttribute("handleError", result.getMessage());
         }
     }
 
     /**
-     * HÀM PHỤ — gọi ở B3 của showPage.
-     * csrfToken cho form Công bố, khóa lưu nháp, menu, tiêu đề + nút (i), mã nhân viên (lỗi thì chỉ không hiện mã).
+     * HÀM PHỤ (showPage B4) — csrfToken (form Công bố + 3 form xử lý) · draftAccountId (khóa lưu nháp trong trình duyệt)
+     * · activeNav, pageTitle, pageHelp (_header.jspf).
      */
     private void setPageInfo(HttpServletRequest request, int accountId) {
-        // → schedule.jsp dòng 300 ô ẩn csrfToken trong form Công bố + 3 form của _handle-dialog.jspf (doPost kiểm tra lại ở B2)
         request.setAttribute("csrfToken", RequestUtil.getOrCreateCsrfToken(request.getSession(false)));
-        // → schedule.jsp dòng 95 data-draft-key="mãTàiKhoản:ngàyThứ2" — schedule.js dùng làm khóa lưu nháp
+
         request.setAttribute("draftAccountId", accountId);
-        // → layout-pt.jspf dòng 64–65 tô mục "Lịch dạy" (nhúng ở schedule.jsp dòng 55)
+
         request.setAttribute("activeNav", "schedule");
-        // → _header.jspf dòng 24, 30 tiêu đề topbar; dòng 28–31 nút (i) + chữ hướng dẫn (nhúng ở schedule.jsp dòng 55)
+
         request.setAttribute("pageTitle", "Lịch dạy");
-        request.setAttribute("pageHelp", "Bấm vào chỗ trống trên lịch (hoặc nút Thêm khung) để thêm khung rảnh. "
-                + "Bấm vào khung Còn trống để đánh dấu gỡ. Khách chỉ thấy thay đổi sau khi bạn bấm Công bố.");
-        ServiceResult<String> employeeCode = dashboardService.getPtEmployeeCode(accountId);
-        if (employeeCode.isSuccess()) {
-            // → _header.jspf dòng 60–62 "NV-0005" dưới tên PT
-            request.setAttribute("ptEmployeeCode", employeeCode.getData());
-        }
+        // Hướng dẫn nhiều dòng (\n → xuống dòng; CSS #pt-page-help white-space: pre-line). Giải thích đủ từng màu ô
+        // + chữ trạng thái trên ô, để PT mới không phải đoán "Đang giữ", "Chưa chốt" là gì.
+        request.setAttribute("pageHelp", String.join("\n",
+                "THÊM / GỠ KHUNG",
+                "• Bấm chỗ trống trên lịch (hoặc nút Thêm khung) → thêm khung nháp. Chỗ trùng khung khác sẽ báo đỏ, không thêm được.",
+                "• Bấm khung Còn trống → đánh dấu gỡ. Bấm lại để giữ.",
+                "• Khách chỉ thấy thay đổi sau khi bạn bấm Công bố.",
+                "",
+                "MÀU Ô",
+                "• Còn trống: khung đã công bố, chưa ai đặt.",
+                "• Có khách: đã có buổi. Bấm buổi sắp tới để Dời / Chuyển PT / Hủy.",
+                "• Đang giữ: một đơn mua gói PT đang giữ khung này chờ thanh toán. Trả tiền → Có khách; hết hạn / hủy đơn → Còn trống.",
+                "• Tạm khóa: khung trùng ca bạn xin nghỉ (chờ duyệt hoặc đã duyệt), khách không đặt được.",
+                "• Nháp mới: khung vừa thêm, chưa lưu. Chờ gỡ: khung sẽ gỡ khi Công bố.",
+                "",
+                "CHỮ TRÊN BUỔI",
+                "• Sắp tới / Đang diễn ra: buổi chưa xong.",
+                "• Chưa chốt: buổi đã hết giờ, hệ thống sẽ tự chốt check-in / vắng lúc 00:05 hôm sau.",
+                "• Đã check-in · Vắng · Đã hủy: kết quả cuối, chỉ xem."));
     }
 
 
-    // ================================================================================================================
-    // 2. CÔNG BỐ (POST)
-    // ================================================================================================================
+
+    // ============================================================================================================
+    // HÀM CHÍNH 2. doPost — 2 loại: Công bố (fetch JSON, không có action) · form Xử lý buổi (action=reschedule|transfer|cancel)
+    //   Ai gọi: schedule.js (nút Công bố) · 3 form trong _schedule-handle*.jspf  ·  Gọi xuống: PtScheduleService.publish, PtSessionHandleService
+    //   Hàm phụ ngay dưới: isPtWithValidToken · handleSession
+    // ============================================================================================================
 
     /**
-     * HÀM CHÍNH — JS publishPtChanges gửi POST khi PT bấm Công bố.
-     *
-     * Tham số nhận — schedule.js (publishPtChanges) gom bằng new FormData(form #pt-publish-form):
-     *   slotDate[] + startTime[]   các khung MỚI, đi theo cặp (ví dụ 2026-10-27 + 12:30)
-     *                              ← 2 ô ẩn trong <template> khung nháp, schedule.jsp dòng 324–325
-     *   removeSlotId[]             mã các khung muốn GỠ (TimeSlots.TimeSlotId, ví dụ 773)
-     *                              ← ô checkbox trên thẻ khung trống, schedule.jsp dòng 219
-     *   duration                   P-06 trang đang dùng ← ô ẩn schedule.jsp dòng 301
-     *   csrfToken                  chống giả mạo request ← ô ẩn schedule.jsp dòng 300
-     *
-     * KHÔNG nhận mã PT hay giờ kết thúc từ trình duyệt: mã PT lấy từ session, giờ kết thúc Service tự tính.
+     * HÀM CHÍNH 2 — Công bố khung (fetch, trả JSON) hoặc 3 form Xử lý buổi (có ô action).
+     *   Ai gọi: schedule.js · form trong hộp Xử lý buổi
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-
-        // B0: form trong hộp Xử lý buổi (có ô action) là POST thường, không phải AJAX
-        //     → hết phiên / sai quyền / sai CSRF thì về trang kèm toast, không trả JSON thô cho trình duyệt.
+        // B1: có ô action = form Xử lý buổi, không có = Công bố
         boolean handleForm = request.getParameter("action") != null;
 
-        // B1: phải đăng nhập.
+        // B2: hết phiên đăng nhập → về đăng nhập / trả 401
         Integer accountId = getAccountId(request);
         if (accountId == null && handleForm) {
             RequestUtil.redirect(request, response, "/login?returnUrl=" + PAGE_URL);
@@ -216,7 +215,7 @@ public class PtScheduleServlet extends HttpServlet {
             return;
         }
 
-        // B2: phải là PT và có CSRF token đúng.
+        // B3: không phải PT hoặc sai CSRF → báo không có quyền
         if (!isPtWithValidToken(request)) {
             if (handleForm) {
                 RequestUtil.setFlashToast(request, "error", Messages.MSG07_NO_PERMISSION);
@@ -227,57 +226,84 @@ public class PtScheduleServlet extends HttpServlet {
             return;
         }
 
-        // B2b: form trong hộp Xử lý buổi có ô action → nhánh riêng (POST thường, trả trang chứ không trả JSON).
+        // B4: form Xử lý buổi → handleSession
         String action = request.getParameter("action");
         if (action != null) {
-            handleSession(request, response, accountId, action);
+            handleSession(
+                    request,
+                    response,
+                    accountId,
+                    action);
             return;
         }
 
-        // B3: chuyển nguyên các mảng cho Service; Service kiểm tra lại MỌI giá trị.
-        //     Không có tham số nào thì getParameterValues trả null.
-        String[] newSlotDates = request.getParameterValues("slotDate");      // ← schedule.jsp dòng 324
-        String[] newStartTimes = request.getParameterValues("startTime");   // ← schedule.jsp dòng 325
-        String[] removeSlotIds = request.getParameterValues("removeSlotId"); // ← schedule.jsp dòng 219
-        Integer duration = RequestUtil.getPositiveIntParam(request, "duration"); // ← schedule.jsp dòng 301
-        ServiceResult<Integer> result = scheduleService.publish(accountId, newSlotDates, newStartTimes, removeSlotIds,
-                duration == null ? 0 : duration, DateTimeUtil.now());
+        // B5: Công bố: lưu khung nháp + gỡ khung đã tích
+        String[] newSlotDates = request.getParameterValues("slotDate");
+        String[] newStartTimes = request.getParameterValues("startTime");
+        String[] removeSlotIds = request.getParameterValues("removeSlotId");
+        Integer duration = RequestUtil.getPositiveIntParam(request, "duration");
+        ServiceResult<Integer> result = scheduleService.publish(
+                accountId,
+                newSlotDates,
+                newStartTimes,
+                removeSlotIds,
+                duration == null ? 0 : duration,
+                DateTimeUtil.now());
 
-        // B4: thành công → lưu toast để hiện sau khi JS tải lại trang; luôn trả JSON cho JS.
+        // B6: trả JSON (thành công → toast ở lần tải trang sau)
         if (result.isSuccess()) {
             RequestUtil.setFlashToast(request, "success", result.getMessage());
         }
         JsonUtil.writeJson(response, JsonResponse.from(result));
     }
 
+    /** HÀM PHỤ (doPost B3) — session đang ở vai trò PT VÀ csrfToken đúng. */
+    private boolean isPtWithValidToken(HttpServletRequest request) {
+        Object role = request.getSession(false).getAttribute(SessionKey.ROLE);
+        boolean isPt = Role.PT.getDbValue().equals(role);
+        return isPt && RequestUtil.isValidCsrfToken(request);
+    }
+
     /**
-     * HÀM PHỤ — gọi ở B2b của doPost. Tham số nhận từ _handle-dialog.jspf (mỗi phương án 1 form):
-     *   action        reschedule | transfer | cancel
-     *   sessionId     mã buổi (Sessions.SessionId) đang xử lý
-     *   timeSlotId    khung đích (radio) — chỉ Dời buổi / Chuyển PT
-     *   reason        ghi chú khi dời (không bắt buộc) / lý do hủy (bắt buộc 5–500 ký tự)
-     *   refundAgreed  "on" khi PT tích "khách đã đồng ý nhận lại tiền mặt" — chỉ Hủy buổi
-     *   date, view    tuần + kiểu xem đang mở, để quay về đúng chỗ
-     *
-     * Thành công → toast + redirect (PRG: F5 không gửi lại form) về tuần có buổi, cuộn tới thẻ #session-120.
-     * Bị từ chối → KHÔNG redirect: dựng lại trang, hộp mở đúng phương án, giữ chữ PT đã nhập, câu lỗi ở đầu hộp.
+     * HÀM PHỤ (doPost B4) — 3 form trong hộp Xử lý buổi: reschedule · transfer · cancel.
+     *   Thành công → toast + redirect về tuần có buổi; bị từ chối → giữ lựa chọn + câu lỗi rồi showPage (hộp vẫn mở).
      */
-    private void handleSession(HttpServletRequest request, HttpServletResponse response, int accountId, String action)
+    private void handleSession(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            int accountId,
+            String action)
             throws IOException {
+        // B1: thiếu mã buổi → lỗi 400
         Integer sessionId = RequestUtil.getPositiveIntParam(request, "sessionId");
         if (sessionId == null) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
 
-        // B1: gọi đúng 1 hàm Service theo phương án PT chọn.
+        // B2: gọi đúng nút: Dời buổi / Chuyển PT / Hủy buổi
         String slotId = request.getParameter("timeSlotId");
         String reason = request.getParameter("reason");
         ServiceResult<LocalDate> result = switch (action) {
-            case "reschedule" -> handleService.reschedule(accountId, sessionId, slotId, reason, DateTimeUtil.now());
-            case "transfer" -> handleService.transfer(accountId, sessionId, slotId, DateTimeUtil.now());
-            case "cancel" -> handleService.cancel(accountId, sessionId, reason,
-                    request.getParameter("refundAgreed") != null, DateTimeUtil.now());
+            case "reschedule" -> handleService.reschedule(
+                    accountId,
+                    sessionId,
+                    slotId,
+                    request.getParameter("newSlotDate"),
+                    request.getParameter("newStartTime"),
+                    reason,
+                    DateTimeUtil.now());
+            case "transfer" -> handleService.transfer(
+                    accountId,
+                    sessionId,
+                    slotId,
+                    DateTimeUtil.now());
+            case "cancel" -> handleService.cancel(
+                    accountId,
+                    sessionId,
+                    reason,
+                    request.getParameter("refundAgreed") != null,
+                    DateTimeUtil.now());
             default -> null;
         };
         if (result == null) {
@@ -285,7 +311,7 @@ public class PtScheduleServlet extends HttpServlet {
             return;
         }
 
-        // B2: thành công → toast + về tuần có buổi (dời buổi: tuần của ngày mới).
+        // B3: thành công → báo + về đúng tuần, cuộn tới buổi
         if (result.isSuccess()) {
             RequestUtil.setFlashToast(request, "success", result.getMessage());
             String view = "list".equals(request.getParameter("view")) ? "list" : "week";
@@ -294,24 +320,36 @@ public class PtScheduleServlet extends HttpServlet {
             return;
         }
 
-        // B3: bị từ chối → mở lại hộp với câu lỗi + giữ phương án và chữ đã nhập.
-        request.setAttribute("handleFormError", result.getMessage());   // → _handle-dialog.jspf đầu hộp
-        request.setAttribute("handleAction", action);                    // → radio phương án được chọn sẵn
-        request.setAttribute("handleReason", reason);                    // → ô ghi chú / lý do
+        // B4: bị từ chối → vẽ lại trang, hộp vẫn mở, giữ lựa chọn cũ
+        request.setAttribute("handleFormError", result.getMessage());
+        request.setAttribute("handleAction", action);
+        request.setAttribute("handleReason", reason);
+        request.setAttribute("handleSlotChoice", slotId);
+        request.setAttribute("handleNewDate", request.getParameter("newSlotDate"));
+        request.setAttribute("handleNewStart", request.getParameter("newStartTime"));
         try {
-            showPage(request, response, accountId, sessionId);
+            showPage(
+                    request,
+                    response,
+                    accountId,
+                    sessionId);
         } catch (ServletException exception) {
             throw new IOException(exception);
         }
     }
 
-    /**
-     * HÀM PHỤ — gọi ở B2 của doPost.
-     * Vai trò đang chọn trong session phải là PT VÀ csrfToken gửi lên phải khớp token trong session.
-     */
-    private boolean isPtWithValidToken(HttpServletRequest request) {
-        Object role = request.getSession(false).getAttribute(SessionKey.ROLE);
-        boolean isPt = Role.PT.getDbValue().equals(role);
-        return isPt && RequestUtil.isValidCsrfToken(request);
+
+
+    // ============================================================================================================
+    // DÙNG CHUNG — đọc AccountId trong session (doGet, doPost)
+    // ============================================================================================================
+
+    /** HÀM PHỤ (dùng chung: doGet, doPost) — AccountId trong session; null = chưa đăng nhập. */
+    private Integer getAccountId(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session == null) {
+            return null;
+        }
+        return (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
     }
 }

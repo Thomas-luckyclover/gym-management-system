@@ -96,6 +96,7 @@
                                     <span class="bf07-sub">
                                         <c:out value="${review.customerCode}" />
                                         ·
+                                        <%-- review.customerTypeLabel = getter tự tính getCustomerTypeLabel() · dto/CustomerDeletionReviewView.java --%>
                                         <c:out value="${review.customerTypeLabel}" />
                                     </span>
                                 </div>

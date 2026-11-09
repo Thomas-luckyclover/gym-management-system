@@ -1,11 +1,21 @@
 // Lịch chọn ngày bắt đầu gói. JS chỉ gửi ngày khách bấm; ngày hết hạn và mọi luật do server quyết định.
 // Cấu trúc: phần tử [data-sdp] chứa nút [data-sdp-toggle], lịch [data-sdp-cal], các chỗ hiển thị
 // [data-sdp-start] / [data-sdp-end] và các thuộc tính data-sdp-url, data-sdp-sub, data-sdp-csrf.
-document.addEventListener("DOMContentLoaded", function () {
+function bootStartDatePickers() {
     document.querySelectorAll("[data-sdp]").forEach(initStartDatePicker);
-});
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", bootStartDatePickers);
+} else {
+    bootStartDatePickers();
+}
 
 function initStartDatePicker(root) {
+    if (root.dataset.sdpInited) {
+        return;
+    }
+    root.dataset.sdpInited = "true";
     const toggle = root.querySelector("[data-sdp-toggle]");
     const calendar = root.querySelector("[data-sdp-cal]");
     const save = root.querySelector("[data-sdp-save]");

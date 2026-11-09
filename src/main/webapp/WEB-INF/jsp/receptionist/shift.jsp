@@ -150,6 +150,7 @@
                     </c:otherwise>
                   </c:choose>
                 </p>
+                <%-- detail.pastDate = getter tự tính isPastDate() · dto/ShiftDetailView.java --%>
                 <c:if test="${detail.pastDate}">
                   <div style="margin-top: 10px;">
                     <a href="${pageContext.request.contextPath}/receptionist/shift"
@@ -323,6 +324,7 @@
               </c:when>
               <c:otherwise>
                 <c:forEach var="item" items="${detail.transactionsPage.items}">
+                  <%-- item.cancelled = getter tự tính isCancelled() · dto/ShiftTransactionItem.java (item = ShiftTransactionItem) --%>
                   <div class="data-row ${item.cancelled ? 'is-void-row' : ''}">
                     <div class="row-main">
                       <div class="row-title">

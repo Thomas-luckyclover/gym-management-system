@@ -8,7 +8,7 @@ public class ShiftStaffingRow {
     private final String shiftLabel;    // "Ca sáng" / "Ca chiều"
     private final int current;          // đang trực (chưa trừ đơn đang xét)
     private final int afterApproval;    // nếu duyệt đơn này
-    private final int minRequired;      // P-13 / P-14
+    private final int minRequired;      // P-11 / P-12
 
     public ShiftStaffingRow(
             String shiftLabel,
@@ -38,6 +38,7 @@ public class ShiftStaffingRow {
         return minRequired;
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "belowMin"; = afterApproval < minRequired; JSP: manager/leave-request-review.jsp:258
     public boolean isBelowMin() {
         return afterApproval < minRequired;
     }

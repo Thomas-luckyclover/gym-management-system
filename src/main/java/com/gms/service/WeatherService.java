@@ -77,16 +77,24 @@ public class WeatherService {
     /**
      * Trả thời tiết hôm nay tại gym. Nếu API lỗi, trả số đo thành công gần nhất
      * trong cùng ngày với cờ stale; chưa từng có số đo thì trả null.
-     * synchronized: nhiều PT mở trang cùng lúc chỉ một request gọi Open-Meteo khi
-     * cache hết hạn.
+        Biến          	Nghĩa
+        cachedView	Thẻ thời tiết đã tính lần trước (WeatherView)
+        cachedDate	Ngày của lần thử gần nhất (thành công hay lỗi đều ghi)
+        cachedSuccessDate	Ngày của lần lấy thành công gần nhất
+        cachedUntil	Mốc hết hạn: trước mốc này thì dùng lại, không gọi API
+        lastFetchFailed	Lần thử gần nhất có lỗi không
      */
+    // synchronized: là từ khóa Java nghĩa là “mỗi lúc chỉ một luồng được chạy hàm này”. 
+    // 1 request = 1 luồng riêng nên nhiều PT mở trang = nhiều luồng => Gọi trùng API nhiều lần, cahce đọc dữ liệu bị pha tạp, hiển thị khác nhau
+    // Nên synchonized giải quyết được điều này: Thread 1 vào đầu, thấy API hết hạn => tạo mới, Thread 2 vào thấy còn hạn => return ngay bước 1,....
+    // 
     public synchronized WeatherView getTodayWeather() {
         LocalDateTime now = currentTime.get();
 
         // B1: dùng lại kết quả trong ngày; không giữ thời tiết hôm qua qua mốc nửa đêm.
         if (cachedDate != null && cachedDate.equals(now.toLocalDate())
                 && cachedUntil != null && now.isBefore(cachedUntil)) {
-            return currentViewFor(now.toLocalDate());
+            return currentViewFor(now.toLocalDate());  // → dùng lại, KHÔNG gọi API
         }
 
         try {
@@ -94,6 +102,9 @@ public class WeatherService {
             // Forecast.
             double latitude = Double.parseDouble(latitudeText);
             double longitude = Double.parseDouble(longitudeText);
+            
+            // Hàm chỉ nhận 2 tham số, nhưng URL gửi đi có nhiều thứ hơn thế. Phần còn lại viết cứng trong WeatherClient, vì nó không bao giờ đổi
+            // Phần còn lại dạng URL
             WeatherForecast forecast = weatherClient.fetchToday(latitude, longitude);
 
             // B3: đổi dữ liệu API thành chữ/kiểu thẻ; giữ 30 phút cho các PT khác.
@@ -109,7 +120,7 @@ public class WeatherService {
             cachedUntil = now.plusMinutes(FAILURE_RETRY_MINUTES);
             lastFetchFailed = true;
         }
-        return currentViewFor(now.toLocalDate());
+        return currentViewFor(now.toLocalDate()); // tính mới
     }
 
     /** Không đưa số đo ngày cũ vào dự báo hôm nay; trạng thái cũ mang đúng mốc lấy API. */

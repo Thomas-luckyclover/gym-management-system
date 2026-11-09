@@ -82,7 +82,7 @@ class AuthServiceTest {
     }
 
     @Test
-    @DisplayName("B7: Khách sai mật khẩu, còn lượt -> MSG33 theo P-17 trong SystemConfigs")
+    @DisplayName("B7: Khách sai mật khẩu, còn lượt -> MSG33 theo P-15 trong SystemConfigs")
     void login_CustomerWrongPassword_UsesMaxAttemptsFromConfig() {
         Account customer = new Account(2, 20, PasswordUtil.hashPassword("Dung2026abc"), Account.Status.ACTIVE, 0, null, null, LocalDateTime.now());
         fakeAccountDAO.setEmailAccount(customer);
@@ -94,7 +94,7 @@ class AuthServiceTest {
     }
 
     @Test
-    @DisplayName("B7: Khách sai đủ P-17 lần -> khóa tạm đúng P-18 phút")
+    @DisplayName("B7: Khách sai đủ P-15 lần -> khóa tạm đúng P-16 phút")
     void login_CustomerReachesMaxAttempts_LocksForConfiguredMinutes() {
         Account customer = new Account(3, 30, PasswordUtil.hashPassword("Dung2026abc"), Account.Status.ACTIVE, 2, null, null, LocalDateTime.now());
         fakeAccountDAO.setEmailAccount(customer);
@@ -152,7 +152,7 @@ class AuthServiceTest {
         }
     }
 
-    /** Fake SystemConfigService: trả P-17, P-18 cố định, không cần DB. */
+    /** Fake SystemConfigService: trả P-15, P-16 cố định, không cần DB. */
     private static class FakeSystemConfigService extends SystemConfigService {
         private final int maxFailedAttempts;
         private final int lockMinutes;

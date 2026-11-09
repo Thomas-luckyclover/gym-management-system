@@ -56,7 +56,7 @@ public class ManagerTransactionItem {
     // JSP hiển thị tại cột Tổng tiền; nếu đơn bị hủy thì gạch ngang (strikethrough).
     private final long totalAmount;
 
-    // DAO: Orders.VatRateSnapshot, phần trăm thuế VAT lúc tạo đơn (mặc định P-10).
+    // DAO: Orders.VatRateSnapshot, phần trăm thuế VAT lúc tạo đơn (mặc định P-08).
     // JSP hiển thị tỷ lệ VAT.
     private final int vatRate;
 
@@ -155,10 +155,6 @@ public class ManagerTransactionItem {
         return customerName;
     }
 
-    public String getCustomerFullName() {
-        return customerName;
-    }
-
     public String getCustomerPhone() {
         return customerPhone;
     }
@@ -211,10 +207,6 @@ public class ManagerTransactionItem {
         return refundableTransactionId;
     }
 
-    public Integer getTransactionId() {
-        return refundableTransactionId;
-    }
-
     public boolean isNeedsRefund() {
         return needsRefund;
     }
@@ -227,10 +219,6 @@ public class ManagerTransactionItem {
         return refundedByName;
     }
 
-    public String getRefundedByEmployeeName() {
-        return refundedByName;
-    }
-
     public String getRefundNote() {
         return refundNote;
     }
@@ -238,26 +226,19 @@ public class ManagerTransactionItem {
     // ===== Helper methods phục vụ hiển thị JSP =====
 
     /** Kiểm tra đơn bán trực tuyến trên website. */
+    // GETTER TỰ TÍNH — không có field/setter "online"; = channel == "Online"; JSP: không dùng (chỉ Java/test)
     public boolean isOnline() {
         return "Online".equalsIgnoreCase(channel);
     }
 
-    /** Kiểm tra đơn tạo trực tiếp tại quầy Lễ tân. */
-    public boolean isCounter() {
-        return "Counter".equalsIgnoreCase(channel);
-    }
-
-    /** Kiểm tra đơn đã thanh toán thành công. */
-    public boolean isPaid() {
-        return "Paid".equalsIgnoreCase(orderStatus);
-    }
-
     /** Kiểm tra đơn đang chờ thanh toán. */
+    // GETTER TỰ TÍNH — không có field/setter "pending"; = orderStatus == "Pending"; JSP: không dùng (chỉ Java/test)
     public boolean isPending() {
         return "Pending".equalsIgnoreCase(orderStatus);
     }
 
     /** Kiểm tra đơn đã bị hủy. */
+    // GETTER TỰ TÍNH — không có field/setter "cancelled"; = orderStatus == "Cancelled"; JSP: không dùng (chỉ Java/test)
     public boolean isCancelled() {
         return "Cancelled".equalsIgnoreCase(orderStatus);
     }
@@ -265,6 +246,7 @@ public class ManagerTransactionItem {
     /**
      * Kiểm tra giao dịch có cần hoàn tiền thủ công và chưa được hoàn (CBR-72).
      */
+    // GETTER TỰ TÍNH — không có field/setter "refundPending"; = needsRefund và chưa có refundedAt; JSP: không dùng (chỉ Java/test)
     public boolean isRefundPending() {
         return needsRefund && refundedAt == null;
     }
@@ -272,7 +254,17 @@ public class ManagerTransactionItem {
     /**
      * Kiểm tra giao dịch đã được Manager xác nhận hoàn tiền thành công (BR-47).
      */
+    // GETTER TỰ TÍNH — không có field/setter "refundCompleted"; = needsRefund và đã có refundedAt; JSP: không dùng (chỉ Java/test)
     public boolean isRefundCompleted() {
         return needsRefund && refundedAt != null;
+    }
+
+    /** Số ngày đơn đã tạo (dùng cho chữ "Chờ N ngày" ở dòng cần hoàn tiền). */
+    public long getWaitDays() {
+        if (createdAt == null) {
+            return 0;
+        }
+        return java.time.temporal.ChronoUnit.DAYS.between(
+                createdAt.toLocalDate(), java.time.LocalDate.now());
     }
 }

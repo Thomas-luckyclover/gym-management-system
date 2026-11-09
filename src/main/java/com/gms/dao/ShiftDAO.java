@@ -460,10 +460,26 @@ public class ShiftDAO {
      * Lễ tân xác nhận đã nhận tiền chuyển khoản cho đơn hàng tại quầy (CBR-77).
      */
     public int confirmBankTransfer(Connection conn, int orderId, int employeeId, LocalDateTime completedAt) throws SQLException {
-        // B1: Cập nhật giao dịch chuyển khoản sang Success
-        String updateTxSql = "UPDATE Transactions "
-                + "SET Status = 'Success', ReceivedByEmployeeId = ?, CompletedAt = ? "
-                + "WHERE OrderId = ? AND Status = 'Pending'";
+        // B1: Cập nhật Order sang Paid trước để khóa đơn, chặn tranh chấp đồng thời (CBR-77, CS-19)
+        String updateOrderSql = "UPDATE Orders SET Status = 'Paid', PaidAt = ? WHERE OrderId = ? AND Status = 'Pending'";
+        int rowsUpdated;
+        try (PreparedStatement orderStmt = conn.prepareStatement(updateOrderSql)) {
+            orderStmt.setTimestamp(1, Timestamp.valueOf(completedAt));
+            orderStmt.setInt(2, orderId);
+            rowsUpdated = orderStmt.executeUpdate();
+        }
+
+        // Nếu đơn không còn ở trạng thái Pending (đã được xác nhận hoặc hủy trước đó) -> dừng ngay
+        if (rowsUpdated == 0) {
+            return 0;
+        }
+
+        // B2: Cập nhật giao dịch chuyển khoản sang Success
+        String updateTxSql = """
+                UPDATE Transactions 
+                SET Status = 'Success', ReceivedByEmployeeId = ?, CompletedAt = ? 
+                WHERE OrderId = ? AND Status = 'Pending'
+                """;
         int txUpdated;
         try (PreparedStatement txStmt = conn.prepareStatement(updateTxSql)) {
             txStmt.setInt(1, employeeId);
@@ -472,7 +488,7 @@ public class ShiftDAO {
             txUpdated = txStmt.executeUpdate();
         }
 
-        // B1.1: Nếu đơn chưa có dòng Transaction (VD đơn giữ chỗ PT) thì tạo mới giao dịch Success
+        // B2.1: Nếu đơn chưa có bản ghi Transaction nào thì tạo mới giao dịch Success
         if (txUpdated == 0) {
             String insertTxSql = """
                     INSERT INTO Transactions (OrderId, Amount, PaymentMethod, ReceivedByEmployeeId, Status, CreatedAt, CompletedAt)
@@ -488,22 +504,76 @@ public class ShiftDAO {
             }
         }
 
-        // B2: Chuyển trạng thái đơn hàng sang Paid
-        String updateOrderSql = "UPDATE Orders SET Status = 'Paid', PaidAt = ? WHERE OrderId = ? AND Status = 'Pending'";
-        try (PreparedStatement orderStmt = conn.prepareStatement(updateOrderSql)) {
-            orderStmt.setTimestamp(1, Timestamp.valueOf(completedAt));
-            orderStmt.setInt(2, orderId);
-            return orderStmt.executeUpdate();
+        // B3: Cấp thẻ tập (Subscription) cho hội viên nếu chưa có (CS-16)
+        String checkSubSql = "SELECT 1 FROM Subscriptions WHERE OrderId = ?";
+        boolean hasSub = false;
+        try (PreparedStatement checkStmt = conn.prepareStatement(checkSubSql)) {
+            checkStmt.setInt(1, orderId);
+            try (ResultSet rs = checkStmt.executeQuery()) {
+                hasSub = rs.next();
+            }
         }
+
+        if (!hasSub) {
+            String insertSubSql = """
+                    INSERT INTO Subscriptions (OrderId, CustomerId, SubscriptionType, StartDate, EndDate, MaxFreezesSnapshot, Status)
+                    SELECT o.OrderId, o.HolderCustomerId, p.PackageType, CAST(? AS DATE),
+                           CASE WHEN p.PackageType = 'DayPass' THEN CAST(? AS DATE)
+                                ELSE DATEADD(MONTH, ISNULL(p.DurationValue, 1), CAST(? AS DATE)) END,
+                           CASE WHEN p.PackageType = 'Membership' THEN 2 ELSE NULL END,
+                           'Active'
+                    FROM Orders o
+                    JOIN Packages p ON p.PackageId = o.PackageId
+                    WHERE o.OrderId = ?
+                    """;
+            try (PreparedStatement insertSubStmt = conn.prepareStatement(insertSubSql)) {
+                insertSubStmt.setTimestamp(1, Timestamp.valueOf(completedAt));
+                insertSubStmt.setTimestamp(2, Timestamp.valueOf(completedAt));
+                insertSubStmt.setTimestamp(3, Timestamp.valueOf(completedAt));
+                insertSubStmt.setInt(4, orderId);
+                insertSubStmt.executeUpdate();
+            }
+
+            // Kích hoạt khách hàng New / Expired sang Active (CBR-01, CBR-02)
+            String activateCustSql = """
+                    UPDATE Customers 
+                    SET Status = 'Active' 
+                    WHERE CustomerId = (SELECT HolderCustomerId FROM Orders WHERE OrderId = ?)
+                      AND Status IN ('New', 'Expired')
+                    """;
+            try (PreparedStatement actStmt = conn.prepareStatement(activateCustSql)) {
+                actStmt.setInt(1, orderId);
+                actStmt.executeUpdate();
+            }
+        }
+
+        return rowsUpdated;
     }
 
     /**
-     * Hủy đơn hàng tại quầy trong ca mở (CBR-11) và thu hồi các quyền lợi liên quan.
+     * Hủy 1 đơn tại quầy trong ca (CBR-11 đơn Paid, CBR-78 đơn Pending) — mọi bước trong transaction của Service.
+     * Input: orderId, lý do (5–500), now, accountId = tài khoản Lễ tân bấm hủy. Output: 1 = đã hủy, 0 = đơn không còn hủy được.
+     *
+     * B1: đọc VoucherId + CreatedAt của đơn
+     * B2: Orders → Cancelled / CancelledByReceptionist (chỉ khi đang Pending hoặc Paid)
+     * B3: hoàn 1 lượt voucher (BR-44)
+     * B4: Subscriptions của đơn → Cancelled (DBR-40)
+     * B5: khung của các buổi CÒN Scheduled → Free (DBR-36). Làm TRƯỚC B6 và chỉ lấy buổi Scheduled: khung của buổi
+     *     đã dời / đã hủy trước đó có thể đang Booked cho khách khác — bản cũ trả cả những khung đó về Free.
+     * B6: buổi Scheduled → Cancelled / ByCustomer (DBR-37 không có loại "lễ tân hủy"; khách đổi ý, tiền trả lại tại quầy),
+     *     CancelledAt = now, CancelledByAccountId = lễ tân (CK_Sessions_CustomerCancel), CommissionAmount = 0 → PT không
+     *     được tính hoa hồng cho buổi đã hoàn tiền. Bản cũ ghi 'ByReceptionist' + thiếu CancelledAt → vi phạm
+     *     CK_Sessions_Cancel → mọi lần hủy đơn gói PT đã thu tiền đều lỗi "Hệ thống đang bận".
+     * B7: đơn gói PT còn đang GIỮ LỊCH (Pending): khung do lần giữ tạo ra → xóa, khung PT đã công bố → Free
+     *     (giống nút "Hủy giữ chỗ" — PtSaleDAO.releaseHold; DBR-36). Bản cũ bỏ quên → khung treo "Đang giữ" mãi.
      */
-    public int cancelCounterOrder(Connection conn, int orderId, String reason, LocalDateTime now) throws SQLException {
-        // B1: Đọc VoucherId của đơn để hoàn lại lượt dùng nếu có (BR-44)
+    public int cancelCounterOrder(Connection conn, int orderId, String reason, LocalDateTime now, int accountId)
+            throws SQLException {
+        // B1
         Integer voucherId = null;
-        try (PreparedStatement readStmt = conn.prepareStatement("SELECT VoucherId FROM Orders WHERE OrderId = ?")) {
+        Timestamp orderCreatedAt = null;
+        String readOrderSql = "SELECT VoucherId, CreatedAt FROM Orders WHERE OrderId = ?";
+        try (PreparedStatement readStmt = conn.prepareStatement(readOrderSql)) {
             readStmt.setInt(1, orderId);
             try (ResultSet rs = readStmt.executeQuery()) {
                 if (rs.next()) {
@@ -511,17 +581,21 @@ public class ShiftDAO {
                     if (!rs.wasNull()) {
                         voucherId = vId;
                     }
+                    orderCreatedAt = rs.getTimestamp("CreatedAt");
                 }
             }
         }
 
-        // B2: Đổi trạng thái Order sang Cancelled
-        String updateOrderSql = "UPDATE Orders "
-                + "SET Status = 'Cancelled', CancelType = 'CancelledByReceptionist', CancelledAt = ?, CancelReason = ? "
-                + "WHERE OrderId = ? AND Status IN ('Pending', 'Paid')";
+        // B2
+        String updateOrderSql = """
+                UPDATE Orders
+                SET Status = 'Cancelled', CancelType = 'CancelledByReceptionist',
+                    CancelledAt = ?, CancelReason = ?
+                WHERE OrderId = ? AND Status IN ('Pending', 'Paid')
+                """;
         int rowsUpdated;
         try (PreparedStatement orderStmt = conn.prepareStatement(updateOrderSql)) {
-            orderStmt.setTimestamp(1, Timestamp.valueOf(now));
+            orderStmt.setTimestamp(1, Timestamp.valueOf(now.withNano(0)));
             orderStmt.setString(2, reason);
             orderStmt.setInt(3, orderId);
             rowsUpdated = orderStmt.executeUpdate();
@@ -530,7 +604,7 @@ public class ShiftDAO {
             return 0;
         }
 
-        // B3: Hoàn lại 1 lượt sử dụng voucher nếu đơn có áp mã (BR-44)
+        // B3
         if (voucherId != null) {
             try (PreparedStatement vStmt = conn.prepareStatement(
                     "UPDATE Vouchers SET UsedCount = UsedCount - 1 WHERE VoucherId = ? AND UsedCount > 0")) {
@@ -539,39 +613,59 @@ public class ShiftDAO {
             }
         }
 
-        // B4: Hủy gói tập Subscriptions vừa sinh từ đơn (DBR-40)
-        try (PreparedStatement subStmt = conn.prepareStatement(
-                "UPDATE Subscriptions SET Status = 'Cancelled' WHERE OrderId = ?")) {
+        // B4
+        String cancelSubSql = "UPDATE Subscriptions SET Status = 'Cancelled' WHERE OrderId = ?";
+        try (PreparedStatement subStmt = conn.prepareStatement(cancelSubSql)) {
             subStmt.setInt(1, orderId);
             subStmt.executeUpdate();
         }
 
-        // B5: Hủy các buổi tập PT chưa diễn ra
+        // B5
+        String freeSlotSql = """
+                UPDATE TimeSlots
+                SET Status = 'Free'
+                WHERE Status = 'Booked' AND TimeSlotId IN (
+                    SELECT s.TimeSlotId FROM Sessions s
+                    JOIN Subscriptions sub ON sub.SubscriptionId = s.SubscriptionId
+                    WHERE sub.OrderId = ? AND s.Status = 'Scheduled'
+                )
+                """;
+        try (PreparedStatement slotStmt = conn.prepareStatement(freeSlotSql)) {
+            slotStmt.setInt(1, orderId);
+            slotStmt.executeUpdate();
+        }
+
+        // B6
         String cancelSessionsSql = """
-                UPDATE Sessions 
-                SET Status = 'Cancelled', CancelType = 'ByReceptionist', CancelReason = ?
+                UPDATE Sessions
+                SET Status = 'Cancelled', CancelType = 'ByCustomer', CancelReason = ?, CancelledAt = ?,
+                    CancelledByAccountId = ?, RefundAgreed = 0, CommissionAmount = 0
                 WHERE SubscriptionId IN (SELECT SubscriptionId FROM Subscriptions WHERE OrderId = ?)
                   AND Status = 'Scheduled'
                 """;
         try (PreparedStatement sesStmt = conn.prepareStatement(cancelSessionsSql)) {
             sesStmt.setString(1, reason);
-            sesStmt.setInt(2, orderId);
+            sesStmt.setTimestamp(2, Timestamp.valueOf(now.withNano(0)));
+            sesStmt.setInt(3, accountId);
+            sesStmt.setInt(4, orderId);
             sesStmt.executeUpdate();
         }
 
-        // B6: Giải phóng khung giờ PT về Free (DBR-36)
-        String freeSlotSql = """
-                UPDATE TimeSlots 
-                SET Status = 'Free' 
-                WHERE TimeSlotId IN (
-                    SELECT s.TimeSlotId FROM Sessions s
-                    JOIN Subscriptions sub ON sub.SubscriptionId = s.SubscriptionId
-                    WHERE sub.OrderId = ?
-                ) AND Status = 'Booked'
-                """;
-        try (PreparedStatement slotStmt = conn.prepareStatement(freeSlotSql)) {
-            slotStmt.setInt(1, orderId);
-            slotStmt.executeUpdate();
+        // B7
+        if (orderCreatedAt != null) {
+            String deleteHoldSlotsSql =
+                    "DELETE FROM TimeSlots WHERE HeldByOrderId = ? AND Status = 'Held' AND CreatedAt >= ?";
+            try (PreparedStatement statement = conn.prepareStatement(deleteHoldSlotsSql)) {
+                statement.setInt(1, orderId);
+                statement.setTimestamp(2, orderCreatedAt);
+                statement.executeUpdate();
+            }
+        }
+        String freeHoldSlotsSql = "UPDATE TimeSlots SET Status = 'Free', HeldByOrderId = NULL, HoldExpiresAt = NULL "
+                + "WHERE HeldByOrderId = ? AND Status = 'Held'";
+        try (PreparedStatement statement = conn.prepareStatement(freeHoldSlotsSql)) {
+            statement.setInt(1, orderId);
+            statement.executeUpdate();
         }
 
         return rowsUpdated;

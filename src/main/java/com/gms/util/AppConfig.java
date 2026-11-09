@@ -12,7 +12,7 @@ import java.util.Properties;
  * File này chứa thông tin RIÊNG TỪNG MÁY và BÍ MẬT (mật khẩu DB, app password Gmail, khóa VNPay)
  * nên KHÔNG commit lên git — mỗi người copy application.properties.example thành application.properties rồi tự điền.
  *
- * Phân biệt với tham số nghiệp vụ P-01…P-20: các tham số đó nằm trong bảng SystemConfig (Manager sửa được),
+ * Phân biệt với tham số nghiệp vụ P-01…P-19: các tham số đó nằm trong bảng SystemConfig (Manager sửa được),
  * không đọc qua class này.
  */
 public final class AppConfig {

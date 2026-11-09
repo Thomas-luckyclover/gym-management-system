@@ -5,10 +5,16 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * DTO đại diện cho thông tin chi tiết đầy đủ của một đơn hàng trong modal chi tiết (Màn #41 - UC-26).
+ * DTO đại diện cho thông tin chi tiết đầy đủ của một đơn hàng trong modal chi
+ * tiết (Màn #41 - UC-26).
  *
- * <p>Nơi tạo: {@link com.gms.dao.TransactionDAO#findOrderDetailForManager}.</p>
- * <p>Nơi dùng: Render thông tin đơn hàng và các lần thử thanh toán trong modal chi tiết tại {@code manager/transaction-list.jsp}.</p>
+ * <p>
+ * Nơi tạo: {@link com.gms.dao.TransactionDAO#findOrderDetailForManager}.
+ * </p>
+ * <p>
+ * Nơi dùng: Render thông tin đơn hàng và các lần thử thanh toán trong modal chi
+ * tiết tại {@code manager/transaction-list.jsp}.
+ * </p>
  *
  * @author Le Cong Minh
  */
@@ -62,6 +68,14 @@ public class ManagerOrderDetailView {
     // DAO: Persons.FullName của người đi kèm (nếu gói couple)
     private final String partnerName;
 
+    // DAO: Subscriptions.StartDate / EndDate / Status, null nếu chưa cấp gói
+    private String packageStartDate;
+    private String packageEndDate;
+    private String packageStatus;
+
+    // DAO: tên PT phụ trách gói (nếu có)
+    private String ptName;
+
     // DAO: Orders.PackageNameSnapshot
     private final String packageName;
 
@@ -96,18 +110,18 @@ public class ManagerOrderDetailView {
     private final List<TransactionAttemptView> attempts;
 
     public ManagerOrderDetailView(int orderId, String orderCode, String channel,
-                                  LocalDateTime createdAt, LocalDateTime paymentDueAt,
-                                  LocalDateTime paidAt, String status,
-                                  String cancelType, LocalDateTime cancelledAt,
-                                  String cancelReason, String createdByEmployeeName,
-                                  Integer shiftId, String customerName,
-                                  String customerPhone, String customerEmail,
-                                  String partnerName, String packageName,
-                                  String packageDescription, String packageBenefits,
-                                  long unitPrice, long discountAmount,
-                                  String voucherCode, int vatRate, long vatAmount,
-                                  long totalPayable, long preTaxAmount,
-                                  List<TransactionAttemptView> attempts) {
+            LocalDateTime createdAt, LocalDateTime paymentDueAt,
+            LocalDateTime paidAt, String status,
+            String cancelType, LocalDateTime cancelledAt,
+            String cancelReason, String createdByEmployeeName,
+            Integer shiftId, String customerName,
+            String customerPhone, String customerEmail,
+            String partnerName, String packageName,
+            String packageDescription, String packageBenefits,
+            long unitPrice, long discountAmount,
+            String voucherCode, int vatRate, long vatAmount,
+            long totalPayable, long preTaxAmount,
+            List<TransactionAttemptView> attempts) {
         this.orderId = orderId;
         this.orderCode = orderCode;
         this.channel = channel;
@@ -263,5 +277,28 @@ public class ManagerOrderDetailView {
             }
         }
         return null;
+    }
+
+    public String getPackageStartDate() {
+        return packageStartDate;
+    }
+
+    public String getPackageEndDate() {
+        return packageEndDate;
+    }
+
+    public String getPackageStatus() {
+        return packageStatus;
+    }
+
+    public String getPtName() {
+        return ptName;
+    }
+
+    public void setSubscriptionInfo(String startDate, String endDate, String status, String ptName) {
+        this.packageStartDate = startDate;
+        this.packageEndDate = endDate;
+        this.packageStatus = status;
+        this.ptName = ptName;
     }
 }

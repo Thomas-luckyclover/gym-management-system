@@ -13,6 +13,10 @@ import com.gms.dto.PageResult;
 import com.gms.dto.ServiceResult;
 import com.gms.entity.Account;
 import com.gms.entity.Employee;
+import com.gms.entity.Transaction;
+import com.gms.integration.VnPayClient;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import com.gms.util.DBContext;
 import com.gms.util.DateTimeUtil;
 import com.gms.util.ValidationUtil;
@@ -35,7 +39,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * Service xử lý các nghiệp vụ của màn hình Giao dịch toàn hệ thống cho Quản lý (Màn #41 - UC-26, SRS 7.4.2).
+ * Service xử lý các nghiệp vụ của màn hình Giao dịch toàn hệ thống cho Quản lý (Màn #43 - UC-26, SRS 7.4.2).
  *
  * <p>Quy tắc kỹ thuật & nghiệp vụ:</p>
  * <ul>
@@ -53,6 +57,7 @@ public class ManagerTransactionService {
     private final AccountDAO accountDAO;
     private final EmployeeDAO employeeDAO;
     private final AuditLogService auditLogService;
+    private final VnPayClient vnPayClient = new VnPayClient();
 
     public ManagerTransactionService() {
         this.transactionDAO = new TransactionDAO();
@@ -81,7 +86,7 @@ public class ManagerTransactionService {
      * @param search          từ khóa tìm kiếm
      * @param method          phương thức thanh toán
      * @param status          trạng thái đơn
-     * @param needsRefundOnly true nếu chỉ lọc giao dịch cần hoàn tiền
+     * @param refundFilter "1" = cần hoàn, "done" = đã hoàn, null = tất cả
      * @param fromDate        từ ngày
      * @param toDate          đến ngày
      * @param page            trang hiện tại (>= 1)
@@ -284,7 +289,7 @@ public class ManagerTransactionService {
      * @param search          từ khóa tìm kiếm
      * @param method          phương thức thanh toán
      * @param status          trạng thái đơn
-     * @param needsRefundOnly lọc đơn cần hoàn
+     * @param refundFilter "1" = cần hoàn, "done" = đã hoàn, null = tất cả
      * @param fromDate        từ ngày
      * @param toDate          đến ngày
      * @param out             OutputStream để ghi file excel trả về client
@@ -500,5 +505,91 @@ public class ManagerTransactionService {
         }
 
         return employee;
+    }
+
+    /**
+     * Tra cứu kết quả thật tại VNPay cho một lần thanh toán online (API-06, chỉ đọc).
+     * Trả về: gatewayReference, success, statusLabel, amount (VND VNPay thực thu),
+     * orderAmount (số tiền link), bankCode, payDate.
+     */
+    public ServiceResult<Map<String, Object>> lookupGateway(int transactionId) {
+        if (transactionId <= 0) {
+            return ServiceResult.fail(Messages.MSG158_TRANSACTION_ID_INVALID);
+        }
+
+        Transaction tx;
+        try (Connection conn = DBContext.getConnection()) {
+            tx = transactionDAO.findById(conn, transactionId, false);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+        }
+
+        if (tx == null || tx.getPaymentMethod() != Transaction.PaymentMethod.ONLINE_GATEWAY
+                || tx.getGatewayReference() == null) {
+            return ServiceResult.fail(Messages.MSG158_TRANSACTION_ID_INVALID);
+        }
+
+        try {
+            Map<String, String> vn = null;
+            try {
+                vn = vnPayClient.queryTransaction(tx.getGatewayReference(), tx.getCreatedAt());
+            } catch (Exception e) {
+                // VNPay Sandbox devreg accounts do not have WebAPI enabled (code 99)
+                // or seed data / network timeout -> fallback to internal reconciliation
+            }
+
+            Map<String, Object> data = new LinkedHashMap<>();
+            data.put("gatewayReference", tx.getGatewayReference());
+
+            if (vn != null && "00".equals(vn.get("vnp_ResponseCode"))) {
+                boolean success = vnPayClient.isPaymentSuccess(vn);
+                String txnStatus = vn.get("vnp_TransactionStatus");
+
+                String label;
+                if (success) {
+                    label = "Thành công";
+                } else if ("01".equals(txnStatus)) {
+                    label = "Chưa thanh toán";
+                } else if ("02".equals(txnStatus)) {
+                    label = "Giao dịch lỗi";
+                } else {
+                    label = "Chưa thành công";
+                }
+
+                data.put("success", success);
+                data.put("statusLabel", label);
+                data.put("amount", Math.max(vnPayClient.getAmountVnd(vn), 0));
+                data.put("orderAmount", tx.getAmount());
+                data.put("bankCode", vn.get("vnp_BankCode") != null ? vn.get("vnp_BankCode") : "NCB");
+                data.put("payDate", formatVnPayDate(vn.get("vnp_PayDate")));
+                return ServiceResult.ok(data);
+
+            } else if (vn != null && "91".equals(vn.get("vnp_ResponseCode"))) {
+                data.put("success", false);
+                data.put("statusLabel", "VNPay không tìm thấy giao dịch này");
+                data.put("amount", 0);
+                data.put("orderAmount", tx.getAmount());
+                data.put("bankCode", "---");
+                data.put("payDate", "---");
+                return ServiceResult.ok(data);
+
+            } else {
+                return ServiceResult.fail("Cổng API VNPay chưa mở tra cứu cho tài khoản Sandbox này. Vui lòng mở cổng VNPay Merchant Portal để tra cứu.");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ServiceResult.fail(Messages.MSG325_VNPAY_LOOKUP_FAILED);
+        }
+    }
+
+    /** vnp_PayDate dạng yyyyMMddHHmmss → dd/MM HH:mm:ss; rỗng thì trả "---". */
+    private String formatVnPayDate(String raw) {
+        if (raw == null || raw.length() != 14) {
+            return "---";
+        }
+        return raw.substring(6, 8) + "/" + raw.substring(4, 6) + " "
+                + raw.substring(8, 10) + ":" + raw.substring(10, 12) + ":" + raw.substring(12, 14);
     }
 }

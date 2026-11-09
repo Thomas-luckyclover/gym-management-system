@@ -715,6 +715,23 @@ function initVoucherLogic() {
 // B1: chọn hình thức thu tiền (Tiền mặt / Chuyển khoản) — cập nhật class .active cho thẻ.
 function initPaymentMethodToggle() {
     const paymentCards = document.querySelectorAll(".counter-payment-card");
+    const box = document.getElementById("transferConfirmBox");
+    const tick = document.getElementById("transferReceived");
+
+    function syncTransferBox() {
+        const checked = document.querySelector('input[name="paymentMethod"]:checked');
+        const isTransfer = checked !== null && checked.value === "Transfer";
+        if (box !== null) {
+            box.hidden = !isTransfer;
+        }
+        if (tick !== null) {
+            tick.required = isTransfer;
+            if (!isTransfer) {
+                tick.checked = false;
+            }
+        }
+    }
+
     for (const card of paymentCards) {
         const radio = card.querySelector('input[type="radio"]');
         if (radio !== null) {
@@ -725,9 +742,11 @@ function initPaymentMethodToggle() {
                 if (radio.checked) {
                     card.classList.add("active");
                 }
+                syncTransferBox();
             });
         }
     }
+    syncTransferBox();
 }
 
 // B2: chọn ngày bắt đầu — chuyển đổi giữa Kích hoạt hôm nay và Hẹn ngày khác (trong 7 ngày tới).

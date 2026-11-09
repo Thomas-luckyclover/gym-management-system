@@ -99,8 +99,12 @@ public class LoginServlet extends HttpServlet {
                     targetUrl += "?returnUrl=" + java.net.URLEncoder.encode(returnUrl, java.nio.charset.StandardCharsets.UTF_8);
                 }
             } else {
-                newSession.setAttribute(SessionKey.ROLE, loginResult.getRole().getDbValue());
-                targetUrl = RequestUtil.isSafeReturnUrl(returnUrl)
+                // B6: 1 vai trò → chỉ quay về returnUrl khi vai trò này VÀO ĐƯỢC trang đó.
+                //     Lỗi cũ: hết phiên ở /pt/schedule → /login?returnUrl=/pt/schedule → đăng nhập TÀI KHOẢN KHÁC (Lễ tân)
+                //     → bị đẩy thẳng vào /pt/schedule → PtAreaFilter 403 "bị chặn"; phải về trang chủ mới vào được.
+                Role role = loginResult.getRole();
+                newSession.setAttribute(SessionKey.ROLE, role.getDbValue());
+                targetUrl = canReturnTo(returnUrl, role)
                         ? returnUrl
                         : loginResult.getRedirectUrl();
             }
@@ -130,6 +134,38 @@ public class LoginServlet extends HttpServlet {
                 RequestUtil.forward(request, response, "auth/login");
             }
         }
+    }
+
+    /**
+     * HÀM PHỤ (doPost B6) — returnUrl có dùng được cho vai trò vừa đăng nhập không.
+     * Input: returnUrl (đường dẫn trong app, VD "/pt/schedule?date=2026-11-09"), role = vai trò của tài khoản vừa đăng nhập.
+     * Output: true = redirect về returnUrl; false = về trang chủ của vai trò (loginResult.getRedirectUrl()).
+     *
+     * B1: URL không an toàn (trống, "//evil.com", có "\\") → false.
+     * B2: URL thuộc khu vực của 1 vai trò ("/pt/", "/receptionist/"…) → chỉ true khi đúng vai trò đó.
+     *     VD tài khoản Lễ tân + "/pt/schedule" → false → về /receptionist/check-in thay vì trang 403.
+     * B3: URL dùng chung (VD "/account-settings", "/notifications", "/blog") → vai trò nào cũng vào được → true.
+     */
+    static boolean canReturnTo(String returnUrl, Role role) {
+        // B1
+        if (!RequestUtil.isSafeReturnUrl(returnUrl)) {
+            return false;
+        }
+        // B2
+        for (Role areaOwner : Role.values()) {
+            if (returnUrl.startsWith(areaPrefix(areaOwner))) {
+                return areaOwner == role;
+            }
+        }
+        // B3
+        return true;
+    }
+
+    /** HÀM PHỤ (canReturnTo) — khu vực URL của vai trò = phần đầu trang chủ: "/pt/dashboard" → "/pt/". */
+    private static String areaPrefix(Role role) {
+        String home = role.getHomePath();
+        int secondSlash = home.indexOf('/', 1);
+        return secondSlash > 0 ? home.substring(0, secondSlash + 1) : home;
     }
 
     /**

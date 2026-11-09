@@ -1,0 +1,29 @@
+<%@ page pageEncoding="UTF-8" %>
+<%--
+================================================================================
+ _pt-sale-holds.jspf — KHUNG "ĐƠN ĐANG GIỮ CHỖ" (đầu màn)
+ Nhúng vào: pt-sales.jsp (static include → dùng chung biến với trang cha).
+ Hiện khi:  sale.pendingHolds không rỗng (PtSaleService.loadPendingHolds ← PtSaleDAO.findActiveHoldOrders).
+ Mỗi dòng:  mã đơn · "còn mm:ss" (common.js bindCountdowns đếm từ data-countdown-seconds)
+            · nút "Tiếp tục thu tiền" → ?order=<id> (KHÔNG kèm start: Service tự lấy ngày khung giữ đầu tiên).
+ Để làm gì: lễ tân bấm Back / đăng xuất mất URL ?order= vẫn tìm lại được đơn chưa thu tiền.
+================================================================================ --%>
+
+<%-- ===== BẮT ĐẦU: ĐƠN ĐANG GIỮ CHỖ ===== --%>
+            <c:if test="${not empty sale.pendingHolds}">
+                <section class="sale-holds" aria-label="Đơn đang giữ chỗ">
+                    <p class="sale-holds-title"><i class="fa-solid fa-hourglass-half" aria-hidden="true"></i> Đơn đang giữ chỗ — tiếp tục thu tiền trước khi hết 15 phút:</p>
+                    <ul class="sale-holds-list">
+                        <c:forEach var="hold" items="${sale.pendingHolds}">
+                            <li>
+                                <span class="sale-holds-info">
+                                    <span class="sale-holds-code"><c:out value="${hold.orderCode}" /></span>
+                                    <span class="sale-holds-time">còn <b data-countdown-seconds="${hold.secondsLeft}">--:--</b></span>
+                                </span>
+                                <a class="btn btn-primary btn-sm" href="${base}?order=${hold.orderId}">Tiếp tục thu tiền</a>
+                            </li>
+                        </c:forEach>
+                    </ul>
+                </section>
+            </c:if>
+<%-- ===== KẾT THÚC: ĐƠN ĐANG GIỮ CHỖ ===== --%>

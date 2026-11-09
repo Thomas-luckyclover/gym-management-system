@@ -684,7 +684,7 @@ class FreezeServiceTest {
                                             Subscription.Status status, LocalDate start, LocalDate end,
                                             int freezeUsed, int maxFreezes) {
         return new Subscription(id, 100, customerId, type, null, start, end,
-                null, null, 0, null, freezeUsed, maxFreezes, status);
+                null, null, freezeUsed, maxFreezes, status);
     }
 
     // =========================================================================

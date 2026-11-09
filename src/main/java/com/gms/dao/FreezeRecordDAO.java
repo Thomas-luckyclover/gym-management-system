@@ -277,8 +277,6 @@ public class FreezeRecordDAO {
                     EndDate,
                     FixedStartTime,
                     GeneratedSessionCount,
-                    SwapsUsed,
-                    MaxSwapsSnapshot,
                     FreezeUsed,
                     MaxFreezesSnapshot,
                     Status
@@ -314,8 +312,6 @@ public class FreezeRecordDAO {
                     s.EndDate,
                     s.FixedStartTime,
                     s.GeneratedSessionCount,
-                    s.SwapsUsed,
-                    s.MaxSwapsSnapshot,
                     s.FreezeUsed,
                     s.MaxFreezesSnapshot,
                     s.Status
@@ -419,8 +415,6 @@ public class FreezeRecordDAO {
                     EndDate,
                     FixedStartTime,
                     GeneratedSessionCount,
-                    SwapsUsed,
-                    MaxSwapsSnapshot,
                     FreezeUsed,
                     MaxFreezesSnapshot,
                     Status
@@ -1016,10 +1010,6 @@ public class FreezeRecordDAO {
         int sc = rs.getInt("GeneratedSessionCount");
         Integer generatedSessionCount = rs.wasNull() ? null : sc;
 
-        int swapsUsed = rs.getInt("SwapsUsed");
-        int ms = rs.getInt("MaxSwapsSnapshot");
-        Integer maxSwapsSnapshot = rs.wasNull() ? null : ms;
-
         int freezeUsed = rs.getInt("FreezeUsed");
         int mf = rs.getInt("MaxFreezesSnapshot");
         Integer maxFreezesSnapshot = rs.wasNull() ? null : mf;
@@ -1027,8 +1017,8 @@ public class FreezeRecordDAO {
         Subscription.Status status = Subscription.Status.fromDbValue(rs.getString("Status"));
 
         return new Subscription(subscriptionId, orderId, customerId, type, ptEmployeeId,
-                startDate, endDate, fixedStartTime, generatedSessionCount, swapsUsed,
-                maxSwapsSnapshot, freezeUsed, maxFreezesSnapshot, status);
+                startDate, endDate, fixedStartTime, generatedSessionCount,
+                freezeUsed, maxFreezesSnapshot, status);
     }
 
     private FreezeRecordItemView mapResultSetToItemView(ResultSet rs) throws SQLException {

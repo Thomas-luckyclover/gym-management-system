@@ -84,6 +84,13 @@
         </nav>
 
         <div class="side-foot">
+            <%-- CBR-113: tài khoản có ≥ 2 vai trò (availableRoles có dấu phẩy, VD "PT,Customer")
+                 → hiện link sang màn chọn vai trò, đổi vai trò không cần đăng nhập lại. --%>
+            <c:if test="${not empty sessionScope.availableRoles and sessionScope.availableRoles.contains(',')}">
+                <a href="${pageContext.request.contextPath}/select-role" class="logout">
+                    <i class="fa-solid fa-repeat" aria-hidden="true" style="width: 18px; text-align: center; margin-right: 8px;"></i> Đổi vai trò
+                </a>
+            </c:if>
             <form action="${pageContext.request.contextPath}/logout" method="post">
                 <button type="submit" class="logout" style="border: none; background: transparent; cursor: pointer; text-align: left; font-family: inherit;">
                     <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true" style="width: 18px; text-align: center; margin-right: 8px;"></i> Đăng xuất

@@ -1,0 +1,44 @@
+<%@ page pageEncoding="UTF-8" %>
+<%--
+====================================================================================================
+ _schedule-grid.jspf — LƯỚI TUẦN (trục giờ + 7 cột ngày)
+ Nhúng vào: schedule.jsp, trong section pt-plan-board (static include → dùng chung biến với trang cha).
+ Dữ liệu: week (PtScheduleWeek ← PtScheduleService.getWeek): axisStartHour / axisEndHour / shiftSplitHour / days.
+ Mỗi ngày → _schedule-day.jspf (biến day, dayLabel). Cuối lưới: ô bóng #pt-ghost cho schedule.js khi rê / kéo thêm khung.
+==================================================================================================== --%>
+
+<%-- ===== BẮT ĐẦU: LƯỚI TUẦN ===== --%>
+                                <div class="pt-plan-scroll">
+
+                                    <%-- LƯỚI TUẦN: --axis-hours = số hàng giờ · --shift-split = vị trí vạch chia Ca sáng / Ca chiều (13:00). --%>
+                                    <%-- week.shiftSplitHour = getter tự tính getShiftSplitHour() · dto/PtScheduleWeek.java --%>
+                                    <div class="pt-plan-grid" style="--axis-hours: ${week.axisEndHour - week.axisStartHour}; --shift-split: ${week.shiftSplitHour - week.axisStartHour}">
+
+                                        <div class="pt-plan-axis-head" aria-hidden="true"></div>
+
+                                        <%-- TRỤC GIỜ: week.axisStartHour → week.axisEndHour − 1. --%>
+                                        <div class="pt-plan-axis" aria-hidden="true">
+                                            <c:forEach var="hour" begin="${week.axisStartHour}" end="${week.axisEndHour - 1}">
+                                                <span><c:out value="${hour lt 10 ? '0' += hour : hour}" />:00</span>
+                                            </c:forEach>
+
+                                            <b class="pt-plan-shift is-am"><span>Ca sáng</span></b>
+                                            <b class="pt-plan-shift is-pm"><span>Ca chiều</span></b>
+                                        </div>
+
+                                        <%-- 7 CỘT NGÀY: mỗi PtScheduleDay → _schedule-day.jspf (biến day, dayLabel = "Thứ 2 03/11"). --%>
+                                        <c:forEach var="day" items="${week.days}">
+                                            <c:set var="dayLabel" value="${day.dayName} ${fn:substring(gms:formatDate(day.date), 0, 5)}" />
+
+                                            <%@ include file="/WEB-INF/jsp/pt/_schedule-day.jspf" %>
+
+                                        </c:forEach>
+                                    </div>
+                                </div>
+
+                                <%-- Ô "bóng" schedule.js dùng khi rê chuột / kéo để thêm khung. --%>
+                                <div class="pt-ghost" id="pt-ghost" aria-hidden="true" hidden>
+                                    <span class="pt-slot-time"></span>
+                                    <span class="pt-ghost-hint"></span>
+                                </div>
+<%-- ===== KẾT THÚC: LƯỚI TUẦN ===== --%>

@@ -1,30 +1,17 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%--
-================================================================================
- forgot-password.jsp — QUÊN MẬT KHẨU (/forgot-password, màn #3). 3 bước trong 1 trang.
+  MÀN QUÊN MẬT KHẨU — mở bởi ForgotPasswordServlet.forwardStep. 1 trang, 3 bước, vẽ form theo "recoveryStep".
+  Dữ liệu (request.setAttribute trong ForgotPasswordServlet):
+    recoveryStep  ← resolveStep (theo session)                      → chọn form: email | code | reset
+    recoveryEmail ← session RECOVERY_EMAIL                          → "Đã gửi tới …"
+    errorMessage  ← ServiceResult lỗi chung (MSG37, MSG44, MSG61…)   → banner đỏ trên form
+    fieldErrors   ← ServiceResult.getFieldErrors() (Map theo tên ô)  → chữ đỏ dưới từng ô
+    codeSecondsLeft / resendSecondsLeft ← setCodeTimers             → đồng hồ + nút Gửi lại (forgot-password.js đếm)
+    attemptHint / resendHint (+ …Warn)  ← setCodeTimers             → gợi ý số lần còn lại (Warn = chữ vàng)
+  Mọi form: POST /forgot-password → ForgotPasswordServlet.doPost, phân nhánh theo ô ẩn action; csrfToken do common.js tự gắn.
+--%>
 
- AI GỬI DỮ LIỆU SANG?  ForgotPasswordServlet. doGet mở trang; doPost đọc ô ẩn "action" rồi gọi
- PasswordRecoveryService (requestCode / verifyCode / resetPassword), cuối cùng forwardStep đặt dữ liệu dưới đây.
- DAO đọc / ghi:
-   AccountDAO.findByEmail          Accounts JOIN Persons (Persons.Email)        — bước 1 tìm tài khoản
-   VerificationCodeDAO             VerificationCodes (mã, SentAt, ExpiresAt, số lần sai, LockedUntil)
-   AccountDAO.updatePasswordHash   Accounts.PasswordHash (+ mở khóa tạm, ghi AuditLogs) — bước 3
-
- DỮ LIỆU SERVLET GỬI SANG (ForgotPasswordServlet.forwardStep)
-   recoveryStep        "email" | "code" | "reset"   — Servlet suy ra từ SESSION, không từ URL
-   recoveryEmail       email đang khôi phục (bước 2)
-   codeSecondsLeft     số giây tới khi mã hết hạn      (bước 2, JS đếm lùi)
-   resendSecondsLeft   số giây phải chờ để "Gửi lại mã" (bước 2, JS đếm lùi)
-   attemptHint / resendHint (+ …Warn)  gợi ý số lượt còn lại MSG62–MSG65 (bước 2)
-   errorMessage        lỗi chung → khung đỏ trên cùng
-   fieldErrors         lỗi gắn ô → chữ đỏ dưới đúng ô
-   email               chữ khách đã gõ (giữ lại khi bước 1 báo lỗi)
-
- Mỗi form có ô ẩn "action" (send / verify / resend / reset) → doPost biết khách bấm nút nào.
- Kiểm tra ô ở trình duyệt + nút con mắt + khóa nút khi gửi: common.js (form[data-validate]).
- Đồng hồ + ô mã chỉ nhận số: forgot-password.js.
-================================================================================ --%>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -37,9 +24,9 @@
 <body class="theme-guest-dark auth-dark auth-page-forgot">
   <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
   <c:set var="ctx" value="${pageContext.request.contextPath}" />
+  <%-- step = recoveryStep (trống = "email"). --%>
   <c:set var="step" value="${empty recoveryStep ? 'email' : recoveryStep}" />
 
-  <%-- ##### KHUNG TRANG: ảnh nền + logo + link "Về đăng nhập" + thẻ form ở giữa ##### --%>
   <div class="auth-shell">
     <%@ include file="/WEB-INF/jsp/common/auth-artwork.jspf" %>
     <div class="auth-top">
@@ -49,16 +36,15 @@
     </div>
 
     <div class="auth-card">
-      <%-- ===== TIẾN TRÌNH 3 BƯỚC — BẮT ĐẦU =====
-           "① Email  ② Mã xác thực  ③ Mật khẩu mới": bước đang làm = is-current (cam), bước đã qua = is-done (dấu ✓). --%>
+
+      <%-- THANH 3 BƯỚC: bước hiện tại tô đậm (is-current), bước đã qua có dấu xong (is-done). --%>
       <ol class="recovery-steps" aria-label="Các bước khôi phục mật khẩu">
         <li class="${step eq 'email' ? 'is-current' : 'is-done'}" ${step eq 'email' ? 'aria-current="step"' : ''}><span>1</span> Email</li>
         <li class="${step eq 'code' ? 'is-current' : (step eq 'reset' ? 'is-done' : '')}" ${step eq 'code' ? 'aria-current="step"' : ''}><span>2</span> Mã xác thực</li>
         <li class="${step eq 'reset' ? 'is-current' : ''}" ${step eq 'reset' ? 'aria-current="step"' : ''}><span>3</span> Mật khẩu mới</li>
       </ol>
-      <%-- ===== TIẾN TRÌNH 3 BƯỚC — KẾT THÚC ===== --%>
 
-      <%-- Lỗi chung (errorMessage, Service trả) → khung đỏ có ⚠, VD "Tài khoản này không thể đăng nhập. Vui lòng liên hệ quản trị viên." (MSG37). --%>
+      <%-- BANNER LỖI CHUNG ← errorMessage (VD tài khoản bị khóa, mã hết hạn, gửi quá nhiều lần). --%>
       <c:if test="${not empty errorMessage}">
         <div class="msg-banner error" role="alert">
           <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
@@ -67,9 +53,12 @@
       </c:if>
 
       <c:choose>
-        <%-- ================= BƯỚC 1: NHẬP EMAIL — BẮT ĐẦU =================
-             Ô email giữ lại chữ đã gõ (email) khi báo lỗi; lỗi gắn ô fieldErrors.email → chữ đỏ dưới ô,
-             VD "Không tìm thấy tài khoản với email này." (MSG41). Nút cam "Gửi mã xác thực". --%>
+
+        <%--
+          ===== BƯỚC 1: EMAIL =====
+          FORM: action=send → handleSend → PasswordRecoveryService.requestCode
+            email = ô nhập (giữ lại chữ đã gõ khi lỗi: attribute "email") · lỗi ô ← fieldErrors.email
+        --%>
         <c:when test="${step eq 'email'}">
           <div class="auth-head"><h1>Quên mật khẩu</h1></div>
 
@@ -80,22 +69,18 @@
               <input id="email" name="email" type="email" placeholder="ban@email.com" autocomplete="email" maxlength="100"
                      value="<c:out value='${email}' />" aria-describedby="emailHint"
                      required data-label="Email" data-rule="email" autofocus>
-              <span class="field-hint" id="emailHint"><i class="fa-solid fa-circle-info" aria-hidden="true"></i> Mã 6 số sẽ được gửi tới email này. Chỉ khôi phục qua email, không dùng số điện thoại.</span>
+              <span class="field-hint" id="emailHint">Mã 6 số sẽ gửi tới email này.</span>
               <span class="field-error" id="emailError" <c:if test="${empty fieldErrors.email}">hidden</c:if>><c:out value="${fieldErrors.email}" /></span>
             </label>
             <button class="btn btn-primary btn-block" type="submit">Gửi mã xác thực</button>
           </form>
         </c:when>
-        <%-- BƯỚC 1 — KẾT THÚC --%>
 
-        <%-- ================= BƯỚC 2: NHẬP MÃ — BẮT ĐẦU =================
-             recoveryEmail lấy từ SESSION (lưu ở bước 1) → dòng "Đã gửi tới ban@email.com".
-             codeSecondsLeft = VerificationCodes.ExpiresAt − bây giờ (Servlet tính) → "Mã hết hạn sau 14:59".
-             resendSecondsLeft = SentAt + 60 giây − bây giờ → nút "Gửi lại mã (0:59)" bị khóa tới khi về 0. --%>
+        <%-- ===== BƯỚC 2: MÃ XÁC THỰC ===== --%>
         <c:when test="${step eq 'code'}">
           <div class="auth-head"><h1>Nhập mã xác thực</h1></div>
 
-          <%-- Đồng hồ: số giây do server tính (codeSecondsLeft); JS đếm lùi, về 0 thì đổi thành câu MSG44. --%>
+          <%-- ĐỒNG HỒ HẾT HẠN MÃ: data-code-seconds = codeSecondsLeft → forgot-password.js đếm ngược "mm:ss"; 0 → "Mã đã hết hạn". --%>
           <p class="recovery-timer" id="codeTimer" data-code-seconds="${codeSecondsLeft}">
             <i class="fa-regular fa-clock" aria-hidden="true"></i>
             <span id="codeTimerText">
@@ -107,6 +92,11 @@
           </p>
 
           <form action="${ctx}/forgot-password" method="post" data-validate novalidate>
+
+            <%--
+              FORM: action=verify → handleVerify → PasswordRecoveryService.verifyCode
+                code = 6 số · lỗi ô ← fieldErrors.code · attemptHint = "Còn x lần nhập" (vàng khi còn 1 lần)
+            --%>
             <input type="hidden" name="action" value="verify">
             <label class="field">
               <span class="field-label">Mã xác thực</span>
@@ -115,7 +105,7 @@
                      required data-label="Mã xác thực" data-rule="verificationCode" autofocus>
               <span class="field-hint" id="codeHint">Đã gửi tới <b class="recovery-email"><c:out value="${recoveryEmail}" /></b></span>
               <span class="field-error" id="codeError" <c:if test="${empty fieldErrors.code}">hidden</c:if>><c:out value="${fieldErrors.code}" /></span>
-              <%-- MSG62 / MSG63: số lần còn nhập mã (ẩn khi đang bị khóa). --%>
+
               <c:if test="${not empty attemptHint}">
                 <span class="field-hint ${attemptHintWarn ? 'field-hint--warn' : ''}"><c:out value="${attemptHint}" /></span>
               </c:if>
@@ -123,14 +113,20 @@
             <button class="btn btn-primary btn-block" type="submit">Xác nhận</button>
           </form>
 
+          <%--
+            NÚT PHỤ:
+              "Gửi lại mã" = FORM action=resend → handleResend; data-resend-seconds = resendSecondsLeft → JS khóa nút tới khi hết đếm
+              resendHint = "Còn x lần gửi lại" (vàng khi hết lượt)
+              "Dùng email khác" = GET ?restart=1 → doGet xóa session khôi phục, về bước 1
+          --%>
           <div class="recovery-actions">
             <form action="${ctx}/forgot-password" method="post">
               <input type="hidden" name="action" value="resend">
-              <%-- JS khóa nút tới khi hết resendSecondsLeft, hiện "(0:59)" cạnh chữ. --%>
+
               <button class="link-btn" type="submit" id="resendBtn" data-resend-seconds="${resendSecondsLeft}">
                 <i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Gửi lại mã<span id="resendWait"></span>
               </button>
-              <%-- MSG64 / MSG65: số lần còn gửi lại trong 60 phút. --%>
+
               <c:if test="${not empty resendHint}">
                 <span class="field-hint ${resendHintWarn ? 'field-hint--warn' : ''}"><c:out value="${resendHint}" /></span>
               </c:if>
@@ -138,14 +134,16 @@
             <a class="link-btn" href="${ctx}/forgot-password?restart=1"><i class="fa-solid fa-pen" aria-hidden="true"></i> Dùng email khác</a>
           </div>
 
-          <%-- Gợi ý khi chưa nhận được mail (Pumpy). --%>
+          <%-- Pumpy nhắc kiểm tra hộp thư rác. --%>
           <%@ include file="/WEB-INF/jsp/common/pumpy-mail-hint.jspf" %>
         </c:when>
-        <%-- BƯỚC 2 — KẾT THÚC --%>
 
-        <%-- ================= BƯỚC 3: ĐẶT MẬT KHẨU MỚI — BẮT ĐẦU =================
-             2 ô mật khẩu có nút con mắt (common.js). Lỗi gắn ô: fieldErrors.password (MSG66: 8–64 ký tự, có chữ và số),
-             fieldErrors.confirmPassword (MSG47: không khớp). Lưu xong → về trang đăng nhập với toast MSG95. --%>
+        <%--
+          ===== BƯỚC 3: MẬT KHẨU MỚI =====
+          FORM: action=reset → handleReset → PasswordRecoveryService.resetPassword
+            password, confirmPassword (nút mắt = hiện/ẩn) · lỗi ô ← fieldErrors.password / fieldErrors.confirmPassword
+            Thành công → toast MSG95, về /login, mọi thiết bị khác bị đăng xuất.
+        --%>
         <c:otherwise>
           <div class="auth-head"><h1>Đặt mật khẩu mới</h1></div>
 
@@ -174,18 +172,18 @@
             </label>
 
             <button class="btn btn-primary btn-block" type="submit">Đặt mật khẩu mới</button>
-            <%-- Hệ quả quan trọng → nói ngay dưới nút (CBR-93). --%>
-            <p class="recovery-note"><i class="fa-solid fa-circle-info" aria-hidden="true"></i> Đổi xong, mọi thiết bị đang đăng nhập tài khoản này sẽ bị đăng xuất.</p>
+
+            <p class="recovery-note">Đổi xong, các thiết bị khác sẽ tự đăng xuất.</p>
           </form>
         </c:otherwise>
-        <%-- BƯỚC 3 — KẾT THÚC --%>
+
       </c:choose>
 
-      <p class="auth-switch">Nhớ ra mật khẩu? <a href="${ctx}/login">Đăng nhập</a></p>
+      <%-- Không in thêm "Nhớ ra mật khẩu? Đăng nhập" — đã có link "Về đăng nhập" ở góc trên. --%>
     </div>
 
     <p class="auth-foot-note">© 2026 Super Gym</p>
   </div>
-  <%-- ##### KHUNG TRANG — KẾT THÚC ##### --%>
+
 </body>
 </html>

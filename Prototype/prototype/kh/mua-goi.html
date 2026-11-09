@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
@@ -70,6 +70,14 @@
     </header>
 
     <main class="cust-content">
+      <div class="chip-filter" id="pkgTypeChips" style="margin-bottom:var(--space-3)">
+        <button type="button" class="active" data-chip="all">Tất cả</button>
+        <button type="button" data-chip="goi-tap">Gói tập</button>
+        <button type="button" data-chip="goi-pt">Gói PT</button>
+        <button type="button" data-chip="goi-ngay">Vé ngày</button>
+        <button type="button" data-chip="saving">Tiết kiệm hơn</button>
+      </div>
+
       <div class="toolbar">
         <div class="search">
           <i class="fa-solid fa-magnifying-glass"></i>
@@ -131,6 +139,7 @@
         <div class="price-card" data-kind="goi-tap" data-channel="online" data-price="2190000" data-months="3" data-name="gói 3 tháng">
           <h3>Gói 3 Tháng</h3>
           <div class="price-amount tabular">2.190.000đ<small> / 3 tháng</small></div>
+          <div class="price-permonth tabular">≈ 730.000đ mỗi tháng</div>
           <span class="price-save">Tiết kiệm 8%</span>
           <p class="price-desc">Đủ thời gian thấy chuyển biến thể lực, tặng 1 buổi đo InBody.</p>
           <a class="btn btn-outline btn-block" href="thanh-toan.html?pkg=m3">Chọn gói</a>
@@ -139,6 +148,7 @@
           <span class="price-badge">Phổ biến nhất</span>
           <h3>Gói 9 Tháng</h3>
           <div class="price-amount tabular">5.490.000đ<small> / 9 tháng</small></div>
+          <div class="price-permonth tabular">≈ 610.000đ mỗi tháng</div>
           <span class="price-save">Tiết kiệm 24%</span>
           <p class="price-desc">Cam kết dài hạn, giá tốt, tặng 3 buổi đo InBody.</p>
           <a class="btn btn-primary btn-block" href="thanh-toan.html?pkg=m9">Chọn gói</a>
@@ -147,6 +157,7 @@
           <span class="price-badge">Tiết kiệm nhất</span>
           <h3>Gói 12 Tháng</h3>
           <div class="price-amount tabular">6.990.000đ<small> / 12 tháng</small></div>
+          <div class="price-permonth tabular">≈ 582.500đ mỗi tháng</div>
           <span class="price-save">Tiết kiệm 27%</span>
           <p class="price-desc">Mức giá tốt nhất cho người tập lâu dài, tặng 4 buổi đo InBody.</p>
           <a class="btn btn-outline btn-block" href="thanh-toan.html?pkg=m12">Chọn gói</a>

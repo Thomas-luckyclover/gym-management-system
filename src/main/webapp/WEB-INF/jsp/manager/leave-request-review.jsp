@@ -63,6 +63,7 @@
 
               <%-- Nút Duyệt --%>
               <c:choose>
+                <%-- item.canApprove = getter tự tính isCanApprove() · dto/LeaveReviewDetailView.java (item = LeaveReviewDetailView) --%>
                 <c:when test="${not item.canApprove}">
                   <button type="button" class="btn btn-sm btn-primary" disabled title="<c:out value='${item.approvalBlockMessage}' />">
                     <i class="fa-solid fa-ban" aria-hidden="true"></i> Chưa đủ điều kiện
@@ -70,6 +71,7 @@
                 </c:when>
                 <c:otherwise>
                   <button type="button" class="btn btn-sm btn-primary" onclick="openModal('modalApproveDetail')">
+                    <%-- item.leaveDatePassed = getter tự tính isLeaveDatePassed() · dto/LeaveReviewDetailView.java (item = LeaveReviewDetailView) --%>
                     <i class="fa-solid fa-check" aria-hidden="true"></i> ${item.leaveDatePassed ? 'Duyệt muộn' : 'Duyệt đơn'}
                   </button>
                 </c:otherwise>
@@ -127,6 +129,7 @@
                     <details class="leave-related" open>
                         <summary>Các đơn cùng đợt nghỉ</summary>
                         <div class="leave-related-parts">
+                            <%-- getter tự tính: item.leaveGroup.totalDays = getTotalDays(), item.leaveGroup.approvedDays = getApprovedDays() · dto/LeaveRequestGroupView.java --%>
                             <small>Được duyệt <fmt:formatNumber value="${item.leaveGroup.approvedDays}" maxFractionDigits="1" />/<fmt:formatNumber value="${item.leaveGroup.totalDays}" maxFractionDigits="1" /> ngày</small>
                             <c:forEach var="part" items="${item.leaveGroup.requests}">
                                 <a class="leave-related-part" href="${pageContext.request.contextPath}/manager/leave-requests/review?id=${part.leaveRequestId}">
@@ -251,6 +254,7 @@
                                           <td>${row.minRequired}</td>
                                           <td>
                                             <c:choose>
+                                              <%-- row.belowMin = getter tự tính isBelowMin() · dto/ShiftStaffingRow.java (row = ShiftStaffingRow) --%>
                                               <c:when test="${row.belowMin}"><span class="badge badge-sm badge-danger">Thiếu người</span></c:when>
                                               <c:otherwise><span class="badge badge-sm badge-success">Đạt</span></c:otherwise>
                                             </c:choose>
@@ -277,6 +281,7 @@
                   <div class="detail-prop-grid">
                     <div class="detail-prop-item">
                       <span class="detail-prop-label">Người xử lý</span>
+                      <%-- item.autoRejected = getter tự tính isAutoRejected() · dto/LeaveReviewDetailView.java (item = LeaveReviewDetailView) --%>
                       <span class="detail-prop-val"><c:out value="${item.reviewerName}" default="${item.autoRejected ? 'Hệ thống' : 'Chưa có thông tin'}" /></span>
                     </div>
                     <div class="detail-prop-item">

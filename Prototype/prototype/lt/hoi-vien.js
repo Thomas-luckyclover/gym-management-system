@@ -4,6 +4,34 @@
   const q = document.getElementById('clq');
   const st = document.getElementById('clSt');
   const mem = document.getElementById('clMem');
+  const profileToolbar = document.getElementById('profileToolbar');
+  const clList = document.getElementById('clList');
+  const reqList = document.getElementById('reqList');
+  const reqBadge = document.getElementById('reqBadge');
+  const reqBody = document.getElementById('reqBody');
+  const custTabs = document.getElementById('custTabs');
+
+  let currentTab = 'profiles';
+  let pendingCount = 2;
+
+  custTabs.addEventListener('click', e => {
+    const btn = e.target.closest('button[data-tab]');
+    if (!btn) return;
+    custTabs.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentTab = btn.dataset.tab;
+    if (currentTab === 'profiles') {
+      profileToolbar.hidden = false;
+      clList.hidden = false;
+      reqList.hidden = true;
+      list.render();
+    } else {
+      profileToolbar.hidden = true;
+      clList.hidden = true;
+      reqList.hidden = false;
+      pager.hidden = true;
+    }
+  });
 
   /* Bảng có hàng <tr class="mem-row">: lọc + phân trang 10 dòng (GBR-18) bằng chính pager của màn. */
   const rows = [...document.querySelectorAll('#clList .mem-row')];
@@ -68,8 +96,25 @@
           fieldError(r, 'delReasonErr', 'Nêu lý do cụ thể, tối thiểu 5 ký tự.');
           return false;
         }
+        const reasonVal = r.value.trim();
         row.querySelector('[data-label="Trạng thái"]').insertAdjacentHTML('beforeend', ' <span class="badge badge-danger">Chờ duyệt xoá</span>');
         b.outerHTML = '<a class="btn btn-primary btn-sm" href="ho-so-khach.html">Xem yêu cầu</a>';
+        
+        pendingCount++;
+        reqBadge.textContent = pendingCount;
+        
+        const now = new Date();
+        const dateStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+        const newReqHtml = `
+          <tr class="req-row">
+            <td data-label="Hội viên"><b>${b.dataset.name}</b><br><span class="muted tabular">${b.dataset.code} · Yêu cầu #043</span></td>
+            <td data-label="Gửi lúc" class="tabular">${dateStr}</td>
+            <td data-label="Lý do">${reasonVal}</td>
+            <td data-label="Kết quả"><span class="badge badge-warn">Chờ duyệt</span></td>
+          </tr>
+        `;
+        reqBody.insertAdjacentHTML('afterbegin', newReqHtml);
+
         showToast('success', 'Đã gửi yêu cầu xóa hồ sơ cho Quản lý.');
       },
     });

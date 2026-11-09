@@ -6,9 +6,11 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
+import com.gms.constant.Messages;
 
 /**
- * Quy tắc ngày bắt đầu / hết hạn của gói Membership mua online (DBR-52, GBR-03).
+ * Quy tắc ngày bắt đầu / hết hạn của gói Membership mua online (DBR-52,
+ * GBR-03).
  *
  * <p>
  * Gói được cấp khi IPN về với ngày bắt đầu mặc định theo DBR-52 (ngày thanh
@@ -67,8 +69,9 @@ public final class PackagePeriod {
     }
 
     /**
-     * Các ngày khách được bấm chọn, theo thứ tự tăng dần. Cho phép chọn trong vòng
-     * MAX_DAYS_AHEAD (7 ngày) tính từ ngày sớm nhất được bắt đầu (hôm nay hoặc ngày sau khi gói cũ hết hạn).
+     * Các ngày khách được bấm chọn, theo thứ tự tăng dần. Cho phép chọn trong
+     * vòng MAX_DAYS_AHEAD (7 ngày) tính từ ngày sớm nhất được bắt đầu (hôm nay
+     * hoặc ngày sau khi gói cũ hết hạn).
      */
     public static List<LocalDate> options(LocalDate today, LocalDate lastMembershipEnd) {
         List<LocalDate> days = new ArrayList<>();
@@ -104,9 +107,9 @@ public final class PackagePeriod {
     }
 
     /**
-     * Ngày bắt đầu thực tế khi mở cổng thanh toán: giữ ngày khách đã chọn,
-     * trừ khi gói khác của khách vừa kéo dài hạn nên phải nối sau gói đó.
-     * Không bao giờ lùi ngày về trước ngày đã chọn.
+     * Ngày bắt đầu thực tế khi mở cổng thanh toán: giữ ngày khách đã chọn, trừ
+     * khi gói khác của khách vừa kéo dài hạn nên phải nối sau gói đó. Không bao
+     * giờ lùi ngày về trước ngày đã chọn.
      */
     public static LocalDate effectiveStart(LocalDate chosen, LocalDate lastMembershipEnd) {
         if (lastMembershipEnd == null) {
@@ -117,7 +120,8 @@ public final class PackagePeriod {
     }
 
     /**
-     * Lý do khách không còn đổi được ngày bắt đầu của gói đã mua; null nếu còn đổi được.
+     * Lý do khách không còn đổi được ngày bắt đầu của gói đã mua; null nếu còn
+     * đổi được.
      *
      * @param currentStart ngày bắt đầu hiện tại của gói
      * @param checkedIn gói đã có lượt check-in
@@ -127,26 +131,27 @@ public final class PackagePeriod {
     public static String lockReason(LocalDate today, LocalDate currentStart, boolean checkedIn,
             int changesDone, boolean hasLaterMembership) {
         if (changesDone >= 1) {
-            return "Bạn đã chọn ngày bắt đầu một lần, không đổi lại được.";
+            return Messages.MSG329_START_DATE_ALREADY_CHANGED;
         }
         if (checkedIn || currentStart.isBefore(today)) {
-            return "Gói đã bắt đầu sử dụng nên không đổi được ngày bắt đầu.";
+            return Messages.MSG330_PACKAGE_ALREADY_STARTED;
         }
         if (hasLaterMembership) {
-            return "Bạn đã có gói nối tiếp sau gói này nên không đổi được ngày bắt đầu.";
+            return Messages.MSG331_LATER_MEMBERSHIP_FOLLOWS;
         }
         return null;
     }
 
     /**
-     * Các ngày được chọn cho gói đã mua: trong khoảng hôm nay đến hôm nay + 7 ngày, không trước gói khác
-     * còn hạn (DBR-52) và không sớm hơn ngày bắt đầu hiện tại, vì đây chỉ dời ngày bắt đầu về sau.
+     * Các ngày được chọn cho gói đã mua: trong khoảng hôm nay đến hôm nay + 7
+     * ngày, không trước gói khác còn hạn (DBR-52) và không sớm hơn ngày bắt đầu
+     * hiện tại, vì đây chỉ dời ngày bắt đầu về sau.
      */
     public static List<LocalDate> optionsForPurchased(LocalDate today, LocalDate currentStart,
             LocalDate otherMembershipEnd) {
         List<LocalDate> days = new ArrayList<>();
         for (LocalDate day : options(today, otherMembershipEnd)) {
-            if (!day.isBefore(currentStart)) {
+         if (!day.isBefore(currentStart)) {
                 days.add(day);
             }
         }
@@ -154,8 +159,9 @@ public final class PackagePeriod {
     }
 
     /**
-     * Số tháng của gói suy ra từ ngày bắt đầu và hết hạn đã lưu (thử 1..36 tháng cho đến khi đúng công thức
-     * endDate). Dùng để xem trước ngày hết hạn của từng ngày khách chọn mà không cần đọc lại gói.
+     * Số tháng của gói suy ra từ ngày bắt đầu và hết hạn đã lưu (thử 1..36
+     * tháng cho đến khi đúng công thức endDate). Dùng để xem trước ngày hết hạn
+     * của từng ngày khách chọn mà không cần đọc lại gói.
      *
      * @return số tháng, hoặc 0 nếu không khớp công thức nào
      */
@@ -173,8 +179,8 @@ public final class PackagePeriod {
     /**
      * Ngày thanh toán dùng làm ngày bắt đầu mặc định. Lấy theo giờ VNPay ghi
      * nhận thanh toán (vnp_PayDate, giờ Việt Nam) để IPN về sau nửa đêm không
-     * làm ngày bắt đầu nhảy sang hôm sau. Giá trị thiếu, sai định dạng, ở
-     * tương lai hoặc cũ hơn 1 ngày so với giờ xử lý thì dùng giờ xử lý.
+     * làm ngày bắt đầu nhảy sang hôm sau. Giá trị thiếu, sai định dạng, ở tương
+     * lai hoặc cũ hơn 1 ngày so với giờ xử lý thì dùng giờ xử lý.
      *
      * @param vnpPayDate chuỗi yyyyMMddHHmmss từ VNPay, có thể null
      * @param now giờ server khi xử lý IPN

@@ -150,22 +150,27 @@ public class ShiftTransactionItem {
         this.canConfirmTransfer = canConfirmTransfer;
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "paid"; = orderStatus == "Paid"; JSP: receptionist/shift.jsp:341
     public boolean isPaid() {
         return "Paid".equalsIgnoreCase(orderStatus);
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "pending"; = orderStatus == "Pending"; JSP: receptionist/shift.jsp:345
     public boolean isPending() {
         return "Pending".equalsIgnoreCase(orderStatus);
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "cancelled"; = orderStatus == "Cancelled"; JSP: receptionist/shift.jsp:328 …
     public boolean isCancelled() {
         return "Cancelled".equalsIgnoreCase(orderStatus);
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "cash"; = paymentMethod == "Cash"; JSP: receptionist/shift.jsp:359
     public boolean isCash() {
         return "Cash".equalsIgnoreCase(paymentMethod);
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "transfer"; = paymentMethod == "Transfer"; JSP: không dùng (chỉ Java/test)
     public boolean isTransfer() {
         return "Transfer".equalsIgnoreCase(paymentMethod);
     }
@@ -173,6 +178,7 @@ public class ShiftTransactionItem {
     /**
      * Tên hiển thị tiếng Việt của trạng thái đơn hàng.
      */
+    // GETTER TỰ TÍNH — không có field/setter "statusDisplayName"; = orderStatus đổi sang chữ tiếng Việt; JSP: không dùng (chỉ Java/test)
     public String getStatusDisplayName() {
         if (isPaid()) return "Đã thanh toán";
         if (isPending()) return "Chờ xác nhận";
@@ -183,6 +189,7 @@ public class ShiftTransactionItem {
     /**
      * Tên hiển thị tiếng Việt của phương thức thanh toán.
      */
+    // GETTER TỰ TÍNH — không có field/setter "paymentMethodDisplayName"; = paymentMethod đổi sang chữ tiếng Việt; JSP: không dùng (chỉ Java/test)
     public String getPaymentMethodDisplayName() {
         if (isCash()) return "Tiền mặt";
         if (isTransfer()) return "Chuyển khoản";
@@ -192,6 +199,7 @@ public class ShiftTransactionItem {
     /**
      * Class CSS tương ứng cho badge trạng thái theo Design System GBR-28.
      */
+    // GETTER TỰ TÍNH — không có field/setter "statusBadgeClass"; = orderStatus đổi sang class huy hiệu màu; JSP: không dùng (chỉ Java/test)
     public String getStatusBadgeClass() {
         if (isPaid()) return "badge-ok";
         if (isPending()) return "badge-warn";
@@ -202,6 +210,7 @@ public class ShiftTransactionItem {
     /**
      * Kiểm tra đơn có phải bị hủy bởi Lễ tân tại quầy hay không (CBR-11).
      */
+    // GETTER TỰ TÍNH — không có field/setter "cancelledByReceptionist"; = cancelType == "CancelledByReceptionist"; JSP: không dùng (chỉ Java/test)
     public boolean isCancelledByReceptionist() {
         return "CancelledByReceptionist".equalsIgnoreCase(cancelType);
     }

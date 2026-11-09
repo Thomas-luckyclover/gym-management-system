@@ -15,135 +15,176 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
- * TRANG TỔNG QUAN PT — GET /pt/dashboard (UC-32). Chỉ xem, không có form POST.
- *
- *   doGet               HÀM CHÍNH: kiểm tra đăng nhập → các hàm phụ đặt attribute → JSP pt/dashboard.jsp
- *   getAccountId        HÀM PHỤ: đọc tài khoản đang đăng nhập từ session
- *   loadEmployeeCode    HÀM PHỤ: mã NV-xxxx dưới tên PT
- *   loadBlocks          HÀM PHỤ: gọi Service 4 lần cho 4 khối (lịch, cảnh báo, khách, hoa hồng)
- *   loadWeather         HÀM PHỤ: thời tiết cho khối chào
- *   setPageInfo         HÀM PHỤ: menu đang chọn, tiêu đề, hôm nay
- *   putBlock            HÀM PHỤ: đặt dữ liệu HOẶC lỗi của 1 khối lên request
- *   resolveWeatherType  HÀM PHỤ: chọn tên nền thời tiết an toàn cho class CSS
- *
- * PtAreaFilter đã chặn người không phải PT trước khi vào đây.
- * Nhắc khách thiếu membership: không còn nút bấm, JOB-08 (RemindMissingGymAccessJob) tự gửi trước buổi 1 ngày.
+ * MÀN PT DASHBOARD (Tổng quan PT) — GET /pt/dashboard[?weather=sunny|rain|… để xem thử thời tiết]
+ * Chỉ có doGet. Mỗi khối gọi 1 hàm Service riêng; khối nào lỗi chỉ khối đó hiện lỗi (putBlock):
+ *   "scheduleDays"      ← PtDashboardService.getSchedule          List<PtScheduleDayView>  (Lịch dạy 7 ngày)
+ *   "attentionItems"    ← PtDashboardService.getAttentionItems    List<PtAttentionView>    (ô "Cần chú ý")
+ *   "assignedPackages"  ← PtDashboardService.getAssignedPackages  List<PtAssignedPackageView> (Khách phụ trách)
+ *   "commissionSummary" ← PtDashboardService.getCommissionSummary PtCommissionSummaryView  (Kết quả tháng)
+ *   "weather"           ← WeatherService (khối chào + thời tiết)
+ *   ?month=yyyy-MM      → tháng của khối hoa hồng ("selectedMonth", "monthOptions"…); sai hoặc ngoài 12 tháng gần nhất → tháng hiện tại
+ * → forward /WEB-INF/jsp/pt/dashboard.jsp
  */
 @WebServlet("/pt/dashboard")
 public class PtDashboardServlet extends HttpServlet {
+    // Ô chọn tháng của khối hoa hồng: tháng hiện tại + 11 tháng trước.
+    private static final int MONTH_OPTIONS = 12;
+    private static final DateTimeFormatter MONTH_LABEL = DateTimeFormatter.ofPattern("MM/yyyy");
+
+    // 1 dòng trong ô chọn tháng: value "2026-10" → ?month= · label "10/2026" → chữ hiện.
+    public record MonthOption(String value, String label) { }
 
     private final PtDashboardService dashboardService = new PtDashboardService();
-    private final WeatherService weatherService = new WeatherService(); // giữ cache thời tiết dùng chung giữa các request
+    private final WeatherService weatherService = new WeatherService();
 
-
-    /**
-     * HÀM CHÍNH — trình duyệt gọi khi PT mở /pt/dashboard (hoặc bấm "Tổng quan" ở menu).
-     *
-     * Mỗi khối có 2 attribute: dữ liệu (vd scheduleDays) hoặc lỗi (vd scheduleError).
-     * Một khối lỗi → chỉ khối đó hiện lỗi, các khối khác vẫn hiện bình thường.
-     */
+    // GET /pt/dashboard: dựng cả màn.
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // B1: lấy accountId từ session (không bao giờ đọc từ URL). Chưa đăng nhập → về trang login.
+        // B1: chưa đăng nhập → /login (xong quay lại dashboard)
         Integer accountId = getAccountId(request);
         if (accountId == null) {
             RequestUtil.redirect(request, response, "/login?returnUrl=/pt/dashboard");
             return;
         }
 
-        // B2: mã nhân viên, 4 khối dữ liệu, thời tiết.
-        loadEmployeeCode(request, accountId);
+        // B2: 4 khối dữ liệu (lịch, cần chú ý, khách phụ trách, hoa hồng)
         loadBlocks(request, accountId);
+        // B3: thời tiết hôm nay (hoặc bản xem thử ?weather=)
         loadWeather(request);
 
-        // B3: thông tin chung của trang rồi mở JSP.
+        // B4: tô menu + tiêu đề + ngày hôm nay → hiện dashboard.jsp
         setPageInfo(request);
         RequestUtil.forward(request, response, "pt/dashboard");
     }
 
-    /** HÀM PHỤ — gọi ở B1 của doGet. accountId lưu trong session lúc đăng nhập; null = chưa đăng nhập. */
+    /**
+     * HÀM PHỤ — AccountId trong session; null = chưa đăng nhập.
+     */
     private Integer getAccountId(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         return session == null ? null : (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
     }
 
-    /** HÀM PHỤ — gọi ở B2 của doGet. Mã nhân viên dưới tên PT ở đầu trang (lỗi thì chỉ không hiện mã). */
-    private void loadEmployeeCode(HttpServletRequest request, int accountId) {
-        ServiceResult<String> employeeCode = dashboardService.getPtEmployeeCode(accountId);
-        if (employeeCode.isSuccess()) {
-            // → _header.jspf dòng 60–62 "NV-0005" dưới tên PT (jspf nhúng ở dashboard.jsp dòng 60)
-            request.setAttribute("ptEmployeeCode", employeeCode.getData());
-        }
-    }
-
     /**
-     * HÀM PHỤ — gọi ở B2 của doGet. Gọi Service 4 lần, mỗi lần 1 khối, đúng thứ tự dưới đây.
-     * getAttentionItems phải chạy TRƯỚC getAssignedPackages vì thẻ khách cần cảnh báo để gắn vào.
+     * HÀM PHỤ (doGet B2) — gọi 4 hàm Service, mỗi kết quả → putBlock (dữ liệu hoặc câu lỗi).
      */
     private void loadBlocks(HttpServletRequest request, int accountId) {
-        // B1: khối "Lịch 7 ngày".
-        //   "scheduleDays"  → dashboard.jsp dòng 71 (đếm "Buổi hôm nay"), 119–146 (dải 7 ngày + bảng từng ngày)
-        //   "scheduleError" → dashboard.jsp dòng 88 (ô đếm hiện "—"), 116–117 (khung đỏ)
-        putBlock(request, dashboardService.getSchedule(accountId), "scheduleDays", "scheduleError");
+        // B1: lịch 7 ngày → "scheduleDays" | "scheduleError"
+        putBlock(
+                request,
+                dashboardService.getSchedule(accountId),
+                "scheduleDays",
+                "scheduleError");
 
-        // B2: cảnh báo 14 ngày. Không có khối riêng — được gắn vào thẻ khách ở B3.
-        //   "attentionItems" → dashboard.jsp dòng 92 (ô đếm "Cần chú ý")
-        //   "attentionError" → dashboard.jsp dòng 92 (ô đếm hiện "—"), 211 (khung đỏ trên khối khách)
+        // B2: việc cần chú ý (14 ngày tới) → "attentionItems" | "attentionError"
         ServiceResult<List<PtAttentionView>> attention = dashboardService.getAttentionItems(accountId);
-        putBlock(request, attention, "attentionItems", "attentionError");
+        putBlock(
+                request,
+                attention,
+                "attentionItems",
+                "attentionError");
 
-        // B3: khối "Khách phụ trách" — cần cảnh báo ở B2 (lỗi B2 thì truyền list rỗng).
-        //   "assignedPackages"      → dashboard.jsp dòng 215–219 (lặp thẻ khách); khung vàng client.attentionItems dòng 263
-        //   "assignedPackagesError" → dashboard.jsp dòng 214 (khung đỏ)
+        // B3: khách phụ trách, gắn kèm các việc cần chú ý ở B2 → "assignedPackages" | "assignedPackagesError"
         List<PtAttentionView> attentionItems = attention.isSuccess() ? attention.getData() : List.of();
         putBlock(request, dashboardService.getAssignedPackages(accountId, attentionItems),
                 "assignedPackages", "assignedPackagesError");
 
-        // B4: khối "Kết quả tháng và hoa hồng".
-        //   "commissionSummary"      → dashboard.jsp dòng 308–312 (c:set cs = commissionSummary, rồi dùng cs.* bên dưới)
-        //   "commissionSummaryError" → dashboard.jsp dòng 305–306 (khung đỏ)
-        putBlock(request, dashboardService.getCommissionSummary(accountId), "commissionSummary", "commissionSummaryError");
+        // B4: kết quả + hoa hồng của tháng đang xem (?month=, loadMonthFilter) → "commissionSummary" | "commissionSummaryError"
+        YearMonth selectedMonth = loadMonthFilter(request);
+        putBlock(
+                request,
+                dashboardService.getCommissionSummary(accountId, selectedMonth),
+                "commissionSummary",
+                "commissionSummaryError");
     }
 
     /**
-     * HÀM PHỤ — gọi ở B2 của doGet. Thời tiết cho khối chào.
-     * Dữ liệu phụ: API lỗi vẫn mở trang (nền sunny, ẩn thẻ). ?weather=rain dùng để xem trước giao diện từng kiểu.
+     * HÀM PHỤ (loadBlocks B4) — đọc ?month= rồi đặt attribute cho ô chọn tháng. Trả về tháng đang xem.
+     * "selectedMonth" = "2026-10" · "selectedMonthText" = "10/2026" · "isCurrentMonth" · "monthOptions" = List<MonthOption>
+     */
+    private YearMonth loadMonthFilter(HttpServletRequest request) {
+        YearMonth currentMonth = YearMonth.from(DateTimeUtil.today());
+        YearMonth selectedMonth = resolveMonth(request.getParameter("month"), currentMonth);
+
+        request.setAttribute("selectedMonth", selectedMonth.toString());
+        request.setAttribute("selectedMonthText", selectedMonth.format(MONTH_LABEL));
+        request.setAttribute("isCurrentMonth", selectedMonth.equals(currentMonth));
+        request.setAttribute("monthOptions", buildMonthOptions(currentMonth));
+        return selectedMonth;
+    }
+
+    /**
+     * HÀM PHỤ (loadMonthFilter) — ?month= hợp lệ trong 12 tháng gần nhất → giữ nguyên;
+     * trống, sai định dạng, ở tương lai, cũ hơn 11 tháng trước → tháng hiện tại. Không ném lỗi.
+     */
+    static YearMonth resolveMonth(String monthParam, YearMonth currentMonth) {
+        if (monthParam == null || monthParam.isBlank()) {
+            return currentMonth;
+        }
+        try {
+            YearMonth month = YearMonth.parse(monthParam.trim());
+            boolean outOfRange = month.isAfter(currentMonth) || month.isBefore(currentMonth.minusMonths(MONTH_OPTIONS - 1));
+            return outOfRange ? currentMonth : month;
+        } catch (DateTimeParseException exception) {
+            return currentMonth;
+        }
+    }
+
+    /**
+     * HÀM PHỤ (loadMonthFilter) — 12 dòng cho ô chọn tháng, mới nhất trước.
+     */
+    static List<MonthOption> buildMonthOptions(YearMonth currentMonth) {
+        List<MonthOption> options = new ArrayList<>();
+        for (int i = 0; i < MONTH_OPTIONS; i++) {
+            YearMonth month = currentMonth.minusMonths(i);
+            options.add(new MonthOption(month.toString(), month.format(MONTH_LABEL)));
+        }
+        return options;
+    }
+
+    /**
+     * HÀM PHỤ (doGet B3) — ?weather= có giá trị hợp lệ → dữ liệu xem thử; không thì thời tiết thật hôm nay.
+     * "weather" = WeatherView · "weatherType" = class giao diện (sunny, rain…) · "weatherPreview" = đang xem thử?
      */
     private void loadWeather(HttpServletRequest request) {
-        // ?weather= KHÔNG có JSP nào gửi: chỉ gõ tay trên URL để xem trước giao diện (VD /pt/dashboard?weather=rain).
         String previewType = request.getParameter("weather");
         WeatherView weather = weatherService.getPreview(previewType);
         boolean isPreview = weather != null;
         if (!isPreview) {
             weather = weatherService.getTodayWeather();
         }
-        // 3 attribute dưới đều đọc trong dashboard-weather.jspf (nhúng ở dashboard.jsp dòng 83):
-        request.setAttribute("weather", weather);            // → dashboard-weather.jspf dòng 6, 22–70 (thẻ thời tiết), 89, 97
-        request.setAttribute("weatherType", resolveWeatherType(isPreview ? previewType : null, weather));
-                                                             // → dashboard.jsp dòng 52 (<body class="weather-…">);
-                                                             //   dashboard-weather.jspf dòng 23, 45, 79–85 (icon + lời khuyên)
-        request.setAttribute("weatherPreview", isPreview);   // → dashboard-weather.jspf dòng 32 nhãn "Xem trước"
-    }
 
-    /** HÀM PHỤ — gọi ở B3 của doGet. Menu trái, tiêu đề topbar, ngày hôm nay. */
-    private void setPageInfo(HttpServletRequest request) {
-        request.setAttribute("activeNav", "dashboard");       // → layout-pt.jspf dòng 55–56 tô mục "Tổng quan" (nhúng ở dashboard.jsp dòng 57)
-        request.setAttribute("pageTitle", "Tổng quan PT");    // → dashboard.jsp dòng 42 (<title>); _header.jspf dòng 24, 30 (nhúng ở dashboard.jsp dòng 60)
-        request.setAttribute("today", DateTimeUtil.today());  // → _header.jspf dòng 37 ngày hôm nay ở topbar
+        request.setAttribute("weather", weather);
+        request.setAttribute("weatherType", resolveWeatherType(isPreview ? previewType : null, weather));
+
+        request.setAttribute("weatherPreview", isPreview);
     }
 
     /**
-     * HÀM PHỤ — gọi ở B1–B4 của loadBlocks.
-     * Thành công → request.setAttribute(dataName, dữ liệu). Thất bại → request.setAttribute(errorName, câu báo lỗi).
-     *
-     * Ví dụ: putBlock(request, result, "scheduleDays", "scheduleError")
-     *        → JSP kiểm tra ${not empty scheduleError} trước, không có lỗi mới lặp ${scheduleDays}.
+     * HÀM PHỤ (doGet B4) — activeNav = "dashboard" · pageTitle = "Tổng quan PT" · today (ngày trên thanh tiêu đề).
      */
-    private void putBlock(HttpServletRequest request, ServiceResult<?> result, String dataName, String errorName) {
+    private void setPageInfo(HttpServletRequest request) {
+        request.setAttribute("activeNav", "dashboard");
+        request.setAttribute("pageTitle", "Tổng quan PT");
+        request.setAttribute("today", DateTimeUtil.today());
+    }
+
+    /**
+     * HÀM PHỤ (loadBlocks) — thành công → attribute dataName = dữ liệu; lỗi → attribute errorName = câu lỗi.
+     */
+    private void putBlock(
+            HttpServletRequest request,
+            ServiceResult<?> result,
+            String dataName,
+            String errorName) {
         if (result.isSuccess()) {
             request.setAttribute(dataName, result.getData());
         } else {
@@ -152,9 +193,7 @@ public class PtDashboardServlet extends HttpServlet {
     }
 
     /**
-     * HÀM PHỤ — gọi trong loadWeather.
-     * Chuỗi trên URL chỉ được nhận nếu nằm trong danh sách cố định → không đưa chữ tùy ý vào class HTML.
-     * Không có / không hợp lệ → dùng thời tiết thật (thiếu luôn thì "sunny").
+     * HÀM PHỤ (loadWeather) — kiểu thời tiết cho class <body>: giá trị xem thử hợp lệ (extreme_hot → hot) hoặc của dữ liệu thật; null → sunny.
      */
     static String resolveWeatherType(String previewType, WeatherView weather) {
         if (previewType != null) {

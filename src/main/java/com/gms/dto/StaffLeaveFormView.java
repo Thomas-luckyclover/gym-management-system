@@ -18,7 +18,7 @@ public class StaffLeaveFormView {
     // DAO: Employees.Position ("PT" hoặc "Receptionist").
     private final String position;
 
-    // SystemConfigs: tham số P-12 (mặc định 15:00).
+    // SystemConfigs: tham số P-10 (mặc định 15:00).
     private final LocalTime submissionCutoffTime;
 
     // Service: cùng DTO dự báo với API preview; JSP hiện trong chú thích nút i.

@@ -19,8 +19,8 @@
 <head>
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Chọn khách · Super Gym Lễ tân</title>
-    <link rel="stylesheet" href="${ctx}/css/pages/receptionist/counter-sale.css?v=20261031_quickmodal">
-    <script src="${ctx}/js/pages/receptionist/counter-sale.js?v=20261031_tempPwd" defer></script>
+    <link rel="stylesheet" href="${ctx}/css/pages/receptionist/counter-sale.css?v=20261105vat">
+    <script src="${ctx}/js/pages/receptionist/counter-sale.js?v=20261109merge" defer></script>
 </head>
 <body class="dock theme-staff counter-sale-page">
 <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
@@ -84,8 +84,8 @@
                         <div><dt>Khách</dt><dd class="counter-muted">Chưa chọn</dd></div>
                         <div><dt>Gói</dt><dd><c:out value="${selectedCard.packageName}" /></dd></div>
                         <div><dt>Giá gói</dt><dd><c:out value="${gms:formatMoney(selectedCard.price)}" /></dd></div>
-                        <div><dt>Trước VAT</dt><dd><c:out value="${gms:formatMoney(selectedCard.preTaxAmount)}" /></dd></div>
-                        <div><dt>VAT <c:out value="${selectedCard.vatRate}" />% (đã gồm)</dt><dd><c:out value="${gms:formatMoney(selectedCard.vatAmount)}" /></dd></div>
+                        <div><dt>Trước VAT<small class="counter-tax-note">Đã bao gồm trong tổng hóa đơn</small></dt><dd><c:out value="${gms:formatMoney(selectedCard.preTaxAmount)}" /></dd></div>
+                        <div><dt>VAT <c:out value="${selectedCard.vatRate}" />%<small class="counter-tax-note">Đã bao gồm trong tổng hóa đơn</small></dt><dd><c:out value="${gms:formatMoney(selectedCard.vatAmount)}" /></dd></div>
                         <div class="is-total"><dt>Phải thu</dt><dd><c:out value="${gms:formatMoney(selectedCard.price)}" /></dd></div>
                     </dl>
                 </aside>

@@ -20,7 +20,7 @@
       <header class="topbar">
         <div class="tb-left">
           <h1 class="tb-title">Danh mục gói dịch vụ</h1>
-          <span class="tb-subtitle">Quản lý bảng giá, thời hạn P-21, số buổi tập ước tính và trạng thái kinh doanh của gói PT (#19 - UC-10).</span>
+          <span class="tb-subtitle">Quản lý bảng giá, thời hạn P-18, số buổi tập ước tính và trạng thái kinh doanh của gói PT (#19 - UC-10).</span>
         </div>
 
         <div class="top-right">
@@ -136,6 +136,7 @@
                         </span>
                       </td>
                       <td>
+                        <%-- pkg.durationDisplay = getter tự tính getDurationDisplay() · dto/ManagerPackageRowView.java (pkg = ManagerPackageRowView) --%>
                         <strong><c:out value="${pkg.durationDisplay}" /></strong>
                       </td>
                       <td>
@@ -149,6 +150,7 @@
                         </c:choose>
                       </td>
                       <td>
+                        <%-- pkg.formattedPrice = getter tự tính getFormattedPrice() · dto/ManagerPackageRowView.java (pkg = ManagerPackageRowView) --%>
                         <span class="package-price-cell"><c:out value="${pkg.formattedPrice}" /></span>
                       </td>
                       <td>
@@ -191,6 +193,7 @@
 
                           <c:choose>
                             <c:when test="${pkg.active}">
+                              <%-- pkg.rowVersionBase64 = getter tự tính getRowVersionBase64() · dto/ManagerPackageRowView.java (pkg = ManagerPackageRowView) --%>
                               <button type="button" class="btn btn-sm btn-ghost text-danger"
                                       data-toggle-package
                                       data-package-id="${pkg.packageId}"

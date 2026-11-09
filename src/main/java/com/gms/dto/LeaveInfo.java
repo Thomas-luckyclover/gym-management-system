@@ -3,22 +3,30 @@ package com.gms.dto;
 import java.time.LocalDate;
 
 /**
- * MỘT ĐƠN NGHỈ PHÉP của PT, chỉ dùng để dựng Lịch dạy (không phải form xin nghỉ).
- *
- *   Ai tạo?   PtScheduleDAO.findLeaves (chỉ lấy đơn Pending / Approved).
- *   Ai dùng?  PtScheduleService: khóa tạm khung trống trùng ca nghỉ và ghi nhãn nghỉ dưới tên ngày.
- *
- * Ví dụ: leaveDate=28/10, shiftType="Morning", status="Pending" → khóa các khung bắt đầu trước 12:00.
+ * DTO 1 NGÀY NGHỈ của PT — DAO TẠO: PtScheduleDAO.findLeaves (LeaveRequests Pending / Approved, tách từng ngày).
+ * Không in thẳng: PtScheduleService đổi thành nhãn "Nghỉ phép ca sáng · chờ duyệt", khóa khung (locked), chặn công bố;
+ * PtSaleService / PtSessionHandle dùng để cảnh báo "PT có đơn nghỉ".
  */
 public class LeaveInfo {
+    public LeaveInfo(LocalDate leaveDate, String shiftType, String status, String reason) {
+        this.leaveDate = leaveDate;
+        this.shiftType = shiftType;
+        this.status = status;
+        this.reason = reason;
+    }
 
-    private LocalDate leaveDate;     // ngày nghỉ
-    private String shiftType;        // Morning | Afternoon | FullDay
-    private String status;           // Pending | Approved
+    public LeaveInfo() {
+    }
+
+    // ===== DÙNG ĐỂ TÍNH =====
+    // ← 1 ngày trong [FromDate, ToDate] của đơn
+    private LocalDate leaveDate;
+    // ← LeaveRequests.ShiftType: Morning (trước 13:00) | Afternoon | FullDay
+    private String shiftType;
+    // ← Pending | Approved → "chờ duyệt" / "đã duyệt"
+    private String status;
+    // ← LeaveRequests.Reason → chi tiết đơn nghỉ
     private String reason;
-
-
-    // ===== Getter / Setter: chỉ đọc và gán, không có nghiệp vụ =====
 
     public LocalDate getLeaveDate() { return leaveDate; }
     public void setLeaveDate(LocalDate leaveDate) { this.leaveDate = leaveDate; }

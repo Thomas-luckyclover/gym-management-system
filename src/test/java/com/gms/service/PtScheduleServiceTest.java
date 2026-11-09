@@ -173,7 +173,7 @@ class PtScheduleServiceTest {
         assertThrows(IllegalStateException.class, () -> PtScheduleService.classify(item, List.of(), NOW));
     }
 
-    /** Tuần rỗng có đủ 7 ngày và list items có thể thêm; đọc P-06/P-19 từ tham số đầu vào. */
+    /** Tuần rỗng có đủ 7 ngày và list items có thể thêm; đọc P-06/P-17 từ tham số đầu vào. */
     @Test
     void emptyWeekHasSevenDaysAndIndependentItemLists() {
         PtScheduleWeek week = week(List.of(), List.of());
@@ -199,7 +199,7 @@ class PtScheduleServiceTest {
     /** Khoảng giờ được thêm khung: ngày qua/nghỉ thì không có; hôm nay chỉ từ sau giờ hiện tại. */
     @Test
     void addRangeFollowsOpeningHoursNowAndClosedDays() {
-        // NOW = Thứ 5 22/10 09:00; P-19 05:30–22:00; khung 90 phút.
+        // NOW = Thứ 5 22/10 09:00; P-17 05:30–22:00; khung 90 phút.
         PtScheduleWeek week = week(List.of(hours(TODAY.plusDays(2), true, null, null),
                 hours(TODAY.plusDays(1), false, "08:10", "12:00")), List.of());
 
@@ -212,7 +212,7 @@ class PtScheduleServiceTest {
         assertEquals(330, week.getDays().get(6).getFirstStartMinute());   // Chủ nhật: từ 05:30
     }
 
-    /** Ngày ngoại lệ thay giờ P-19, đồng thời mở rộng trục nếu mở sớm/đóng muộn. */
+    /** Ngày ngoại lệ thay giờ P-17, đồng thời mở rộng trục nếu mở sớm/đóng muộn. */
     @Test
     void exceptionalHoursOverrideDefaultsAndExpandAxis() {
         HourException exception = hours(TODAY, false, "04:30", "22:30");
@@ -314,7 +314,29 @@ class PtScheduleServiceTest {
         assertEquals(List.of(reopened, earlier), slots);
     }
 
-    /** Buổi ngoài giờ P-19 hiện tại vẫn nằm trong trục, không có top âm. */
+    /**
+     * Mỗi khung chỉ còn một ô: buổi đã hủy trả khung về Free thì khung tương lai giữ "Còn trống",
+     * khung đã qua giữ "Đã hủy"; khung đã có buổi mới thì bỏ ô "Đã hủy".
+     */
+    @Test
+    void mergeWithNowKeepsOneItemPerTimeSlot() {
+        PtScheduleItem pastCancelled = withSlotId(session(TODAY.minusDays(1), "15:00", "16:30", "Cancelled"), 1);
+        PtScheduleItem pastFree = withSlotId(slot(TODAY.minusDays(1), "15:00", "16:30", "Free"), 1);
+        PtScheduleItem futureCancelled = withSlotId(session(TODAY.plusDays(1), "15:00", "16:30", "Cancelled"), 2);
+        PtScheduleItem futureFree = withSlotId(slot(TODAY.plusDays(1), "15:00", "16:30", "Free"), 2);
+        PtScheduleItem oldBooking = withSlotId(session(TODAY.plusDays(2), "15:00", "16:30", "Cancelled"), 3);
+        PtScheduleItem newBooking = withSlotId(session(TODAY.plusDays(2), "15:00", "16:30", "Scheduled"), 3);
+        PtScheduleItem otherFree = withSlotId(slot(TODAY.plusDays(3), "15:00", "16:30", "Free"), 4);
+
+        List<PtScheduleItem> merged = PtScheduleService.merge(
+                List.of(pastCancelled, futureCancelled, oldBooking, newBooking),
+                List.of(pastFree, futureFree, otherFree),
+                NOW);
+
+        assertEquals(List.of(pastCancelled, futureFree, newBooking, otherFree), merged);
+    }
+
+    /** Buổi ngoài giờ P-17 hiện tại vẫn nằm trong trục, không có top âm. */
     @Test
     void fillWeekPlacesItemsInCorrectDayAndUsesExpandedAxis() {
         PtScheduleWeek week = week(List.of(), List.of());
@@ -338,7 +360,7 @@ class PtScheduleServiceTest {
         assertThrows(RuntimeException.class, () -> PtScheduleService.parseOpeningHours(value));
     }
 
-    /** P-19 có khoảng trắng vẫn đọc được giờ thật. */
+    /** P-17 có khoảng trắng vẫn đọc được giờ thật. */
     @Test
     void openingHoursAreParsedFromConfiguration() {
         assertArrayEquals(new LocalTime[]{LocalTime.of(5, 30), LocalTime.of(22, 0)},
@@ -362,6 +384,11 @@ class PtScheduleServiceTest {
     }
 
     /** Thêm thông tin buổi giống kết quả readSessionRow của DAO. */
+    private static PtScheduleItem withSlotId(PtScheduleItem item, int timeSlotId) {
+        item.setTimeSlotId(timeSlotId);
+        return item;
+    }
+
     private static PtScheduleItem session(LocalDate date, String start, String end, String status) {
         PtScheduleItem item = slot(date, start, end, null);
         item.setSessionId(100);

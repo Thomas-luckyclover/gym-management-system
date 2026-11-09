@@ -2,7 +2,7 @@
    GMS — Gym Management System
    FILE    : 1_Init_Schema.sql  ·  bản v26 (06/10/2026)
    MỤC ĐÍCH: Tạo toàn bộ schema SQL Server, chuẩn 3NF, khớp thay đổi nghiệp vụ v26
-             (GBR / CBR / DBR / BR / P-01…P-22). 30 bảng, 7 cluster A–G.
+             (GBR / CBR / DBR / BR / P-01…P-19). 30 bảng, 7 cluster A–G.
    CHẠY    : Trên SQL Server 2019+. Muốn làm lại từ đầu: chạy 0_Reset_Database.sql trước.
              Thứ tự: 0_Reset_Database.sql → 1_Init_Schema.sql → 2_Seed_Data.sql
    v26    : JOB-04 chốt tự động, CheckedIn/Used, đánh giá PT theo tháng (DBR-66/67).
@@ -49,7 +49,7 @@ CREATE TABLE Persons (
     RowVer      ROWVERSION,
 
     CONSTRAINT PK_Persons PRIMARY KEY (PersonId),
-    CONSTRAINT CK_Persons_Phone    CHECK (Phone IS NULL OR Phone LIKE '0[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'), -- DBR-17 (đầu số nhà mạng: P-16, kiểm ở Service)
+    CONSTRAINT CK_Persons_Phone    CHECK (Phone IS NULL OR Phone LIKE '0[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'), -- DBR-17 (đầu số nhà mạng: P-14, kiểm ở Service)
     CONSTRAINT CK_Persons_Email    CHECK (Email IS NULL OR Email LIKE '%_@_%._%'),   -- DBR-18
     CONSTRAINT CK_Persons_FullName CHECK (LEN(LTRIM(RTRIM(FullName))) >= 2),
     CONSTRAINT CK_Persons_Dob      CHECK (DateOfBirth >= '1900-01-01')               -- "không ở tương lai, ≤ 100 tuổi" phụ thuộc ngày hiện tại → kiểm ở Service
@@ -171,8 +171,8 @@ CREATE TABLE VerificationCodes (
     Purpose            VARCHAR(15)  NOT NULL, -- SignUp | Claim | Recovery | EmailChange | PhoneChange
     Code               CHAR(6)      NOT NULL, -- DBR-03
     SentAt             DATETIME2(0) NOT NULL,
-    ExpiresAt          DATETIME2(0) NOT NULL, -- SentAt + P-15
-    FailedAttempts     TINYINT      NOT NULL CONSTRAINT DF_VerificationCodes_Failed DEFAULT (0), -- CBR-94: đủ P-17 → hủy mã + khóa P-18
+    ExpiresAt          DATETIME2(0) NOT NULL, -- SentAt + P-13
+    FailedAttempts     TINYINT      NOT NULL CONSTRAINT DF_VerificationCodes_Failed DEFAULT (0), -- CBR-94: đủ P-15 → hủy mã + khóa P-16
     LockedUntil        DATETIME2(0) NULL,
     UsedAt             DATETIME2(0) NULL,
 
@@ -213,7 +213,7 @@ CREATE TABLE Packages (
     Benefits              NVARCHAR(1000) NULL,     -- DBR-15: tối đa 10 dòng, mỗi dòng 3–100 ký tự (kiểm ở Service)
     PackageType           VARCHAR(15)    NOT NULL, -- Membership | DayPass | PTSingle | PTCouple | SingleSession
     DurationUnit          VARCHAR(5)     NULL,     -- Day | Month (DBR-19)
-    DurationValue         TINYINT        NULL,     -- gói ngày = 1 Day; gói tập: tháng theo P-04; gói PT: tháng theo P-21
+    DurationValue         TINYINT        NULL,     -- gói ngày = 1 Day; gói tập: tháng theo P-04; gói PT: tháng theo P-18
     EstimatedSessionCount TINYINT        NULL,     -- CHỈ để hiển thị "khoảng n buổi" cho gói PT (DBR-53)
     Price                 INT            NOT NULL, -- VND, đã gồm VAT (GBR-02)
     IsActive              BIT            NOT NULL CONSTRAINT DF_Packages_IsActive  DEFAULT (1), -- 0 = ngừng bán (CBR-97)
@@ -325,10 +325,10 @@ CREATE TABLE Orders (
     PackageBenefitsSnapshot    NVARCHAR(1000) NULL,      -- v25: DBR-50 chép cả quyền lợi
     UnitPriceSnapshot          INT            NOT NULL,  -- giá lúc mua, đã gồm VAT
     DiscountAmount             INT            NOT NULL CONSTRAINT DF_Orders_Discount  DEFAULT (0),
-    VatRateSnapshot            TINYINT        NOT NULL,  -- P-10 lúc mua
+    VatRateSnapshot            TINYINT        NOT NULL,  -- P-08 lúc mua
     VatAmount                  INT            NOT NULL,  -- DBR-57: (giá − giảm) × VAT ÷ (100 + VAT), làm tròn đồng
     Status                     VARCHAR(10)    NOT NULL CONSTRAINT DF_Orders_Status    DEFAULT ('Pending'), -- DBR-39, DBR-40
-    PaymentDueAt               DATETIME2(0)   NULL,      -- online: CreatedAt + P-09, cũng là hạn giữ slot (CBR-40). Tại quầy: NULL
+    PaymentDueAt               DATETIME2(0)   NULL,      -- online: CreatedAt + P-07, cũng là hạn giữ slot (CBR-40). Tại quầy: NULL
     CreatedAt                  DATETIME2(0)   NOT NULL CONSTRAINT DF_Orders_CreatedAt DEFAULT (SYSDATETIME()),
     PaidAt                     DATETIME2(0)   NULL,
     CancelType                 VARCHAR(25)    NULL,      -- DBR-43
@@ -367,9 +367,10 @@ CREATE TABLE Orders (
         CancelType IS NULL OR CancelType <> 'CancelledByReceptionist'
         OR (Channel = 'Counter' AND CancelReason IS NOT NULL AND LEN(LTRIM(RTRIM(CancelReason))) >= 5)
     ),
-    -- Hủy loại "quá hạn" / "bị thay thế" chỉ có ở đơn online (CBR-70, CBR-71)
+    -- "Bị thay thế" chỉ có ở đơn online (CBR-71). "Quá hạn" (PaymentTimeout) có ở đơn online (CBR-70)
+    -- VÀ đơn tại quầy giữ lịch gói PT hết 15 phút chưa thu tiền (BR-93).
     CONSTRAINT CK_Orders_OnlineCancel CHECK (
-        CancelType IS NULL OR CancelType NOT IN ('PaymentTimeout','ReplacedByNewOrder') OR Channel = 'Online'
+        CancelType IS NULL OR CancelType <> 'ReplacedByNewOrder' OR Channel = 'Online'
     ),
     -- Paid → Cancelled chỉ theo CBR-11, nên đơn đã hủy vẫn có thể có PaidAt
     CONSTRAINT CK_Orders_Paid CHECK (
@@ -444,8 +445,6 @@ CREATE TABLE Subscriptions (
     EndDate               DATE         NOT NULL,  -- NGÀY CUỐI còn dùng (GBR-03)
     FixedStartTime        TIME(0)      NULL,      -- v25: khung giờ cố định của gói PT (CBR-43, CBR-52)
     GeneratedSessionCount TINYINT      NULL,      -- số buổi thực sinh, chốt khi Paid (BR-40, DBR-53)
-    SwapsUsed             TINYINT      NOT NULL CONSTRAINT DF_Subscriptions_Swaps  DEFAULT (0),
-    MaxSwapsSnapshot      TINYINT      NULL,      -- hạn mức đổi buổi = P-08 × số tháng của gói, chốt lúc bán — đổi P-08 không áp ngược (BR-73, GBR-04)
     FreezeUsed            TINYINT      NOT NULL CONSTRAINT DF_Subscriptions_Freeze DEFAULT (0),
     MaxFreezesSnapshot    TINYINT      NULL,      -- v25: P-01 lúc bán (GBR-04)
     Status                VARCHAR(10)  NOT NULL CONSTRAINT DF_Subscriptions_Status DEFAULT ('Active'),
@@ -468,21 +467,18 @@ CREATE TABLE Subscriptions (
         (SubscriptionType IN ('PTSingle','PTCouple','SingleSession') AND PtEmployeeId IS NOT NULL)
         OR (SubscriptionType IN ('Membership','DayPass') AND PtEmployeeId IS NULL)
     ),
-    -- Gói PT: có khung giờ cố định, trần swap, số buổi. Buổi lẻ: đúng 1 buổi. Gói tập: trần bảo lưu.
+    -- Gói PT: có khung giờ cố định, số buổi. Buổi lẻ: đúng 1 buổi. Gói tập: trần bảo lưu.
     CONSTRAINT CK_Subscriptions_PtFields CHECK (
         (SubscriptionType IN ('PTSingle','PTCouple') AND FixedStartTime IS NOT NULL
-            AND MaxSwapsSnapshot IS NOT NULL AND GeneratedSessionCount IS NOT NULL)
-        OR (SubscriptionType = 'SingleSession' AND FixedStartTime IS NULL AND MaxSwapsSnapshot IS NULL
+            AND GeneratedSessionCount IS NOT NULL)
+        OR (SubscriptionType = 'SingleSession' AND FixedStartTime IS NULL
             AND GeneratedSessionCount IS NOT NULL AND GeneratedSessionCount = 1)
-        OR (SubscriptionType IN ('Membership','DayPass') AND FixedStartTime IS NULL AND MaxSwapsSnapshot IS NULL
+        OR (SubscriptionType IN ('Membership','DayPass') AND FixedStartTime IS NULL
             AND GeneratedSessionCount IS NULL)
     ),
     CONSTRAINT CK_Subscriptions_Freeze CHECK (
         (SubscriptionType = 'Membership' AND MaxFreezesSnapshot IS NOT NULL AND FreezeUsed <= MaxFreezesSnapshot)
         OR (SubscriptionType <> 'Membership' AND MaxFreezesSnapshot IS NULL AND FreezeUsed = 0)
-    ),
-    CONSTRAINT CK_Subscriptions_Swaps CHECK (
-        SwapsUsed = 0 OR (MaxSwapsSnapshot IS NOT NULL AND SwapsUsed <= MaxSwapsSnapshot)    -- BR-73, BR-74
     )
 );
 GO
@@ -662,10 +658,10 @@ CREATE INDEX IX_Sessions_Scheduled ON Sessions(TimeSlotId) INCLUDE (Subscription
 GO
 
 -- SessionMoveLogs (v25, thay SessionSwapLogs): MỌI lần dời buổi, để giữ lịch sử PT cũ / slot cũ
---   CustomerSwap   : khách tự swap (UC-38) — tính vào P-08
---   PtOnBehalfSwap : PT dời theo yêu cầu khách không có tài khoản (BR-62) — tính vào P-08
---   PtReschedule   : PT bận, dời sang slot khác của chính mình (BR-64) — không tính
---   PtTransfer     : chuyển sang PT khác (BR-65, BR-68) — không tính
+--   CustomerSwap   : khách tự swap (UC-38)
+--   PtOnBehalfSwap : PT dời theo yêu cầu khách không có tài khoản (BR-62)
+--   PtReschedule   : PT bận, dời sang slot khác của chính mình (BR-64)
+--   PtTransfer     : chuyển sang PT khác (BR-65, BR-68)
 CREATE TABLE SessionMoveLogs (
     SessionMoveLogId     INT IDENTITY(1,1) NOT NULL,
     SessionId            INT           NOT NULL,
@@ -1041,10 +1037,10 @@ GO
    CLUSTER G — CẤU HÌNH & LƯU VẾT
    ============================================================================ */
 
--- SystemConfigs: P-01…P-22 dạng key–value (GBR-04)
+-- SystemConfigs: P-01…P-19 dạng key–value (GBR-04)
 CREATE TABLE SystemConfigs (
     SystemConfigId      INT IDENTITY(1,1) NOT NULL,
-    ConfigKey           VARCHAR(10)   NOT NULL,  -- P-01 … P-22
+    ConfigKey           VARCHAR(10)   NOT NULL,  -- P-01 … P-19
     ConfigValue         NVARCHAR(200) NOT NULL,
     Description         NVARCHAR(255) NOT NULL,
     UpdatedAt           DATETIME2(0)  NOT NULL CONSTRAINT DF_SystemConfigs_UpdatedAt DEFAULT (SYSDATETIME()),

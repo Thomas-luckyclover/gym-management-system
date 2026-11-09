@@ -19,7 +19,7 @@ import java.time.LocalTime;
  * (gói PT cá nhân), PTCouple (gói PT cặp đôi), SingleSession (buổi PT lẻ).</li>
  * <li>Vòng đời trạng thái: Active, Frozen (chỉ Membership), Used (chỉ
  * DayPass/SingleSession), Expired, Cancelled (CBR-55).</li>
- * <li>Snapshot thông số lúc bán: MaxSwapsSnapshot (P-08 × số tháng gói PT), MaxFreezesSnapshot
+ * <li>Snapshot thông số lúc bán: MaxFreezesSnapshot
  * (P-01) để không bị ảnh hưởng nếu Manager đổi cấu hình sau này (GBR-04).</li>
  * </ul>
  *
@@ -66,12 +66,6 @@ public class Subscription {
      */
     private Integer generatedSessionCount;
 
-    /** Số lần đổi lịch buổi tập đã sử dụng (mặc định 0). */
-    private int swapsUsed;
-
-    /** Hạn mức số lần đổi lịch tối đa chụp tại thời điểm bán = P-08 × số tháng của gói PT. */
-    private Integer maxSwapsSnapshot;
-
     /** Số lần bảo lưu thẻ đã sử dụng (mặc định 0, chỉ áp dụng cho Membership). */
     private int freezeUsed;
 
@@ -89,7 +83,6 @@ public class Subscription {
      */
     public Subscription(int subscriptionId) {
         this.subscriptionId = subscriptionId;
-        this.swapsUsed = 0;
         this.freezeUsed = 0;
         this.status = Status.ACTIVE;
     }
@@ -100,7 +93,7 @@ public class Subscription {
      */
     public Subscription(int subscriptionId, int orderId, int customerId, Type subscriptionType,
             Integer ptEmployeeId, LocalDate startDate, LocalDate endDate, LocalTime fixedStartTime,
-            Integer generatedSessionCount, int swapsUsed, Integer maxSwapsSnapshot, int freezeUsed,
+            Integer generatedSessionCount, int freezeUsed,
             Integer maxFreezesSnapshot, Status status) {
         this.subscriptionId = subscriptionId;
         this.orderId = orderId;
@@ -111,8 +104,6 @@ public class Subscription {
         this.endDate = endDate;
         this.fixedStartTime = fixedStartTime;
         this.generatedSessionCount = generatedSessionCount;
-        this.swapsUsed = swapsUsed;
-        this.maxSwapsSnapshot = maxSwapsSnapshot;
         this.freezeUsed = freezeUsed;
         this.maxFreezesSnapshot = maxFreezesSnapshot;
         this.status = status;
@@ -188,22 +179,6 @@ public class Subscription {
         this.generatedSessionCount = generatedSessionCount;
     }
 
-    public int getSwapsUsed() {
-        return swapsUsed;
-    }
-
-    public void setSwapsUsed(int swapsUsed) {
-        this.swapsUsed = swapsUsed;
-    }
-
-    public Integer getMaxSwapsSnapshot() {
-        return maxSwapsSnapshot;
-    }
-
-    public void setMaxSwapsSnapshot(Integer maxSwapsSnapshot) {
-        this.maxSwapsSnapshot = maxSwapsSnapshot;
-    }
-
     public int getFreezeUsed() {
         return freezeUsed;
     }
@@ -271,27 +246,6 @@ public class Subscription {
         boolean hasSnapshot = this.maxFreezesSnapshot != null;
         boolean hasRemainingTimes = hasSnapshot && this.freezeUsed < this.maxFreezesSnapshot;
         return isMembership && isActive() && hasRemainingTimes;
-    }
-
-    /**
-     * Kiểm tra gói PT còn lượt đổi lịch hợp lệ không (BR-73).
-     */
-    public boolean canSwap() {
-        boolean isPtPackage = this.subscriptionType == Type.PT_SINGLE
-                || this.subscriptionType == Type.PT_COUPLE;
-        boolean hasSnapshot = this.maxSwapsSnapshot != null;
-        boolean hasRemainingTimes = hasSnapshot && this.swapsUsed < this.maxSwapsSnapshot;
-        return isPtPackage && isActive() && hasRemainingTimes;
-    }
-
-    /**
-     * Lấy số lượt đổi lịch còn lại của gói PT.
-     */
-    public int getRemainingSwaps() {
-        if (maxSwapsSnapshot == null) {
-            return 0;
-        }
-        return Math.max(0, maxSwapsSnapshot - swapsUsed);
     }
 
     /**

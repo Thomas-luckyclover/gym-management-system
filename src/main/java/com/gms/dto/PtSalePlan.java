@@ -4,23 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * DỮ LIỆU BƯỚC 3 "LỊCH TẬP" của màn Bán gói PT — gửi xuống trình duyệt dạng JSON (pt-sale-plan.js đọc).
- *
- *   Ai tạo?   PtSaleService.buildPlan (không đọc DB, test được) từ khung của PT, đơn nghỉ, ngày phòng nghỉ,
- *             các buổi khác của khách trong kỳ.
- *   Ý tưởng:  server tính SẴN cho từng ngày T2–T6 trong kỳ: mỗi giờ có thể tập được hay không (+ lý do).
- *             Trình duyệt chỉ ghép "lịch mẫu" + "sửa từng buổi" trên dữ liệu này → bấm là thấy ngay, không tải lại.
- *             Lúc bấm "Giữ lịch", PtSaleService.hold vẫn KIỂM TRA LẠI từng buổi có khóa (không tin trình duyệt).
- *
- *   Ví dụ 1 ngày:  {date:"2026-10-28", weekday:3, label:"Thứ 4 · 28/10",
- *                   options:[{time:"09:30", end:"11:00", ok:true}, {time:"20:00", ok:false, reason:"PT đã có khách giờ này"}]}
+ * DỮ LIỆU KHỐI "LỊCH TẬP" GỬI CHO JS — Service tạo: PtSaleService.loadPlan → buildPlan, rồi JsonUtil.toJson
+ * → nhúng vào <script id="sale-plan-data"> (_pt-sale-plan.jspf) → pt-sale-plan.js đọc (biến data) và vẽ lịch mẫu + từng tuần.
+ * Option = 1 giờ của 1 ngày (time, end, ok, reason, warning, fresh = PT chưa mở khung) · Day = 1 ngày T2–T6 trong kỳ.
  */
 public class PtSalePlan {
-
-    /**
-     * 1 giờ có thể chọn trong 1 ngày. ok = false → reason nói vì sao; ok = true có thể kèm warning (PT cần dời sau).
-     * fresh = true: ngày đó PT CHƯA có khung giờ này → giữ lịch sẽ tạo khung mới → màn hình ghi "PT chưa mở".
-     */
     public static class Option {
         private final String time;
         private final String end;
@@ -46,7 +34,6 @@ public class PtSalePlan {
         public boolean isFresh() { return fresh; }
     }
 
-    /** 1 ngày T2–T6 trong kỳ. weekday: 1 = Thứ 2 … 5 = Thứ 6. */
     public static class Day {
         private final String date;
         private final int weekday;
@@ -65,18 +52,35 @@ public class PtSalePlan {
         public List<Option> getOptions() { return options; }
     }
 
-    private String start;                               // "2026-10-27"
-    private String end;
-    private long price;                                 // giá gói → giá 1 buổi = price ÷ số buổi
-    private List<String> times = new ArrayList<>();      // giờ của lịch mẫu (PT công bố trong 14 ngày đầu kỳ)
-    private String[] pattern = new String[5];            // lịch mẫu ban đầu (t1..t5 trên URL); null = Nghỉ
-    private List<String> requested = new ArrayList<>();  // "2026-10-27@09:30" — buổi đã gửi lên khi Giữ lịch bị từ chối
+    // ===== JS ĐỌC ĐỂ VẼ =====
+    // ← mỗi ngày T2–T6 trong kỳ × mỗi giờ chọn được → checkDay (ok / lý do) → data.days: ô ngày ở "Từng tuần", ô sửa riêng
     private List<Day> days = new ArrayList<>();
-    private List<Integer> unpublished = new ArrayList<>(); // Thứ PT chưa công bố khung nào (1–5) → nhãn trong Lịch mẫu
-    private List<String> published = new ArrayList<>();    // giờ PT đã công bố (JS tô xanh); giờ ngoài list này = lễ tân tự nhập ("PT chưa mở")
-    private String open;                                    // giờ mở cửa P-19 ("05:30") → min cho ô nhập giờ tự do
-    private String close;                                   // giờ bắt đầu muộn nhất hợp lệ (đóng cửa − thời lượng buổi, "20:30") → max cho ô nhập giờ tự do
-    private int minutes;                                    // độ dài 1 buổi (P-06, phút) → JS tính giờ kết thúc cho giờ tự nhập
+    // ← giờ PT đã công bố (14 ngày đầu) → các nút giờ của mỗi dòng "Lịch mẫu"
+    private List<String> times = new ArrayList<>();
+    // ← giờ lịch mẫu lễ tân tự thêm cho RIÊNG từng thứ (đã kiểm giờ mở cửa) → thêm nút giờ vào đúng dòng thứ đó
+    private String[] custom = new String[5];
+    // ← t1..t5 trên URL (giờ hợp lệ) → nút giờ được chọn sẵn của mỗi thứ
+    private String[] pattern = new String[5];
+    // ← sessions trên URL → khôi phục các buổi "sửa riêng" (F5, chọn khách, Giữ lịch bị từ chối)
+    private List<String> requested = new ArrayList<>();
+    // ← thứ PT chưa mở khung nào → nhãn "PT chưa công bố" trên dòng thứ đó
+    private List<Integer> unpublished = new ArrayList<>();
+    // ← giờ PT đã công bố → giờ KHÔNG nằm trong đây ghi "PT chưa mở"
+    private List<String> published = new ArrayList<>();
+    // ← giờ mở cửa P-17 → min của ô "+ Thêm giờ"
+    private String open;
+    // ← giờ bắt đầu muộn nhất (đóng cửa − thời lượng buổi) → max của ô "+ Thêm giờ"
+    private String close;
+    // ← P-06 thời lượng 1 buổi → giờ kết thúc
+    private int minutes;
+    // ← giờ tự thêm sai (ngoài giờ mở cửa / lệch mốc 15 phút) → khung đỏ đầu "Lịch tập"
+    private String notice;
+    // ← giá gói → "N buổi · x đ/buổi"
+    private long price;
+    // ← ngày bắt đầu kỳ
+    private String start;
+    // ← ngày hết kỳ
+    private String end;
 
     public String getStart() { return start; }
     public void setStart(String start) { this.start = start; }
@@ -100,6 +104,10 @@ public class PtSalePlan {
     public void setOpen(String open) { this.open = open; }
     public String getClose() { return close; }
     public void setClose(String close) { this.close = close; }
+    public String[] getCustom() { return custom; }
+    public void setCustom(String[] custom) { this.custom = custom; }
+    public String getNotice() { return notice; }
+    public void setNotice(String notice) { this.notice = notice; }
     public int getMinutes() { return minutes; }
     public void setMinutes(int minutes) { this.minutes = minutes; }
 }

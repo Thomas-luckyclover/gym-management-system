@@ -8,7 +8,7 @@
   const DATA = {
     'KH-1001': { pkg: 'Gói 3 Tháng', end: '15/11/2026', left: 56, pt: [] },
     'KH-1002': { pkg: 'Gói Ngày', end: '20/09/2026', left: 0, block: 'Gói Ngày không bảo lưu được.' },
-    'KH-1003': { pkg: 'Gói 12 Tháng', end: '01/03/2027', left: 162, block: 'Gói đang bảo lưu đến 05/10/2026 và đã dùng hết lượt bảo lưu. Mỗi gói chỉ bảo lưu một lần.' },
+    'KH-1003': { pkg: 'Gói 12 Tháng', end: '01/03/2027', left: 162, currentlyFrozen: true, freezeStart: '05/09/2026', freezeEnd: '05/10/2026', actualDays: 15, newEnd: '16/03/2027' },
     'KH-1004': { pkg: 'Gói 1 Tháng', end: '10/09/2026', left: -10, block: 'Gói đã hết hạn 10/09/2026. Gia hạn trước rồi mới bảo lưu được.' },
     'KH-1005': { pkg: '', end: '', left: 0, block: 'Khách chỉ có gói PT. Bảo lưu chỉ áp dụng cho gói tập.' },
     'KH-1006': { pkg: 'Gói 1 Tháng', end: '18/10/2026', left: 28, pt: [] },
@@ -28,6 +28,31 @@
   const clashList = document.getElementById('fzClashList');
   const info = document.getElementById('fzInfo');
   const days = document.getElementById('fzDays');
+  const resumeSection = document.getElementById('fzResumeSection');
+  const formFields = document.getElementById('fzFormFields');
+  const btnResumeEarly = document.getElementById('btnResumeEarly');
+
+  if (btnResumeEarly) {
+    btnResumeEarly.addEventListener('click', () => {
+      const c = current();
+      if (!c || !c.currentlyFrozen) return;
+      openConfirmModal({
+        title: 'Mở lại thẻ tập trước hạn?',
+        body: `<p>Hội viên: <b>Phạm Minh Châu (KH-1003)</b></p>
+               <p>Số ngày đã bảo lưu thực tế: <b>${c.actualDays} ngày</b>.</p>
+               <p>Hạn thẻ mới sau khi mở lại: <b class="text-success">${c.newEnd}</b>.</p>
+               <p class="muted">Hội viên có thể check-in vào tập lại ngay hôm nay.</p>`,
+        confirmLabel: 'Xác nhận mở thẻ',
+        onConfirm() {
+          c.currentlyFrozen = false;
+          c.end = c.newEnd;
+          c.block = 'Gói đã dùng hết lượt bảo lưu (1/1 lần). Mỗi gói chỉ được bảo lưu 1 lần.';
+          showToast('success', 'Đã mở lại thẻ tập thành công. Hạn mới: ' + c.newEnd);
+          validate();
+        }
+      });
+    });
+  }
 
   const d = s => new Date(s + 'T00:00:00');
   const span = () => Math.round((d(end.value) - d(start.value)) / DAY) + 1;
@@ -46,6 +71,14 @@
   function renderInfo() {
     const c = current();
     if (!c) { info.innerHTML = '<p class="muted">Chọn khách để xem gói đang chạy.</p>'; return; }
+    if (c.currentlyFrozen) {
+      info.innerHTML = `
+        <div class="side-row"><span>Gói</span><b>${c.pkg || 'Không có'}</b></div>
+        <div class="side-row"><span>Trạng thái</span><b class="badge badge-warn">Đang bảo lưu</b></div>
+        <div class="side-row"><span>Khoảng bảo lưu</span><b>${c.freezeStart} – ${c.freezeEnd}</b></div>
+        <div class="side-row"><span>Hạn gốc</span><b>${c.end}</b></div>`;
+      return;
+    }
     info.innerHTML = `
       <div class="side-row"><span>Gói</span><b>${c.pkg || 'Không có'}</b></div>
       <div class="side-row"><span>Hết hạn</span><b>${c.end || '—'}</b></div>
@@ -65,8 +98,18 @@
     ['fzCustErr', 'fzStartErr', 'fzEndErr', 'fzReasonErr'].forEach(clearErr);
     block.hidden = true;
     clash.hidden = true;
+    if (resumeSection) resumeSection.hidden = true;
+    if (formFields) formFields.hidden = false;
 
     if (!c) { save.disabled = true; renderInfo(); return; }
+
+    if (c.currentlyFrozen) {
+      if (resumeSection) resumeSection.hidden = false;
+      if (formFields) formFields.hidden = true;
+      save.disabled = true;
+      renderInfo();
+      return;
+    }
 
     if (c.block) {
       blockText.innerHTML = `<b>Không bảo lưu được.</b> ${c.block}`;

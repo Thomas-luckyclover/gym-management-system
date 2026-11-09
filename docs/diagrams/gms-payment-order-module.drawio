@@ -1,0 +1,993 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-11-04T22:00:00.000Z" agent="GMS-Architect" version="24.0.0" type="device" pages="6">
+  <diagram id="page-class-diagram" name="01. Class Diagram - Phân hệ Đơn hàng &amp; Thanh toán">
+    <mxGraphModel dx="2400" dy="1600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="3500" pageHeight="2300" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="&lt;div style=&quot;text-align:center;&quot;&gt;&lt;b style=&quot;font-size:22px;&quot;&gt;PHÂN HỆ ĐƠN HÀNG, THANH TOÁN &amp;amp; GÓI TẬP — CLASS DIAGRAM CHI TIẾT (4 TẦNG)&lt;/b&gt;&lt;br&gt;&lt;i style=&quot;font-size:14px;color:#555;&quot;&gt;Gym Management System (GMS) · Kiến trúc chuẩn MVC &amp;amp; Layered Architecture · Java 17 / Jakarta EE&lt;/i&gt;&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ecf0f1;strokeColor=#bdc3c7;fontFamily=Arial;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="60" y="20" width="3360" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="lg_servlet" value="&lt;b&gt;Controller (Servlet)&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#dae8fc;strokeColor=#6c8ebf;fontFamily=Arial;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="60" y="95" width="200" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="lg_service" value="&lt;b&gt;Service (Business Logic)&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#e1d5e7;strokeColor=#9673a6;fontFamily=Arial;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="280" y="95" width="220" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="lg_dao" value="&lt;b&gt;DAO (Data Access)&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#fff2cc;strokeColor=#d6b656;fontFamily=Arial;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="520" y="95" width="200" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="lg_entity" value="&lt;b&gt;Entity (Database Model)&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#d5e8d4;strokeColor=#82b366;fontFamily=Arial;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="740" y="95" width="210" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="lg_dto" value="&lt;b&gt;DTO / View Object&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffe6cc;strokeColor=#d79b00;fontFamily=Arial;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="970" y="95" width="200" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="lg_int" value="&lt;b&gt;Integration / Domain Rule&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#d0e0e3;strokeColor=#76a5af;fontFamily=Arial;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1190" y="95" width="240" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="s_checkout" value="&lt;div style=&quot;text-align:center;font-weight:bold;padding-bottom:5px;border-bottom:1px solid #7f8c8d;&quot;&gt;&amp;laquo;Servlet&amp;raquo;&lt;br&gt;&lt;b&gt;CheckoutServlet&lt;/b&gt;&lt;/div&gt;&lt;div style=&quot;padding:5px 0;border-bottom:1px solid #7f8c8d;font-size:11px;&quot;&gt;- paymentService: PaymentService&lt;br&gt;- packageService: PackageService&lt;/div&gt;&lt;div style=&quot;padding:5px 0;font-size:11px;&quot;&gt;+ doGet(req: HttpServletRequest, resp: HttpServletResponse): void&lt;br&gt;+ doPost(req: HttpServletRequest, resp: HttpServletResponse): void&lt;br&gt;- handleShowCheckout(req, resp): void&lt;br&gt;- handleApplyVoucher(req, resp): void&lt;br&gt;- handleRemoveVoucher(req, resp): void&lt;br&gt;- handleStartPayment(req, resp): void&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=8;spacingRight=8;spacingTop=6;fillColor=#dae8fc;strokeColor=#6c8ebf;fontFamily=Consolas, Arial;" vertex="1" parent="1">
+          <mxGeometry x="60" y="150" width="400" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="s_vnpayIpn" value="&lt;div style=&quot;text-align:center;font-weight:bold;padding-bottom:5px;border-bottom:1px solid #7f8c8d;&quot;&gt;&amp;laquo;Servlet&amp;raquo;&lt;br&gt;&lt;b&gt;VnPayIpnServlet&lt;/b&gt;&lt;/div&gt;&lt;div style=&quot;padding:5px 0;border-bottom:1px solid #7f8c8d;font-size:11px;&quot;&gt;- callbackService: PaymentCallbackService&lt;/div&gt;&lt;div style=&quot;padding:5px 0;font-size:11px;&quot;&gt;+ doGet(req: HttpServletRequest, resp: HttpServletResponse): void&lt;br&gt;+ doPost(req: HttpServletRequest, resp: HttpServletResponse): void&lt;br&gt;- extractParams(req): Map&amp;lt;String, String&amp;gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=8;spacingRight=8;spacingTop=6;fillColor=#dae8fc;strokeColor=#6c8ebf;fontFamily=Consolas, Arial;" vertex="1" parent="1">
+          <mxGeometry x="480" y="150" width="380" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="s_counterSale" value="&lt;div style=&quot;text-align:center;font-weight:bold;padding-bottom:5px;border-bottom:1px solid #7f8c8d;&quot;&gt;&amp;laquo;Servlet&amp;raquo;&lt;br&gt;&lt;b&gt;CounterSaleServlet&lt;/b&gt;&lt;/div&gt;&lt;div style=&quot;padding:5px 0;border-bottom:1px solid #7f8c8d;font-size:11px;&quot;&gt;- counterSaleService: CounterSaleService&lt;br&gt;- accountService: CounterAccountService&lt;/div&gt;&lt;div style=&quot;padding:5px 0;font-size:11px;&quot;&gt;+ doGet(req: HttpServletRequest, resp: HttpServletResponse): void&lt;br&gt;+ doPost(req: HttpServletRequest, resp: HttpServletResponse): void&lt;br&gt;- showPackages(req, resp, accountId: int): void&lt;br&gt;- showCustomers(req, resp): void&lt;br&gt;- showNext(req, resp, accId: int, cusId: int, pkgId: int): void&lt;br&gt;- showReceipt(req, resp): void&lt;br&gt;- writeCustomers(resp, accountId: int, keyword: String): void&lt;br&gt;- writeVoucherCheck(req, resp, accountId: int): void&lt;br&gt;- handleQuickCreateCustomer(req, resp, accountId: int): void&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=8;spacingRight=8;spacingTop=6;fillColor=#dae8fc;strokeColor=#6c8ebf;fontFamily=Consolas, Arial;" vertex="1" parent="1">
+          <mxGeometry x="880" y="150" width="450" height="280" as="geometry" />
+        </mxCell>
+        <mxCell id="s_startDate" value="&lt;div style=&quot;text-align:center;font-weight:bold;padding-bottom:5px;border-bottom:1px solid #7f8c8d;&quot;&gt;&amp;laquo;Servlet&amp;raquo;&lt;br&gt;&lt;b&gt;SubscriptionStartDateServlet&lt;/b&gt;&lt;/div&gt;&lt;div style=&quot;padding:5px 0;border-bottom:1px solid #7f8c8d;font-size:11px;&quot;&gt;- startDateService: SubscriptionStartDateService&lt;/div&gt;&lt;div style=&quot;padding:5px 0;font-size:11px;&quot;&gt;+ doGet(req: HttpServletRequest, resp: HttpServletResponse): void&lt;br&gt;+ doPost(req: HttpServletRequest, resp: HttpServletResponse): void&lt;br&gt;- handleGetPicker(req, resp, accId: int, pkgId: int): void&lt;br&gt;- handleChangeDate(req, resp, accId: int, pkgId: int): void&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=8;spacingRight=8;spacingTop=6;fillColor=#dae8fc;strokeColor=#6c8ebf;fontFamily=Consolas, Arial;" vertex="1" parent="1">
+          <mxGeometry x="1350" y="150" width="420" height="210" as="geometry" />
+        </mxCell>
+        <mxCell id="s_sysTx" value="&lt;div style=&quot;text-align:center;font-weight:bold;padding-bottom:5px;border-bottom:1px solid #7f8c8d;&quot;&gt;&amp;laquo;Servlet&amp;raquo;&lt;br&gt;&lt;b&gt;SystemTransactionServlet&lt;/b&gt;&lt;/div&gt;&lt;div style=&quot;padding:5px 0;border-bottom:1px solid #7f8c8d;font-size:11px;&quot;&gt;- managerTransactionService: ManagerTransactionService&lt;br&gt;- accountSettingsService: AccountSettingsService&lt;/div&gt;&lt;div style=&quot;padding:5px 0;font-size:11px;&quot;&gt;+ doGet(req: HttpServletRequest, resp: HttpServletResponse): void&lt;br&gt;+ doPost(req: HttpServletRequest, resp: HttpServletResponse): void&lt;br&gt;- renderTransactionPage(req, resp): void&lt;br&gt;- handleOrderDetailAjax(req, resp): void&lt;br&gt;- handleLookupAjax(req, resp): void&lt;br&gt;- handleOfflineRefund(req, resp, accountId: int): void&lt;br&gt;- handleExportExcel(req, resp): void&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=8;spacingRight=8;spacingTop=6;fillColor=#dae8fc;strokeColor=#6c8ebf;fontFamily=Consolas, Arial;" vertex="1" parent="1">
+          <mxGeometry x="1790" y="150" width="470" height="270" as="geometry" />
+        </mxCell>
+        <mxCell id="s_txHistory" value="&lt;div style=&quot;text-align:center;font-weight:bold;padding-bottom:5px;border-bottom:1px solid #7f8c8d;&quot;&gt;&amp;laquo;Servlet&amp;raquo;&lt;br&gt;&lt;b&gt;TransactionHistoryServlet&lt;/b&gt;&lt;/div&gt;&lt;div style=&quot;padding:5px 0;border-bottom:1px solid #7f8c8d;font-size:11px;&quot;&gt;- historyService: TransactionHistoryService&lt;/div&gt;&lt;div style=&quot;padding:5px 0;font-size:11px;&quot;&gt;+ doGet(req: HttpServletRequest, resp: HttpServletResponse): void&lt;br&gt;- parseFilter(req): String&lt;br&gt;- parsePage(req): int&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=8;spacingRight=8;spacingTop=6;fillColor=#dae8fc;strokeColor=#6c8ebf;fontFamily=Consolas, Arial;" vertex="1" parent="1">
+          <mxGeometry x="2280" y="150" width="390" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="s_vnpayReturn" value="&lt;div style=&quot;text-align:center;font-weight:bold;padding-bottom:5px;border-bottom:1px solid #7f8c8d;&quot;&gt;&amp;laquo;Servlet&amp;raquo;&lt;br&gt;&lt;b&gt;VnPayReturnServlet&lt;/b&gt;&lt;/div&gt;&lt;div style=&quot;padding:5px 0;border-bottom:1px solid #7f8c8d;font-size:11px;&quot;&gt;- callbackService: PaymentCallbackService&lt;/div&gt;&lt;div style=&quot;padding:5px 0;font-size:11px;&quot;&gt;+ doGet(req: HttpServletRequest, resp: HttpServletResponse): void&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=8;spacingRight=8;spacingTop=6;fillColor=#dae8fc;strokeColor=#6c8ebf;fontFamily=Consolas, Arial;" vertex="1" parent="1">
+          <mxGeometry x="2690" y="150" width="360" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="svc_payment" value="&lt;div style=&quot;text-align:center;font-weight:bold;padding-bottom:5px;border-bottom:1px solid #7f8c8d;&quot;&gt;&amp;laquo;Service&amp;raquo;&lt;br&gt;&lt;b&gt;PaymentService&lt;/b&gt;&lt;/div&gt;&lt;div style=&quot;padding:5px 0;border-bottom:1px solid #7f8c8d;font-size:11px;&quot;&gt;- paymentDAO: PaymentDAO&lt;br&gt;- packageDAO: PackageDAO&lt;br&gt;- orderDAO: OrderDAO&lt;br&gt;- transactionDAO: TransactionDAO&lt;br&gt;- vnPayClient: VnPayClient&lt;/div&gt;&lt;div style=&quot;padding:5px 0;font-size:11px;&quot;&gt;+ createOnlineOrder(accountId: int, packageId: int): ServiceResult&amp;lt;Integer&amp;gt;&lt;br&gt;+ getOwnedOnlineOrder(accountId: int, orderId: int): ServiceResult&amp;lt;Order&amp;gt;&lt;br&gt;+ getCheckoutView(accountId: int, orderId: int): ServiceResult&amp;lt;CheckoutView&amp;gt;&lt;br&gt;+ applyVoucher(accountId: int, orderId: int, code: String): ServiceResult&amp;lt;Void&amp;gt;&lt;br&gt;+ removeVoucher(accountId: int, orderId: int): ServiceResult&amp;lt;Void&amp;gt;&lt;br&gt;+ startPayment(accountId: int, orderId: int, clientIp: String): ServiceResult&amp;lt;String&amp;gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=8;spacingRight=8;spacingTop=6;fillColor=#e1d5e7;strokeColor=#9673a6;fontFamily=Consolas, Arial;" vertex="1" parent="1">
+          <mxGeometry x="60" y="480" width="430" height="290" as="geometry" />
+        </mxCell>
+        <mxCell id="svc_callback" value="&lt;div style=&quot;text-align:center;font-weight:bold;padding-bottom:5px;border-bottom:1px solid #7f8c8d;&quot;&gt;&amp;laquo;Service&amp;raquo;&lt;br&gt;&lt;b&gt;PaymentCallbackService&lt;/b&gt;&lt;/div&gt;&lt;div style=&quot;padding:5px 0;border-bottom:1px solid #7f8c8d;font-size:11px;&quot;&gt;- orderDAO: OrderDAO&lt;br&gt;- transactionDAO: TransactionDAO&lt;br&gt;- subscriptionDAO: SubscriptionDAO&lt;br&gt;- vnPayClient: VnPayClient&lt;br&gt;- auditService: AuditLogService&lt;/div&gt;&lt;div style=&quot;padding:5px 0;font-size:11px;&quot;&gt;+ processIpn(params: Map&amp;lt;String, String&amp;gt;): String&lt;br&gt;+ processReturn(params: Map&amp;lt;String, String&amp;gt;): ServiceResult&amp;lt;PaymentReturnView&amp;gt;&lt;br&gt;- notifyCustomer(conn, order, title: String, content: String): void&lt;br&gt;- buildSubscription(conn, order, startDate: LocalDate): Subscription&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=8;spacingRight=8;spacingTop=6;fillColor=#e1d5e7;strokeColor=#9673a6;fontFamily=Consolas, Arial;" vertex="1" parent="1">
+          <mxGeometry x="510" y="480" width="440" height="270" as="geometry" />
+        </mxCell>
+        <mxCell id="svc_counterSale" value="&lt;div style=&quot;text-align:center;font-weight:bold;padding-bottom:5px;border-bottom:1px solid #7f8c8d;&quot;&gt;&amp;laquo;Service&amp;raquo;&lt;br&gt;&lt;b&gt;CounterSaleService&lt;/b&gt;&lt;/div&gt;&lt;div style=&quot;padding:5px 0;border-bottom:1px solid #7f8c8d;font-size:11px;&quot;&gt;- counterSaleDAO: CounterSaleDAO&lt;br&gt;- shiftDAO: ShiftDAO&lt;br&gt;- packageDAO: PackageDAO&lt;br&gt;- auditLogService: AuditLogService&lt;/div&gt;&lt;div style=&quot;padding:5px 0;font-size:11px;&quot;&gt;+ getPackageView(accountId: int): ServiceResult&amp;lt;CounterPackageView&amp;gt;&lt;br&gt;+ getPackageCard(accountId: int, packageId: int): ServiceResult&amp;lt;CounterPackageCard&amp;gt;&lt;br&gt;+ searchCustomers(accountId: int, keyword: String): ServiceResult&amp;lt;List&amp;lt;CounterCustomerRow&amp;gt;&amp;gt;&lt;br&gt;+ getCustomer(accountId: int, customerId: int): ServiceResult&amp;lt;CounterCustomerRow&amp;gt;&lt;br&gt;+ quickCreateCustomer(accountId: int, in: CounterCustomerCreateInput): ServiceResult&amp;lt;CounterCustomerRow&amp;gt;&lt;br&gt;+ checkVoucher(accId: int, pkgId: int, cusId: int, code: String): ServiceResult&amp;lt;CounterVoucherResult&amp;gt;&lt;br&gt;+ checkout(accountId: int, name: String, in: CounterCheckoutInput): ServiceResult&amp;lt;CounterSaleReceipt&amp;gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=8;spacingRight=8;spacingTop=6;fillColor=#e1d5e7;strokeColor=#9673a6;fontFamily=Consolas, Arial;" vertex="1" parent="1">
+          <mxGeometry x="970" y="480" width="500" height="330" as="geometry" />
+        </mxCell>
+        <mxCell id="svc_startDate" value="&lt;div style=&quot;text-align:center;font-weight:bold;padding-bottom:5px;border-bottom:1px solid #7f8c8d;&quot;&gt;&amp;laquo;Service&amp;raquo;&lt;br&gt;&lt;b&gt;SubscriptionStartDateService&lt;/b&gt;&lt;/div&gt;&lt;div style=&quot;padding:5px 0;border-bottom:1px solid #7f8c8d;font-size:11px;&quot;&gt;- subscriptionDAO: SubscriptionDAO&lt;br&gt;- orderDAO: OrderDAO&lt;br&gt;- packageDAO: PackageDAO&lt;/div&gt;&lt;div style=&quot;padding:5px 0;font-size:11px;&quot;&gt;+ getStartDatePicker(accountId: int, packageId: int): ServiceResult&amp;lt;StartDatePicker&amp;gt;&lt;br&gt;+ changeStartDate(accountId: int, packageId: int, chosen: LocalDate): ServiceResult&amp;lt;StartDatePicker&amp;gt;&lt;br&gt;+ changeStartDateByStaff(staffId: int, subId: int, chosen: LocalDate): ServiceResult&amp;lt;StartDatePicker&amp;gt;&lt;br&gt;+ pickerForOrderId(orderId: int): StartDatePicker&lt;br&gt;- buildPicker(conn, sub: Subscription, today: LocalDate): StartDatePicker&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=8;spacingRight=8;spacingTop=6;fillColor=#e1d5e7;strokeColor=#9673a6;fontFamily=Consolas, Arial;" vertex="1" parent="1">
+          <mxGeometry x="1490" y="480" width="470" height="270" as="geometry" />
+        </mxCell>
+        <mxCell id="svc_managerTx" value="&lt;div style=&quot;text-align:center;font-weight:bold;padding-bottom:5px;border-bottom:1px solid #7f8c8d;&quot;&gt;&amp;laquo;Service&amp;raquo;&lt;br&gt;&lt;b&gt;ManagerTransactionService&lt;/b&gt;&lt;/div&gt;&lt;div style=&quot;padding:5px 0;border-bottom:1px solid #7f8c8d;font-size:11px;&quot;&gt;- transactionDAO: TransactionDAO&lt;br&gt;- vnPayClient: VnPayClient&lt;br&gt;- auditLogService: AuditLogService&lt;/div&gt;&lt;div style=&quot;padding:5px 0;font-size:11px;&quot;&gt;+ findManagerTransactions(search, method, status, refund, from, to, page, size): ServiceResult&amp;lt;PageResult&amp;gt;&lt;br&gt;+ countPendingRefunds(): int&lt;br&gt;+ getOrderDetail(orderId: int): ServiceResult&amp;lt;ManagerOrderDetailView&amp;gt;&lt;br&gt;+ lookupGateway(transactionId: int): ServiceResult&amp;lt;Map&amp;lt;String, Object&amp;gt;&amp;gt;&lt;br&gt;+ recordRefund(accountId: int, txId: int, refundNote: String): ServiceResult&amp;lt;Void&amp;gt;&lt;br&gt;+ exportToExcel(search, method, status, refund, from, to, out: OutputStream): void&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=8;spacingRight=8;spacingTop=6;fillColor=#e1d5e7;strokeColor=#9673a6;fontFamily=Consolas, Arial;" vertex="1" parent="1">
+          <mxGeometry x="1980" y="480" width="510" height="290" as="geometry" />
+        </mxCell>
+        <mxCell id="svc_txHistory" value="&lt;div style=&quot;text-align:center;font-weight:bold;padding-bottom:5px;border-bottom:1px solid #7f8c8d;&quot;&gt;&amp;laquo;Service&amp;raquo;&lt;br&gt;&lt;b&gt;TransactionHistoryService&lt;/b&gt;&lt;/div&gt;&lt;div style=&quot;padding:5px 0;border-bottom:1px solid #7f8c8d;font-size:11px;&quot;&gt;- historyDAO: TransactionHistoryDAO&lt;/div&gt;&lt;div style=&quot;padding:5px 0;font-size:11px;&quot;&gt;+ getCustomerHistory(accountId: int, filter: String, page: int, size: int): ServiceResult&amp;lt;PageResult&amp;gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=8;spacingRight=8;spacingTop=6;fillColor=#e1d5e7;strokeColor=#9673a6;fontFamily=Consolas, Arial;" vertex="1" parent="1">
+          <mxGeometry x="2510" y="480" width="440" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="svc_maintenance" value="&lt;div style=&quot;text-align:center;font-weight:bold;padding-bottom:5px;border-bottom:1px solid #7f8c8d;&quot;&gt;&amp;laquo;Service&amp;raquo;&lt;br&gt;&lt;b&gt;PaymentMaintenanceService&lt;/b&gt;&lt;/div&gt;&lt;div style=&quot;padding:5px 0;border-bottom:1px solid #7f8c8d;font-size:11px;&quot;&gt;- orderDAO: OrderDAO&lt;br&gt;- transactionDAO: TransactionDAO&lt;br&gt;- vnPayClient: VnPayClient&lt;/div&gt;&lt;div style=&quot;padding:5px 0;font-size:11px;&quot;&gt;+ cancelOverdueOnlineOrders(): void&lt;br&gt;+ closeTimedOutPendingTransactions(): void&lt;br&gt;- notifyCustomer(conn, order: Order): void&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=8;spacingRight=8;spacingTop=6;fillColor=#e1d5e7;strokeColor=#9673a6;fontFamily=Consolas, Arial;" vertex="1" parent="1">
+          <mxGeometry x="2970" y="480" width="400" height="210" as="geometry" />
+        </mxCell>
+        <mxCell id="dao_order" value="&lt;div style=&quot;text-align:center;font-weight:bold;padding-bottom:5px;border-bottom:1px solid #7f8c8d;&quot;&gt;&amp;laquo;DAO&amp;raquo;&lt;br&gt;&lt;b&gt;OrderDAO&lt;/b&gt;&lt;/div&gt;&lt;div style=&quot;padding:5px 0;border-bottom:1px solid #7f8c8d;font-size:11px;&quot;&gt;- DBContext&lt;/div&gt;&lt;div style=&quot;padding:5px 0;font-size:11px;&quot;&gt;+ insertPending(conn, order: Order): int&lt;br&gt;+ findById(conn, orderId: int): Order&lt;br&gt;+ findForCallback(conn, orderId: int, lock: boolean): Order&lt;br&gt;+ markPaid(conn, orderId: int, paidAt: LocalDateTime): int&lt;br&gt;+ applyVoucher(conn, orderId: int, voucherId: int, discount: long, finalAmt: long): int&lt;br&gt;+ removeVoucher(conn, orderId: int, originalAmt: long): int&lt;br&gt;+ findOverduePendingOrderIds(conn, cutoff: LocalDateTime): List&amp;lt;Integer&amp;gt;&lt;br&gt;+ markCancelled(conn, orderId: int): int&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=8;spacingRight=8;spacingTop=6;fillColor=#fff2cc;strokeColor=#d6b656;fontFamily=Consolas, Arial;" vertex="1" parent="1">
+          <mxGeometry x="60" y="850" width="440" height="270" as="geometry" />
+        </mxCell>
+        <mxCell id="dao_tx" value="&lt;div style=&quot;text-align:center;font-weight:bold;padding-bottom:5px;border-bottom:1px solid #7f8c8d;&quot;&gt;&amp;laquo;DAO&amp;raquo;&lt;br&gt;&lt;b&gt;TransactionDAO&lt;/b&gt;&lt;/div&gt;&lt;div style=&quot;padding:5px 0;border-bottom:1px solid #7f8c8d;font-size:11px;&quot;&gt;- DBContext&lt;/div&gt;&lt;div style=&quot;padding:5px 0;font-size:11px;&quot;&gt;+ insertAttempt(conn, tx: Transaction): int&lt;br&gt;+ findById(conn, transactionId: int, lock: boolean): Transaction&lt;br&gt;+ markSuccess(conn, txId: int, gatewayNo: String, bankCode: String, payDate: LocalDateTime): int&lt;br&gt;+ markFailed(conn, txId: int, code: String): int&lt;br&gt;+ markNeedsRefund(conn, txId: int): int&lt;br&gt;+ markRefunded(conn, txId: int, empId: int, note: String): int&lt;br&gt;+ countPendingRefunds(conn): int&lt;br&gt;+ findManagerTransactions(search, method, status, refund, from, to, offset, limit): List&amp;lt;ManagerTransactionItem&amp;gt;&lt;br&gt;+ findOrderDetailForManager(orderId: int): ManagerOrderDetailView&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=8;spacingRight=8;spacingTop=6;fillColor=#fff2cc;strokeColor=#d6b656;fontFamily=Consolas, Arial;" vertex="1" parent="1">
+          <mxGeometry x="520" y="850" width="490" height="300" as="geometry" />
+        </mxCell>
+        <mxCell id="dao_counterSale" value="&lt;div style=&quot;text-align:center;font-weight:bold;padding-bottom:5px;border-bottom:1px solid #7f8c8d;&quot;&gt;&amp;laquo;DAO&amp;raquo;&lt;br&gt;&lt;b&gt;CounterSaleDAO&lt;/b&gt;&lt;/div&gt;&lt;div style=&quot;padding:5px 0;border-bottom:1px solid #7f8c8d;font-size:11px;&quot;&gt;- DBContext&lt;/div&gt;&lt;div style=&quot;padding:5px 0;font-size:11px;&quot;&gt;+ findOpenShift(conn, accountId: int): Shift&lt;br&gt;+ findAllSellablePackages(conn): List&amp;lt;Package&amp;gt;&lt;br&gt;+ searchCustomers(conn, keyword: String): List&amp;lt;CounterCustomerRow&amp;gt;&lt;br&gt;+ insertQuickCustomer(conn, in: CounterCustomerCreateInput): int&lt;br&gt;+ findVoucherForCounter(conn, code: String): Voucher&lt;br&gt;+ insertCounterOrder(conn, order: Order): int&lt;br&gt;+ insertCounterTransaction(conn, tx: Transaction): int&lt;br&gt;+ insertSubscription(conn, sub: Subscription): int&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=8;spacingRight=8;spacingTop=6;fillColor=#fff2cc;strokeColor=#d6b656;fontFamily=Consolas, Arial;" vertex="1" parent="1">
+          <mxGeometry x="1030" y="850" width="460" height="280" as="geometry" />
+        </mxCell>
+        <mxCell id="dao_subscription" value="&lt;div style=&quot;text-align:center;font-weight:bold;padding-bottom:5px;border-bottom:1px solid #7f8c8d;&quot;&gt;&amp;laquo;DAO&amp;raquo;&lt;br&gt;&lt;b&gt;SubscriptionDAO&lt;/b&gt;&lt;/div&gt;&lt;div style=&quot;padding:5px 0;border-bottom:1px solid #7f8c8d;font-size:11px;&quot;&gt;- DBContext&lt;/div&gt;&lt;div style=&quot;padding:5px 0;font-size:11px;&quot;&gt;+ insertOnline(conn, sub: Subscription): int&lt;br&gt;+ findById(conn, subId: int): Subscription&lt;br&gt;+ findByOrderId(conn, orderId: int): Subscription&lt;br&gt;+ findForUpdate(conn, subId: int): Subscription&lt;br&gt;+ hasCheckIn(conn, subId: int): boolean&lt;br&gt;+ countStartDateChanges(conn, subId: int): int&lt;br&gt;+ existsLaterMembership(conn, customerId: int, subId: int, start: LocalDate): boolean&lt;br&gt;+ findLastMembershipEndExcluding(conn, cusId: int, today: LocalDate, subId: int): LocalDate&lt;br&gt;+ updateStartDate(conn, subId: int, newStart: LocalDate, newEnd: LocalDate): int&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=8;spacingRight=8;spacingTop=6;fillColor=#fff2cc;strokeColor=#d6b656;fontFamily=Consolas, Arial;" vertex="1" parent="1">
+          <mxGeometry x="1510" y="850" width="480" height="300" as="geometry" />
+        </mxCell>
+        <mxCell id="dao_txHistory" value="&lt;div style=&quot;text-align:center;font-weight:bold;padding-bottom:5px;border-bottom:1px solid #7f8c8d;&quot;&gt;&amp;laquo;DAO&amp;raquo;&lt;br&gt;&lt;b&gt;TransactionHistoryDAO&lt;/b&gt;&lt;/div&gt;&lt;div style=&quot;padding:5px 0;border-bottom:1px solid #7f8c8d;font-size:11px;&quot;&gt;- DBContext&lt;/div&gt;&lt;div style=&quot;padding:5px 0;font-size:11px;&quot;&gt;+ countCustomerTransactions(customerId: int, filter: String): int&lt;br&gt;+ findPagedCustomerTransactions(customerId: int, filter: String, offset: int, limit: int): List&amp;lt;TransactionHistoryItem&amp;gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=8;spacingRight=8;spacingTop=6;fillColor=#fff2cc;strokeColor=#d6b656;fontFamily=Consolas, Arial;" vertex="1" parent="1">
+          <mxGeometry x="2010" y="850" width="470" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="int_vnpay" value="&lt;div style=&quot;text-align:center;font-weight:bold;padding-bottom:5px;border-bottom:1px solid #7f8c8d;&quot;&gt;&amp;laquo;Integration&amp;raquo;&lt;br&gt;&lt;b&gt;VnPayClient&lt;/b&gt;&lt;/div&gt;&lt;div style=&quot;padding:5px 0;border-bottom:1px solid #7f8c8d;font-size:11px;&quot;&gt;- tmnCode: String&lt;br&gt;- hashSecret: String&lt;br&gt;- paymentUrl: String&lt;br&gt;- queryUrl: String&lt;/div&gt;&lt;div style=&quot;padding:5px 0;font-size:11px;&quot;&gt;+ buildPaymentUrl(orderCode: String, amount: long, orderInfo: String, ip: String, returnUrl: String): String&lt;br&gt;+ verifySignature(fields: Map&amp;lt;String, String&amp;gt;): boolean&lt;br&gt;+ verifyQuerySignature(fields: Map&amp;lt;String, String&amp;gt;): boolean&lt;br&gt;+ queryTransaction(txnRef: String, txDate: LocalDateTime): Map&amp;lt;String, String&amp;gt;&lt;br&gt;+ isPaymentSuccess(fields: Map&amp;lt;String, String&amp;gt;): boolean&lt;br&gt;+ getAmountVnd(fields: Map&amp;lt;String, String&amp;gt;): long&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=8;spacingRight=8;spacingTop=6;fillColor=#d0e0e3;strokeColor=#76a5af;fontFamily=Consolas, Arial;" vertex="1" parent="1">
+          <mxGeometry x="2500" y="850" width="470" height="260" as="geometry" />
+        </mxCell>
+        <mxCell id="rule_period" value="&lt;div style=&quot;text-align:center;font-weight:bold;padding-bottom:5px;border-bottom:1px solid #7f8c8d;&quot;&gt;&amp;laquo;Domain Rule&amp;raquo;&lt;br&gt;&lt;b&gt;PackagePeriod&lt;/b&gt;&lt;/div&gt;&lt;div style=&quot;padding:5px 0;border-bottom:1px solid #7f8c8d;font-size:11px;&quot;&gt;+ MAX_DAYS_AHEAD: int = 7&lt;/div&gt;&lt;div style=&quot;padding:5px 0;font-size:11px;&quot;&gt;+ earliestStart(today: LocalDate, lastEnd: LocalDate): LocalDate&lt;br&gt;+ latestStart(today: LocalDate): LocalDate&lt;br&gt;+ options(today: LocalDate, lastEnd: LocalDate): List&amp;lt;LocalDate&amp;gt;&lt;br&gt;+ optionsForPurchased(today: LocalDate, start: LocalDate, otherEnd: LocalDate): List&amp;lt;LocalDate&amp;gt;&lt;br&gt;+ lockReason(today, start, checkedIn, changesDone, hasLater): String&lt;br&gt;+ endDate(start: LocalDate, months: int): LocalDate&lt;br&gt;+ paymentDay(vnpPayDate: String, now: LocalDateTime): LocalDate&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=8;spacingRight=8;spacingTop=6;fillColor=#d0e0e3;strokeColor=#76a5af;fontFamily=Consolas, Arial;" vertex="1" parent="1">
+          <mxGeometry x="2990" y="850" width="410" height="260" as="geometry" />
+        </mxCell>
+        <mxCell id="ent_order" value="&lt;div style=&quot;text-align:center;font-weight:bold;padding-bottom:5px;border-bottom:1px solid #7f8c8d;&quot;&gt;&amp;laquo;Entity&amp;raquo;&lt;br&gt;&lt;b&gt;Order&lt;/b&gt;&lt;/div&gt;&lt;div style=&quot;padding:5px 0;border-bottom:1px solid #7f8c8d;font-size:11px;&quot;&gt;- orderId: int&lt;br&gt;- orderCode: String&lt;br&gt;- buyerAccountId: int&lt;br&gt;- holderCustomerId: int&lt;br&gt;- packageId: int&lt;br&gt;- originalAmount: long&lt;br&gt;- discountAmount: long&lt;br&gt;- finalAmount: long&lt;br&gt;- status: Order.Status&lt;br&gt;- channel: Order.Channel&lt;br&gt;- createdAt: LocalDateTime&lt;br&gt;- paidAt: LocalDateTime&lt;/div&gt;&lt;div style=&quot;padding:5px 0;font-size:11px;&quot;&gt;+ getOrderId(): int&lt;br&gt;+ getOrderCode(): String&lt;br&gt;+ getFinalAmount(): long&lt;br&gt;+ getStatus(): Order.Status&lt;br&gt;+ setStatus(status: Order.Status): void&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=8;spacingRight=8;spacingTop=6;fillColor=#d5e8d4;strokeColor=#82b366;fontFamily=Consolas, Arial;" vertex="1" parent="1">
+          <mxGeometry x="60" y="1200" width="360" height="310" as="geometry" />
+        </mxCell>
+        <mxCell id="ent_tx" value="&lt;div style=&quot;text-align:center;font-weight:bold;padding-bottom:5px;border-bottom:1px solid #7f8c8d;&quot;&gt;&amp;laquo;Entity&amp;raquo;&lt;br&gt;&lt;b&gt;Transaction&lt;/b&gt;&lt;/div&gt;&lt;div style=&quot;padding:5px 0;border-bottom:1px solid #7f8c8d;font-size:11px;&quot;&gt;- transactionId: int&lt;br&gt;- orderId: int&lt;br&gt;- gatewayReference: String&lt;br&gt;- gatewayTxNo: String&lt;br&gt;- amount: long&lt;br&gt;- paymentMethod: PaymentMethod&lt;br&gt;- status: Transaction.Status&lt;br&gt;- needsRefund: boolean&lt;br&gt;- refundedAt: LocalDateTime&lt;br&gt;- refundedByEmployeeId: Integer&lt;br&gt;- refundNote: String&lt;br&gt;- createdAt: LocalDateTime&lt;/div&gt;&lt;div style=&quot;padding:5px 0;font-size:11px;&quot;&gt;+ getTransactionId(): int&lt;br&gt;+ getGatewayReference(): String&lt;br&gt;+ getAmount(): long&lt;br&gt;+ isNeedsRefund(): boolean&lt;br&gt;+ setNeedsRefund(val: boolean): void&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=8;spacingRight=8;spacingTop=6;fillColor=#d5e8d4;strokeColor=#82b366;fontFamily=Consolas, Arial;" vertex="1" parent="1">
+          <mxGeometry x="440" y="1200" width="380" height="330" as="geometry" />
+        </mxCell>
+        <mxCell id="ent_sub" value="&lt;div style=&quot;text-align:center;font-weight:bold;padding-bottom:5px;border-bottom:1px solid #7f8c8d;&quot;&gt;&amp;laquo;Entity&amp;raquo;&lt;br&gt;&lt;b&gt;Subscription&lt;/b&gt;&lt;/div&gt;&lt;div style=&quot;padding:5px 0;border-bottom:1px solid #7f8c8d;font-size:11px;&quot;&gt;- subscriptionId: int&lt;br&gt;- customerId: int&lt;br&gt;- packageId: int&lt;br&gt;- orderId: int&lt;br&gt;- startDate: LocalDate&lt;br&gt;- endDate: LocalDate&lt;br&gt;- status: Subscription.Status&lt;br&gt;- subscriptionType: Subscription.Type&lt;/div&gt;&lt;div style=&quot;padding:5px 0;font-size:11px;&quot;&gt;+ getSubscriptionId(): int&lt;br&gt;+ getStartDate(): LocalDate&lt;br&gt;+ getEndDate(): LocalDate&lt;br&gt;+ setStartDate(date: LocalDate): void&lt;br&gt;+ setEndDate(date: LocalDate): void&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=8;spacingRight=8;spacingTop=6;fillColor=#d5e8d4;strokeColor=#82b366;fontFamily=Consolas, Arial;" vertex="1" parent="1">
+          <mxGeometry x="840" y="1200" width="350" height="280" as="geometry" />
+        </mxCell>
+        <mxCell id="ent_pkg" value="&lt;div style=&quot;text-align:center;font-weight:bold;padding-bottom:5px;border-bottom:1px solid #7f8c8d;&quot;&gt;&amp;laquo;Entity&amp;raquo;&lt;br&gt;&lt;b&gt;Package&lt;/b&gt;&lt;/div&gt;&lt;div style=&quot;padding:5px 0;border-bottom:1px solid #7f8c8d;font-size:11px;&quot;&gt;- packageId: int&lt;br&gt;- packageName: String&lt;br&gt;- packageType: Package.Type&lt;br&gt;- price: long&lt;br&gt;- durationMonths: int&lt;br&gt;- durationValue: int&lt;br&gt;- durationUnit: String&lt;br&gt;- isSoldOnline: boolean&lt;br&gt;- isActive: boolean&lt;/div&gt;&lt;div style=&quot;padding:5px 0;font-size:11px;&quot;&gt;+ getPackageId(): int&lt;br&gt;+ getPackageName(): String&lt;br&gt;+ getPrice(): long&lt;br&gt;+ getDurationMonths(): int&lt;br&gt;+ isSoldOnline(): boolean&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=8;spacingRight=8;spacingTop=6;fillColor=#d5e8d4;strokeColor=#82b366;fontFamily=Consolas, Arial;" vertex="1" parent="1">
+          <mxGeometry x="1210" y="1200" width="340" height="280" as="geometry" />
+        </mxCell>
+        <mxCell id="dto_card" value="&lt;div style=&quot;text-align:center;font-weight:bold;padding-bottom:5px;border-bottom:1px solid #7f8c8d;&quot;&gt;&amp;laquo;DTO&amp;raquo;&lt;br&gt;&lt;b&gt;CounterPackageCard&lt;/b&gt;&lt;/div&gt;&lt;div style=&quot;padding:5px 0;border-bottom:1px solid #7f8c8d;font-size:11px;&quot;&gt;- packageId: int&lt;br&gt;- packageName: String&lt;br&gt;- packageType: Package.Type&lt;br&gt;- price: long&lt;br&gt;- vatRate: int&lt;br&gt;- vatAmount: long&lt;br&gt;- preTaxAmount: long&lt;br&gt;- durationText: String&lt;br&gt;- durationMonths: int&lt;br&gt;- isContinueAllowed: boolean&lt;/div&gt;&lt;div style=&quot;padding:5px 0;font-size:11px;&quot;&gt;+ getPackageId(): int&lt;br&gt;+ getPackageName(): String&lt;br&gt;+ getPrice(): long&lt;br&gt;+ getDurationMonths(): int&lt;br&gt;+ isContinueAllowed(): boolean&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=8;spacingRight=8;spacingTop=6;fillColor=#ffe6cc;strokeColor=#d79b00;fontFamily=Consolas, Arial;" vertex="1" parent="1">
+          <mxGeometry x="1570" y="1200" width="350" height="290" as="geometry" />
+        </mxCell>
+        <mxCell id="dto_picker" value="&lt;div style=&quot;text-align:center;font-weight:bold;padding-bottom:5px;border-bottom:1px solid #7f8c8d;&quot;&gt;&amp;laquo;DTO&amp;raquo;&lt;br&gt;&lt;b&gt;StartDatePicker&lt;/b&gt;&lt;/div&gt;&lt;div style=&quot;padding:5px 0;border-bottom:1px solid #7f8c8d;font-size:11px;&quot;&gt;- subscriptionId: int&lt;br&gt;- currentStartDate: LocalDate&lt;br&gt;- currentEndDate: LocalDate&lt;br&gt;- today: LocalDate&lt;br&gt;- selectableDates: List&amp;lt;LocalDate&amp;gt;&lt;br&gt;- lockReason: String&lt;/div&gt;&lt;div style=&quot;padding:5px 0;font-size:11px;&quot;&gt;+ isLocked(): boolean&lt;br&gt;+ getSelectableDates(): List&amp;lt;LocalDate&amp;gt;&lt;br&gt;+ getLockReason(): String&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=8;spacingRight=8;spacingTop=6;fillColor=#ffe6cc;strokeColor=#d79b00;fontFamily=Consolas, Arial;" vertex="1" parent="1">
+          <mxGeometry x="1940" y="1200" width="340" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="dto_mgrTx" value="&lt;div style=&quot;text-align:center;font-weight:bold;padding-bottom:5px;border-bottom:1px solid #7f8c8d;&quot;&gt;&amp;laquo;DTO&amp;raquo;&lt;br&gt;&lt;b&gt;ManagerTransactionItem&lt;/b&gt;&lt;/div&gt;&lt;div style=&quot;padding:5px 0;border-bottom:1px solid #7f8c8d;font-size:11px;&quot;&gt;- transactionId: int&lt;br&gt;- orderId: int&lt;br&gt;- orderCode: String&lt;br&gt;- channel: String&lt;br&gt;- createdAt: LocalDateTime&lt;br&gt;- customerName: String&lt;br&gt;- customerPhone: String&lt;br&gt;- packageName: String&lt;br&gt;- amount: long&lt;br&gt;- paymentMethod: String&lt;br&gt;- orderStatus: String&lt;br&gt;- needsRefund: boolean&lt;br&gt;- refundedAt: LocalDateTime&lt;/div&gt;&lt;div style=&quot;padding:5px 0;font-size:11px;&quot;&gt;+ getTransactionId(): int&lt;br&gt;+ isNeedsRefund(): boolean&lt;br&gt;+ isRefunded(): boolean&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=8;spacingRight=8;spacingTop=6;fillColor=#ffe6cc;strokeColor=#d79b00;fontFamily=Consolas, Arial;" vertex="1" parent="1">
+          <mxGeometry x="2300" y="1200" width="360" height="320" as="geometry" />
+        </mxCell>
+        <mxCell id="dto_historyItem" value="&lt;div style=&quot;text-align:center;font-weight:bold;padding-bottom:5px;border-bottom:1px solid #7f8c8d;&quot;&gt;&amp;laquo;DTO&amp;raquo;&lt;br&gt;&lt;b&gt;TransactionHistoryItem&lt;/b&gt;&lt;/div&gt;&lt;div style=&quot;padding:5px 0;border-bottom:1px solid #7f8c8d;font-size:11px;&quot;&gt;- transactionId: int&lt;br&gt;- orderCode: String&lt;br&gt;- packageName: String&lt;br&gt;- durationText: String&lt;br&gt;- amount: long&lt;br&gt;- paymentMethod: String&lt;br&gt;- status: String&lt;br&gt;- createdAt: LocalDateTime&lt;br&gt;- needsRefund: boolean&lt;/div&gt;&lt;div style=&quot;padding:5px 0;font-size:11px;&quot;&gt;+ getOrderCode(): String&lt;br&gt;+ getAmount(): long&lt;br&gt;+ getStatus(): String&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=8;spacingRight=8;spacingTop=6;fillColor=#ffe6cc;strokeColor=#d79b00;fontFamily=Consolas, Arial;" vertex="1" parent="1">
+          <mxGeometry x="2680" y="1200" width="340" height="250" as="geometry" />
+        </mxCell>
+        <mxCell id="dto_receipt" value="&lt;div style=&quot;text-align:center;font-weight:bold;padding-bottom:5px;border-bottom:1px solid #7f8c8d;&quot;&gt;&amp;laquo;DTO&amp;raquo;&lt;br&gt;&lt;b&gt;CounterSaleReceipt&lt;/b&gt;&lt;/div&gt;&lt;div style=&quot;padding:5px 0;border-bottom:1px solid #7f8c8d;font-size:11px;&quot;&gt;- orderId: int&lt;br&gt;- orderCode: String&lt;br&gt;- customerName: String&lt;br&gt;- packageName: String&lt;br&gt;- finalAmount: long&lt;br&gt;- paymentMethod: String&lt;br&gt;- paidAt: LocalDateTime&lt;br&gt;- receptionistName: String&lt;/div&gt;&lt;div style=&quot;padding:5px 0;font-size:11px;&quot;&gt;+ getOrderCode(): String&lt;br&gt;+ getFinalAmount(): long&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=8;spacingRight=8;spacingTop=6;fillColor=#ffe6cc;strokeColor=#d79b00;fontFamily=Consolas, Arial;" vertex="1" parent="1">
+          <mxGeometry x="3040" y="1200" width="320" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" value="calls" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;fontColor=#2c3e50;strokeColor=#7f8c8d;strokeWidth=1;" edge="1" parent="1" source="s_checkout" target="svc_payment">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" value="calls" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;fontColor=#2c3e50;strokeColor=#7f8c8d;strokeWidth=1;" edge="1" parent="1" source="s_vnpayIpn" target="svc_callback">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" value="calls" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;fontColor=#2c3e50;strokeColor=#7f8c8d;strokeWidth=1;" edge="1" parent="1" source="s_vnpayReturn" target="svc_callback">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" value="calls" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;fontColor=#2c3e50;strokeColor=#7f8c8d;strokeWidth=1;" edge="1" parent="1" source="s_counterSale" target="svc_counterSale">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" value="calls" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;fontColor=#2c3e50;strokeColor=#7f8c8d;strokeWidth=1;" edge="1" parent="1" source="s_startDate" target="svc_startDate">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" value="calls" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;fontColor=#2c3e50;strokeColor=#7f8c8d;strokeWidth=1;" edge="1" parent="1" source="s_sysTx" target="svc_managerTx">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" value="calls" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;fontColor=#2c3e50;strokeColor=#7f8c8d;strokeWidth=1;" edge="1" parent="1" source="s_txHistory" target="svc_txHistory">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e10" value="uses" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;fontColor=#2c3e50;strokeColor=#7f8c8d;strokeWidth=1;" edge="1" parent="1" source="svc_payment" target="dao_order">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e11" value="uses" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;fontColor=#2c3e50;strokeColor=#7f8c8d;strokeWidth=1;" edge="1" parent="1" source="svc_payment" target="dao_tx">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e12" value="calls" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;fontColor=#2c3e50;strokeColor=#7f8c8d;strokeWidth=1;" edge="1" parent="1" source="svc_payment" target="int_vnpay">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e13" value="uses" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;fontColor=#2c3e50;strokeColor=#7f8c8d;strokeWidth=1;" edge="1" parent="1" source="svc_callback" target="dao_order">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e14" value="uses" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;fontColor=#2c3e50;strokeColor=#7f8c8d;strokeWidth=1;" edge="1" parent="1" source="svc_callback" target="dao_tx">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e15" value="uses" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;fontColor=#2c3e50;strokeColor=#7f8c8d;strokeWidth=1;" edge="1" parent="1" source="svc_callback" target="dao_subscription">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e16" value="verifies hash" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;fontColor=#2c3e50;strokeColor=#7f8c8d;strokeWidth=1;" edge="1" parent="1" source="svc_callback" target="int_vnpay">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e17" value="uses" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;fontColor=#2c3e50;strokeColor=#7f8c8d;strokeWidth=1;" edge="1" parent="1" source="svc_counterSale" target="dao_counterSale">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e18" value="uses" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;fontColor=#2c3e50;strokeColor=#7f8c8d;strokeWidth=1;" edge="1" parent="1" source="svc_startDate" target="dao_subscription">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e19" value="checks rules" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;fontColor=#2c3e50;strokeColor=#7f8c8d;strokeWidth=1;" edge="1" parent="1" source="svc_startDate" target="rule_period">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e20" value="uses" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;fontColor=#2c3e50;strokeColor=#7f8c8d;strokeWidth=1;" edge="1" parent="1" source="svc_managerTx" target="dao_tx">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e21" value="calls QueryDR" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;fontColor=#2c3e50;strokeColor=#7f8c8d;strokeWidth=1;" edge="1" parent="1" source="svc_managerTx" target="int_vnpay">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e22" value="uses" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;fontColor=#2c3e50;strokeColor=#7f8c8d;strokeWidth=1;" edge="1" parent="1" source="svc_txHistory" target="dao_txHistory">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e23" value="uses" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;fontColor=#2c3e50;strokeColor=#7f8c8d;strokeWidth=1;" edge="1" parent="1" source="svc_maintenance" target="dao_order">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e30" value="CRUD" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;fontColor=#2c3e50;strokeColor=#7f8c8d;strokeWidth=1;" edge="1" parent="1" source="dao_order" target="ent_order">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e31" value="CRUD" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;fontColor=#2c3e50;strokeColor=#7f8c8d;strokeWidth=1;" edge="1" parent="1" source="dao_tx" target="ent_tx">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e32" value="CRUD" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;fontColor=#2c3e50;strokeColor=#7f8c8d;strokeWidth=1;" edge="1" parent="1" source="dao_subscription" target="ent_sub">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e33" value="creates" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;fontColor=#2c3e50;strokeColor=#7f8c8d;strokeWidth=1;" edge="1" parent="1" source="dao_counterSale" target="ent_order">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e34" value="creates" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;fontColor=#2c3e50;strokeColor=#7f8c8d;strokeWidth=1;" edge="1" parent="1" source="dao_counterSale" target="ent_tx">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e35" value="creates" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;fontColor=#2c3e50;strokeColor=#7f8c8d;strokeWidth=1;" edge="1" parent="1" source="dao_counterSale" target="ent_sub">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e36" value="produces" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;fontColor=#2c3e50;strokeColor=#7f8c8d;strokeWidth=1;" edge="1" parent="1" source="dao_counterSale" target="dto_card">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e37" value="produces" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;fontColor=#2c3e50;strokeColor=#7f8c8d;strokeWidth=1;" edge="1" parent="1" source="dao_counterSale" target="dto_receipt">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e38" value="maps to" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;fontColor=#2c3e50;strokeColor=#7f8c8d;strokeWidth=1;" edge="1" parent="1" source="dao_tx" target="dto_mgrTx">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e39" value="maps to" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;fontColor=#2c3e50;strokeColor=#7f8c8d;strokeWidth=1;" edge="1" parent="1" source="dao_txHistory" target="dto_historyItem">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e40" value="builds" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;fontColor=#2c3e50;strokeColor=#7f8c8d;strokeWidth=1;" edge="1" parent="1" source="svc_startDate" target="dto_picker">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="page-seq-1" name="02. Sequence 1 - Mua hàng Online &amp;amp; VNPay IPN">
+    <mxGraphModel dx="1800" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2400" pageHeight="1800" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title_page-seq-1" value="&lt;b&gt;LUỒNG MUA GÓI ONLINE &amp;amp; THANH TOÁN QUA CỔNG VNPAY (IPN WEBHOOK)&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=18;fontColor=#1a252f;fillColor=#ecf0f1;strokeColor=#bdc3c7;" vertex="1" parent="1">
+          <mxGeometry x="60" y="20" width="2200" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="p_0" value="&lt;b&gt;Khách hàng&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#d5e8d4;strokeColor=#82b366;fontFamily=Arial;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="80" y="90" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="line_0" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#95a5a6;strokeWidth=1;" edge="1" parent="1" source="p_0">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="155" y="1270" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p_1" value="&lt;b&gt;Web Browser&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#d5e8d4;strokeColor=#82b366;fontFamily=Arial;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="313" y="90" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="line_1" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#95a5a6;strokeWidth=1;" edge="1" parent="1" source="p_1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="388" y="1270" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p_2" value="&lt;b&gt;CheckoutServlet&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#dae8fc;strokeColor=#6c8ebf;fontFamily=Arial;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="546" y="90" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="line_2" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#95a5a6;strokeWidth=1;" edge="1" parent="1" source="p_2">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="621" y="1270" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p_3" value="&lt;b&gt;PaymentService&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#e1d5e7;strokeColor=#9673a6;fontFamily=Arial;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="779" y="90" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="line_3" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#95a5a6;strokeWidth=1;" edge="1" parent="1" source="p_3">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="854" y="1270" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p_4" value="&lt;b&gt;VnPayClient&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#d5e8d4;strokeColor=#82b366;fontFamily=Arial;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1012" y="90" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="line_4" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#95a5a6;strokeWidth=1;" edge="1" parent="1" source="p_4">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="1087" y="1270" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p_5" value="&lt;b&gt;Cổng VNPay&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#d0e0e3;strokeColor=#76a5af;fontFamily=Arial;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1245" y="90" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="line_5" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#95a5a6;strokeWidth=1;" edge="1" parent="1" source="p_5">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="1320" y="1270" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p_6" value="&lt;b&gt;VnPayIpnServlet&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#dae8fc;strokeColor=#6c8ebf;fontFamily=Arial;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1478" y="90" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="line_6" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#95a5a6;strokeWidth=1;" edge="1" parent="1" source="p_6">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="1553" y="1270" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p_7" value="&lt;b&gt;PaymentCallbackService&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#e1d5e7;strokeColor=#9673a6;fontFamily=Arial;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1711" y="90" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="line_7" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#95a5a6;strokeWidth=1;" edge="1" parent="1" source="p_7">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="1786" y="1270" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p_8" value="&lt;b&gt;Database&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#fff2cc;strokeColor=#d6b656;fontFamily=Arial;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1944" y="90" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="line_8" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#95a5a6;strokeWidth=1;" edge="1" parent="1" source="p_8">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="2019" y="1270" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="step_0" value="1. Chọn gói &amp; Bấm Thanh toán VNPay" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="155" y="150" as="sourcePoint" />
+            <mxPoint x="388" y="150" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_1" value="2. POST /customer/checkout {packageId, voucher}" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="388" y="205" as="sourcePoint" />
+            <mxPoint x="621" y="205" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_2" value="3. createOnlineOrder(accountId, packageId)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="621" y="260" as="sourcePoint" />
+            <mxPoint x="854" y="260" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_3" value="4. INSERT Orders (PENDING), INSERT Transactions" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="854" y="315" as="sourcePoint" />
+            <mxPoint x="2019" y="315" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_4" value="5. buildPaymentUrl(HMAC-SHA512)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="854" y="370" as="sourcePoint" />
+            <mxPoint x="1087" y="370" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_5" value="6. Trả URL cổng thanh toán VNPay" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;dashed=1;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="854" y="425" as="sourcePoint" />
+            <mxPoint x="621" y="425" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_6" value="7. Redirect sang Cổng VNPay" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;dashed=1;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="621" y="480" as="sourcePoint" />
+            <mxPoint x="388" y="480" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_7" value="8. Khách quét mã VNPAY-QR / Thẻ NCB" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="388" y="535" as="sourcePoint" />
+            <mxPoint x="1320" y="535" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_8" value="9. Thanh toán thành công tại ngân hàng" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="1320" y="590" as="sourcePoint" />
+            <mxPoint x="155" y="590" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_9" value="[Server-to-Server] 10. POST /payment/vnpay-ipn (Webhook)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#c0392b;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="1320" y="645" as="sourcePoint" />
+            <mxPoint x="1553" y="645" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_10" value="11. processIpn(params)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="1553" y="700" as="sourcePoint" />
+            <mxPoint x="1786" y="700" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_11" value="12. verifySignature(params) &amp; Check sum" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="1786" y="755" as="sourcePoint" />
+            <mxPoint x="1087" y="755" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_12" value="13. [Hợp lệ] UPDATE Orders=PAID, Transactions=SUCCESS" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="1786" y="810" as="sourcePoint" />
+            <mxPoint x="2019" y="810" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_13" value="14. [Hợp lệ] INSERT Subscriptions (Active, StartDate)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="1786" y="865" as="sourcePoint" />
+            <mxPoint x="2019" y="865" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_14" value="15. Gửi thông báo MSG333 (Mua gói thành công)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="1786" y="920" as="sourcePoint" />
+            <mxPoint x="2019" y="920" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_15" value="16. Phản hồi IPN {&quot;RspCode&quot;:&quot;00&quot;,&quot;Message&quot;:&quot;Confirm Success&quot;}" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;dashed=1;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="1786" y="975" as="sourcePoint" />
+            <mxPoint x="1320" y="975" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_16" value="17. Redirect khách về /payment/vnpay-return" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;dashed=1;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="1320" y="1030" as="sourcePoint" />
+            <mxPoint x="388" y="1030" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_17" value="18. Hiển thị màn hình Kết quả mua gói thành công" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="388" y="1085" as="sourcePoint" />
+            <mxPoint x="155" y="1085" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="page-seq-2" name="03. Sequence 2 - Bán hàng tại Quầy (Counter Sale)">
+    <mxGraphModel dx="1800" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2400" pageHeight="1800" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title_page-seq-2" value="&lt;b&gt;LUỒNG LỄ TÂN BÁN GÓI TẠI QUẦY (SCREEN #37 · UC-20/UC-21)&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=18;fontColor=#1a252f;fillColor=#ecf0f1;strokeColor=#bdc3c7;" vertex="1" parent="1">
+          <mxGeometry x="60" y="20" width="2200" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="p_0" value="&lt;b&gt;Lễ tân&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#d5e8d4;strokeColor=#82b366;fontFamily=Arial;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="80" y="90" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="line_0" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#95a5a6;strokeWidth=1;" edge="1" parent="1" source="p_0">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="155" y="1450" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p_1" value="&lt;b&gt;Khách tại quầy&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#d5e8d4;strokeColor=#82b366;fontFamily=Arial;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="342" y="90" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="line_1" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#95a5a6;strokeWidth=1;" edge="1" parent="1" source="p_1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="417" y="1450" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p_2" value="&lt;b&gt;Counter UI&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#d5e8d4;strokeColor=#82b366;fontFamily=Arial;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="604" y="90" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="line_2" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#95a5a6;strokeWidth=1;" edge="1" parent="1" source="p_2">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="679" y="1450" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p_3" value="&lt;b&gt;CounterSaleServlet&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#dae8fc;strokeColor=#6c8ebf;fontFamily=Arial;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="866" y="90" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="line_3" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#95a5a6;strokeWidth=1;" edge="1" parent="1" source="p_3">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="941" y="1450" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p_4" value="&lt;b&gt;CounterSaleService&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#e1d5e7;strokeColor=#9673a6;fontFamily=Arial;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1128" y="90" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="line_4" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#95a5a6;strokeWidth=1;" edge="1" parent="1" source="p_4">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="1203" y="1450" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p_5" value="&lt;b&gt;PackagePeriod&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#d5e8d4;strokeColor=#82b366;fontFamily=Arial;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1390" y="90" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="line_5" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#95a5a6;strokeWidth=1;" edge="1" parent="1" source="p_5">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="1465" y="1450" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p_6" value="&lt;b&gt;CounterSaleDAO&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#fff2cc;strokeColor=#d6b656;fontFamily=Arial;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1652" y="90" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="line_6" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#95a5a6;strokeWidth=1;" edge="1" parent="1" source="p_6">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="1727" y="1450" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p_7" value="&lt;b&gt;Database&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#fff2cc;strokeColor=#d6b656;fontFamily=Arial;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1914" y="90" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="line_7" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#95a5a6;strokeWidth=1;" edge="1" parent="1" source="p_7">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="1989" y="1450" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="step_0" value="1. Mở màn Bán gói tại quầy (/receptionist/sales)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="155" y="150" as="sourcePoint" />
+            <mxPoint x="679" y="150" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_1" value="2. GET /receptionist/sales" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="679" y="205" as="sourcePoint" />
+            <mxPoint x="941" y="205" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_2" value="3. getPackageView(accountId)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="941" y="260" as="sourcePoint" />
+            <mxPoint x="1203" y="260" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_3" value="4. Kiểm tra ca trực đang mở (CBR-105)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="1203" y="315" as="sourcePoint" />
+            <mxPoint x="1727" y="315" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_4" value="5. [Ca mở] Lấy danh sách gói tập Active" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="1203" y="370" as="sourcePoint" />
+            <mxPoint x="1727" y="370" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_5" value="6. Render màn chọn gói counter-sale-packages.jsp" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;dashed=1;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="941" y="425" as="sourcePoint" />
+            <mxPoint x="679" y="425" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_6" value="7. Bấm Chọn gói này (?package=ID)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="155" y="480" as="sourcePoint" />
+            <mxPoint x="679" y="480" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_7" value="8. Gõ SĐT tìm kiếm khách hàng (AJAX)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="155" y="535" as="sourcePoint" />
+            <mxPoint x="679" y="535" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_8" value="9. searchCustomers(keyword)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="941" y="590" as="sourcePoint" />
+            <mxPoint x="1203" y="590" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_9" value="10. SELECT Persons, Customers" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="1203" y="645" as="sourcePoint" />
+            <mxPoint x="1989" y="645" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_10" value="11. [Khách mới] Popup Tạo nhanh khách hàng (MSG122)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="155" y="700" as="sourcePoint" />
+            <mxPoint x="679" y="700" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_11" value="12. Chọn khách hàng (?package=ID&amp;customer=ID)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="155" y="755" as="sourcePoint" />
+            <mxPoint x="679" y="755" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_12" value="13. Tính ngày bắt đầu (hôm nay / nối tiếp)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="941" y="810" as="sourcePoint" />
+            <mxPoint x="1465" y="810" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_13" value="14. Render màn xác nhận &amp; thu tiền counter-sale-next.jsp" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;dashed=1;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="941" y="865" as="sourcePoint" />
+            <mxPoint x="679" y="865" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_14" value="15. Khách chọn trả Tiền mặt hoặc Chuyển khoản QR" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="417" y="920" as="sourcePoint" />
+            <mxPoint x="155" y="920" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_15" value="16. Chọn hình thức trả &amp; Bấm Xác nhận thu tiền" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="155" y="975" as="sourcePoint" />
+            <mxPoint x="679" y="975" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_16" value="17. POST /receptionist/sales {pkgId, cusId, startDate, method...}" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="679" y="1030" as="sourcePoint" />
+            <mxPoint x="941" y="1030" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_17" value="18. checkout(accountId, input)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="941" y="1085" as="sourcePoint" />
+            <mxPoint x="1203" y="1085" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_18" value="19. [ACID] INSERT Orders (PAID, COUNTER), Transactions, Subscriptions" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#c0392b;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="1203" y="1140" as="sourcePoint" />
+            <mxPoint x="1989" y="1140" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_19" value="20. Ghi AuditLog Lễ tân thu tiền tại quầy" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="1203" y="1195" as="sourcePoint" />
+            <mxPoint x="1989" y="1195" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_20" value="21. Hiển thị biên lai thu tiền counter-sale-receipt.jsp" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="941" y="1250" as="sourcePoint" />
+            <mxPoint x="679" y="1250" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="page-seq-3" name="04. Sequence 3 - Đổi ngày kích hoạt (CBR-119)">
+    <mxGraphModel dx="1800" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2400" pageHeight="1800" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title_page-seq-3" value="&lt;b&gt;LUỒNG ĐỔI NGÀY BẮT ĐẦU GÓI TẬP (RULE ENGINE CBR-119)&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=18;fontColor=#1a252f;fillColor=#ecf0f1;strokeColor=#bdc3c7;" vertex="1" parent="1">
+          <mxGeometry x="60" y="20" width="2200" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="p_0" value="&lt;b&gt;Khách hàng&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#d5e8d4;strokeColor=#82b366;fontFamily=Arial;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="80" y="90" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="line_0" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#95a5a6;strokeWidth=1;" edge="1" parent="1" source="p_0">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="155" y="1150" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p_1" value="&lt;b&gt;Web Browser&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#d5e8d4;strokeColor=#82b366;fontFamily=Arial;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="380" y="90" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="line_1" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#95a5a6;strokeWidth=1;" edge="1" parent="1" source="p_1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="455" y="1150" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p_2" value="&lt;b&gt;SubscriptionStartDateServlet&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#dae8fc;strokeColor=#6c8ebf;fontFamily=Arial;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="680" y="90" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="line_2" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#95a5a6;strokeWidth=1;" edge="1" parent="1" source="p_2">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="755" y="1150" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p_3" value="&lt;b&gt;SubscriptionStartDateService&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#e1d5e7;strokeColor=#9673a6;fontFamily=Arial;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="980" y="90" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="line_3" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#95a5a6;strokeWidth=1;" edge="1" parent="1" source="p_3">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="1055" y="1150" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p_4" value="&lt;b&gt;PackagePeriod&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#d5e8d4;strokeColor=#82b366;fontFamily=Arial;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1280" y="90" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="line_4" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#95a5a6;strokeWidth=1;" edge="1" parent="1" source="p_4">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="1355" y="1150" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p_5" value="&lt;b&gt;SubscriptionDAO&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#fff2cc;strokeColor=#d6b656;fontFamily=Arial;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1580" y="90" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="line_5" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#95a5a6;strokeWidth=1;" edge="1" parent="1" source="p_5">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="1655" y="1150" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p_6" value="&lt;b&gt;Database&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#fff2cc;strokeColor=#d6b656;fontFamily=Arial;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1880" y="90" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="line_6" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#95a5a6;strokeWidth=1;" edge="1" parent="1" source="p_6">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="1955" y="1150" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="step_0" value="1. Bấm Đổi ngày bắt đầu tại Gói tập của tôi" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="155" y="150" as="sourcePoint" />
+            <mxPoint x="455" y="150" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_1" value="2. GET /customer/subscription/start-date?package=ID" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="455" y="205" as="sourcePoint" />
+            <mxPoint x="755" y="205" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_2" value="3. getStartDatePicker(accountId, packageId)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="755" y="260" as="sourcePoint" />
+            <mxPoint x="1055" y="260" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_3" value="4. Lấy Subscription, lượt check-in, số lần đã đổi ngày" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="1055" y="315" as="sourcePoint" />
+            <mxPoint x="1655" y="315" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_4" value="5. lockReason(today, start, checkedIn, changesDone, hasLater)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="1055" y="370" as="sourcePoint" />
+            <mxPoint x="1355" y="370" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_5" value="6. [Đã đổi 1 lần/Check-in] Trả lý do khóa (MSG329, MSG330...)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;dashed=1;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="1355" y="425" as="sourcePoint" />
+            <mxPoint x="1055" y="425" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_6" value="7. [Đủ điều kiện] optionsForPurchased(hôm nay -&gt; +7 ngày)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="1055" y="480" as="sourcePoint" />
+            <mxPoint x="1355" y="480" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_7" value="8. Trả Picker kèm danh sách ngày hợp lệ" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;dashed=1;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="1055" y="535" as="sourcePoint" />
+            <mxPoint x="755" y="535" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_8" value="9. Hiển thị Dropdown chọn ngày bắt đầu" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="755" y="590" as="sourcePoint" />
+            <mxPoint x="455" y="590" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_9" value="10. Chọn ngày bắt đầu mới &amp; Bấm Lưu" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="155" y="645" as="sourcePoint" />
+            <mxPoint x="455" y="645" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_10" value="11. POST /customer/subscription/start-date {startDate}" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="455" y="700" as="sourcePoint" />
+            <mxPoint x="755" y="700" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_11" value="12. changeStartDate(chosenDate)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="755" y="755" as="sourcePoint" />
+            <mxPoint x="1055" y="755" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_12" value="13. Tính ngày hết hạn mới: endDate(chosen, durationMonths)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="1055" y="810" as="sourcePoint" />
+            <mxPoint x="1355" y="810" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_13" value="14. UPDATE Subscriptions SET StartDate, EndDate" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="1055" y="865" as="sourcePoint" />
+            <mxPoint x="1955" y="865" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_14" value="15. Ghi AuditLog đổi ngày bắt đầu" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="1055" y="920" as="sourcePoint" />
+            <mxPoint x="1955" y="920" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_15" value="16. Toast xanh MSG187: Đã lưu ngày bắt đầu" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;dashed=1;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="755" y="975" as="sourcePoint" />
+            <mxPoint x="455" y="975" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="page-seq-4" name="05. Sequence 4 - Manager Giao dịch &amp;amp; QueryDR">
+    <mxGraphModel dx="1800" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2400" pageHeight="1800" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title_page-seq-4" value="&lt;b&gt;LUỒNG QUẢN LÝ GIAO DỊCH, TRA CỨU VNPAY (QUERYDR) &amp;amp; HOÀN TIỀN OFFLINE (BR-81, SCREEN #43)&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=18;fontColor=#1a252f;fillColor=#ecf0f1;strokeColor=#bdc3c7;" vertex="1" parent="1">
+          <mxGeometry x="60" y="20" width="2200" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="p_0" value="&lt;b&gt;Quản lý (Manager)&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#d5e8d4;strokeColor=#82b366;fontFamily=Arial;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="80" y="90" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="line_0" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#95a5a6;strokeWidth=1;" edge="1" parent="1" source="p_0">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="155" y="1330" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p_1" value="&lt;b&gt;Manager Portal&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#d5e8d4;strokeColor=#82b366;fontFamily=Arial;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="380" y="90" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="line_1" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#95a5a6;strokeWidth=1;" edge="1" parent="1" source="p_1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="455" y="1330" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p_2" value="&lt;b&gt;SystemTransactionServlet&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#dae8fc;strokeColor=#6c8ebf;fontFamily=Arial;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="680" y="90" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="line_2" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#95a5a6;strokeWidth=1;" edge="1" parent="1" source="p_2">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="755" y="1330" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p_3" value="&lt;b&gt;ManagerTransactionService&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#e1d5e7;strokeColor=#9673a6;fontFamily=Arial;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="980" y="90" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="line_3" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#95a5a6;strokeWidth=1;" edge="1" parent="1" source="p_3">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="1055" y="1330" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p_4" value="&lt;b&gt;VnPayClient&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#d5e8d4;strokeColor=#82b366;fontFamily=Arial;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1280" y="90" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="line_4" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#95a5a6;strokeWidth=1;" edge="1" parent="1" source="p_4">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="1355" y="1330" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p_5" value="&lt;b&gt;Cổng VNPay&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#d0e0e3;strokeColor=#76a5af;fontFamily=Arial;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1580" y="90" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="line_5" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#95a5a6;strokeWidth=1;" edge="1" parent="1" source="p_5">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="1655" y="1330" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p_6" value="&lt;b&gt;Database&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#fff2cc;strokeColor=#d6b656;fontFamily=Arial;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1880" y="90" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="line_6" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#95a5a6;strokeWidth=1;" edge="1" parent="1" source="p_6">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="1955" y="1330" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="step_0" value="1. Mở màn Giao dịch hệ thống (/manager/transactions)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="155" y="150" as="sourcePoint" />
+            <mxPoint x="455" y="150" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_1" value="2. GET /manager/transactions?tab=orders" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="455" y="205" as="sourcePoint" />
+            <mxPoint x="755" y="205" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_2" value="3. findManagerTransactions(filter) &amp; countPendingRefunds()" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="755" y="260" as="sourcePoint" />
+            <mxPoint x="1055" y="260" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_3" value="4. SELECT Transactions JOIN Orders (Lọc, phân trang, NeedsRefund)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="1055" y="315" as="sourcePoint" />
+            <mxPoint x="1955" y="315" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_4" value="5. Hiển thị bảng giao dịch kèm badge Cần hoàn tiền" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="755" y="370" as="sourcePoint" />
+            <mxPoint x="455" y="370" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_5" value="6. [Tra cứu] Bấm Tra cứu tại đơn Online" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="155" y="425" as="sourcePoint" />
+            <mxPoint x="455" y="425" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_6" value="7. GET ?action=lookup&amp;transactionId=... (AJAX)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="455" y="480" as="sourcePoint" />
+            <mxPoint x="755" y="480" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_7" value="8. lookupGateway(transactionId)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="755" y="535" as="sourcePoint" />
+            <mxPoint x="1055" y="535" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_8" value="9. queryTransaction(txnRef, createdAt) (HMAC-SHA512)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="1055" y="590" as="sourcePoint" />
+            <mxPoint x="1355" y="590" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_9" value="10. POST /merchant_webapi/api/transaction (querydr)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="1355" y="645" as="sourcePoint" />
+            <mxPoint x="1655" y="645" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_10" value="11. [VNPay trả mã 00] Trả số tiền thực thu, ngân hàng, thời gian" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;dashed=1;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="1655" y="700" as="sourcePoint" />
+            <mxPoint x="1055" y="700" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_11" value="12. [VNPay lỗi 99/Mất mạng] fail(MSG325_VNPAY_LOOKUP_FAILED)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="1655" y="755" as="sourcePoint" />
+            <mxPoint x="1055" y="755" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_12" value="13. Tự điền số tiền thực thu vào ô Hoàn tiền (hoặc Toast đỏ MSG325)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;dashed=1;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="755" y="810" as="sourcePoint" />
+            <mxPoint x="455" y="810" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_13" value="14. [Hoàn tiền] Nhập ghi chú &amp; Bấm Xác nhận hoàn tiền (BR-81)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="155" y="865" as="sourcePoint" />
+            <mxPoint x="455" y="865" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_14" value="15. POST /manager/transactions {action=refund, txId, note}" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="455" y="920" as="sourcePoint" />
+            <mxPoint x="755" y="920" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_15" value="16. recordRefund(managerAccountId, txId, refundNote)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="755" y="975" as="sourcePoint" />
+            <mxPoint x="1055" y="975" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_16" value="17. UPDATE Transactions SET NeedsRefund=0, RefundedAt=NOW(), RefundedBy=EmpId" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="1055" y="1030" as="sourcePoint" />
+            <mxPoint x="1955" y="1030" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_17" value="18. INSERT AuditLog (Xác nhận hoàn tiền ngoài hệ thống)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="1055" y="1085" as="sourcePoint" />
+            <mxPoint x="1955" y="1085" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_18" value="19. Toast xanh MSG174: Đã xác nhận hoàn tiền thành công" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;dashed=1;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="755" y="1140" as="sourcePoint" />
+            <mxPoint x="455" y="1140" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="page-seq-5" name="06. Sequence 5 - Lịch sử giao dịch Khách hàng">
+    <mxGraphModel dx="1800" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2400" pageHeight="1800" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title_page-seq-5" value="&lt;b&gt;LUỒNG KHÁCH HÀNG XEM LỊCH SỬ THANH TOÁN CÁ NHÂN (UC-36)&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=18;fontColor=#1a252f;fillColor=#ecf0f1;strokeColor=#bdc3c7;" vertex="1" parent="1">
+          <mxGeometry x="60" y="20" width="2200" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="p_0" value="&lt;b&gt;Khách hàng&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#d5e8d4;strokeColor=#82b366;fontFamily=Arial;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="80" y="90" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="line_0" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#95a5a6;strokeWidth=1;" edge="1" parent="1" source="p_0">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="155" y="730" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p_1" value="&lt;b&gt;Web Browser&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#d5e8d4;strokeColor=#82b366;fontFamily=Arial;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="430" y="90" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="line_1" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#95a5a6;strokeWidth=1;" edge="1" parent="1" source="p_1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="505" y="730" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p_2" value="&lt;b&gt;TransactionHistoryServlet&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#dae8fc;strokeColor=#6c8ebf;fontFamily=Arial;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="780" y="90" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="line_2" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#95a5a6;strokeWidth=1;" edge="1" parent="1" source="p_2">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="855" y="730" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p_3" value="&lt;b&gt;TransactionHistoryService&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#e1d5e7;strokeColor=#9673a6;fontFamily=Arial;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1130" y="90" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="line_3" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#95a5a6;strokeWidth=1;" edge="1" parent="1" source="p_3">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="1205" y="730" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p_4" value="&lt;b&gt;TransactionHistoryDAO&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#fff2cc;strokeColor=#d6b656;fontFamily=Arial;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1480" y="90" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="line_4" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#95a5a6;strokeWidth=1;" edge="1" parent="1" source="p_4">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="1555" y="730" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="p_5" value="&lt;b&gt;Database&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#fff2cc;strokeColor=#d6b656;fontFamily=Arial;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1830" y="90" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="line_5" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#95a5a6;strokeWidth=1;" edge="1" parent="1" source="p_5">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="1905" y="730" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="step_0" value="1. Đăng nhập &amp; Mở menu Lịch sử giao dịch" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="155" y="150" as="sourcePoint" />
+            <mxPoint x="505" y="150" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_1" value="2. GET /customer/history?page=1&amp;status=all" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="505" y="205" as="sourcePoint" />
+            <mxPoint x="855" y="205" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_2" value="3. getCustomerHistory(customerId, filter, page, size)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="855" y="260" as="sourcePoint" />
+            <mxPoint x="1205" y="260" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_3" value="4. countCustomerTransactions() &amp; findPagedCustomerTransactions()" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="1205" y="315" as="sourcePoint" />
+            <mxPoint x="1555" y="315" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_4" value="5. SELECT * FROM Transactions JOIN Orders WHERE CustomerId = ?" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="1555" y="370" as="sourcePoint" />
+            <mxPoint x="1905" y="370" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_5" value="6. Trả danh sách TransactionHistoryItem &amp; PageResult" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;dashed=1;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="1555" y="425" as="sourcePoint" />
+            <mxPoint x="1205" y="425" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_6" value="7. ServiceResult.ok(PageResult)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="1205" y="480" as="sourcePoint" />
+            <mxPoint x="855" y="480" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_7" value="8. Render transaction-history.jsp (Mã đơn, Gói tập, Số tiền, Trạng thái)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;dashed=1;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="855" y="535" as="sourcePoint" />
+            <mxPoint x="505" y="535" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step_8" value="9. Khách xem chi tiết biên lai &amp; thời hạn gói tập" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeWidth=1.5;fontSize=11;strokeColor=#2980b9;" edge="1" parent="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="505" y="590" as="sourcePoint" />
+            <mxPoint x="155" y="590" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

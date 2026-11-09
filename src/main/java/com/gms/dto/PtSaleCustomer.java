@@ -3,55 +3,53 @@ package com.gms.dto;
 import java.time.LocalDate;
 
 /**
- * MỘT KHÁCH trên màn Bán gói PT (người đứng tên, hoặc người tập cùng của gói đôi).
- *
- *   Ai tạo?   PtSaleDAO.findCustomer (tìm theo mã KH-xxxx hoặc số điện thoại).
- *   Ai xét?   PtSaleService.whyCannotBuy: còn gói thành viên dùng được, đủ 10 tuổi, không phải chính lễ tân / PT.
- *   Ai in?    pt-sales.jsp thẻ khách (tên, mã, SĐT, gói thành viên tới ngày nào, lý do không bán được).
+ * 1 KHÁCH trên màn Bán gói PT — DAO tạo: PtSaleDAO.searchCustomers / findCustomer; Service điền blockReason (whyCannotBuy).
+ * Hiện ở: ô gợi ý tìm khách (pt-sales.js nhận JSON), danh sách kết quả, thẻ khách _sale-customer.jspf (biến cust).
  */
 public class PtSaleCustomer {
+    public PtSaleCustomer(int customerId, int personId, String customerCode, String fullName,
+            String phone, LocalDate dateOfBirth, LocalDate membershipEnd, boolean frozen) {
+        this.customerId = customerId;
+        this.personId = personId;
+        this.customerCode = customerCode;
+        this.fullName = fullName;
+        this.phone = phone;
+        this.dateOfBirth = dateOfBirth;
+        this.membershipEnd = membershipEnd;
+        this.frozen = frozen;
+    }
 
-    private int customerId;
-    private int personId;              // so với lễ tân / PT: không bán cho chính mình, không tự làm PT của mình
-    private String customerCode;       // KH-0001
-    private String fullName;
-    private String phone;              // hồ sơ phụ thuộc có thể null
-    private LocalDate dateOfBirth;
-    private String customerType;       // Self | Dependent
-    private LocalDate membershipEnd;   // ngày cuối của gói thành viên đang dùng được; null = không có
-    private boolean frozen;            // hôm nay đang bảo lưu → không tính là dùng được (CBR-59)
-    private String blockReason;        // Service điền: null = bán được
+    // ===== IN RA MÀN =====
+    // ← Persons.FullName → tên in đậm, chữ cái avatar
+    private final String fullName;
+    // ← Customers.CustomerCode → "KH-2010"
+    private final String customerCode;
+    // ← Persons.Phone (null = hồ sơ phụ thuộc) → SĐT
+    private final String phone;
+    // ← Persons.DateOfBirth → ngày sinh trên thẻ, tính tuổi (whyCannotBuy)
+    private final LocalDate dateOfBirth;
+    // ← MAX(EndDate) gói Membership phủ hôm nay → "Gói thành viên tới dd/MM/yyyy" (null = không có gói)
+    private final LocalDate membershipEnd;
+    // ← whyCannotBuy: null = bán được (thẻ xanh) · có chữ = lý do đỏ, khóa nút Giữ lịch
+    private String blockReason;
+
+    // ===== DÙNG ĐỂ KIỂM (không in) =====
+    // ← Customers.CustomerId → ?customer=<id>
+    private final int customerId;
+    // ← Persons.PersonId → chặn lễ tân tự bán cho mình, chặn PT trùng khách
+    private final int personId;
+    // ← có FreezeRecords phủ hôm nay → "Đang bảo lưu gói thành viên"
+    private final boolean frozen;
 
     public int getCustomerId() { return customerId; }
-    public void setCustomerId(int customerId) { this.customerId = customerId; }
-
     public int getPersonId() { return personId; }
-    public void setPersonId(int personId) { this.personId = personId; }
-
     public String getCustomerCode() { return customerCode; }
-    public void setCustomerCode(String customerCode) { this.customerCode = customerCode; }
-
     public String getFullName() { return fullName; }
-    public void setFullName(String fullName) { this.fullName = fullName; }
-
     public String getPhone() { return phone; }
-    public void setPhone(String phone) { this.phone = phone; }
-
     public LocalDate getDateOfBirth() { return dateOfBirth; }
-    public void setDateOfBirth(LocalDate dateOfBirth) { this.dateOfBirth = dateOfBirth; }
-
-    public String getCustomerType() { return customerType; }
-    public void setCustomerType(String customerType) { this.customerType = customerType; }
-
     public LocalDate getMembershipEnd() { return membershipEnd; }
-    public void setMembershipEnd(LocalDate membershipEnd) { this.membershipEnd = membershipEnd; }
-
     public boolean isFrozen() { return frozen; }
-    public void setFrozen(boolean frozen) { this.frozen = frozen; }
 
     public String getBlockReason() { return blockReason; }
     public void setBlockReason(String blockReason) { this.blockReason = blockReason; }
-
-    /** JSP viết ${c.dependent}: hồ sơ phụ thuộc (không có SĐT riêng). */
-    public boolean isDependent() { return "Dependent".equals(customerType); }
 }

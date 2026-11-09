@@ -52,6 +52,7 @@ public class LeaveRequestGroupView {
         return false;
     }
     /** Khóa DOM gồm chủ đơn và UUID đầy đủ, tránh nhầm hai đợt có cùng mã ngắn. */
+    // GETTER TỰ TÍNH — không có field/setter "key"; = employeeId + "-" + leaveGroupId của đơn đầu; JSP: manager/leave-request-table.jspf:34 …
     public String getKey() {
         return requests.get(0).getEmployeeId() + "-" + requests.get(0).getLeaveGroupId();
     }
@@ -59,11 +60,13 @@ public class LeaveRequestGroupView {
     public String getCode() {
         return code;
     }
+    // GETTER TỰ TÍNH — không có field/setter "linked"; = code khác null; JSP: staff/leave-request-form.jsp:233
     public boolean isLinked() {
         return code != null;
     }
 
     /** Tổng các phần còn tồn tại; rút Pending không làm thay đổi phần đã được duyệt. */
+    // GETTER TỰ TÍNH — không có field/setter "totalDays"; = cộng days của mọi đơn trong nhóm; JSP: manager/leave-request-review.jsp:133 …
     public BigDecimal getTotalDays() {
         BigDecimal total = BigDecimal.ZERO;
         for (LeaveRequest request : requests) {
@@ -72,6 +75,7 @@ public class LeaveRequestGroupView {
         return total;
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "fromDate"; = fromDate sớm nhất trong nhóm; JSP: manager/leave-request-table.jspf:53
     public java.time.LocalDate getFromDate() {
         java.time.LocalDate date = requests.get(0).getFromDate();
         for (LeaveRequest request : requests) {
@@ -82,6 +86,7 @@ public class LeaveRequestGroupView {
         return date;
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "toDate"; = toDate muộn nhất trong nhóm; JSP: manager/leave-request-table.jspf:53
     public java.time.LocalDate getToDate() {
         java.time.LocalDate date = requests.get(0).getToDate();
         for (LeaveRequest request : requests) {
@@ -92,6 +97,7 @@ public class LeaveRequestGroupView {
         return date;
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "approvedDays"; = cộng days của các đơn đã duyệt; JSP: manager/leave-request-review.jsp:133 …
     public BigDecimal getApprovedDays() {
         BigDecimal total = BigDecimal.ZERO;
         for (LeaveRequest request : requests) {

@@ -24,6 +24,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
@@ -43,6 +44,9 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  * System_Test_MBF02_MBF06.xlsx (MBF-02 Bảo lưu gói tập & MBF-06 Ca làm việc)
  * trên CSDL thực tế.
  */
+// Test hệ thống chạy trên DB GMS THẬT (đọc + ghi dữ liệu thử) và phụ thuộc dữ liệu / ngày trên máy người viết.
+// Không chạy khi build thường; chạy riêng: mvn test -Dgroups=system-db -DexcludedGroups=
+@Tag("system-db")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class SystemTestMBF02MBF06Test {
 

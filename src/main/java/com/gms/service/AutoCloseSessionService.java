@@ -13,81 +13,43 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * SERVICE CỦA JOB-04 — TỰ CHỐT BUỔI PT ĐÃ QUA NGÀY MÀ CÒN "Scheduled".
- *
- * NGHIỆP VỤ
- *   PT không điểm danh bằng tay. Sau khi ngày tập kết thúc, hệ thống tự chốt mỗi buổi còn Scheduled thành:
- *     Missed / MembershipFrozen   cả buổi không ai vào được gym, và có người đang bảo lưu
- *     Missed / NoMembership       cả buổi không ai vào được gym, không ai bảo lưu
- *     CheckedIn                   có người vào được gym VÀ có check-in trong ngày tập
- *     Missed / NoCheckIn          có người vào được gym nhưng không ai check-in
- *   "Vào được gym" = có Membership HOẶC vé ngày (DayPass) phủ ngày tập, VÀ không bảo lưu ngày đó.
- *
- * AI GỌI?  BackgroundJobScheduler (lượt 00:05 mỗi ngày) → AutoCloseUnmarkedSessionsJob.run() → runJob().
- *
- * CÁC NHÓM HÀM
- *   1. CHẠY JOB         runJob(), runJob(today)
- *                         ├─ B1 findOverdueSessionIds   lấy danh sách mã buổi cần chốt
- *                         └─ B2 closeOneSession         chốt từng buổi, mỗi buổi 1 transaction
- *   2. QUYẾT ĐỊNH KẾT QUẢ evaluate(data)               luật chọn Status + MissedReason (không đụng DB)
- *   3. DÙNG CHUNG       openConnection()
- *
- * Service giữ quy tắc nghiệp vụ; AutoCloseSessionDAO chỉ đọc / ghi SQL.
- *
- * ❓ VẤN ĐÁP (mỗi câu kèm luồng file để mở theo khi trả lời):
- *   1) JOB-04 làm gì? → mỗi ngày 00:05 tự chốt các buổi PT đã QUA ngày mà còn "Scheduled" (PT không điểm danh tay).
- *      File: job/BackgroundJobScheduler.java → job/AutoCloseUnmarkedSessionsJob.java → service/AutoCloseSessionService.java.
- *   2) Chốt ra kết quả gì? → evaluate(): vào được gym + có check-in → CheckedIn; vào được nhưng không check-in → Missed/NoCheckIn;
- *      không vào được gym → Missed/NoMembership (hoặc MembershipFrozen nếu đang bảo lưu).
- *      File: service/AutoCloseSessionService.java (evaluate) → dao/AutoCloseSessionDAO.java (đọc/ghi bảng Sessions).
- *   3) Mỗi buổi chốt có an toàn không? → mỗi buổi 1 TRANSACTION (closeOneSession): đổi trạng thái + ghi AuditLog; lỗi giữa chừng thì rollback.
- *      File: service/AutoCloseSessionService.java (closeOneSession) → service/AuditLogService.java + dao/AutoCloseSessionDAO.java.
+ * JOB-04 — chốt các buổi PT đã qua ngày mà vẫn Scheduled.
+ * Mỗi buổi chốt thành 1 trong 3 kết quả (evaluate):
+ *   phòng đóng / buổi ngoài giờ mở cửa → Cancelled (GymClosed), hoa hồng PT = 0
+ *   khách không có quyền vào gym       → Missed (MembershipFrozen | NoMembership)
+ *   có check-in trong ngày tập         → CheckedIn · không check-in → Missed (NoCheckIn)
+ * Mỗi buổi 1 transaction riêng: 1 buổi lỗi không làm hỏng các buổi khác.
  */
 public class AutoCloseSessionService {
-
-    // sessionDAO      đọc + cập nhật bảng Sessions (AutoCloseSessionDAO)
-    // auditLogService ghi nhật ký mỗi buổi đã chốt vào AuditLogs
     private final AutoCloseSessionDAO sessionDAO;
     private final AuditLogService auditLogService;
 
-    /** Job dùng constructor này: tự tạo DAO và AuditLogService thật. */
+    
+    // Job dùng constructor này, constructor ko tham số, và constructor này tự tạo DAO thật
     public AutoCloseSessionService() {
         this(new AutoCloseSessionDAO(), new AuditLogService());
     }
 
-    /** Test dùng constructor này: truyền DAO giả để không sửa database thật. */
+    // Tets gọi constructor có tham số để truyền DAO giả vào, ko cần DB thật
     public AutoCloseSessionService(AutoCloseSessionDAO sessionDAO,
             AuditLogService auditLogService) {
         this.sessionDAO = sessionDAO;
         this.auditLogService = auditLogService;
     }
 
-
-    // =================================================================================================
-    // 1. CHẠY JOB
-    // =================================================================================================
-
-    /**
-     * HÀM CHÍNH — AutoCloseUnmarkedSessionsJob.run() gọi mỗi ngày lúc 00:05.
-     * Chạy JOB-04 với "hôm nay" theo giờ Việt Nam.
-     */
+    // Chạy job với ngày hôm nay (BackgroundJobScheduler gọi).
+    // trả về số buổi int
     public int runJob() throws SQLException {
         return runJob(DateTimeUtil.today());
     }
 
-    /**
-     * HÀM CHÍNH — runJob() ở trên gọi; test có thể gọi thẳng với một ngày cố định.
-     *
-     * @param today ngày hiện tại. Buổi có ngày tập TRƯỚC ngày này mới bị chốt.
-     *              VD today = 24/10 → chốt buổi 23/10 trở về trước (kể cả buổi sót từ nhiều ngày trước).
-     * @return số buổi đã chốt và commit thành công
-     */
+    // Chạy job với 1 ngày cho trước (test gọi thẳng). Trả về: số buổi đã chốt.
     public int runJob(LocalDate today) throws SQLException {
-        // B1: lấy danh sách mã buổi cần chốt, VD [91, 105]. Lỗi ở đây thì dừng cả lượt để scheduler thử lại.
+        // B1: lấy Id các buổi Scheduled có ngày tập < hôm nay (AutoCloseSessionDAO.findOverdueSessionIds)
         List<Integer> overdueSessionIds = findOverdueSessionIds(today);
         int closedCount = 0;
 
-        // B2: chốt từng buổi. Mỗi buổi 1 transaction riêng → một buổi lỗi không làm dừng các buổi còn lại.
+        // B2: chốt TỪNG buổi, mỗi buổi 1 transaction (closeOneSession); đếm số buổi chốt được
         for (Integer sessionId : overdueSessionIds) {
             if (closeOneSession(sessionId, today)) {
                 closedCount++;
@@ -97,8 +59,7 @@ public class AutoCloseSessionService {
     }
 
     /**
-     * HÀM PHỤ — gọi ở B1 của runJob(today).
-     * Mở 1 kết nối, nhờ DAO đọc mã các buổi Scheduled đã qua ngày, rồi đóng kết nối.
+     * HÀM PHỤ (runJob B1) — mở kết nối, đọc danh sách Id buổi quá hạn. Trả về: List<Integer> SessionId.
      */
     private List<Integer> findOverdueSessionIds(LocalDate today) throws SQLException {
         try (Connection connection = openConnection()) {
@@ -107,18 +68,16 @@ public class AutoCloseSessionService {
     }
 
     /**
-     * HÀM PHỤ — gọi ở B2 của runJob(today), mỗi buổi một lần.
-     * Chốt 1 buổi trong 1 transaction: đọc lại → quyết định → cập nhật Sessions → ghi AuditLog → commit.
-     *
-     * @return true = đã chốt; false = bỏ qua (buổi đã được xử lý nơi khác) hoặc lỗi (đã in log)
+     * HÀM PHỤ (runJob B2) — chốt 1 buổi trong 1 transaction. Trả về: true = đã chốt, false = bỏ qua / lỗi.
      */
     private boolean closeOneSession(int sessionId, LocalDate today) {
         try (Connection connection = openConnection()) {
-            // Tắt tự lưu: các câu SQL dưới chỉ có hiệu lực khi commit().
+            // Mở transaction
             connection.setAutoCommit(false);
 
             try {
-                // B1: khóa và đọc lại buổi. null = buổi đã được luồng khác xử lý hoặc chưa đủ điều kiện.
+                // B1: AutoCloseSessionDAO.findDataForClosing: KHÓA dòng buổi (UPDLOCK) + đọc đủ dữ liệu để quyết định
+                //     → SessionAutoCloseData. null = buổi đã được PT xử lý / không còn Scheduled → rollback, bỏ qua
                 SessionAutoCloseData data = sessionDAO.findDataForClosing(
                         connection, sessionId, today);
                 if (data == null) {
@@ -126,10 +85,11 @@ public class AutoCloseSessionService {
                     return false;
                 }
 
-                // B2: Service quyết định Status + MissedReason theo luật JOB-04.
+                // B2: quyết định kết quả (evaluate) → Outcome(status, missedReason, cancelType)
                 Outcome outcome = evaluate(data);
 
-                // B3: cập nhật; DAO kiểm tra lại "vẫn còn Scheduled" ngay lúc ghi.
+                // B3: ghi kết quả: Sessions: Scheduled → CheckedIn | Missed | Cancelled, IsAutoClosed = 1
+                //     (không cập nhật được dòng nào = có người vừa xử lý → rollback)
                 boolean updated = sessionDAO.closeScheduledSession(
                         connection,
                         sessionId,
@@ -142,8 +102,7 @@ public class AutoCloseSessionService {
                     return false;
                 }
 
-                // B4: ghi nhật ký trong CÙNG transaction; ghi log lỗi thì cập nhật buổi cũng bị hủy.
-                //     Người thực hiện = null (hệ thống). VD: Sessions #91, Status: Scheduled → Missed, NoCheckIn.
+                // B4: AuditLogs: thêm 1 dòng "JOB-04" (Status cũ → mới, lý do)
                 auditLogService.logInTransaction(
                         connection,
                         null,
@@ -157,47 +116,35 @@ public class AutoCloseSessionService {
                                 ? null
                                 : outcome.missedReason().getDbValue());
 
-                // B5: Sessions và AuditLog cùng thành công → lưu thật.
+                // B5: commit → xong 1 buổi
                 connection.commit();
                 return true;
             } catch (SQLException | RuntimeException exception) {
-                // Lỗi giữa chừng → hủy mọi thay đổi của buổi này.
+                // Lỗi giữa chừng → rollback buổi này
                 connection.rollback();
                 throw exception;
             }
         } catch (SQLException | RuntimeException exception) {
-            // In lỗi của buổi này; vòng lặp ở runJob vẫn chốt các buổi tiếp theo.
+            // In lỗi của buổi này ra log, job vẫn chạy tiếp buổi sau.
             System.err.println("[JOB-04] SessionId=" + sessionId);
             exception.printStackTrace();
             return false;
         }
     }
 
-
-    // =================================================================================================
-    // 2. QUYẾT ĐỊNH KẾT QUẢ (không đụng database → test được bằng dữ liệu giả)
-    // =================================================================================================
-
     /**
-     * Kết quả Service chọn cho 1 buổi, trước khi DAO ghi vào Sessions.
-     * record = lớp chỉ chứa dữ liệu; Java tự tạo constructor + getter: outcome.status(), outcome.missedReason().
-     * VD: (MISSED, NO_CHECK_IN) hoặc (CHECKED_IN, null).
+     * Kết quả chốt 1 buổi: status (Sessions.Status) + missedReason (khi Missed) + cancelType (khi Cancelled).
      */
     public record Outcome(Session.Status status, Session.MissedReason missedReason,
             Session.CancelType cancelType) {
     }
 
     /**
-     * HÀM CHÍNH — closeOneSession gọi ở B2.
-     * Xét lần lượt: MembershipFrozen → NoMembership → CheckedIn → NoCheckIn; gặp điều kiện nào trước thì trả luôn.
-     *
-     * Membership hoặc DayPass đều tính là có quyền vào gym. Check-in chỉ cho biết khách đã vào gym trong ngày,
-     * không khẳng định khách đã tập cùng PT.
-     *
-     * VD gói đôi: người đứng tên thiếu membership, người tập cùng có membership và có check-in → CheckedIn.
+     * Luật chốt 1 buổi (không đọc DB — test gọi thẳng). Trả về: Outcome.
      */
     public static Outcome evaluate(SessionAutoCloseData data) {
-        // B0: ngày nghỉ hoặc slot nằm ngoài giờ mở cửa thì hủy theo GymClosed, không tính commission.
+        // B1: phòng nghỉ cả ngày / không đọc được giờ mở cửa / buổi nằm ngoài giờ mở cửa ngày đó
+        //     → Cancelled + GymClosed (không phải lỗi của khách, PT không có hoa hồng)
         if (data.isGymClosedAllDay()
                 || data.getGymOpenTime() == null
                 || data.getGymCloseTime() == null
@@ -206,9 +153,11 @@ public class AutoCloseSessionService {
             return new Outcome(Session.Status.CANCELLED, null, Session.CancelType.GYM_CLOSED);
         }
 
+        // B2: gói đôi thì xét cả người tập cùng
         boolean coupleSession = isCoupleSession(data);
 
-        // B1: từng người có dùng được gym vào ngày tập không.
+        // B3: từng người có quyền vào gym ngày đó không (CBR-117): gói thành viên phủ ngày đó và KHÔNG bảo lưu,
+        //     HOẶC vé ngày phủ ngày đó (bảo lưu chỉ áp cho gói thành viên — BR-21, nên vé ngày vẫn dùng được)
         boolean holderCanUseGym = canUseGym(
                 data.hasHolderMembership(),
                 data.hasHolderDayPass(),
@@ -218,65 +167,62 @@ public class AutoCloseSessionService {
                 data.hasPartnerDayPass(),
                 data.isPartnerFrozen());
 
-        // B2: gói 1 người (PTSingle / SingleSession) xét 1 người; gói đôi (PTCouple) chỉ "bị chặn" khi CẢ HAI bị chặn.
+        // B4: KHÔNG AI vào gym được (đơn: người đứng tên; đôi: cả 2 người)
         boolean allCustomersCannotUseGym = !holderCanUseGym
                 && (!coupleSession || !partnerCanUseGym);
 
-        // B3: cả buổi bị chặn và có người đang bảo lưu → Missed / MembershipFrozen.
+        // B5: không ai vào được + có người đang bảo lưu → Missed (MembershipFrozen)
         if (allCustomersCannotUseGym && hasFrozenCustomer(data, coupleSession)) {
             return new Outcome(Session.Status.MISSED,
                     Session.MissedReason.MEMBERSHIP_FROZEN, null);
         }
 
-        // B4: cả buổi bị chặn, không ai bảo lưu → Missed / NoMembership.
+        // B6: không ai vào được, không bảo lưu → Missed (NoMembership)
         if (allCustomersCannotUseGym) {
             return new Outcome(Session.Status.MISSED,
                     Session.MissedReason.NO_MEMBERSHIP, null);
         }
 
-        // B5: còn ít nhất 1 người vào được gym → giờ mới xét check-in trong ngày.
+        // B7: có check-in (người đứng tên hoặc người tập cùng) trong ngày tập → CheckedIn
         if (data.hasCheckInOnSessionDate()) {
             return new Outcome(Session.Status.CHECKED_IN, null, null);
         }
 
-        // B6: không ai check-in → Missed / NoCheckIn.
+        // B8: có quyền vào gym nhưng không đến → Missed (NoCheckIn)
         return new Outcome(Session.Status.MISSED, Session.MissedReason.NO_CHECK_IN, null);
     }
 
-    /** HÀM PHỤ — gọi ở đầu evaluate. true khi buổi thuộc gói PT đôi; loại khác chỉ có 1 khách. */
+    /**
+     * HÀM PHỤ (evaluate B2) — gói PT đôi (PTCouple)?
+     */
     private static boolean isCoupleSession(SessionAutoCloseData data) {
         return data.getPtSubscriptionType() == Package.Type.PT_COUPLE;
     }
 
     /**
-     * HÀM PHỤ — gọi ở B1 của evaluate (1 lần cho người đứng tên, 1 lần cho người tập cùng).
-     * Một khách dùng được gym = có Membership hoặc DayPass, VÀ không đang bảo lưu.
-     * VD có DayPass nhưng đang bảo lưu → false (DayPass không gỡ được bảo lưu).
-     * SessionReminderDAO (JOB-08) dùng đúng luật này trong SQL để nhắc khách trước 1 ngày.
+     * HÀM PHỤ (evaluate B3) — vào gym được ngày đó (CBR-117) = (có gói thành viên VÀ gói đó không bảo lưu) HOẶC có vé ngày.
+     * isFrozen = gói thành viên đang bảo lưu ngày đó (FreezeRecords). Bảo lưu không chặn vé ngày (quyết định 06/11/2026):
+     * VD khách bảo lưu 01/11–30/11, mua vé ngày 10/11 → 10/11 vào gym được → buổi PT 10/11 xét check-in như thường.
      */
-    private static boolean canUseGym(boolean hasMembership, boolean hasDayPass,
+    static boolean canUseGym(boolean hasMembership, boolean hasDayPass,
             boolean isFrozen) {
-        return (hasMembership || hasDayPass) && !isFrozen;
+        return (hasMembership && !isFrozen) || hasDayPass;
     }
 
-    /** HÀM PHỤ — gọi ở B3 của evaluate. Trong nhóm khách của buổi có ai đang bảo lưu không. */
+    /**
+     * HÀM PHỤ (evaluate B5) — người đứng tên (hoặc người tập cùng ở gói đôi) đang bảo lưu?
+     */
     private static boolean hasFrozenCustomer(SessionAutoCloseData data,
             boolean coupleSession) {
         return data.isHolderFrozen()
                 || (coupleSession && data.isPartnerFrozen());
     }
 
-
-    // =================================================================================================
-    // 3. DÙNG CHUNG
-    // =================================================================================================
-
     /**
-     * HÀM PHỤ DÙNG CHUNG — gọi ở findOverdueSessionIds và closeOneSession.
-     * Mở 1 kết nối SQL Server; try-with-resources ở nơi gọi tự đóng kết nối.
-     * Để protected: class test có thể kế thừa và thay cách mở kết nối.
+     * HÀM PHỤ — mở kết nối DB (test ghi đè để dùng kết nối giả).
+     * protected nghĩa là class con được ovveride hàm này, mở cho test thay thế ok, bên ngoài ko gọi đc trừ các class cùng package
      */
     protected Connection openConnection() throws SQLException {
-        return DBContext.getConnection();
+        return DBContext.getConnection(); // // bản thật: nối SQL Server
     }
 }

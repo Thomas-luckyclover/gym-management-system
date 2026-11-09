@@ -15,7 +15,7 @@
 <head>
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Phiếu thu dịch vụ #<c:out value="${receipt.orderCode}" /> · Super Gym Lễ tân</title>
-    <link rel="stylesheet" href="${ctx}/css/pages/receptionist/counter-sale.css?v=20261031_vVoucherDone">
+    <link rel="stylesheet" href="${ctx}/css/pages/receptionist/counter-sale.css?v=20261102_v2">
     <link rel="stylesheet" href="${ctx}/css/pages/customer/start-date-picker.css?v=20261101_vGymResult">
     <script src="${ctx}/js/pages/customer/start-date-picker.js?v=2" defer></script>
 </head>
@@ -93,11 +93,13 @@
                         <div class="receipt-row receipt-row--validity">
                             <span class="receipt-label">Hiệu lực gói:</span>
                             <c:choose>
+                                <%-- startPicker.editable = getter tự tính isEditable() · dto/StartDatePicker.java --%>
                                 <c:when test="${not empty startPicker and startPicker.editable}">
                                     <div class="sdp-anchor receipt-sdp" data-sdp data-sdp-url="${ctx}/receptionist/subscription/start-date"
                                          data-sdp-sub="${startPicker.subscriptionId}" data-sdp-csrf="<c:out value='${csrfToken}' />">
                                         <div class="receipt-validity-line">
                                             <span class="receipt-val">
+                                                <%-- startPicker.startText = getter tự tính getStartText() · dto/StartDatePicker.java --%>
                                                 <span data-sdp-start><c:out value="${startPicker.startText}" /></span> → <span data-sdp-end><c:out value="${startPicker.endText}" /></span>
                                             </span>
                                             <button type="button" class="btn btn-sm sdp-btn no-print" data-sdp-toggle aria-expanded="false" title="Đổi ngày bắt đầu gói">

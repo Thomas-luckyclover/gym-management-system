@@ -847,3 +847,15 @@ summary.leave-employee-summary:focus-visible {
   border-radius: var(--radius-sm);
   overflow-wrap: anywhere;
 }
+
+/* common.css ep chu nut primary thanh trang; nut khoa can chu dam de doc ro. */
+.leave-list-page #leave-approve-selected:disabled {
+  color: var(--color-text) !important;
+  text-shadow: none;
+}
+
+/* Mau hover phai cung tong voi chu tren bang trong ca hai theme. */
+.leave-list-page .leave-table tbody tr:hover,
+.leave-list-page .leave-tab-btn:hover {
+  background: var(--color-surface-hover);
+}

@@ -39,7 +39,7 @@ class CustomerDashboardScheduleTest {
 
     private SubscriptionRow membership(int id, LocalDate start, LocalDate end, String status) {
         return new SubscriptionRow(id, "Membership", "Gói tập", start, end, status,
-                null, null, null, null, null, "DH-1", null, null, null, 0, 0);
+                null, null, null, null, "DH-1", null, null, 0, 0);
     }
 
     @Test

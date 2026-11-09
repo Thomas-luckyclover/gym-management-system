@@ -72,6 +72,11 @@
   margin-inline-start: auto;
   justify-content: flex-end;
 }
+@media (min-width: 1101px) {
+  .pt-plan-toolbar { flex-wrap: nowrap; }
+  .pt-plan-period { flex-wrap: nowrap; flex: none; }
+  .pt-plan-actions { flex-wrap: nowrap; min-width: 0; }
+}
 
 /* Giữ thanh công cụ trên một hàng ở laptop; màn hẹp mới xuống hàng theo nhóm. */
 @media (min-width: 701px) {
@@ -262,9 +267,20 @@
 }
 
 .pt-plan-readonly {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 2px var(--space-2);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: 999px;
   color: var(--color-text-soft);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
+  line-height: 1.5;
+  white-space: nowrap;
+  cursor: help;
 }
+.pt-plan-readonly i { font-size: 0.75em; opacity: .8; }
 
 
 /* ==================== 2. THẺ KHUNG — màu theo loại ====================
@@ -609,7 +625,7 @@
   .pt-plan:not(.is-list) .pt-plan-scroll { overflow-x: auto; }
   .pt-plan:not(.is-list) .pt-plan-grid {
     display: grid;
-    grid-template-columns: var(--space-10) repeat(7, minmax(calc(var(--space-12) * 2), 1fr));
+    grid-template-columns: calc(var(--space-10) + var(--space-2)) repeat(7, minmax(calc(var(--space-12) * 2), 1fr));   /* +8px cho nhãn ca dọc */
     grid-template-rows: auto auto;
     grid-auto-flow: column;
     user-select: none;
@@ -654,12 +670,27 @@
   .pt-plan:not(.is-list) .pt-day.is-closed .pt-day-track { background-color: var(--color-surface-muted); }
   .pt-plan:not(.is-list) .pt-day-track[data-first] { cursor: pointer; }
   .pt-plan:not(.is-list) .pt-day-empty { display: none; }
+  /* Mọi ô nằm CÙNG 1 cột (grid-column: 1) → grid không tự đẻ thêm cột khi 2 ô chồng giờ (lỗi cũ: 1 ô chồng là cả ngày co).
+     Ô chồng giờ chia bề ngang theo làn do server tính (--lane / --lanes, PtScheduleService.assignLanes):
+     rộng = (100% − khe giữa các làn) / số làn · lề trái = số làn đứng trước × (rộng 1 làn + khe). */
   .pt-plan:not(.is-list) .pt-slot {
+    --pt-lane-gap: var(--space-1);
+    --pt-lane-width: calc((100% - (var(--lanes, 1) - 1) * var(--pt-lane-gap)) / var(--lanes, 1));
+    grid-column: 1;
     grid-row: calc(var(--start) + 1) / span var(--length);
+    justify-self: start;
+    width: var(--pt-lane-width);
     margin-block: var(--space-1) var(--border-width);
+    margin-inline-start: calc(var(--lane, 0) * (var(--pt-lane-width) + var(--pt-lane-gap)));
     overflow: hidden;
     font-size: var(--font-size-xs);
   }
+  /* Ô hẹp (cụm ≥ 2 làn, JSP thêm class is-narrow): chữ dài cắt "…" thay vì tràn khỏi ô; rê chuột xem đủ (title). */
+  .pt-plan:not(.is-list) .pt-slot.is-narrow .pt-slot-body { padding: var(--space-1-5); }
+  .pt-plan:not(.is-list) .pt-slot.is-narrow .pt-slot-time { white-space: normal; line-height: var(--line-height-snug); }
+  /* Ô hẹp không đủ cao cho nhãn trạng thái → ẩn nhãn (rê chuột xem ở title); buổi Đã hủy / Vắng vẫn nhận ra nhờ viền đứt + mờ. */
+  .pt-plan:not(.is-list) .pt-slot.is-narrow .pt-slot-state { display: none; }
+  .pt-plan:not(.is-list) .pt-slot.is-narrow:is([data-status="Cancelled"], [data-status="Missed"]) { border-style: dashed; opacity: 0.75; }
   .pt-plan:not(.is-list) .pt-slot-body { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-1); padding: var(--space-2); }
   .pt-plan:not(.is-list) .pt-slot-info { width: 100%; }
   .pt-plan:not(.is-list) .pt-slot-person { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -981,7 +1012,7 @@ html body.dock.pt-plan-page .pt-plan-pending .pt-pending-error { color: var(--ar
 
 
 /* ==================== 10. XỬ LÝ BUỔI (bước 11) ====================
-   Thẻ buổi còn xử lý được là link ?handle= → hộp _handle-dialog.jspf.
+   Thẻ buổi còn xử lý được là link ?handle= → hộp _schedule-handle.jspf.
    Đổi phương án KHÔNG cần JS: radio trong .pt-handle-options + :has() hiện đúng 1 form.
 
    Hộp theo hệ Arena (DESIGN.md mục Arena):
@@ -1556,6 +1587,93 @@ html body.dock .pt-handle .pt-handle-head h2:focus,
   background: var(--arena-chalk);
 }
 
+/* --- 10.6b Gọn hơn (06/11): 1 dòng ghi chú ngắn + chú thích màu vàng, khung "Giờ khác", báo lỗi bằng viền đỏ --- */
+.pt-handle-panel { gap: var(--space-4); }
+.pt-handle-note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-3);
+  font-size: var(--font-size-sm);
+}
+.pt-handle-note strong { color: var(--arena-ink); font-weight: var(--font-weight-semibold); }
+.pt-handle-note-key { display: inline-flex; align-items: center; gap: var(--space-1-5); font-size: var(--font-size-xs); }
+.pt-handle-effect {
+  padding-top: var(--space-2);
+  border-top: var(--border-width) dashed var(--arena-chalk-line);
+}
+
+/* "Giờ khác": 1 ô trắng; tích vào thì mở 2 ô Ngày + Giờ bắt đầu (CSS :has, không cần JS). */
+.pt-handle-new {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-surface);
+  box-shadow: inset 0 0 0 1px var(--handle-tile-line);
+}
+.pt-handle-new:has(input[value="new"]:checked) {
+  background: var(--arena-today-tint);
+  box-shadow: inset 0 0 0 2px var(--arena-accent);
+}
+.pt-handle-new-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+}
+.pt-handle-new-toggle input { width: 18px; height: 18px; margin: 0; accent-color: var(--arena-accent); }
+.pt-handle-new-toggle small { color: var(--arena-steel-ink); font-weight: var(--font-weight-regular); }
+.pt-handle-new-fields { display: none; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+.pt-handle-new:has(input[value="new"]:checked) .pt-handle-new-fields { display: grid; }
+.pt-handle-field :is(input[type="date"], input[type="time"]) {
+  width: 100%;
+  min-height: var(--control-height-md);
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-surface);
+  box-shadow: inset 0 0 0 1px var(--arena-chalk-line-strong);
+  color: var(--arena-ink);
+  font: inherit;
+  font-weight: var(--font-weight-regular);
+  font-variant-numeric: tabular-nums;
+}
+.pt-handle-field :is(input[type="date"], input[type="time"]):focus-visible { outline-offset: 0; box-shadow: inset 0 0 0 1px var(--arena-accent); }
+
+/* Hủy buổi: dòng "Phải hỏi khách trước" đậm hơn 3 dòng còn lại, tách bằng vạch mảnh. */
+.pt-handle-warning li.is-must {
+  margin-top: var(--space-1);
+  padding-top: var(--space-2);
+  border-top: var(--border-width) solid var(--color-danger-border);
+  list-style: none;
+  margin-left: calc(-1 * var(--space-3));
+}
+.pt-handle-warning li.is-must strong { font-weight: var(--font-weight-bold); }
+.pt-handle-check {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-surface);
+  box-shadow: inset 0 0 0 1px var(--handle-tile-line);
+}
+.pt-handle-check:has(input:checked) { box-shadow: inset 0 0 0 2px var(--color-danger); }
+
+/* schedule.js (initPtHandleForms) thêm .is-invalid khi thiếu → viền đỏ đúng chỗ cần sửa, toast nói lý do. */
+.pt-handle .is-invalid,
+.pt-handle-field .is-invalid {
+  box-shadow: inset 0 0 0 2px var(--color-danger);
+}
+.pt-handle-days.is-invalid,
+.pt-handle-pts.is-invalid { outline: 2px solid var(--color-danger); outline-offset: 2px; }
+
+@media (max-width: 700px) {
+  .pt-handle-new-fields { grid-template-columns: 1fr; }
+  .pt-handle-note { justify-content: flex-start; }
+}
+
 /* --- 10.7 Điện thoại: tấm trượt từ đáy, 3 phương án xếp 1 cột gọn --- */
 @media (max-width: 700px) {
   .pt-handle {
@@ -1656,29 +1774,62 @@ html body.dock .pt-handle .pt-handle-head h2:focus,
 @media (min-width: 701px) {
   .pt-plan:not(.is-list) .pt-list-shift { display: none; }
 
-  /* Nhãn ca trên trục giờ: nằm ngoài lưới hàng giờ (position absolute), ở nửa sau của giờ đầu ca. */
+  /* Nhãn ca trên trục giờ (07/11/2026): một "ghi chú" mảnh ở mép trái cột giờ, dài đúng bằng ca.
+     Vạch màu 2px chạy suốt ca + chữ dọc nhỏ ở đầu ca; không chiếm chỗ, không đè lên số giờ (số giờ căn phải).
+       Ca sáng : từ đầu trục tới vạch 13:00   → top 0, cao --shift-split giờ
+       Ca chiều: từ vạch 13:00 tới cuối trục   → top --shift-split giờ, cao (--axis-hours − --shift-split) giờ */
   .pt-plan:not(.is-list) .pt-plan-axis { position: relative; }
   .pt-plan:not(.is-list) .pt-plan-shift {
+    --shift-ink: var(--color-warning-ink);
     position: absolute;
-    right: var(--space-1);
-    display: block;
-    padding: 0 var(--space-1);
-    border-radius: var(--arena-radius-chip);
-    font-size: var(--font-size-2xs);
+    left: var(--space-1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-1);
+    width: calc(var(--space-4) - 2px);
+    padding-top: var(--space-2);
+    color: var(--shift-ink);
+    font-size: 0.6875rem;
     font-weight: var(--font-weight-semibold);
-    line-height: 1.6;
-    text-align: right;
+    letter-spacing: 0.08em;
+    line-height: 1;
+    text-transform: uppercase;
     white-space: nowrap;
+    pointer-events: none;
+    animation: pt-shift-in 420ms cubic-bezier(.2, .7, .2, 1) both;
+  }
+  /* Chữ dọc ở đầu ca (đọc từ dưới lên), rồi vạch ca 2px chạy tới hết ca, đậm ở đầu rồi nhạt dần. */
+  .pt-plan:not(.is-list) .pt-plan-shift > span {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+  }
+  .pt-plan:not(.is-list) .pt-plan-shift::after {
+    content: "";
+    flex: 1;
+    width: 2px;
+    margin-bottom: var(--space-2);
+    border-radius: 2px;
+    background: linear-gradient(to bottom,
+        color-mix(in srgb, var(--shift-ink) 65%, transparent),
+        color-mix(in srgb, var(--shift-ink) 8%, transparent));
   }
   .pt-plan:not(.is-list) .pt-plan-shift.is-am {
-    top: calc(var(--pt-hour) * 0.5);
-    background: var(--color-warning-tint);
-    color: var(--color-warning-ink);
+    top: 0;
+    height: calc(var(--pt-hour) * var(--shift-split));
   }
   .pt-plan:not(.is-list) .pt-plan-shift.is-pm {
-    top: calc(var(--pt-hour) * (var(--shift-split) + 0.5));
-    background: color-mix(in srgb, var(--arena-accent) 18%, transparent);
-    color: var(--arena-accent-text);
+    --shift-ink: var(--arena-accent-text);
+    top: calc(var(--pt-hour) * var(--shift-split));
+    height: calc(var(--pt-hour) * (var(--axis-hours) - var(--shift-split)));
+    animation-delay: 80ms;
+  }
+  @keyframes pt-shift-in {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pt-plan:not(.is-list) .pt-plan-shift { animation: none; }
   }
 
   /* Nền ca chiều + vạch 13:00 trong từng cột ngày. Thẻ khung (.pt-slot, position: relative) nằm trên. */

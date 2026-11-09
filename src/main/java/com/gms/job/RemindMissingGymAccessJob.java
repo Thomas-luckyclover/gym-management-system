@@ -4,22 +4,17 @@ import com.gms.service.SessionReminderService;
 import java.sql.SQLException;
 
 /**
- * JOB-08 — tự nhắc khách có buổi PT ngày mai nhưng chưa vào được phòng tập.
- *
- * AI GỌI?  BackgroundJobScheduler, lượt hằng ngày 00:05 (CUỐI DAILY_JOBS, sau các job hết hạn gói).
- * LÀM GÌ?  Chỉ gọi SessionReminderService.runJob(). Quy tắc nằm ở Service, SQL nằm ở SessionReminderDAO.
- * KẾT QUẢ HIỆN Ở ĐÂU?  Chuông thông báo trên topbar Gói của tôi / Lịch tập của khách.
- * Thay cho nút "Nhắc khách" bấm tay ở PT Dashboard (đã bỏ).
+ * JOB-08 — nhắc khách có buổi PT NGÀY MAI nhưng chưa có quyền vào gym (không có gói / vé ngày, hoặc đang bảo lưu).
+ * Ai chạy: BackgroundJobScheduler, mỗi ngày 00:05, chạy SAU các job hết hạn gói để xét quyền vào gym mới nhất.
  */
 public class RemindMissingGymAccessJob implements BackgroundJob {
-
-    /** Tên in ra log của scheduler. */
+    // Tên job in ra log.
     @Override
     public String getName() {
         return "JOB-08 Remind customers missing gym access for tomorrow's PT sessions";
     }
 
-    /** HÀM CHÍNH — BackgroundJobScheduler gọi mỗi ngày. */
+    // Gọi SessionReminderService.runJob().
     @Override
     public void run() throws SQLException {
         new SessionReminderService().runJob();

@@ -23,71 +23,74 @@ class PtAttentionServiceTest {
     @Test
     void closedDayCardKeepsExactSessionAndRescheduleWarning() {
         PtDashboardDAO.ClosedDaySession row = new PtDashboardDAO.ClosedDaySession(
-                274, 6, "Đỗ Thị Mai", 11, Package.Type.PT_SINGLE,
-                LocalDate.of(2026, 11, 7), LocalDate.of(2026, 10, 23), LocalTime.of(18, 0));
+                274, "Đỗ Thị Mai", 11, LocalDate.of(2026, 10, 23), LocalTime.of(18, 0),
+                true, LocalTime.of(19, 0), null, null);
 
         PtAttentionView item = PtDashboardService.buildClosedDayItem(row);
 
         assertEquals("closedDay", item.getKind());
         assertEquals(274, item.getSessionId());
-        assertEquals(6, item.getCustomerId());
+        assertEquals("Đỗ Thị Mai", item.getCustomerName());
         assertEquals(11, item.getPtSubscriptionId());
         assertEquals(row.slotDate(), item.getSessionDate());
-        assertEquals(row.ptEndDate(), item.getPtEndDate());
         assertEquals("Ngày phòng nghỉ — cần dời", item.getAttentionTitle());
         assertEquals("Buổi 23/10/2026 18:00 rơi vào ngày phòng nghỉ. Dời buổi trước ngày này; nếu không, hệ thống sẽ hủy và không tính hoa hồng.", item.getAttentionMessage());
-        assertNull(item.getMembershipEndDate());
+    }
+
+    @Test
+    void outsideOpeningHoursCardShowsSessionAndGymHours() {
+        PtDashboardDAO.ClosedDaySession row = new PtDashboardDAO.ClosedDaySession(
+                274, "Đỗ Thị Mai", 11, LocalDate.of(2026, 10, 23), LocalTime.of(20, 0),
+                false, LocalTime.of(21, 0), LocalTime.of(8, 0), LocalTime.of(12, 0));
+
+        PtAttentionView item = PtDashboardService.buildClosedDayItem(row);
+
+        assertEquals("closedDay", item.getKind());
+        assertEquals(274, item.getSessionId());
+        assertEquals("Ngoài giờ mở cửa — cần dời", item.getAttentionTitle());
+        assertEquals("Buổi 23/10/2026 20:00–21:00 nằm ngoài giờ mở cửa (08:00–12:00). Dời buổi trước ngày này; nếu không, hệ thống sẽ hủy và không tính hoa hồng.", item.getAttentionMessage());
+    }
+
+    @Test
+    void unknownOpeningHoursCardAsksToCheck() {
+        PtDashboardDAO.ClosedDaySession row = new PtDashboardDAO.ClosedDaySession(
+                274, "Đỗ Thị Mai", 11, LocalDate.of(2026, 10, 23), LocalTime.of(20, 0),
+                false, LocalTime.of(21, 0), null, null);
+
+        PtAttentionView item = PtDashboardService.buildClosedDayItem(row);
+
+        assertEquals("closedDay", item.getKind());
+        assertEquals("Chưa rõ giờ mở cửa — cần kiểm tra", item.getAttentionTitle());
+        assertEquals("Buổi 23/10/2026 20:00 chưa xác định được giờ mở cửa ngày này. Hệ thống sẽ hủy buổi nếu chưa xử lý.", item.getAttentionMessage());
     }
 
     @Test
     void validMembershipWithoutFreezeCreatesNoAttention() throws SQLException {
         PtClientPackageView valid = row(1, 101, Package.Type.PT_SINGLE, SESSION_DATE, true, false);
 
-        List<PtAttentionView> items = service.buildAttentionItems(List.of(valid), TODAY);
+        List<PtAttentionView> items = service.buildAttentionItems(List.of(valid));
 
         assertTrue(items.isEmpty());
     }
 
-    @ParameterizedTest
-    @CsvSource({
-        "2026-10-06, Đã hết hạn",
-        "2026-10-10, Không bao phủ ngày tập",
-        "2026-10-07, Không bao phủ ngày tập"
-    })
-    void missingCoverageIsExplainedRelativeToToday(LocalDate membershipEndDate,
-            String expectedLabel) throws SQLException {
-        PtClientPackageView missing = new PtClientPackageView(1, "Khách A", 101,
-                Package.Type.PT_SINGLE, TODAY.plusDays(20), 6, SESSION_DATE,
-                membershipEndDate, false, false, null);
-
-        PtAttentionView item = service.buildAttentionItems(List.of(missing), TODAY).get(0);
-
-        assertEquals("Cần membership", item.getAttentionTitle());
-        assertEquals(expectedLabel, item.getMembershipStatusLabel());
-        assertEquals("Cần membership hợp lệ cho buổi ngày 12/10/2026.", item.getAttentionMessage());
-        assertEquals(membershipEndDate, item.getMembershipEndDate());
-    }
-
     @Test
-    void noMembershipHasNoFakeExpiryDate() throws SQLException {
+    void noMembershipAsksForValidMembership() throws SQLException {
         PtClientPackageView missing = row(1, 101, Package.Type.PT_SINGLE, SESSION_DATE, false, false);
 
-        PtAttentionView item = service.buildAttentionItems(List.of(missing), TODAY).get(0);
+        PtAttentionView item = service.buildAttentionItems(List.of(missing)).get(0);
 
-        assertEquals("Chưa có membership phù hợp", item.getMembershipStatusLabel());
-        assertNull(item.getMembershipEndDate());
-        assertNull(item.getFreezeEndDate());
+        assertEquals("membership", item.getKind());
+        assertEquals("Cần membership hợp lệ cho buổi ngày 12/10/2026.", item.getAttentionMessage());
     }
 
     @Test
     void freezeTakesPriorityEvenWhenMembershipDoesNotCoverDate() throws SQLException {
         PtClientPackageView frozen = row(1, 101, Package.Type.PT_SINGLE, SESSION_DATE, false, true);
 
-        PtAttentionView item = service.buildAttentionItems(List.of(frozen), TODAY).get(0);
+        PtAttentionView item = service.buildAttentionItems(List.of(frozen)).get(0);
 
         assertEquals("Membership đang bảo lưu", item.getAttentionTitle());
-        assertEquals("Đang bảo lưu", item.getMembershipStatusLabel());
-        assertEquals(TODAY.plusDays(10), item.getFreezeEndDate());
+        assertEquals("frozen", item.getKind());
     }
 
     @Test
@@ -99,7 +102,7 @@ class PtAttentionServiceTest {
                 row(1, 101, Package.Type.PT_SINGLE, TODAY.plusDays(6), false, false),
                 row(1, 101, Package.Type.PT_SINGLE, TODAY.plusDays(8), false, false));
 
-        List<PtAttentionView> items = service.buildAttentionItems(rows, TODAY);
+        List<PtAttentionView> items = service.buildAttentionItems(rows);
 
         // 5 ngày, cùng 1 khách + 1 gói + 1 loại vấn đề => 1 cảnh báo; ngày gần nhất = today + 5.
         int expectedCount = 1;
@@ -116,7 +119,7 @@ class PtAttentionServiceTest {
 
         // 1 khách có vấn đề trên 2 gói => 1 cảnh báo/gói × 2 gói = 2.
         int expectedCount = 1 * 2;
-        assertEquals(expectedCount, service.buildAttentionItems(rows, TODAY).size());
+        assertEquals(expectedCount, service.buildAttentionItems(rows).size());
     }
 
     @Test
@@ -125,7 +128,7 @@ class PtAttentionServiceTest {
                 row(1, 101, Package.Type.PT_SINGLE, SESSION_DATE, false, false),
                 row(1, 101, Package.Type.PT_SINGLE, SESSION_DATE.plusDays(1), true, true));
 
-        List<PtAttentionView> items = service.buildAttentionItems(rows, TODAY);
+        List<PtAttentionView> items = service.buildAttentionItems(rows);
 
         // 1 thiếu membership + 1 bảo lưu = 2 loại cảnh báo khác nhau.
         assertEquals(1 + 1, items.size());
@@ -139,7 +142,7 @@ class PtAttentionServiceTest {
                 row(1, 101, Package.Type.PT_SINGLE, SESSION_DATE, false, false),
                 row(2, 101, Package.Type.PT_SINGLE, SESSION_DATE, false, false));
 
-        assertEquals(2, service.buildAttentionItems(rows, TODAY).size());
+        assertEquals(2, service.buildAttentionItems(rows).size());
     }
 
     @Test
@@ -148,10 +151,9 @@ class PtAttentionServiceTest {
                 row(1, 101, Package.Type.PT_COUPLE, SESSION_DATE, true, true),
                 row(2, 101, Package.Type.PT_COUPLE, SESSION_DATE, true, false));
 
-        List<PtAttentionView> items = service.buildAttentionItems(rows, TODAY);
+        List<PtAttentionView> items = service.buildAttentionItems(rows);
 
         assertEquals(1, items.size());
-        assertEquals("PT đôi", items.get(0).getPtSubscriptionTypeLabel());
         assertTrue(items.get(0).getAttentionMessage().contains("Khách trùng tên vẫn dùng được gym"));
     }
 
@@ -163,7 +165,7 @@ class PtAttentionServiceTest {
                 row(1, 101, Package.Type.PT_COUPLE, SESSION_DATE, firstFrozen, firstFrozen),
                 row(2, 101, Package.Type.PT_COUPLE, SESSION_DATE, secondFrozen, secondFrozen));
 
-        List<PtAttentionView> items = service.buildAttentionItems(rows, TODAY);
+        List<PtAttentionView> items = service.buildAttentionItems(rows);
 
         // Cả 2 người có vấn đề => 1 dòng/người × 2 người = 2, không suy ra PT phải đổi Status.
         assertEquals(1 * 2, items.size());
@@ -179,7 +181,7 @@ class PtAttentionServiceTest {
                 row(2, 101, Package.Type.PT_COUPLE, SESSION_DATE.plusDays(1), true, false),
                 row(3, 102, Package.Type.PT_COUPLE, SESSION_DATE, true, false));
 
-        assertThrows(SQLException.class, () -> service.buildAttentionItems(rows, TODAY));
+        assertThrows(SQLException.class, () -> service.buildAttentionItems(rows));
     }
 
     @Test
@@ -190,7 +192,7 @@ class PtAttentionServiceTest {
                 row(1, 101, Package.Type.PT_COUPLE, SESSION_DATE, false, false),
                 row(2, 101, Package.Type.PT_COUPLE, SESSION_DATE, true, false));
 
-        List<PtAttentionView> items = service.buildAttentionItems(rows, TODAY);
+        List<PtAttentionView> items = service.buildAttentionItems(rows);
 
         assertEquals(SESSION_DATE, items.get(0).getSessionDate());
         assertTrue(items.get(0).getAttentionMessage().contains("vẫn dùng được gym"));
@@ -199,8 +201,13 @@ class PtAttentionServiceTest {
     /** Dữ liệu mẫu giống kết quả DAO; cố ý cho khách trùng tên để kiểm tra gom bằng mã. */
     private PtClientPackageView row(int customerId, int subscriptionId, Package.Type type,
             LocalDate sessionDate, boolean hasMembership, boolean frozen) {
-        return new PtClientPackageView(customerId, "Khách trùng tên", subscriptionId, type,
-                TODAY.plusDays(20), 6, sessionDate, hasMembership ? TODAY.plusDays(30) : null,
-                hasMembership, frozen, frozen ? TODAY.plusDays(10) : null);
+        return new PtClientPackageView(
+                customerId,
+                "Khách trùng tên",
+                subscriptionId,
+                type,
+                sessionDate,
+                hasMembership,
+                frozen);
     }
 }

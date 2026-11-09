@@ -5,17 +5,12 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 /**
- * 1 BUỔI PT của khách. Dùng ở màn "Lịch tập" (ô thời khóa biểu) và "Gói của tôi" (dòng bảng buổi).
- *   Phần 1: DAO đọc từ DB (MyPtSessionDAO.readSessionRow).
- *   Phần 2: Service tính thêm để hiển thị (MyPtSessionService.fillDisplay).
+ * DTO 1 BUỔI PT của khách — DAO TẠO: MyPtSessionDAO (findSessionsOfPackage / findSingleSessions);
+ * Service ĐIỀN thêm: MyPtSessionService.fillDisplay (trạng thái, lý do, Zalo…) và MyBookingService (moveNote, firstOfWeek, rebook).
+ * Dùng chung 2 màn: Gói của tôi (my-bookings.jsp) và Lịch tập (my-pt-sessions.jsp).
+ * Hàm tính sẵn: getDayName() "Thứ 2…Chủ nhật" · isCouple() · isSingleSession() · isEnded().
  */
 public class MyPtSessionRow {
-
-    /**
-     * DAO tạo từ một dòng JOIN Sessions/TimeSlots/Subscriptions/Orders/Persons.
-     * Các field hiển thị do Service tính (statusLabel, explanation, ended...) vẫn để trống
-     * và được fillDisplay điền sau đó.
-     */
     public MyPtSessionRow(int sessionId, String status, String missedReason, String cancelType,
             String cancelReason, LocalDateTime cancelledAt, LocalDate slotDate,
             LocalTime startTime, LocalTime endTime, int subscriptionId, String type,
@@ -48,115 +43,98 @@ public class MyPtSessionRow {
         this.partnerFullName = partnerFullName;
     }
 
-    /** Constructor rỗng để Service/test tạo row nhỏ rồi chỉ set các field cần kiểm tra. */
     public MyPtSessionRow() {
     }
 
-    // ---------------- Phần 1: DAO đọc từ DB (SESSIONS_SQL → readSessionRow) ----------------
-    // Bảng gốc Sessions: một dòng là một buổi; các field dưới đây lấy trực tiếp, không ghép chữ từ bảng khác.
-    private int sessionId;               // Sessions.SessionId
-    private String status;               // Sessions.Status: Scheduled | CheckedIn | Missed | Cancelled
-    private String missedReason;         // Sessions.MissedReason (khi Missed)
-    private String cancelType;           // Sessions.CancelType (khi Cancelled)
-    private String cancelReason;         // Sessions.CancelReason
-    private LocalDateTime cancelledAt;   // Sessions.CancelledAt
-
-    // JOIN Sessions.TimeSlotId = TimeSlots.TimeSlotId để lấy ngày/giờ của buổi này.
-    private LocalDate slotDate;          // TimeSlots.SlotDate → ngày trên ô lịch và phần chi tiết
-    private LocalTime startTime;         // TimeSlots.StartTime → giờ bắt đầu; Service dùng để xếp Sáng/Chiều/Tối
-    private LocalTime endTime;           // TimeSlots.EndTime → giờ kết thúc; Service dùng để tính ended
-
-    // JOIN Sessions.SubscriptionId = Subscriptions.SubscriptionId để lấy gói chứa buổi.
-    private int subscriptionId;          // Subscriptions.SubscriptionId → link Xem toàn bộ gói
-    private String type;                 // Subscriptions.SubscriptionType: PTSingle | PTCouple | SingleSession
-    private LocalDate packageStartDate;  // Subscriptions.StartDate → đầu hạn gói; readSessionRow để null nếu buổi lẻ
-    private LocalDate packageEndDate;    // Subscriptions.EndDate → cuối hạn gói; readSessionRow để null nếu buổi lẻ
-    private int holderCustomerId;        // Subscriptions.CustomerId → người đứng tên, không nhất thiết là người đang xem
-
-    // Từ gói JOIN Subscriptions.OrderId = Orders.OrderId để đọc thông tin đơn lúc mua.
-    private Integer partnerCustomerId;   // Orders.PartnerCustomerId → người đi kèm; DAO chỉ gán cho PTCouple
-    private String packageName;          // Orders.PackageNameSnapshot → tên gói lúc mua, không lấy tên hiện tại trong Packages
-
-    // Không có cột SessionNo trong DB: SQL tự tính ROW_NUMBER() theo Sessions.SubscriptionId,
-    // sắp TimeSlots.SlotDate, TimeSlots.StartTime, Sessions.SessionId; JOIN Sessions ↔ TimeSlots như trên.
-    // Đánh số cả gói trước khi lọc ngày để đổi tuần vẫn giữ số buổi. Đây là tử số 31 trong “31/45”.
+    // ===== IN RA MÀN — ngày giờ, số thứ tự =====
+    // ← Sessions.SessionId → link "…&openSession=<id>" mở đúng buổi trên Lịch tập
+    private int sessionId;
+    // ← TimeSlots.SlotDate → ngày của buổi (dải chấm, "Buổi tới", danh sách)
+    private LocalDate slotDate;
+    // ← TimeSlots.StartTime → giờ bắt đầu
+    private LocalTime startTime;
+    // ← TimeSlots.EndTime → giờ kết thúc
+    private LocalTime endTime;
+    // ← DAO đánh số (ROW_NUMBER) → "Buổi 3/24" khi rê chuột vào chấm
     private int sessionNo;
-    // Subscriptions.GeneratedSessionCount, qua Sessions.SubscriptionId = Subscriptions.SubscriptionId.
-    private int totalSessions;           // Mẫu số 45 trong “31/45”, không phải COUNT các buổi của tuần đang xem
+    // ← tổng buổi của gói → "Buổi 3/24"
+    private int totalSessions;
 
-    // PT của BUỔI: JOIN Sessions.PtEmployeeId = Employees.EmployeeId,
-    // rồi Employees.PersonId = Persons.PersonId (SQL đặt alias ptPerson).
-    private int ptEmployeeId;            // Sessions.PtEmployeeId → link "Đặt lại với PT này" (màn Gói của tôi, buổi lẻ)
-    private String ptName;               // ptPerson.FullName = Persons.FullName → tên PT trên thẻ và chi tiết
-    private String ptPhone;              // ptPerson.Phone = Persons.Phone → SĐT liên hệ, copy và tạo link Zalo
+    // ===== IN RA MÀN — trạng thái (fillDisplay) =====
+    // ← fillDisplay → applyStatus: checkedIn | missed | cancelled | pending | warn | upcoming → màu chấm / nhãn (data-status)
+    private String statusKey;
+    // ← fillDisplay: chữ trạng thái "Đã check-in", "Vắng"… → nhãn trạng thái
+    private String statusLabel;
+    // ← fillDisplay: lý do (VD "Chưa có gói thành viên ngày này") → chú thích khung "Cần để ý", title của "Buổi tới"
+    private String explanation;
+    // ← fillDisplay: buổi sắp tới mà ngày đó chưa có gói gym / vé ngày → vào "Cần để ý", chữ "Cần Membership/DayPass"
+    private boolean noGymPass;
 
-    // Người đứng tên: JOIN Subscriptions.CustomerId = Customers.CustomerId (alias holder),
-    // rồi holder.PersonId = Persons.PersonId (alias holderPerson).
-    private String holderName;           // holderPerson.FullName = Persons.FullName → tên người đứng tên gói
-
-    // Người đi kèm: LEFT JOIN Orders.PartnerCustomerId = Customers.CustomerId (alias partner),
-    // rồi LEFT JOIN partner.PersonId = Persons.PersonId (alias partnerPerson); không có người thì tên null.
-    private String partnerFullName;      // partnerPerson.FullName = Persons.FullName → tên người đi kèm gói đôi
-    // ---------------- Kết thúc phần 1: dữ liệu DAO đọc hoặc SQL tính ----------------
-
-    // ---------------- Phần 2: Service tính thêm; các field này không có cột DB riêng ----------------
-    // typeLabel(type): đổi Subscriptions.SubscriptionType thành chữ trên thẻ/tiêu đề chi tiết.
-    private String typeLabel;            // PTSingle → PT cá nhân; PTCouple → PT đôi; còn lại → Buổi lẻ
-
-    // fillDisplay: so holderCustomerId với mã khách đang xem; chọn partnerFullName hoặc holderName.
-    // Hai tên đều từ Persons.FullName qua hai đường JOIN người đứng tên/người đi kèm đã ghi ở phần 1.
-    private String partnerName;          // “Tập cùng”: luôn là người còn lại so với người đang xem
-
-    // applyStatus: dùng Sessions.Status + ngày/giờ TimeSlots + now của request + warning do fillDisplay tính.
-    // Warning có thể đọc OperatingHourExceptions (ngày nghỉ), Subscriptions/FreezeRecords (quyền vào gym/bảo lưu).
-    private String statusKey;            // today | upcoming | warn | pending | checkedIn | missed | cancelled → JSP chọn màu
-    private String statusLabel;          // applyStatus chọn chữ badge, ví dụ “Đang diễn ra”; không đọc một cột tên trạng thái
-
-    // applyStatus: ghép lời giải thích từ Sessions.MissedReason/CancelType, loại gói và warning ở trên.
-    private String explanation;          // Nội dung cảnh báo/lý do trong chi tiết; khác cancelReason là chữ đọc từ DB
-
-    // zaloUrl(ptPhone): chuẩn hóa Persons.Phone của PT rồi ghép https://zalo.me/<số>; thiếu số → null.
+    // ===== IN RA MÀN — PT =====
+    // ← Sessions.PtEmployeeId → link "Đặt lại với PT này" (?pt=<id>)
+    private int ptEmployeeId;
+    // ← tên PT → "PT …" ở dòng buổi lẻ, khung "PT buổi tới"
+    private String ptName;
+    // ← SĐT PT → nút gọi PT buổi tới
+    private String ptPhone;
+    // ← fillDisplay: link Zalo từ ptPhone → nút "Nhắn Zalo"
     private String zaloUrl;
 
-    // calendarUrl(row): ghép ngày/giờ TimeSlots (đổi UTC), ptName từ Persons.FullName,
-    // packageName từ Orders.PackageNameSnapshot, sessionNo do SQL tính, totalSessions từ Subscriptions.
-    // Chỉ tạo nếu Sessions.Status=Scheduled và now < giờ kết thúc; mở form Google để khách tự lưu.
+    // ===== IN RA MÀN — chỉ màn Gói của tôi (MyBookingService điền) =====
+    // ← fillPackageDetail → moveNote(MyBookingDAO.findMoves): "PT dời lịch · thay buổi T3 05/11" → cột ghi chú "Buổi khác giờ"
+    private String moveNote;
+    // ← markWeeks: buổi đầu tiên của tuần mới → JSP chèn vạch ngăn tuần trong dải chấm
+    private boolean firstOfWeek;
+    // ← orderSingles: buổi lẻ đã qua, mỗi PT lấy 1 buổi gần nhất → link "Đặt lại với PT này"
+    private boolean rebook;
+
+    // ===== IN RA MÀN — chỉ màn Lịch tập (my-pt-sessions.jsp) =====
+    // ← fillDisplay: "Gói PT đơn / đôi / Buổi lẻ"
+    private String typeLabel;
+    // ← fillDisplay: tên người kia của gói đôi
+    private String partnerName;
+    // ← tên gói
+    private String packageName;
+    // ← Sessions.CancelReason → lý do hủy trong chi tiết buổi
+    private String cancelReason;
+    // ← fillDisplay: link "Thêm vào Google Calendar" (buổi Scheduled chưa kết thúc)
     private String calendarUrl;
 
-    // applyStatus: ended = now >= TimeSlots.SlotDate + TimeSlots.EndTime (qua JOIN Sessions ↔ TimeSlots).
-    // JSP dùng nền trầm cho buổi đã hết giờ; vẫn cho bấm chi tiết và giữ nhãn kết quả đã lưu trong Sessions.Status.
+    // ===== KHÔNG IN RA MÀN (chỉ dùng trong code) =====
+    private String status;
+    private String missedReason;
+    private String cancelType;
+    private LocalDateTime cancelledAt;
+    private int subscriptionId;
+    private String type;
+    private LocalDate packageStartDate;
+    private LocalDate packageEndDate;
+    private int holderCustomerId;
+    private Integer partnerCustomerId;
+    private String holderName;
+    private String partnerFullName;
     private boolean ended;
 
-    // Chỉ màn "Gói của tôi" (MyBookingService) điền 3 field dưới:
-    private String moveNote;             // vì sao buổi lệch lịch cố định: "PT dời lịch · thay buổi T3 06/10" (SessionMoveLogs)
-    private boolean firstOfWeek;         // buổi đầu tiên của 1 tuần trong gói → dải chấm vẽ vạch ngăn tuần
-    private boolean rebook;              // buổi lẻ gần nhất với PT này → hiện "Đặt lại với PT"
-    private boolean noGymPass;           // buổi sắp tới mà bạn chưa có Membership/DayPass (không tính bảo lưu, ngày phòng nghỉ)
-    // ---------------- Kết thúc phần 2: dữ liệu Service tính thêm ----------------
-
-    /** Buổi đã hết giờ; chỉ điều khiển cách hiển thị, không thay trạng thái trong DB. */
     public boolean isEnded() { return ended; }
 
-    /** Service điền từ giờ kết thúc của buổi. */
     public void setEnded(boolean ended) { this.ended = ended; }
 
-    /** Thứ của ngày tập: "Thứ 2" … "Chủ nhật" (JSP: ${s.dayName}); tính từ TimeSlots.SlotDate. */
+    // GETTER TỰ TÍNH — không có field/setter "dayName"; = thứ của slotDate: "Thứ 2…Thứ 7", "Chủ nhật"; JSP: customer/my-bookings.jsp:204 …
     public String getDayName() {
-        int day = slotDate.getDayOfWeek().getValue();   // Thứ 2 = 1 … Chủ nhật = 7
+        int day = slotDate.getDayOfWeek().getValue();
         return day == 7 ? "Chủ nhật" : "Thứ " + (day + 1);
     }
 
-    /** Gói đôi? */
+    // GETTER TỰ TÍNH — không có field/setter "couple"; = type == "PTCouple"; JSP: không dùng (chỉ Java/test)
     public boolean isCouple() {
         return "PTCouple".equals(type);
     }
 
-    /** Buổi lẻ? */
+    // GETTER TỰ TÍNH — không có field/setter "singleSession"; = type == "SingleSession"; JSP: customer/_session-card.jspf:20 …
     public boolean isSingleSession() {
         return "SingleSession".equals(type);
     }
 
-    // ---------------- Getter / Setter ----------------
     public int getPtEmployeeId() { return ptEmployeeId; }
     public void setPtEmployeeId(int ptEmployeeId) { this.ptEmployeeId = ptEmployeeId; }
 

@@ -25,8 +25,29 @@
  *   NHÓM 5. Lưu tạm trong trình duyệt   savePtChanges, restorePtChanges
  *   NHÓM 6. Công bố                     publishPtChanges
  *   NHÓM 7. Hàm phụ dùng chung          ptMinuteAtPointer, ptClock, ptMinutes, showPtStatus
- *   NHÓM 8. Hộp Xử lý buổi              initPtHandleDialog
+ *   NHÓM 8. Hộp Xử lý buổi              initPtHandleDialog, initPtHandleForms, ptHandleFormProblem
  *   NHÓM 9. Thao tác nhanh              initPtTools, removeAllPtFree, copyPtWeekToNext, showPtCopyNotice
+ *   (HÀM CHÍNH initPtSchedule ở NHÓM 1; các nhóm sau là hàm phụ nó gắn vào sự kiện, xếp theo thứ tự gắn.)
+ *
+ * JS TÌM PHẦN TỬ NÀO TRÊN TRANG?  (getElementById("x") = tìm thẻ có id="x"; querySelector(".a") = thẻ có class "a")
+ *   Mẫu tìm                        Ở file JSP nào (thư mục WEB-INF/jsp/pt/)     Dùng để
+ *   #main-content (ptPlan)         schedule.jsp <main data-duration data-axis-start data-axis-end data-draft-key …>
+ *                                                                               đọc P-06, trục giờ, khóa lưu nháp
+ *   .pt-plan-board                 schedule.jsp <section> panel lịch             gắn rê chuột / bấm / tích ô gỡ
+ *   .pt-day-track[data-date]       _schedule-day.jspf thân 1 cột ngày (data-first / data-last = giờ được thêm)
+ *   .pt-slot[data-start]           _schedule-day.jspf 1 thẻ khung đang chiếm giờ  kiểm trùng giờ khi thêm nháp
+ *   .pt-remove                     _schedule-day.jspf ô tích "Gỡ khung"           gom removeIds khi Công bố
+ *   #pt-add-form                   _schedule-toolbar.jspf form "Thêm khung"       addPtDraftFromForm
+ *   [data-plan-action], [data-jump-date]  _schedule-toolbar.jspf nút thao tác nhanh / ô nhảy ngày   initPtTools
+ *   #pt-ghost                      schedule.jsp bóng khung đi theo chuột          movePtGhost
+ *   #pt-draft-template             _schedule-draft-template.jspf <template>       addPtDraft sao chép
+ *   .pt-draft                      thẻ nháp JS vừa tạo (từ template)              Công bố / Bỏ / lưu tạm
+ *   #pt-publish-form, #pt-publish, #pt-clear, #pt-publish-error   _schedule-pending.jspf thanh Chờ công bố
+ *   #pt-plan-status                schedule.jsp <p role="status"> ẩn              báo cho trình đọc màn hình
+ *   #pt-handle                     _schedule-handle.jspf <dialog>                initPtHandleDialog
+ *
+ * HÀM LẤY TỪ common.js (nạp trước): showToast(loại, chữ) — toast góc màn; postData(url, URLSearchParams) — gửi POST AJAX, trả {success, message} (dùng ở publishPtChanges);
+ *   setButtonLoading(nút, true) — khóa nút đang gửi; formatDate("2026-11-12") → "12/11/2026".
  */
 
 // ===== Đọc một lần từ JSP =====
@@ -102,8 +123,15 @@ function movePtGhost(event) {
     ptGhost.style.setProperty("--start", start - ptAxisStart);
     ptGhost.style.setProperty("--length", ptDuration);
     ptGhost.querySelector(".pt-slot-time").textContent = ptClock(start) + " – " + ptClock(start + ptDuration);
-    // Lý do đầy đủ được báo khi bấm; ô theo chuột chỉ giữ nhãn ngắn để không tràn chiều cao.
-    ptGhost.querySelector(".pt-ghost-hint").textContent = reason ? "Không thể thêm" : "Bấm để thêm";
+    // Lý do đầy đủ được báo bằng toast khi bấm; ô theo chuột chỉ giữ nhãn ngắn để không tràn chiều cao.
+    // Trùng khung thì ghi luôn khung bị trùng ("Trùng 17:00 – 18:30") để PT biết vì sao không thêm được.
+    let hint = "Bấm để thêm";
+    if (reason.startsWith("Trùng khung ")) {
+        hint = "Trùng " + reason.slice("Trùng khung ".length).replace(/\.$/, "");
+    } else if (reason) {
+        hint = "Không thể thêm";
+    }
+    ptGhost.querySelector(".pt-ghost-hint").textContent = hint;
     ptGhost.classList.toggle("is-blocked", reason !== "");
     if (ptGhost.parentElement !== track) {
         track.appendChild(ptGhost);
@@ -172,10 +200,13 @@ function addPtDraftFromForm(event) {
     const track = ptPlan.querySelector('.pt-day-track[data-date="' + form.elements.date.value + '"]');
     const start = ptMinutes(startInput.value);
 
-    // B2: thêm nháp; lỗi thì báo ngay dưới ô giờ (trình duyệt tự hiện bong bóng lỗi).
-    const error = addPtDraft(track, start);//thêm nháp
-    startInput.setCustomValidity(error);
-    if (!form.reportValidity()) {
+    // B2: thêm nháp; không thêm được (trùng khung, ngoài giờ, chưa chọn giờ…) → TOAST đỏ + viền đỏ ô giờ.
+    //     Không dùng bong bóng mặc định của trình duyệt (reportValidity) — trông như trình duyệt chặn chứ không phải hệ thống.
+    const error = addPtDraft(track, start);
+    startInput.classList.toggle("invalid", error !== "");
+    if (error) {
+        showPtStatus(error, true);
+        startInput.focus();
         return;
     }
 
@@ -189,7 +220,7 @@ function addPtDraftFromForm(event) {
 function showPtEndTime() {
     const form = document.getElementById("pt-add-form");
     const start = ptMinutes(form.elements.start.value);
-    form.elements.start.setCustomValidity("");   // sửa giờ thì xóa lỗi cũ
+    form.elements.start.classList.remove("invalid");   // sửa giờ thì bỏ viền đỏ cũ
     form.elements.end.value = Number.isFinite(start) ? ptClock(start + ptDuration) : "--:--";
 }
 
@@ -436,7 +467,7 @@ function showPtStatus(text, isError) {
 
 
 // ================================================================================================================
-// NHÓM 8. HỘP XỬ LÝ BUỔI — dữ liệu và form do server in sẵn (_handle-dialog.jspf), JS không gửi gì
+// NHÓM 8. HỘP XỬ LÝ BUỔI — dữ liệu và form do server in sẵn (_schedule-handle*.jspf), JS không gửi gì
 // ================================================================================================================
 
 /**
@@ -467,6 +498,110 @@ function initPtHandleDialog() {
     dialog.addEventListener("close", function () {
         history.replaceState(null, "", dialog.dataset.closeUrl);
     });
+
+    // B4: 3 form trong hộp tự kiểm trước khi gửi → báo bằng toast (initPtHandleForms)
+    initPtHandleForms(dialog);
+
+    // B5: SERVER vừa từ chối (JSP in .pt-handle-error, VD "khung vừa bị lấy", "trùng khung 17:00–18:30")
+    //     → toast đỏ nói rõ là hệ thống chặn; dòng đỏ trong hộp vẫn giữ để đọc lại.
+    const serverError = dialog.querySelector(".pt-handle-error");
+    if (serverError) {
+        showToast("error", "Hệ thống chưa lưu: " + serverError.textContent.trim());
+    }
+}
+
+/**
+ * HÀM PHỤ — gọi ở B4 của initPtHandleDialog.
+ * 3 form Dời / Chuyển / Hủy có novalidate → trình duyệt KHÔNG hiện bong bóng "Please check this box…".
+ * Thay vào đó: thiếu gì thì TOAST đỏ (showToast của common.js) + viền đỏ đúng chỗ, không gửi form.
+ * Server (PtSessionHandleService) vẫn kiểm lại y hệt; nếu lọt (VD khung vừa bị lấy) → câu đỏ đầu hộp sau khi tải lại.
+ */
+function initPtHandleForms(dialog) {
+    for (const form of dialog.querySelectorAll(".pt-handle-panel")) {
+        form.addEventListener("submit", function (event) {
+            const problem = ptHandleFormProblem(form);
+            if (problem) {
+                event.preventDefault();
+                showToast("error", problem.message);
+                if (problem.field) {
+                    problem.field.classList.add("is-invalid");
+                    problem.field.focus({ preventScroll: false });
+                }
+                return;
+            }
+            // Hợp lệ → khóa nút để không bấm 2 lần (setButtonLoading ở common.js)
+            const button = form.querySelector('button[type="submit"]');
+            if (button) {
+                setTimeout(function () { setButtonLoading(button, true); }, 0);
+            }
+        });
+        // Sửa / chọn lại thì bỏ viền đỏ
+        form.addEventListener("input", function (event) {
+            const box = event.target.closest(".is-invalid") || event.target;
+            box.classList.remove("is-invalid");
+            event.target.closest("label")?.classList.remove("is-invalid");
+        });
+    }
+
+    // Tích "Giờ khác" → con trỏ nhảy vào ô Ngày để chọn luôn
+    const newToggle = dialog.querySelector('.pt-handle-new-toggle input');
+    if (newToggle) {
+        newToggle.addEventListener("change", function () {
+            dialog.querySelector('[name="newSlotDate"]').focus();
+        });
+    }
+}
+
+/**
+ * HÀM PHỤ — gọi trong submit của initPtHandleForms.
+ * Trả {message, field} nếu form chưa gửi được, null nếu ổn. field = phần tử tô đỏ + focus.
+ *   Dời buổi : chưa chọn khung · chọn "Giờ khác" mà thiếu ngày / giờ / giờ lệch mốc 15 phút / ngày ngoài khoảng
+ *   Chuyển PT: chưa chọn PT
+ *   Hủy buổi : lý do < 5 ký tự · chưa tích "Khách đã đồng ý nhận lại tiền mặt"
+ */
+function ptHandleFormProblem(form) {
+    const panel = form.dataset.panel;
+    const chosen = form.querySelector('input[name="timeSlotId"]:checked');
+
+    if (panel === "reschedule") {
+        if (!chosen) {
+            return { message: "Chọn 1 khung giờ mới (hoặc Giờ khác) trước khi dời.", field: form.querySelector(".pt-handle-days, .pt-handle-new-toggle") };
+        }
+        if (chosen.value === "new") {
+            const dateInput = form.elements.newSlotDate;
+            const timeInput = form.elements.newStartTime;
+            if (!dateInput.value) {
+                return { message: "Chọn ngày cho khung mới.", field: dateInput };
+            }
+            if ((dateInput.min && dateInput.value < dateInput.min) || (dateInput.max && dateInput.value > dateInput.max)) {
+                return { message: "Ngày mới phải từ " + formatDate(dateInput.min) + " đến " + formatDate(dateInput.max) + ".", field: dateInput };
+            }
+            const start = ptMinutes(timeInput.value);
+            if (!Number.isFinite(start)) {
+                return { message: "Chọn giờ bắt đầu cho khung mới.", field: timeInput };
+            }
+            if (start % 15 !== 0) {
+                return { message: "Giờ bắt đầu theo mốc 15 phút (:00, :15, :30, :45).", field: timeInput };
+            }
+        }
+        return null;
+    }
+
+    if (panel === "transfer") {
+        return chosen ? null : { message: "Chọn PT nhận dạy thay trước khi chuyển.", field: form.querySelector(".pt-handle-pts") };
+    }
+
+    if (panel === "cancel") {
+        const reason = form.elements.reason;
+        if (reason.value.trim().length < 5) {
+            return { message: "Nhập lý do hủy ít nhất 5 ký tự (khách sẽ đọc lý do này).", field: reason };
+        }
+        const agreed = form.elements.refundAgreed;
+        if (!agreed.checked) {
+            return { message: "Hỏi khách trước: khách đồng ý nhận lại tiền mặt thì tích ô xác nhận rồi mới hủy.", field: agreed.closest("label") };
+        }
+    }
+    return null;
 }
 
 

@@ -482,7 +482,7 @@ public class ShiftService {
             beginTx(conn);
             try {
                 LocalDateTime now = LocalDateTime.now(DateTimeUtil.GYM_ZONE);
-                int cancelled = shiftDAO.cancelCounterOrder(conn, orderId, trimmedReason, now);
+                int cancelled = shiftDAO.cancelCounterOrder(conn, orderId, trimmedReason, now, accountId);
                 if (cancelled == 0) {
                     rollbackTx(conn);
                     return ServiceResult.fail(Messages.MSG270_ORDER_NOT_CANCELLABLE);

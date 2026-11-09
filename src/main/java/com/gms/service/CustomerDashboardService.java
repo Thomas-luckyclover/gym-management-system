@@ -54,11 +54,11 @@ import java.util.Set;
  */
 public class CustomerDashboardService {
 
-    /** Mốc "sắp hết hạn" mặc định (ngày) khi P-21 chưa có trong SystemConfigs. */
+    /** Mốc "sắp hết hạn" mặc định (ngày) khi P-18 chưa có trong SystemConfigs. */
     private static final int DEFAULT_EXPIRING_SOON_DAYS = 7;
 
-    /** Mã tham số P-21: số ngày cảnh báo gói sắp hết hạn ([CHỐT-D1]). */
-    private static final String EXPIRING_SOON_DAYS_KEY = "P-21";
+    /** Mã tham số P-18: số ngày cảnh báo gói sắp hết hạn ([CHỐT-D1]). */
+    private static final String EXPIRING_SOON_DAYS_KEY = "P-18";
 
     /** Chuỗi từ mức này trở lên thì được chào bằng màn "chuỗi tập" sau khi đăng nhập (mở rộng ngoài SRS). */
     private static final int STREAK_INTRO_MIN_DAYS = 3;
@@ -177,13 +177,17 @@ public class CustomerDashboardService {
             view.setScheduleDays(buildScheduleDays(now.toLocalDate(), weekSessions));
             view.setTrainers(groupTrainerPackages(dashboardDAO.findTrainers(customerId), subscriptions));
 
-            // Thẻ Gói tập: hiện ô "Đổi ngày" nếu gói còn đổi được. Lỗi ở đây chỉ ẩn ô, không hỏng Dashboard.
-            SubscriptionRow activeMembership = view.getActiveMembership();
-            if (activeMembership != null && "Membership".equals(activeMembership.getSubscriptionType())) {
-                ServiceResult<StartDatePicker> picker
-                        = startDateService.getPicker(accountId, activeMembership.getSubscriptionId());
-                if (picker.isSuccess()) {
-                    view.setStartPicker(picker.getData());
+            // Thẻ Gói tập: hiện ô "Đổi ngày" cho mọi gói Membership còn đổi được (kể cả gói đang dùng hoặc gói mới mua/nối tiếp).
+            for (SubscriptionRow sub : visibleSubscriptions) {
+                if (!sub.isPtPackage() && "Membership".equals(sub.getSubscriptionType())) {
+                    ServiceResult<StartDatePicker> picker
+                            = startDateService.getPicker(accountId, sub.getSubscriptionId());
+                    if (picker.isSuccess() && picker.getData() != null) {
+                        sub.setStartPicker(picker.getData());
+                        if (view.getStartPicker() == null && picker.getData().isEditable()) {
+                            view.setStartPicker(picker.getData());
+                        }
+                    }
                 }
             }
 
@@ -269,7 +273,7 @@ public class CustomerDashboardService {
      * Quyết định thẻ gói tập hiện kiểu nào. Dashboard chỉ đọc trạng thái đã lưu (GBR-14).
      *
      * - FROZEN: gói tập đang bảo lưu.
-     * - EXPIRING: gói Active còn không quá P-21 ngày và chưa có gói nối tiếp (DBR-52), nút Gia hạn nổi.
+     * - EXPIRING: gói Active còn không quá P-18 ngày và chưa có gói nối tiếp (DBR-52), nút Gia hạn nổi.
      * - ACTIVE: gói Active còn dài hạn, hoặc đã có gói nối tiếp.
      * - EXPIRED: không còn gói chạy nhưng từng có gói đã hết hạn.
      * - NONE: chưa từng có gói tập.
@@ -308,7 +312,7 @@ public class CustomerDashboardService {
         return expiringSoon && !hasNext ? CARD_EXPIRING : CARD_ACTIVE;
     }
 
-    /** Đọc P-21 (số ngày coi là "sắp hết hạn"); chưa có hoặc lỗi đọc thì dùng mặc định 7 ngày. */
+    /** Đọc P-18 (số ngày coi là "sắp hết hạn"); chưa có hoặc lỗi đọc thì dùng mặc định 7 ngày. */
     private int readExpiringSoonDays() {
         try {
             return systemConfigService.getInt(EXPIRING_SOON_DAYS_KEY);
@@ -374,21 +378,16 @@ public class CustomerDashboardService {
         // B2: kỷ lục toàn thời gian, không nhỏ hơn chuỗi đang chạy
         int record = Math.max(countLongestStreak(checkInDays, neutralDays), streak);
 
-        // B3: còn bao nhiêu ngày để PHÁ kỷ lục (cần vượt, nên +1); đang giữ kỷ lục thì 0
-        int daysToBeatRecord = streak < record ? record - streak + 1 : 0;
-
-        // B4: số buổi tháng này và tháng trước
+        // B3: số buổi tháng này và tháng trước
         int thisMonthCount = countCheckInsInMonth(checkInDays, thisMonth, today);
         int lastMonthCount = countCheckInsInMonth(checkInDays, thisMonth.minusMonths(1), today);
 
-        // B5: lịch tháng. Thứ Hai là cột đầu nên số ô trống = thứ của ngày 1 trừ 1
+        // B4: lịch tháng. Thứ Hai là cột đầu nên số ô trống = thứ của ngày 1 trừ 1
         int leadingBlanks = firstOfMonth.getDayOfWeek().getValue() - 1;
         String monthLabel = "Tháng " + String.format("%02d/%d", thisMonth.getMonthValue(), thisMonth.getYear());
 
         return new AttendanceView(
-                streak,
                 record,
-                daysToBeatRecord,
                 thisMonthCount,
                 lastMonthCount,
                 checkInDays.contains(today),
@@ -506,7 +505,7 @@ public class CustomerDashboardService {
             dangerBanners.add(new BannerItem("danger", message, "MISSING_MEMBERSHIP"));
         }
 
-        // Banner 4 (vàng): gói tập sắp hết hạn (≤ P-21 ngày), không hiện nếu đã có gói
+        // Banner 4 (vàng): gói tập sắp hết hạn (≤ P-18 ngày), không hiện nếu đã có gói
         // nối tiếp (DBR-52)
         buildExpiringSoonBanner(subscriptions, now.toLocalDate(), warningBanners);
 
@@ -514,8 +513,9 @@ public class CustomerDashboardService {
         Object[] pendingOrder = dashboardDAO.findPendingOrder(customerId);
         if (pendingOrder != null) {
             int orderId = (int) pendingOrder[0];
-            String message = "Đơn #" + orderId + " đang chờ thanh toán";
-            warningBanners.add(new BannerItem("warning", message, "PENDING_ORDER"));
+            String packageName = (String) pendingOrder[2];
+            String message = "Bạn có đơn mua " + packageName + " đang chờ thanh toán";
+            warningBanners.add(new BannerItem("warning", message, "PENDING_ORDER", packageName, orderId));
         }
 
         // Gộp: đỏ trước, vàng sau
@@ -537,7 +537,7 @@ public class CustomerDashboardService {
     private void buildExpiringSoonBanner(List<SubscriptionRow> subscriptions, LocalDate today,
             List<BannerItem> warningBanners) throws SQLException {
 
-        // B1: đọc P-21, nếu chưa seed hoặc lỗi đọc thì dùng mặc định 7 ngày
+        // B1: đọc P-18, nếu chưa seed hoặc lỗi đọc thì dùng mặc định 7 ngày
         int expiringSoonDays = readExpiringSoonDays();
 
         // B2: kiểm tra có gói nối tiếp (chưa bắt đầu) không

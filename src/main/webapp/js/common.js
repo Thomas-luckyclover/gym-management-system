@@ -266,8 +266,6 @@ const MESSAGES = {
     MSG88_LAST_ACTIVE_ADMIN: "Đây là tài khoản Admin hoạt động cuối cùng. Không thể khóa, hạ quyền hoặc chuyển sang Đã nghỉ việc.",
     // EN: The position cannot be changed while unfinished work remains: %s.
     MSG89_POSITION_CHANGE_UNFINISHED: "Không thể đổi vị trí khi còn công việc chưa hoàn thành: %s.",
-    // EN: This PT package has already used all %d swaps.
-    MSG90_SWAP_LIMIT_REACHED: "Gói PT này đã dùng hết %d lượt đổi.",
     // EN: This session has already started or is no longer scheduled, so it cannot be changed.
     MSG91_SESSION_CANNOT_CHANGE: "Buổi tập đã bắt đầu hoặc không còn ở trạng thái đã xếp lịch, nên không thể thay đổi.",
     // EN: The customer has no valid membership package on %s. Please choose another date.
@@ -1194,12 +1192,16 @@ function bindFieldValidation(form) {
         }
     }
 
+    // Rời ô: chỉ kiểm tra ô ĐÃ GÕ GÌ ĐÓ. Ô còn trống (chưa gõ) thì im lặng — lỗi "… là bắt buộc"
+    // chỉ hiện khi bấm nút gửi (validateForm). Tránh cảnh vừa mở trang (autofocus) bấm ra ngoài / bấm con mắt
+    // là đỏ cả form dù khách chưa kịp gõ.
     form.addEventListener("focusout", function (event) {
         const field = event.target;
         const isFormField = field.matches("input, select, textarea");
-        if (isFormField) {
-            checkFieldAndShowError(field);
+        if (!isFormField || isUntouchedEmptyField(field)) {
+            return;
         }
+        checkFieldAndShowError(field);
     });
 
     form.addEventListener("input", function (event) {
@@ -1207,7 +1209,25 @@ function bindFieldValidation(form) {
         if (field.classList.contains("invalid")) {
             checkFieldAndShowError(field);
         }
+        // Đổi ô gốc (VD Mật khẩu) khi ô "Nhập lại" đang báo lệch → kiểm lại ô "Nhập lại" để lỗi tự mất khi đã khớp
+        const matchFields = form.querySelectorAll('[data-match="' + field.id + '"]');
+        for (const matchField of matchFields) {
+            if (matchField.classList.contains("invalid")) {
+                checkFieldAndShowError(matchField);
+            }
+        }
     });
+}
+
+// Ô chưa gõ gì và chưa bị báo lỗi → true (rời ô thì không báo "bắt buộc"; ô checkbox chưa tích cũng tính là trống)
+function isUntouchedEmptyField(field) {
+    if (field.classList.contains("invalid")) {
+        return false;
+    }
+    if (field.type === "checkbox" || field.type === "radio") {
+        return !field.checked;
+    }
+    return isBlank(field.value);
 }
 
 // Gắn kiểm tra cho form gửi THƯỜNG (POST về Servlet, có thuộc tính data-validate) — initCommon tự gọi

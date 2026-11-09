@@ -98,6 +98,7 @@ public class ShiftMetrics {
      *
      * @return tỷ lệ phần trăm tiền mặt
      */
+    // GETTER TỰ TÍNH — không có field/setter "cashPercentage"; = cashTotal ÷ totalRevenue × 100, không có doanh thu → 0; JSP: không dùng (chỉ Java/test)
     public double getCashPercentage() {
         return totalRevenue > 0 ? ((double) cashTotal / totalRevenue) * 100.0 : 0.0;
     }
@@ -107,6 +108,7 @@ public class ShiftMetrics {
      *
      * @return tỷ lệ phần trăm chuyển khoản
      */
+    // GETTER TỰ TÍNH — không có field/setter "bankPercentage"; = bankTotal ÷ totalRevenue × 100, không có doanh thu → 0; JSP: không dùng (chỉ Java/test)
     public double getBankPercentage() {
         return totalRevenue > 0 ? ((double) bankTotal / totalRevenue) * 100.0 : 0.0;
     }

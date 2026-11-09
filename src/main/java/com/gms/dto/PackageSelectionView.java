@@ -30,7 +30,7 @@ public class PackageSelectionView {
     // Giá trị sắp xếp đã chuẩn hóa: default | saving | price-asc | price-desc.
     private String sortKey = "default";
 
-    // Service: giờ mở cửa dạng "05:30 – 22:00" (tham số P-19), dùng trong hướng dẫn mua tại quầy. Có thể null.
+    // Service: giờ mở cửa dạng "05:30 – 22:00" (tham số P-17), dùng trong hướng dẫn mua tại quầy. Có thể null.
     private String openingHours = null;
 
     // Service: trang đang xem (từ 1), đã ép vào khoảng 1..totalPages.
@@ -263,11 +263,4 @@ public class PackageSelectionView {
         this.chips = new ArrayList<>(chips);
     }
 
-    /**
-     * Có đang lọc hoặc tìm kiếm không — JSP dùng để hiện nút "Xóa bộ lọc" trong trạng thái rỗng.
-     * Tính: từ khóa khác rỗng, hoặc có chip bộ lọc đang bật. Kiểu sắp xếp không tính là lọc.
-     */
-    public boolean isFiltering() {
-        return !keyword.isEmpty() || !chips.isEmpty();
-    }
 }

@@ -2215,3 +2215,19 @@ html body.dock .counter-sale .counter-cell-action .btn.btn-primary {
     display: none !important;
   }
 }
+
+/* Dòng tách thuế: nhãn dài xuống dòng trong cột trái, số tiền giữ nguyên 1 dòng bên phải (không tràn). */
+.counter-summary-list dt {
+  min-width: 0;
+}
+.counter-summary-list dd {
+  flex: none;
+  white-space: nowrap;
+}
+.counter-tax-note {
+  display: block;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-regular);
+  line-height: 1.3;
+  text-wrap: pretty;
+}

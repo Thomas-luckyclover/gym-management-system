@@ -1,38 +1,61 @@
-# GMS — Gym Management System (Super Gym) · SWP391 · G5
+# GMS — Gym Management System (Super Gym)
 
-Hệ thống quản lý phòng gym: khách vãng lai, hội viên, PT, lễ tân, quản lý, quản trị; thanh toán VNPay, gửi mã qua email.
+**Môn học:** SWP391 — Software Development Project · **Nhóm:** G5 · **Trường Đại học FPT**
 
-**Stack:** Java 17 · Jakarta Servlet 6 / JSP 3.1 / JSTL 3 · Apache Tomcat 10.1 · SQL Server · Maven · HTML/CSS/JS thuần.
+## Giới thiệu dự án (Project Introduction)
 
-## Cài đặt lần đầu (mỗi thành viên)
+GMS là hệ thống quản lý phòng gym **Super Gym**, số hóa toàn bộ vận hành hằng ngày của một phòng tập:
+bán gói tập online (thanh toán VNPay) và tại quầy, check-in hội viên, đặt và quản lý buổi tập với huấn luyện viên (PT),
+bảo lưu gói, nghỉ phép nhân viên, bảo trì thiết bị và báo cáo doanh thu.
 
-1. Cài **JDK 17**, **Apache Tomcat 10.1.x**, **SQL Server 2019+** (+ SSMS), IDE (NetBeans / IntelliJ / VS Code + Maven).
-2. Clone repo, mở như project Maven — IDE tự tải thư viện theo `pom.xml` (không add .jar bằng tay).
-3. Tạo database: chạy `database/01_schema.sql` rồi `database/02_seed.sql` trong SSMS.
-4. Cấu hình: copy `src/main/resources/application.properties.example` → `application.properties` (cùng thư mục), sửa `db.password`…
-   File này **không commit** (đã nằm trong `.gitignore`).
-5. Build & chạy test: `mvn clean package` → ra `target/gms.war`.
-6. Deploy lên Tomcat 10.1 (IDE: Run on Server) → mở `http://localhost:8080/gms/`.
+Hệ thống phục vụ 6 nhóm người dùng: **Khách vãng lai, Hội viên, Huấn luyện viên (PT), Lễ tân, Quản lý, Quản trị viên**.
 
-> Dùng Tomcat 10.0.x? Đổi `jakarta.servlet-api` trong `pom.xml` về `5.0.0`. Tomcat 9 trở xuống **không chạy được** (khác package javax/jakarta).
+**Công nghệ:** Java 17 · Jakarta Servlet 6 / JSP 3.1 / JSTL 3 · Apache Tomcat 10.1 · SQL Server · Maven · HTML / CSS / JavaScript thuần · VNPay (sandbox) · Gmail SMTP.
 
-## Đọc gì trước khi code
+**Tài liệu dự án (SRS, thiết kế, báo cáo):** [Google Drive](https://drive.google.com/drive/folders/1FJVCnXGreeBdyfikNVIl7XMqAY3TFDfK)
 
-| Tài liệu | Nội dung |
-|---|---|
-| `agents.md` | Bối cảnh + toàn bộ quy tắc (AI đọc file này đầu tiên) |
-| `docs/project-structure.md` | File nào đặt ở đâu; bảng 67 màn → Servlet → URL → JSP |
-| `docs/team-plan.md` | Ai làm gì, quy trình Git, checklist review |
-| `docs/frontend-shared-usage.md` | Cách dùng tokens.css / common.css / common.js |
-| `docs/integration-guide.md` | VNPay + Email: luồng, lỗi, cần chuẩn bị gì |
-| `NamingConvention.md`, `codeImplementationBackend.md`, `codeImplementationFrontend.md` | Quy tắc đặt tên & viết code |
+## Chức năng chính
 
-## Có sẵn để dùng ngay
+| # | Nhóm chức năng | Nội dung |
+|---|---|---|
+| 1 | Authentication | Đăng nhập, chọn vai trò, đăng xuất, đăng ký tài khoản, quên mật khẩu, cài đặt tài khoản, thông báo trong ứng dụng |
+| 2 | Public Website | Trang chủ, giới thiệu, bảng giá, blog |
+| 3 | System Account Management | Quản lý tài khoản hệ thống, nhật ký thao tác (audit log) |
+| 4 | Configuration & Catalogue | Tham số vận hành, giờ mở cửa, danh mục gói tập / gói PT, voucher |
+| 5 | Staff & Leave | Hồ sơ nhân viên, gửi và duyệt đơn nghỉ phép |
+| 6 | Customer Management | Hồ sơ hội viên (kể cả hồ sơ phụ thuộc), duyệt xóa hội viên, check-in, bảo lưu gói |
+| 7 | Sales & Payment | Mua gói online qua VNPay, bán hàng tại quầy, bán gói PT, ca làm việc & đối soát tiền, lịch sử giao dịch |
+| 8 | Facilities & Maintenance | Danh mục cơ sở vật chất / thiết bị, báo hỏng và duyệt bảo trì |
+| 9 | Customer Training | Trang cá nhân hội viên, gói của tôi, lịch tập, chỉ số cơ thể, đặt buổi PT lẻ, giáo án, thư viện bài tập |
+| 10 | PT Teaching | Dashboard PT, lịch dạy (công bố khung giờ, dời / chuyển / hủy buổi), ghi chú khách, soạn giáo án |
+| 11 | Feedback | Hội viên gửi góp ý, quản lý xem góp ý |
+| 12 | Content & Notifications | Quản lý bài viết blog, gửi thông báo |
+| 13 | Reporting | Báo cáo vận hành & doanh thu (Quản lý), báo cáo hệ thống (Quản trị viên) |
 
-- **Java:** `DBContext`, `ServiceResult`, `PageResult`, `JsonResponse`, `PasswordUtil` (BCrypt), `ValidationUtil`, `DateTimeUtil`,
-  `MoneyUtil`, `JsonUtil`, `RequestUtil`, `PaginationUtil`, `SqlUtil`, `SecureCodeUtil`, `Messages` (MSG01–61 tiếng Việt),
-  `Role`, `SessionKey`, Filter đăng nhập + 5 Filter phân quyền, `SessionRegistryListener`, scheduler + 7 job khung,
-  `VnPayClient`, `EmailGateway`, trang lỗi 403/404/500, hàm EL `gms:formatMoney/formatDate/...`.
-- **Frontend:** `tokens.css` (6 theme theo vai trò), `common.css`, `common.js` (toast, hộp xác nhận, kiểm tra form,
-  AJAX, đếm ngược, định dạng tiền/ngày, phân trang), `head.jspf`, `flash-toast.jspf`.
-- **Test:** `mvn test` — kiểm tra ValidationUtil, MoneyUtil, DateTimeUtil, SqlUtil và ký số VNPay.
+## Thành viên (Member List) — Trường Đại học FPT
+
+| # | Họ tên | GitHub | Vai trò |
+|---|---|---|---|
+| 1 | Lê Công Minh | [@Thomas-luckyclover](https://github.com/Thomas-luckyclover) | **Leader** |
+| 2 | Phan Khắc Huy Hoàng | [@MuscleCodder06](https://github.com/MuscleCodder06) | Member |
+| 3 | Lê Thị Thanh Nhàn | [@lenhan24](https://github.com/lenhan24) | Member |
+| 4 | Nguyễn Tuấn Minh | [@Penguin336](https://github.com/Penguin336) | Member |
+| 5 | Nguyễn Đăng Vũ | [@godzetkaa](https://github.com/godzetkaa) | Member |
+
+## Cách chạy (How to Run)
+
+1. Cài **JDK 17**, **Apache Tomcat 10.1**, **SQL Server** (+ SSMS) và NetBeans (hoặc IDE có Maven).
+2. Tạo database: trong SSMS chạy lần lượt `database/0_Reset_Database.sql` → `database/1_Init_Schema.sql` → `database/2_Seed_Data.sql`.
+3. Copy `src/main/resources/application.properties.example` thành `application.properties` (cùng thư mục), điền tài khoản SQL Server.
+   File này không được commit.
+4. Mở project trong NetBeans → **Clean and Build** → **Run** (Tomcat 10.1).
+5. Mở `http://localhost:<port>/gym-management-system/`. Tài khoản mẫu trong dữ liệu seed dùng mật khẩu `Gms@2026`
+   (ví dụ khách `an.nguyen95@gmail.com`, lễ tân `tam.le@gms.vn`, quản lý `viet.tran@gms.vn`, PT `trang.nguyen@gms.vn`).
+
+> Chưa điền App Password Gmail thì email (mã xác thực…) được in ra console Tomcat thay vì gửi thật.
+
+## Lời cảm ơn
+
+Nhóm G5 xin chân thành cảm ơn giảng viên môn SWP391 đã hướng dẫn và góp ý trong suốt quá trình thực hiện dự án,
+cảm ơn Trường Đại học FPT đã tạo môi trường học tập và thực hành, và cảm ơn từng thành viên trong nhóm đã cùng nhau
+hoàn thành Super Gym.

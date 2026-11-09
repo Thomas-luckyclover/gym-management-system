@@ -164,10 +164,12 @@ public class CustomerMembershipRow {
         return subscriptionId != null && subscriptionId > 0;
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "currentlyFrozen"; = openFreezeId khác null và lớn hơn 0; JSP: không dùng (chỉ Java/test)
     public boolean isCurrentlyFrozen() {
         return openFreezeId != null && openFreezeId > 0;
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "eligibleToFreeze"; = có gói, chưa bảo lưu, trạng thái Active, còn lượt và gói chưa hết hạn; JSP: không dùng (chỉ Java/test)
     public boolean isEligibleToFreeze() {
         if (!hasMembership() || isCurrentlyFrozen()) {
             return false;
@@ -188,6 +190,7 @@ public class CustomerMembershipRow {
         return hasMembership() && startDate != null && startDate.isAfter(LocalDate.now());
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "freezeStatusBadgeClass"; = class huy hiệu theo đang bảo lưu / đủ điều kiện / còn lại; JSP: receptionist/freeze-membership.jsp:502
     public String getFreezeStatusBadgeClass() {
         if (isCurrentlyFrozen()) {
             return "badge-warning";
@@ -201,6 +204,7 @@ public class CustomerMembershipRow {
         return "badge-muted";
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "freezeStatusLabel"; = chữ theo đang bảo lưu / đủ điều kiện (lượt đã dùng) / còn lại; JSP: receptionist/freeze-membership.jsp:504
     public String getFreezeStatusLabel() {
         if (isCurrentlyFrozen()) {
             return "Đang bảo lưu";
@@ -220,6 +224,7 @@ public class CustomerMembershipRow {
         return "Chưa có gói";
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "daysRemaining"; = số ngày từ hôm nay tới endDate, không có gói → null; JSP: receptionist/freeze-membership.jsp:489
     public Long getDaysRemaining() {
         if (!hasMembership() || endDate == null) {
             return null;
@@ -232,6 +237,7 @@ public class CustomerMembershipRow {
         return java.time.temporal.ChronoUnit.DAYS.between(today, endDate);
     }
 
+    // GETTER TỰ TÍNH — không có field/setter "daysRemainingText"; = chữ theo getDaysRemaining ("Đã hết hạn", "Hết hạn hôm nay", "Còn N ngày"); JSP: receptionist/freeze-membership.jsp:487 …
     public String getDaysRemainingText() {
         Long days = getDaysRemaining();
         if (days == null) {

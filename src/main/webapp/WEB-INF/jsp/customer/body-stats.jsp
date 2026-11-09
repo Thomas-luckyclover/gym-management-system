@@ -76,6 +76,7 @@
                         <section class="panel stats-chart" aria-labelledby="stats-chart-title">
                             <header class="stats-head">
                                 <h2 id="stats-chart-title"><c:out value="${stats.metricLabel}" /></h2>
+                                <%-- stats.hasChart = getter tự tính isHasChart() · dto/BodyStatsView.java --%>
                                 <c:if test="${stats.hasChart}"><p><c:out value="${stats.chartFrom}" /> – <c:out value="${stats.chartTo}" /> · <c:out value="${fn:length(stats.chartPoints)}" /> lần đo</p></c:if>
                             </header>
                             <c:choose>
@@ -120,6 +121,7 @@
                                     <input type="text" name="weight" inputmode="decimal" autocomplete="off" placeholder="58,6" required>
                                 </label>
                                 <label class="stats-field"><span>Chiều cao <small>cm</small></span>
+                                    <%-- stats.lastHeightText = getter tự tính getLastHeightText() · dto/BodyStatsView.java --%>
                                     <input type="text" name="height" inputmode="decimal" autocomplete="off" value="${stats.lastHeightText}" placeholder="160" required>
                                 </label>
                                 <label class="stats-field"><span>Tỷ lệ mỡ <small>% · không bắt buộc</small></span>
@@ -156,11 +158,17 @@
                                         <c:forEach var="r" items="${stats.rows}">
                                             <tr>
                                                 <td class="date"><c:out value="${gms:formatDate(r.measuredOn)}" /></td>
+                                                <%-- r.weightText = getter tự tính getWeightText() · dto/BodyStatRow.java (r = BodyStatRow) --%>
                                                 <td class="num"><c:out value="${r.weightText}" /></td>
+                                                <%-- getter tự tính: r.changeText = getChangeText(), r.changeTone = getChangeTone() · dto/BodyStatRow.java (r = BodyStatRow) --%>
                                                 <td class="num is-${r.changeTone}"><c:out value="${r.changeText}" /></td>
+                                                <%-- r.bmiText = getter tự tính getBmiText() · dto/BodyStatRow.java (r = BodyStatRow) --%>
                                                 <td class="num" data-label="BMI"><c:out value="${r.bmiText}" /></td>
+                                                <%-- r.fatText = getter tự tính getFatText() · dto/BodyStatRow.java (r = BodyStatRow) --%>
                                                 <td class="num" data-label="Mỡ"><c:out value="${r.fatText}" /></td>
+                                                <%-- r.muscleText = getter tự tính getMuscleText() · dto/BodyStatRow.java (r = BodyStatRow) --%>
                                                 <td class="num" data-label="Cơ"><c:out value="${r.muscleText}" /></td>
+                                                <%-- r.waistText = getter tự tính getWaistText() · dto/BodyStatRow.java (r = BodyStatRow) --%>
                                                 <td class="num" data-label="Vòng eo"><c:out value="${r.waistText}" /></td>
                                                 <td class="note"><c:out value="${r.note}" /></td>
                                                 <td>

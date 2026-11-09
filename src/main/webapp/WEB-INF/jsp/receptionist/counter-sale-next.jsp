@@ -33,8 +33,8 @@
 <head>
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Xác nhận thanh toán · Super Gym Lễ tân</title>
-    <link rel="stylesheet" href="${ctx}/css/pages/receptionist/counter-sale.css?v=20261031_vVoucherDone">
-    <script src="${ctx}/js/pages/receptionist/counter-sale.js?v=20261031_vVoucherDone" defer></script>
+    <link rel="stylesheet" href="${ctx}/css/pages/receptionist/counter-sale.css?v=20261105vat">
+    <script src="${ctx}/js/pages/receptionist/counter-sale.js?v=20261109merge" defer></script>
 </head>
 <body class="dock theme-staff counter-sale-page">
 <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
@@ -88,13 +88,16 @@
                                 <div class="counter-customer-details">
                                     <div class="customer-name-row">
                                         <span class="customer-name"><c:out value="${selectedCustomer.fullName}" /></span>
+                                        <%-- selectedCustomer.statusBadgeClass = getter tự tính getStatusBadgeClass() · dto/CounterCustomerRow.java (selectedCustomer = CounterCustomerRow) --%>
                                         <span class="badge ${selectedCustomer.statusBadgeClass}"><c:out value="${selectedCustomer.status.displayName}" /></span>
+                                        <%-- selectedCustomer.dependent = getter tự tính isDependent() · dto/CounterCustomerRow.java (selectedCustomer = CounterCustomerRow) --%>
                                         <c:if test="${selectedCustomer.dependent}">
                                             <span class="badge badge-info">Hồ sơ phụ thuộc</span>
                                         </c:if>
                                     </div>
                                     <div class="customer-meta-row">
                                         <span><i class="fa-solid fa-id-card"></i> Mã KH: <strong><c:out value="${selectedCustomer.customerCode}" /></strong></span>
+                                        <%-- selectedCustomer.phoneText = getter tự tính getPhoneText() · dto/CounterCustomerRow.java (selectedCustomer = CounterCustomerRow) --%>
                                         <span><i class="fa-solid fa-phone"></i> SĐT: <strong><c:out value="${selectedCustomer.phoneText}" /></strong></span>
                                     </div>
                                 </div>
@@ -140,6 +143,9 @@
                                         <input type="radio" name="startDateMode" id="modeToday" value="today" checked>
                                         <span class="radio-label">
                                             <c:choose>
+                                                <c:when test="${isDayPass}">
+                                                    <strong>Vé ngày có hiệu lực ngay hôm nay</strong> (<c:out value="${todayText}" />)
+                                                </c:when>
                                                 <c:when test="${isChained}">
                                                     <strong>Kích hoạt nối tiếp sau gói hiện tại</strong> (<c:out value="${defaultStartDateText}" />)
                                                 </c:when>
@@ -149,23 +155,28 @@
                                             </c:choose>
                                         </span>
                                     </label>
-                                    <label class="validity-option-radio">
-                                        <input type="radio" name="startDateMode" id="modeCustom" value="custom">
-                                        <span class="radio-label">
-                                            <strong>Hẹn ngày kích hoạt khác</strong> (trong 7 ngày tới)
-                                        </span>
-                                    </label>
+                                    <%-- CBR-119: chỉ gói tập mới (chưa có gói nối tiếp) được hẹn ngày; vé ngày và gói nối tiếp thì không. --%>
+                                    <c:if test="${canPickDate}">
+                                        <label class="validity-option-radio">
+                                            <input type="radio" name="startDateMode" id="modeCustom" value="custom">
+                                            <span class="radio-label">
+                                                <strong>Hẹn ngày kích hoạt khác</strong> (trong 7 ngày tới)
+                                            </span>
+                                        </label>
+                                    </c:if>
                                 </div>
 
                                 <%-- id="customDateWrap" được dùng trong counter-sale.js, hàm initValidityPicker() để toggle ẩn/hiện --%>
-                                <div class="validity-custom-input" id="customDateWrap" hidden>
-                                    <label for="customStartDate" class="field-label">Chọn ngày bắt đầu:</label>
-                                    <input type="date" id="customStartDate" name="customStartDate"
-                                           value="<c:out value='${defaultStartDateIso}' />"
-                                           min="<c:out value='${minStartDateIso}' />"
-                                           max="<c:out value='${maxStartDateIso}' />">
-                                    <span class="field-hint">Chỉ được chọn từ <c:out value="${defaultStartDateText}" /> đến <c:out value="${maxStartDateText}" /></span>
-                                </div>
+                                <c:if test="${canPickDate}">
+                                    <div class="validity-custom-input" id="customDateWrap" hidden>
+                                        <label for="customStartDate" class="field-label">Chọn ngày bắt đầu:</label>
+                                        <input type="date" id="customStartDate" name="customStartDate"
+                                               value="<c:out value='${defaultStartDateIso}' />"
+                                               min="<c:out value='${minStartDateIso}' />"
+                                               max="<c:out value='${maxStartDateIso}' />">
+                                        <span class="field-hint">Chỉ được chọn từ <c:out value="${defaultStartDateText}" /> đến <c:out value="${maxStartDateText}" /></span>
+                                    </div>
+                                </c:if>
 
                                 <div class="validity-dates-preview">
                                     <div class="date-chip">
@@ -209,6 +220,18 @@
                                         </div>
                                     </div>
                                 </label>
+                            </div>
+
+                            <%-- CBR-77: chuyển khoản chỉ hoàn tất sau khi lễ tân xác nhận tiền đã về tài khoản phòng tập. --%>
+                            <%-- id="transferConfirmBox" và "transferReceived" được dùng trong counter-sale.js, hàm initPaymentMethodToggle() --%>
+                            <div class="counter-transfer-confirm" id="transferConfirmBox" hidden>
+                                <label class="counter-transfer-tick" for="transferReceived">
+                                    <input type="checkbox" name="transferReceived" value="true" id="transferReceived">
+                                    <span>Tôi đã kiểm tra tiền đã về tài khoản phòng tập, đủ số tiền</span>
+                                </label>
+                                <input type="text" name="transferReference" id="transferReference"
+                                       maxlength="50" autocomplete="off"
+                                       placeholder="Mã giao dịch chuyển khoản (không bắt buộc)">
                             </div>
                         </div>
 
@@ -257,11 +280,11 @@
                                     <dd class="discount-amount">-<span id="summaryDiscountAmount">0 đ</span></dd>
                                 </div>
                                 <div>
-                                    <dt>Trước thuế VAT</dt>
+                                    <dt>Trước thuế VAT<small class="counter-tax-note">Đã bao gồm trong tổng hóa đơn</small></dt>
                                     <dd id="summaryPreTaxAmount"><c:out value="${gms:formatMoney(selectedCard.preTaxAmount)}" /></dd>
                                 </div>
                                 <div>
-                                    <dt>Thuế VAT <c:out value="${selectedCard.vatRate}" />% (đã gồm)</dt>
+                                    <dt>Thuế VAT <c:out value="${selectedCard.vatRate}" />%<small class="counter-tax-note">Đã bao gồm trong tổng hóa đơn</small></dt>
                                     <dd id="summaryVatAmount"><c:out value="${gms:formatMoney(selectedCard.vatAmount)}" /></dd>
                                 </div>
                                 <div class="is-total">

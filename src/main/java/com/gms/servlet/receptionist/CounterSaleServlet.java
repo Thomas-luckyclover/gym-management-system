@@ -2,6 +2,7 @@ package com.gms.servlet.receptionist;
 
 import com.gms.constant.Messages;
 import com.gms.constant.SessionKey;
+import com.gms.entity.Package;
 import com.gms.dto.CounterCheckoutInput;
 import com.gms.dto.CounterCustomerCreateInput;
 import com.gms.dto.CounterCustomerRow;
@@ -33,16 +34,17 @@ import java.util.Map;
 /**
  * SERVLET MÀN LỄ TÂN BÁN GÓI TẠI QUẦY — /receptionist/sales (SRS #37).
  *
- * ReceptionistAreaFilter kiểm quyền Lễ tân.
- * Áp dụng mô hình PRG (Post/Redirect/Get) sau khi thu tiền để chống submit trùng lặp.
+ * ReceptionistAreaFilter kiểm quyền Lễ tân. Áp dụng mô hình PRG
+ * (Post/Redirect/Get) sau khi thu tiền để chống submit trùng lặp.
  *
- * GET /receptionist/sales                 Chọn gói → counter-sale-packages.jsp
- * GET /receptionist/sales?package=3       Chọn khách → counter-sale-customers.jsp
- * GET /receptionist/sales/customers?q=mai AJAX tìm khách → JSON tối đa 20 khách
- * GET /receptionist/sales/voucher?package=3&customer=12&code=WELCOME10 AJAX kiểm tra voucher → JSON
- * GET /receptionist/sales?package=3&customer=12 Xác nhận & Thu tiền → counter-sale-next.jsp
- * GET /receptionist/sales?receipt=101     In/xem biên lai thu tiền → counter-sale-receipt.jsp
- * POST /receptionist/sales                Xác nhận thu tiền tại quầy (tiền mặt / chuyển khoản)
+ * GET /receptionist/sales Chọn gói → counter-sale-packages.jsp GET
+ * /receptionist/sales?package=3 Chọn khách → counter-sale-customers.jsp GET
+ * /receptionist/sales/customers?q=mai AJAX tìm khách → JSON tối đa 20 khách GET
+ * /receptionist/sales/voucher?package=3&customer=12&code=WELCOME10 AJAX kiểm
+ * tra voucher → JSON GET /receptionist/sales?package=3&customer=12 Xác nhận &
+ * Thu tiền → counter-sale-next.jsp GET /receptionist/sales?receipt=101 In/xem
+ * biên lai thu tiền → counter-sale-receipt.jsp POST /receptionist/sales Xác
+ * nhận thu tiền tại quầy (tiền mặt / chuyển khoản)
  */
 @WebServlet(urlPatterns = {"/receptionist/sales", "/receptionist/sales/customers", "/receptionist/sales/voucher"})
 public class CounterSaleServlet extends HttpServlet {
@@ -164,13 +166,12 @@ public class CounterSaleServlet extends HttpServlet {
             startDate = DateTimeUtil.parseHtmlDate(customStartDateStr);
         }
 
+        boolean transferReceived = "true".equals(request.getParameter("transferReceived"));
+        String transferReference = request.getParameter("transferReference");
+
         CounterCheckoutInput input = new CounterCheckoutInput(
-                packageId,
-                customerId,
-                startDate,
-                paymentMethod,
-                voucherCode
-        );
+                packageId, customerId, startDate, paymentMethod, voucherCode,
+                transferReceived, transferReference);
 
         String receptionistName = "Lễ tân quầy";
         HttpSession session = request.getSession(false);
@@ -202,6 +203,7 @@ public class CounterSaleServlet extends HttpServlet {
 
     /**
      * HÀM PHỤ — màn Chọn gói: Service dựng 3 tab thẻ gói rồi forward JSP.
+     *
      * @param request HTTP request
      * @param response HTTP response
      * @param accountId mã tài khoản lễ tân từ session
@@ -218,7 +220,9 @@ public class CounterSaleServlet extends HttpServlet {
     }
 
     /**
-     * HÀM PHỤ — màn Chọn khách: chỉ vẽ khung, bảng khách do counter-sale.js đổ vào sau mỗi lần gõ.
+     * HÀM PHỤ — màn Chọn khách: chỉ vẽ khung, bảng khách do counter-sale.js đổ
+     * vào sau mỗi lần gõ.
+     *
      * @param request HTTP request
      * @param response HTTP response
      */
@@ -230,6 +234,7 @@ public class CounterSaleServlet extends HttpServlet {
 
     /**
      * HÀM PHỤ — JSON cho ô tìm khách.
+     *
      * @param response HTTP response
      * @param accountId mã tài khoản lễ tân
      * @param keyword từ khóa tìm kiếm
@@ -271,7 +276,8 @@ public class CounterSaleServlet extends HttpServlet {
     }
 
     /**
-     * HÀM PHỤ — kiểm tra mã giảm giá và trả JSON cho JavaScript cập nhật realtime bảng tính tiền.
+     * HÀM PHỤ — kiểm tra mã giảm giá và trả JSON cho JavaScript cập nhật
+     * realtime bảng tính tiền.
      *
      * @param request HTTP request
      * @param response HTTP response
@@ -296,8 +302,9 @@ public class CounterSaleServlet extends HttpServlet {
     }
 
     /**
-     * HÀM PHỤ — bước sau Chọn khách: Xác nhận thông tin & Thu tiền.
-     * Tính toán sẵn ngày kích hoạt (hôm nay hoặc nối tiếp) và ngày hết hạn dự kiến.
+     * HÀM PHỤ — bước sau Chọn khách: Xác nhận thông tin & Thu tiền. Tính toán
+     * sẵn ngày kích hoạt (hôm nay hoặc nối tiếp) và ngày hết hạn dự kiến.
+     *
      * @param request HTTP request
      * @param response HTTP response
      * @param accountId mã tài khoản lễ tân
@@ -341,6 +348,11 @@ public class CounterSaleServlet extends HttpServlet {
         LocalDate minStartDate = isChained ? startDate : today;
         LocalDate maxStartDate = minStartDate.plusDays(7);
 
+        boolean isDayPass = card != null && (card.getPackageType() == Package.Type.DAY_PASS || card.getDurationMonths() == 0);
+        boolean canPickDate = !isDayPass && !isChained;
+
+        request.setAttribute("isDayPass", isDayPass);
+        request.setAttribute("canPickDate", canPickDate);
         request.setAttribute("today", today);
         request.setAttribute("todayText", DateTimeUtil.formatDate(today));
         request.setAttribute("isChained", isChained);
@@ -360,6 +372,7 @@ public class CounterSaleServlet extends HttpServlet {
 
     /**
      * HÀM PHỤ — hiển thị biên lai thu tiền sau khi thanh toán thành công.
+     *
      * @param request HTTP request
      * @param response HTTP response
      */
@@ -425,6 +438,7 @@ public class CounterSaleServlet extends HttpServlet {
 
     /**
      * HÀM PHỤ — mã tài khoản trong session; chưa đăng nhập trả null.
+     *
      * @param request HTTP request
      * @return mã accountId nếu đã đăng nhập; null nếu chưa
      */

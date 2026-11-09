@@ -1,49 +1,33 @@
-<%--
-================================================================================
- _header.jspf — Thanh đầu trang dùng chung cho các màn PT.
- Trang cha (dashboard.jsp / schedule.jsp) include file này bên trong div.main.
- Bạt nằm phía trên header.
-
- DỮ LIỆU ĐỌC:
-   pageTitle       String     Servlet đặt tiêu đề, ví dụ "Lịch dạy".
-   today           LocalDate  Servlet lấy ngày hôm nay theo giờ Việt Nam.
-   ptEmployeeCode  String     mã Employees.EmployeeCode nếu trang đã tải, ví dụ NV-0005.
-   sessionScope.displayName   tên người đăng nhập; LoginServlet lưu trong session.
-
- THƯ VIỆN: trang cha đã khai báo c và gms trước khi include.
-   c:out in dữ liệu có escape HTML; gms:formatDate đổi LocalDate sang dd/MM/yyyy.
-================================================================================ --%>
 <%@ page pageEncoding="UTF-8" %>
+<%--
+  THANH TIÊU ĐỀ dùng chung các màn PT (dashboard.jsp, schedule.jsp, exercises.jsp).
+  Servlet của màn đặt: pageTitle (chữ tiêu đề) · pageHelp (câu hướng dẫn trong nút "i", có thì mới hiện nút) · today (ngày hôm nay).
+  Bên phải: chuông thông báo + thẻ tài khoản (common).
+--%>
 
-<%-- ===== Thanh đầu trang PT ===== --%>
 <header class="topbar">
-    <%-- ===== Bên trái: tiêu đề trang + ngày hôm nay (pageTitle, today) ===== --%>
+
     <div class="tb-left">
-        <%-- pageTitle do Servlet của trang đang xem đặt; không ghi cứng để dùng chung nhiều màn. --%>
+
         <h1 class="tb-title">
             <c:out value="${pageTitle}" />
         </h1>
-        <%-- Nút i cạnh tiêu đề (giống màn Lịch tập của khách): chỉ hiện khi Servlet đặt pageHelp.
-             common.js điều khiển .pt-info: bấm để mở, bấm ngoài hoặc Escape để đóng. --%>
+
         <c:if test="${not empty pageHelp}">
             <span class="pt-info">
                 <button type="button" class="pt-info-trigger" aria-label="Hướng dẫn ${pageTitle}" aria-describedby="pt-page-help"><span aria-hidden="true">i</span></button>
                 <span id="pt-page-help" class="pt-info-popover" role="tooltip"><c:out value="${pageHelp}" /></span>
             </span>
         </c:if>
-        <%-- today luôn là hôm nay, khác weekStart của tuần đang xem trong màn Lịch dạy.
-             Ví dụ today=2026-10-22 → gms:formatDate in "22/10/2026". --%>
+
         <p class="pt-header-date">
             <c:out value="${gms:formatDate(today)}" />
         </p>
     </div>
-    <%-- ===== KẾT THÚC tiêu đề và ngày ===== --%>
 
-    <%-- ===== Bên phải: chuông thông báo + tài khoản PT ===== --%>
     <div class="pt-top-actions">
         <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
         <%@ include file="/WEB-INF/jsp/common/topbar-user.jspf" %>
     </div>
-    <%-- ===== KẾT THÚC giao diện và tài khoản ===== --%>
+
 </header>
-<%-- ===== KẾT THÚC thanh đầu trang PT ===== --%>

@@ -13,7 +13,7 @@
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Tạo tài khoản — Super Gym</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/register.css?v=20261014b">
-  <script src="${pageContext.request.contextPath}/js/pages/auth/register.js?v=4" defer></script>
+  <script src="${pageContext.request.contextPath}/js/pages/auth/register.js?v=20261109merge" defer></script>
 </head>
 
 <body class="theme-guest-dark auth-dark auth-page-register">

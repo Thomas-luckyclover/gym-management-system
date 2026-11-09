@@ -9,7 +9,7 @@ import java.util.List;
 /** Đọc tham số nghiệp vụ v26 từ bảng SystemConfigs. */
 public class SystemConfigService {
 
-    // ===== Tham số đang dùng; P-07 và P-20 đã bỏ =====
+    // ===== 19 tham số P-01…P-19 =====
 
     // P-01: Số lần bảo lưu tối đa cho mỗi gói tập
     public static final String MAX_FREEZE_COUNT = "P-01";
@@ -29,58 +29,50 @@ public class SystemConfigService {
     // P-06: Độ dài một buổi PT (phút)
     public static final String SESSION_DURATION_MINUTES = "P-06";
 
-    // P-08: Số lượt Swap (đổi buổi) cho MỖI THÁNG của gói PT.
-    // Hạn mức của một gói = P-08 × số tháng của gói, chốt vào Subscriptions.MaxSwapsSnapshot lúc bán
-    // (mặc định 3 → gói 1/2/3 tháng được 3/6/9 lượt).
-    public static final String MAX_SWAP_COUNT = "P-08";
+    // P-07: Hạn thanh toán đơn online, cũng là thời gian giữ slot đặt (phút)
+    public static final String PAYMENT_DUE_MINUTES = "P-07";
 
-    // P-09: Hạn thanh toán đơn online, cũng là thời gian giữ slot đặt (phút)
-    public static final String PAYMENT_DUE_MINUTES = "P-09";
+    // P-08: Thuế VAT (%) đã nằm trong giá bán
+    public static final String VAT_PERCENT = "P-08";
 
-    // P-10: Thuế VAT (%) đã nằm trong giá bán
-    public static final String VAT_PERCENT = "P-10";
+    // P-09: Tỷ lệ hoa hồng mặc định cho PT (%)
+    public static final String DEFAULT_COMMISSION_RATE = "P-09";
 
-    // P-11: Tỷ lệ hoa hồng mặc định cho PT (%)
-    public static final String DEFAULT_COMMISSION_RATE = "P-11";
+    // P-10: Giờ chốt nộp đơn nghỉ của ngày hôm trước (HH:mm)
+    public static final String LEAVE_SUBMIT_DEADLINE = "P-10";
 
-    // P-12: Giờ chốt nộp đơn nghỉ của ngày hôm trước (HH:mm)
-    public static final String LEAVE_SUBMIT_DEADLINE = "P-12";
+    // P-11: Số PT tối thiểu còn lại của mỗi ca
+    public static final String MIN_PT_PER_SHIFT = "P-11";
 
-    // P-13: Số PT tối thiểu còn lại của mỗi ca
-    public static final String MIN_PT_PER_SHIFT = "P-13";
+    // P-12: Số lễ tân tối thiểu còn lại của mỗi ca
+    public static final String MIN_RECEPTIONIST_PER_SHIFT = "P-12";
 
-    // P-14: Số lễ tân tối thiểu còn lại của mỗi ca
-    public static final String MIN_RECEPTIONIST_PER_SHIFT = "P-14";
+    // P-13: Hiệu lực mã xác thực / mã khôi phục (phút)
+    public static final String VERIFICATION_VALID_MINUTES = "P-13";
 
-    // P-15: Hiệu lực mã xác thực / mã khôi phục (phút)
-    public static final String VERIFICATION_VALID_MINUTES = "P-15";
+    // P-14: Đầu số di động hợp lệ, phân tách bởi dấu phẩy
+    public static final String PHONE_PREFIXES = "P-14";
 
-    // P-16: Đầu số di động hợp lệ, phân tách bởi dấu phẩy
-    public static final String PHONE_PREFIXES = "P-16";
+    // P-15: Số lần sai trước khi tạm khóa (đăng nhập và mã xác thực)
+    public static final String MAX_FAILED_ATTEMPTS = "P-15";
 
-    // P-17: Số lần sai trước khi tạm khóa (đăng nhập và mã xác thực)
-    public static final String MAX_FAILED_ATTEMPTS = "P-17";
+    // P-16: Thời gian khóa tạm (phút)
+    public static final String LOCK_MINUTES = "P-16";
 
-    // P-18: Thời gian khóa tạm (phút)
-    public static final String LOCK_MINUTES = "P-18";
+    // P-17: Giờ mở cửa mặc định hàng ngày (HH:mm-HH:mm)
+    public static final String OPENING_HOURS = "P-17";
 
-    // P-19: Giờ mở cửa mặc định hàng ngày (HH:mm-HH:mm)
-    public static final String OPENING_HOURS = "P-19";
+    // P-18: Thời hạn gói PT, VD "1M,2M,3M"
+    public static final String PT_PACKAGE_DURATIONS = "P-18";
 
-    // P-21: Thời hạn gói PT, VD "1M,2M,3M"
-    public static final String PT_PACKAGE_DURATIONS = "P-21";
-
-    // P-22: Số khách tối thiểu để hiện điểm PT (DBR-69)
-    public static final String MIN_PT_RATING_CUSTOMERS = "P-22";
-
-    // P-23: Định mức phép năm mặc định cho nhân viên (ngày)
-    public static final String LEAVE_ANNUAL_QUOTA = "P-23";
+    // P-19: Định mức phép năm mặc định cho nhân viên (ngày)
+    public static final String LEAVE_ANNUAL_QUOTA = "P-19";
 
     // DAO dùng chung
     private final SystemConfigDAO systemConfigDAO = new SystemConfigDAO();
 
     /**
-     * Đọc tham số dạng số nguyên (P-05, P-09, P-15, P-17, P-18...).
+     * Đọc tham số dạng số nguyên (P-05, P-07, P-13, P-15, P-16...).
      * @param configKey mã tham số, VD: SystemConfigService.MAX_FAILED_ATTEMPTS
      * @return giá trị dạng int
      * @throws SQLException lỗi truy vấn
@@ -98,7 +90,7 @@ public class SystemConfigService {
     }
 
     /**
-     * Đọc tham số dạng chuỗi nguyên bản (VD: P-12, P-19).
+     * Đọc tham số dạng chuỗi nguyên bản (VD: P-10, P-17).
      * @param configKey mã tham số
      * @return giá trị ConfigValue
      * @throws SQLException lỗi truy vấn
@@ -120,7 +112,7 @@ public class SystemConfigService {
     }
 
     /**
-     * Đọc tham số dạng danh sách, tách bởi dấu phẩy (VD: P-04, P-16).
+     * Đọc tham số dạng danh sách, tách bởi dấu phẩy (VD: P-04, P-14).
      * @param configKey mã tham số
      * @return danh sách giá trị đã trim, giữ nguyên thứ tự trong ConfigValue
      * @throws SQLException lỗi truy vấn

@@ -25,6 +25,7 @@ import com.gms.dto.PaymentResultView;
 import com.gms.dto.StartDatePicker;
 import com.gms.util.PackagePeriod;
 import com.gms.util.AppConfig;
+import java.io.IOException;
 
 /**
  * Nhận kết quả thanh toán từ VNPay qua IPN. Không dùng session và không tin kết
@@ -306,9 +307,7 @@ public class PaymentCallbackService {
                             conn,
                             order,
                             "Thanh toán cần đối soát",
-                            "Đơn " + order.getOrderCode()
-                            + " chưa được cấp gói. "
-                            + "Giao dịch đã đưa vào danh sách cần hoàn tiền.");
+                            String.format(Messages.MSG335_NOTIFICATION_PAYMENT_NEEDS_RECONCILIATION, order.getOrderCode()));
 
                     conn.commit();
 
@@ -357,10 +356,7 @@ public class PaymentCallbackService {
                         conn,
                         order,
                         "Mua gói thành công",
-                        "Đơn " + order.getOrderCode()
-                        + " đã thanh toán. Gói "
-                        + order.getPackageNameSnapshot()
-                        + " đã được cấp.");
+                        String.format(Messages.MSG333_NOTIFICATION_ONLINE_PAYMENT_SUCCESS, order.getOrderCode(), order.getPackageNameSnapshot()));
 
                 conn.commit();
                 return reply("00", "Confirm Success");
@@ -657,7 +653,10 @@ public class PaymentCallbackService {
         }
     }
 
-    /** Lỗi đọc ngày bắt đầu không được làm hỏng trang kết quả; chỉ ẩn ô chọn ngày. */
+    /**
+     * Lỗi đọc ngày bắt đầu không được làm hỏng trang kết quả; chỉ ẩn ô chọn
+     * ngày.
+     */
     private StartDatePicker readStartPicker(Connection conn, Order order) {
         try {
             return startDateService.pickerForPaidOrder(conn, order);
@@ -667,31 +666,60 @@ public class PaymentCallbackService {
     }
 
     /**
-     * Nhận kết quả QueryDR từ job. Chỉ chuyển kết quả thanh toán thành công đã
-     * xác minh sang phần xử lý DB dùng chung.
+     * CBR-125: xử lý kết quả QueryDR như một IPN. Chữ ký đã được
+     * VnPayClient.queryTransaction kiểm. Chỉ đi tiếp khi VNPay báo đã thu tiền;
+     * trường hợp khác không đổi gì.
+     *
+     * @return true nếu giao dịch đã được ghi nhận (Paid hoặc cần hoàn), hoặc đã
+     * được IPN ghi trước đó
      */
-    public IpnResult handleQueryResult(Map<String, String> params) {
+    public boolean handleQueryResult(Map<String, String> queryResult) {
+        if (queryResult == null || !vnPayClient.isPaymentSuccess(queryResult)) {
+            return false;
+        }
+
+        IpnResult result = processVerifiedResult(queryResult);
+        String code = result.getCode();
+
+        // 00: đã ghi nhận. 02: IPN đã ghi trước đó.
+        // 04: thu tiền nhưng sai số tiền, nhánh này đã commit "cần hoàn" rồi mới trả 04.
+        return "00".equals(code) || "02".equals(code) || "04".equals(code);
+    }
+
+    /**
+     * CBR-125: trang kết quả đang chờ → hỏi VNPay một lần, xử lý như IPN. Không
+     * ném lỗi: hỏi không được thì trang vẫn hiển thị "đang chờ".
+     */
+    public void refreshIfWaiting(int accountId, int transactionId) {
+        if (!"true".equalsIgnoreCase(AppConfig.get("vnpay.query-enabled", "false"))) {
+            return;
+        }
+
+        Transaction payment;
+        try (Connection conn = openConnection()) {
+            payment = transactionDAO.findById(conn, transactionId, false);
+            if (payment == null || !payment.isOnlineGateway() || !payment.isPending()
+                    || orderDAO.findOnlineByIdAndAccount(conn, accountId, payment.getOrderId()) == null) {
+                return;   // không phải của khách này, hoặc đã có kết quả
+            }
+        } catch (SQLException | RuntimeException e) {
+            return;
+        }
+
+        // Chưa đủ 30 giây thì cứ chờ IPN, đỡ gọi VNPay vô ích.
+        if (payment.getCreatedAt().plusSeconds(30).isAfter(DateTimeUtil.now())) {
+            return;
+        }
+
         try {
-            if (!vnPayClient.verifyQuerySignature(params)) {
-                return reply("97", "Invalid query signature");
+            handleQueryResult(vnPayClient.queryTransaction(
+                    payment.getGatewayReference(), payment.getCreatedAt()));
+        } catch (IOException | InterruptedException e) {
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
             }
-
-            if (!"querydr".equals(params.get("vnp_Command"))
-                    || !AppConfig.get("vnpay.tmn-code")
-                            .equals(params.get("vnp_TmnCode"))) {
-                return reply("99", "Invalid query response");
-            }
-
-            if (!"00".equals(params.get("vnp_ResponseCode"))
-                    || !"00".equals(params.get("vnp_TransactionStatus"))
-                    || !"01".equals(params.get("vnp_TransactionType"))) {
-                return reply("99", "Payment not confirmed");
-            }
-
-            return processVerifiedResult(params);
-
-        } catch (RuntimeException e) {
-            return reply("99", "Query processing error");
+            System.err.println("[RESULT] Chưa hỏi được VNPay, TransactionId=" + transactionId);
         }
     }
+
 }

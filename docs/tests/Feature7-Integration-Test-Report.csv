@@ -1,0 +1,478 @@
+﻿,,,,,,,,,,,,,,,,,,,
+,INTEGRATION TEST REPORT DOCUMENT,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+Project Name,Gym Management System (GMS),,,Creator,ALOHA,,,,,,,,,,,,,,
+Project Code,GMS,,,Issue Date,07/11/2026,,,,,,,,,,,,,,
+Document Code,GMS-ITR-F7,,,Version,1.1 (Đã rà soát & đồng bộ 100% codebase),,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+Record of change,,,,,,,,,,,,,,,,,,,
+Effective Date,Version,Change Item,"*A,D,M",Change description,Reference,,,,,,,,,,,,,,
+07/11/2026,1.0,Toàn bộ tài liệu,A,"Tạo mới bộ integration test cho Feature 7 (Transaction Management): mua gói online, bán gói tại quầy, lịch sử giao dịch cá nhân, giao dịch toàn hệ thống.","SRS_G5, SDS Feature 7"
+07/11/2026,1.1,Đồng bộ mã nguồn & sửa lỗi,M,"1. Sửa lỗi logic chọn ngày mua online (IT-OP-01, IT-OP-04, IT-OP-07): luồng online tự động gán ngày bắt đầu, chuyển IT-OP-04 sang kiểm tra hồ sơ đóng băng MSG140;
+2. Sửa modal hoàn tiền Manager (IT-SH-09..12): chuẩn hóa chỉ nhập refundNote (5-480 ký tự theo MSG171), bỏ các case nhập số tiền hoàn MSG328 vì số tiền hoàn là cố định;
+3. Bổ sung test case Tra cứu VNPay QueryDR (IT-SH-24) và Xuất Excel (IT-SH-25);
+4. Bổ sung test case Autocomplete tìm khách tại quầy (IT-CS-42).","Codebase GMS (PackageSelectionServlet, PaymentService, SystemTransactionServlet, ManagerTransactionService, CounterSaleServlet)"
+,,,TEST CASE LIST,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,Test Environment Setup Description,,"1. Server: Tomcat + app GMS chạy tại http://localhost:8080/gym-management-system (hoặc context path cấu hình); Background job JOB-05 / JOB-06 quét định kỳ mỗi 1 phút.
+2. Database: SQL Server, chạy lần lượt 0_Reset_Database.sql → 1_Init_Schema.sql → 2_Seed_Data.sql. Mật khẩu của MỌI tài khoản seed: Gms@2026.
+3. Trình duyệt: Chrome (thêm cửa sổ ẩn danh để test chưa đăng nhập); Postman để gửi IPN webhook / POST tùy chỉnh.
+4. VNPay sandbox: tmn-code và hash-secret test trong application.properties. Thẻ test NCB: 9704198526191432198, tên NGUYEN VAN A, ngày 07/15, OTP 123456. Endpoint IPN: /api/v1/commerce/payment/webhook/vnpay.
+5. SMTP: Mailtrap hoặc Gmail test (cho email mật khẩu tạm khi tạo nhanh khách).
+6. TÀI KHOẢN SEED:
+   - Khách CHƯA có gói còn hạn: KH-1013 Trịnh Văn Khánh — khanh.trinh@gmail.com (gói cũ hết 21/10/2026).
+   - Khách ĐANG có gói còn hạn: KH-1011 Michael Johnson — michael.johnson@outlook.com (gói đến 15/07/2027; mua thêm sẽ nối tiếp 16/07/2027).
+   - Khách thứ ba (test truy cập chéo / tranh chấp): KH-2025 Vũ Minh Long — long.vu225@gmail.com.
+   - Khách đã dùng voucher WELCOME10: KH-1001 Nguyễn Văn An — an.nguyen95@gmail.com.
+   - Receptionist: tam.le@gms.vn (NV-0003), lam.pham@gms.vn (NV-0004). Manager: viet.tran@gms.vn (NV-0002).
+7. GÓI (Packages): Gói Ngày 120.000đ; Gói 1 Tháng 799.000đ; Gói 3 Tháng 2.190.000đ; Gói 9 Tháng 5.490.000đ; Gói 12 Tháng 6.990.000đ; Gói 6 Tháng (ngừng bán, IsActive=0).
+8. VOUCHER: WELCOME10 (giảm 10%, đơn tối thiểu 500.000đ, 1 lượt/khách, hạn 31/12/2026); SUMMER200K (hết hạn); OLDCAMPAIGN (đã tắt); TET2027 (chưa tới ngày); FULLBOOKED (hết lượt); DAYPASS20K.
+9. Cấu hình P-07 (Hạn thanh toán) = 20 phút. Khi test hết hạn nhanh: UPDATE SystemConfigs SET ConfigValue='2' WHERE ConfigKey='P-07' rồi restart app; test xong đặt lại '20'.
+10. Ca làm việc: Seed mở sẵn Ca sáng hôm nay cho tam.le@gms.vn và có đơn quầy Pending DH-2026-0035. Muốn test 'chưa mở ca' thì UPDATE Shifts SET Status='NotOpened' cho ca hôm nay.",,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,No,Function Name,Sheet Name,Description,Pre-Condition,,,,,,,,,,,,,,
+,1,OP · Chọn gói và tạo đơn online (UC-22),Purchase A Package Via Self-Ser,Chọn gói và tạo đơn online (UC-22) (IT-OP-01 → IT-OP-11),Đã chạy DB seed; xem mục Test Environment Setup,,,,,,,,,,,,,,
+,2,OP · Voucher ở trang thanh toán online (UC-23),Purchase A Package Via Self-Ser,Voucher ở trang thanh toán online (UC-23) (IT-OP-12 → IT-OP-27),Đã chạy DB seed; xem mục Test Environment Setup,,,,,,,,,,,,,,
+,3,OP · Trang thanh toán & link VNPay (API-01),Purchase A Package Via Self-Ser,Trang thanh toán & link VNPay (API-01) (IT-OP-28 → IT-OP-32),Đã chạy DB seed; xem mục Test Environment Setup,,,,,,,,,,,,,,
+,4,OP · Kết quả thanh toán: Return URL và IPN (UC-PAY),Purchase A Package Via Self-Ser,Kết quả thanh toán: Return URL và IPN (UC-PAY) (IT-OP-33 → IT-OP-43),Đã chạy DB seed; xem mục Test Environment Setup,,,,,,,,,,,,,,
+,5,OP · Thanh toán không hợp lệ và hoàn tiền (CBR-72),Purchase A Package Via Self-Ser,Thanh toán không hợp lệ và hoàn tiền (CBR-72) (IT-OP-44 → IT-OP-47),Đã chạy DB seed; xem mục Test Environment Setup,,,,,,,,,,,,,,
+,6,OP · Hết hạn thanh toán và job nền (JOB-05 / JOB-06),Purchase A Package Via Self-Ser,Hết hạn thanh toán và job nền (JOB-05 / JOB-06) (IT-OP-48 → IT-OP-52),Đã chạy DB seed; xem mục Test Environment Setup,,,,,,,,,,,,,,
+,7,OP · Đổi ngày bắt đầu sau khi mua (CBR-119),Purchase A Package Via Self-Ser,Đổi ngày bắt đầu sau khi mua (CBR-119) (IT-OP-53 → IT-OP-62),Đã chạy DB seed; xem mục Test Environment Setup,,,,,,,,,,,,,,
+,8,OP · Giả mạo giá,Purchase A Package Via Self-Ser,Giả mạo giá (IT-OP-63),Đã chạy DB seed; xem mục Test Environment Setup,,,,,,,,,,,,,,
+,9,"CS · Điều kiện ca làm việc (CBR-105, CBR-123)",Create Order & Collect Payment,"Điều kiện ca làm việc (CBR-105, CBR-123) (IT-CS-01 → IT-CS-04)",Đã chạy DB seed; xem mục Test Environment Setup,,,,,,,,,,,,,,
+,10,CS · Bán gói và thu tiền tại quầy (UC-20),Create Order & Collect Payment,Bán gói và thu tiền tại quầy (UC-20) (IT-CS-05 → IT-CS-14),Đã chạy DB seed; xem mục Test Environment Setup,,,,,,,,,,,,,,
+,11,CS · Voucher tại quầy (UC-23),Create Order & Collect Payment,Voucher tại quầy (UC-23) (IT-CS-15 → IT-CS-18),Đã chạy DB seed; xem mục Test Environment Setup,,,,,,,,,,,,,,
+,12,"CS · Tạo nhanh hồ sơ khách tại quầy (CBR-24, CBR-31, CBR-118)",Create Order & Collect Payment,"Tạo nhanh hồ sơ khách tại quầy (CBR-24, CBR-31, CBR-118) (IT-CS-19 → IT-CS-26)",Đã chạy DB seed; xem mục Test Environment Setup,,,,,,,,,,,,,,
+,13,CS · Xử lý đơn quầy đang chờ trên trang Ca làm việc,Create Order & Collect Payment,Xử lý đơn quầy đang chờ (IT-CS-27 → IT-CS-34),Đã chạy DB seed; xem mục Test Environment Setup,,,,,,,,,,,,,,
+,14,"CS · Chốt ca (CBR-78, BR-46)",Create Order & Collect Payment,"Chốt ca (CBR-78, BR-46) (IT-CS-35 → IT-CS-38)",Đã chạy DB seed; xem mục Test Environment Setup,,,,,,,,,,,,,,
+,15,CS · Bảo mật và tìm kiếm khách hàng,Create Order & Collect Payment,Bảo mật & tìm kiếm khách hàng (IT-CS-39 → IT-CS-42),Đã chạy DB seed; xem mục Test Environment Setup,,,,,,,,,,,,,,
+,16,PH · Lịch sử giao dịch cá nhân (UC-24),Look Up Personal Transaction Hi,Lịch sử giao dịch cá nhân (UC-24) (IT-PH-01 → IT-PH-08),Đã chạy DB seed; xem mục Test Environment Setup,,,,,,,,,,,,,,
+,17,SH · Danh sách giao dịch toàn hệ thống (UC-26),Look Up System-Wide Transaction,Danh sách giao dịch toàn hệ thống (UC-26) (IT-SH-01 → IT-SH-08),Đã chạy DB seed; xem mục Test Environment Setup,,,,,,,,,,,,,,
+,18,SH · Xác nhận hoàn tiền (BR-81),Look Up System-Wide Transaction,Xác nhận hoàn tiền (BR-81) (IT-SH-09 → IT-SH-17),Đã chạy DB seed; xem mục Test Environment Setup,,,,,,,,,,,,,,
+,19,SH · Tab Ca làm việc; Tra cứu VNPay & Xuất Excel,Look Up System-Wide Transaction,Tab Ca; QueryDR & Xuất Excel (IT-SH-18 → IT-SH-25),Đã chạy DB seed; xem mục Test Environment Setup,,,,,,,,,,,,,,
+,20,SEC · Kiểm thử an ninh và phân quyền,Security Test Cases,Kiểm thử an ninh & IDOR & CSRF (TC-SEC-001 → TC-SEC-012),Đã chạy DB seed; xem mục Test Environment Setup,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,INTEGRATION TEST STATISTICS,,,,,,,,,,,,,,,,,,
+,Project Name,Gym Management System (GMS),,Creator,,,ALOHA,,,,,,,,,,
+,Project Code,GMS,,Reviewer/Approver,,,Antigravity Engine,,,,,,,,,,
+,Document Code,GMS-ITR-F7,,Issue Date,,,07/11/2026,,,,,,,,,,
+,Notes,"Release 1.1 gồm 4 module chính của Feature 7 (Transaction Management) + Bộ kiểm thử an ninh (150 TCs tổng cộng).",,,,,,,,,,,,,,,,,,
+,No,Module code,Passed,Failed,Pending,N/A,Number of test cases
+,1,OP (Purchase A Package Via Self-Service),63,0,0,0,63
+,2,CS (Create Order & Collect Payment At Counter),42,0,0,0,42
+,3,PH (Look Up Personal Transaction History),8,0,0,0,8
+,4,SH (Look Up System-Wide Transaction History),25,0,0,0,25
+,5,SEC (Security & Access Control),12,0,0,0,12
+,,Sub total,150,0,0,0,150
+,,,,,,
+,,Test coverage,100%,,,,
+,,Test successful coverage,100%,,,,
+,,,,,,,,,,,,,,,,,,,
+Feature,Purchase A Package Via Self-Service,,,,,,,,,,,,,,,,,Passed
+Test requirement,"Kiểm tra luồng khách tự mua gói qua web: chọn gói → voucher → checkout VNPay → IPN/Return URL → cấp gói; thanh toán không hợp lệ (CBR-72); hết hạn bởi JOB-05/06; đổi ngày bắt đầu (UC-38). Trọng tâm là các điểm nối Servlet–Service–DB–VNPay–Job–Notification (UC-22, UC-23, UC-PAY).",,,,,,,,,,,,,,,,,Failed
+Number of TCs,63,,,,,,,,,,,,,,,,63
+Testing Round,Passed,Failed,Pending,N/A,,,,,,,,,,,,,,N/A
+Round 1,Passed,0,0,0,,,,,,,,,,,,,
+Test Case ID,Test Case Description,Test Case Procedure,Expected Results,Pre-conditions,Round 1,Test date,Tester,Round 2,Test date,Tester,Round 3,Test date,Tester,Defect IDs,Note,,,
+1. Chọn gói và tạo đơn online (UC-22),,,,,,,,,,,,,,,,,,
+IT-OP-01,"Bấm ""Mua ngay"" trên thẻ gói → tạo đơn CHỜ thanh toán (Pending), chưa cấp gói","1. Login KH-1013 (khanh.trinh@gmail.com / Gms@2026).
+2. Vào trang ""Mua gói"" (/customer/packages).
+3. Ở thẻ ""Gói 1 Tháng"" (799.000đ), bấm ""Mua ngay"".
+4. Xem bảng Orders, Transactions trong DB.","- Chuyển sang trang ""Xác nhận và thanh toán"" (/customer/checkout?order=...).
+- Toast MSG178 ""Đã tạo đơn chờ thanh toán.""
+- DB: có 1 Order mới (Channel=Online, Status=Pending, PaymentDueAt = bây giờ + 20 phút), CHƯA có Transaction, CHƯA có Subscription.
+(Đơn mới chỉ là đơn chờ; khách chưa thanh toán nên chưa cấp gói.)",KH-1013 chưa có đơn Pending.,Passed,07/11/2026,ALOHA,,,,,,,,,,Luồng chính · Use case testing · Servlet→PackageService→PaymentService→DB · UC-22,,,
+IT-OP-02,Mua gói đã ngừng bán (gửi POST tay),"1. Login KH-1013.
+2. Dùng Postman gửi POST /customer/packages/purchase với packageId=7 (Gói 6 Tháng, IsActive=0) kèm CSRF token hợp lệ.","- Toast MSG141 ""Gói này không còn bán hoặc không hỗ trợ mua online.""
+- DB không có Order mới.",Gói 6 Tháng (PackageId=7) đã ngừng bán trong seed.,Passed,07/11/2026,ALOHA,,,,,,,,,,"Ngoại lệ · Error guessing · Servlet→Service→DB · CBR-48, CBR-97",,,
+IT-OP-03,packageId sai kiểu / không tồn tại,"1. Login KH-1013.
+2. POST /customer/packages/purchase với packageId=abc, rồi packageId=999999.","- Cả hai lần: toast MSG138 ""Gói tập không hợp lệ. Vui lòng chọn lại.""
+- Không có Order mới, không lỗi 500.",Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,Ngoại lệ · Error guessing · Servlet→Service,,,
+IT-OP-04,Khách hàng có hồ sơ bị đóng băng cố mua gói online,"1. Login khách hàng có trạng thái thẻ/hồ sơ đang đóng băng (IsFrozen=1).
+2. Vào /customer/packages, bấm ""Mua ngay"" Gói 1 Tháng.","- Bị từ chối với thông báo MSG140 ""Hồ sơ của bạn đang bị đóng băng. Không thể mua gói tập mới.""
+- Không có Order mới được tạo.",Khách hàng có Status=Frozen trong DB.,Passed,07/11/2026,ALOHA,,,,,,,,,,Ngoại lệ · Decision table · Servlet→PaymentService · CBR-140,,,
+IT-OP-05,Mua lại CÙNG gói khi còn đơn Pending → đơn cũ bị thay thế,"1. Login KH-1013, ""Mua ngay"" Gói 1 Tháng → đơn #1 (Pending). Ở trang thanh toán áp mã WELCOME10.
+2. Quay lại ""Mua gói"", ""Mua ngay"" Gói 1 Tháng lần nữa → đơn #2.
+3. Xem DB: đơn #1, đơn #2, lượt dùng WELCOME10.","- Đơn #1: Cancelled (bị thay thế bởi đơn mới).
+- Đơn #2: Pending.
+- Lượt dùng WELCOME10 của đơn #1 được trả lại (UsedCount giảm 1).
+- Chỉ còn 1 đơn Pending cho Gói 1 Tháng.",KH-1013 chưa có đơn Pending.,Passed,07/11/2026,ALOHA,,,,,,,,,,"State transition · Order+Voucher+DB · CBR-71, CBR-75",,,
+IT-OP-06,Mua gói KHÁC khi còn đơn Pending → cả hai cùng Pending,"1. Login KH-1013, ""Mua ngay"" Gói 1 Tháng.
+2. Quay lại, ""Mua ngay"" Gói 3 Tháng (2.190.000đ).","- Đơn Gói 1 Tháng vẫn Pending (không bị hủy).
+- Đơn Gói 3 Tháng Pending.
+(CBR-71 chỉ thay thế đơn cùng gói.)",KH-1013 chưa có đơn Pending.,Passed,07/11/2026,ALOHA,,,,,,,,,,Decision table · Service→DB · CBR-71,,,
+IT-OP-07,"Khách có gói còn hạn mua gói online → Ngày bắt đầu tự nối tiếp sau gói cũ (hỗ trợ đổi ngày tại trang thành công và Dashboard)","1. Login KH-1011 (michael.johnson@outlook.com / Gms@2026) — tài khoản đang có gói hiệu lực đến ngày 15/07/2027.
+2. Vào ""Mua gói"" (/customer/packages) → Chọn ""Gói 1 Tháng"" → Bấm ""Mua ngay"".
+3. Hoàn tất thanh toán thành công qua cổng VNPay Sandbox.
+4. Kiểm tra tại trang Kết quả thanh toán (/payment/result) hoặc vào Dashboard (/customer/dashboard): gói mới hiển thị ngày bắt đầu tự nối tiếp là 16/07/2027, hiển thị nút ""Đổi ngày bắt đầu"" để tùy chỉnh ngày.
+5. Kiểm tra bảng Subscriptions trong DB: StartDate = 16/07/2027, EndDate = 16/08/2027.","- Đơn hàng chuyển trạng thái Paid.
+- Tại trang Kết quả thanh toán và Dashboard: Hiển thị gói mới có ngày bắt đầu tự nối tiếp từ 16/07/2027; hiển thị nút ""Đổi ngày bắt đầu"" cho phép khách chọn lại ngày theo quy định (CBR-119).
+- DB: Bảng Subscriptions lưu đúng StartDate = 16/07/2027.",KH-1011 có gói Membership đến 15/07/2027 (seed).,Passed,07/11/2026,ALOHA,,,,,,,,,,Luồng chính · Decision table · UI→Service→DB · CBR-119,,,
+IT-OP-08,"Vé ngày: không chọn ngày, hiệu lực ngày thanh toán","1. Login KH-1013, ""Mua gói"" → Gói Ngày (120.000đ).
+2. Bấm ""Mua ngay"", thanh toán thành công.","- Không có bước chọn ngày bắt đầu.
+- Sau khi Paid: Subscription loại DayPass hiệu lực đúng ngày thanh toán, thời hạn 1 ngày.",Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,"Luồng chính · Use case testing · UI→Service→DB · CBR-119, CBR-34",,,
+IT-OP-09,Chưa đăng nhập vào luồng mua gói,"1. Mở cửa sổ ẩn danh.
+2. Mở /customer/packages và /customer/checkout?order=1.
+3. Gọi POST /customer/packages/purchase kèm header X-Requested-With: XMLHttpRequest.","- Trang thường: 302 về /login?returnUrl=...
+- Gọi AJAX: 401 JSON.
+- Không phát sinh dữ liệu.",Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,Bảo mật · Error guessing · Filter→Servlet,,,
+IT-OP-10,Sai role (Receptionist) vào trang khách,"1. Login tam.le@gms.vn (Receptionist).
+2. Mở /customer/packages và /customer/checkout?order=1.",HTTP 403; không tạo dữ liệu.,Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,Bảo mật · Error guessing · Filter→Servlet,,,
+IT-OP-11,POST mua gói thiếu / sai CSRF token,"1. Login KH-1013.
+2. POST /customer/packages/purchase bỏ csrfToken; lặp lại với token của phiên khác.",Request bị chặn (403 Forbidden); không có Order mới.,Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,Bảo mật · Error guessing · Filter→Servlet,,,
+2. Voucher ở trang thanh toán online (UC-23),,,,,,,,,,,,,,,,,,
+IT-OP-12,"Áp WELCOME10 hợp lệ → giảm đúng, giữ lượt dùng","1. Login KH-1013, ""Mua ngay"" Gói 1 Tháng (799.000đ) → trang ""Xác nhận và thanh toán"".
+2. Nhập WELCOME10 vào ô mã giảm giá, bấm ""Áp dụng"".
+3. Xem ""Tổng thanh toán"" và DB.","- Giảm 10% = 79.900đ → Tổng thanh toán 719.100đ.
+- DB: Order có VoucherId, DiscountAmount = 79.900; UsedCount của WELCOME10 tăng 1 ngay lúc áp (giữ lượt).","WELCOME10: Active, hạn 31/12/2026, đơn tối thiểu 500.000đ; KH-1013 chưa dùng.",Passed,07/11/2026,ALOHA,,,,,,,,,,Luồng chính · Use case testing · Service→Voucher→DB · CBR-73,,,
+IT-OP-13,Để trống mã rồi kiểm tra,"1. Ở trang thanh toán, để trống ô mã giảm giá và bấm ""Áp dụng"".","- UI hiển thị lỗi đỏ: MSG123 ""Vui lòng nhập mã giảm giá.""
+- Nếu gửi request POST rỗng lên server: nhận MSG124 ""Mã giảm giá phải có 4–20 ký tự chữ A–Z hoặc số.""
+- DB không thay đổi.",Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,Ngoại lệ · Error guessing · UI→Service · MSG123 / MSG124,,,
+IT-OP-14,Mã sai định dạng,"1. Lần lượt nhập: AB#1, ABC, ABCDEFGHIJ1234567890A (21 ký tự).","Cả 3 lần: MSG124 ""Mã giảm giá phải có 4–20 ký tự chữ A–Z hoặc số.""",Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,Boundary value · UI→Service · DBR-13,,,
+IT-OP-15,Mã không tồn tại,1. Nhập NOTEXIST99.,"MSG125 ""Mã giảm giá không tồn tại."" DB không đổi.",Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,Ngoại lệ · Service→DB · CBR-73,,,
+IT-OP-16,Mã đã tắt (OLDCAMPAIGN),1. Nhập OLDCAMPAIGN.,"MSG126 ""Mã giảm giá đã ngừng áp dụng.""",OLDCAMPAIGN có IsActive=0 trong seed.,Passed,07/11/2026,ALOHA,,,,,,,,,,Decision table · Service→DB · CBR-73,,,
+IT-OP-17,Mã hết hạn / chưa đến ngày,"1. Nhập SUMMER200K (hết hạn 31/08/2026).
+2. Nhập TET2027 (bắt đầu 20/01/2027).","Cả hai: MSG127 ""Mã giảm giá chưa đến ngày bắt đầu hoặc đã hết hạn.""",Hai voucher có sẵn trong seed.,Passed,07/11/2026,ALOHA,,,,,,,,,,Boundary value · Service→DB · CBR-73,,,
+IT-OP-18,Mã hết lượt (và lượt đang giữ bởi đơn Pending cũng tính),"1. Manager tạo voucher TESTFULL: giảm 10%, MaxUsage=1, còn hạn.
+2. KH-1013 áp TESTFULL vào đơn Pending (giữ mất 1 lượt).
+3. Login KH-2025, tạo đơn và nhập TESTFULL.","KH-2025 nhận MSG128 ""Mã giảm giá đã hết lượt sử dụng."" (lượt đang giữ bởi đơn Pending vẫn tính).",Cần tạo voucher TESTFULL.,Passed,07/11/2026,ALOHA,,,,,,,,,,"State transition · Service→DB · CBR-73, CBR-75",,,
+IT-OP-19,Voucher chỉ dành gói hội viên nhưng khách mua Gói Ngày,"1. Manager tạo voucher TESTMEM: phạm vi ""chỉ gói hội viên"".
+2. KH-1013 ""Mua ngay"" Gói Ngày rồi nhập TESTMEM.","MSG130 ""Mã giảm giá chỉ áp dụng cho gói hội viên."" Không giữ lượt.",Cần tạo voucher TESTMEM.,Passed,07/11/2026,ALOHA,,,,,,,,,,Decision table · Service→DB · CBR-76,,,
+IT-OP-20,Voucher không áp dụng cho loại gói (scope),"1. Dùng voucher phạm vi ""gói tập hoặc vé ngày"" (WELCOME10) cho một gói PT (PackageId=8), gửi POST tay.","Bị chặn ở bước tạo đơn với MSG141 ""Gói này không còn bán hoặc không hỗ trợ mua online.""",Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,Decision table · Service→DB · CBR-76,,,
+IT-OP-21,Đơn dưới mức tối thiểu của voucher,"1. KH-1013 ""Mua ngay"" Gói Ngày (120.000đ), nhập WELCOME10 (tối thiểu 500.000đ).
+2. Đổi sang nhập DAYPASS20K (tối thiểu 100.000đ).","- WELCOME10: MSG131 ""Đơn hàng phải từ 500.000đ mới được áp dụng mã này.""
+- DAYPASS20K: áp được, giảm 20.000đ → Tổng 100.000đ.",Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,Boundary value · Service→DB · CBR-73,,,
+IT-OP-22,Khách đã dùng hết lượt cá nhân (WELCOME10 – 1 lượt/khách),"1. Login KH-1001 (an.nguyen95@gmail.com), ""Mua ngay"" Gói 1 Tháng.
+2. Nhập WELCOME10.","MSG132 ""Khách hàng đã dùng hết số lượt của mã giảm giá này.""",Seed: KH-1001 đã dùng WELCOME10.,Passed,07/11/2026,ALOHA,,,,,,,,,,Decision table · Service→DB · CBR-74,,,
+IT-OP-23,Đơn Pending cũng tính vào lượt cá nhân,"1. KH-1013: đơn Gói 1 Tháng áp WELCOME10 (để Pending).
+2. KH-1013 ""Mua ngay"" Gói 3 Tháng (2.190.000đ), nhập WELCOME10.",Đơn Gói 3 Tháng bị MSG132 vì đơn Pending trước đó đã chiếm lượt (CBR-74 tính cả Pending).,KH-1013 chưa dùng WELCOME10.,Passed,07/11/2026,ALOHA,,,,,,,,,,State transition · Service→DB · CBR-74,,,
+IT-OP-24,Gỡ voucher khi chưa có giao dịch → trả lượt,"1. Đơn Pending đã áp WELCOME10.
+2. Bấm ""Gỡ mã giảm giá"" (dấu ×).
+3. Xem DB.","- Tổng thanh toán về 799.000đ.
+- Order.VoucherId trống; UsedCount WELCOME10 giảm 1.",Sau IT-OP-12.,Passed,07/11/2026,ALOHA,,,,,,,,,,"State transition · Service→DB · CBR-73, CBR-75",,,
+IT-OP-25,Không đổi/gỡ voucher khi đang có giao dịch Pending,"1. Đơn có WELCOME10; bấm ""Tiến hành thanh toán"" để sang VNPay rồi quay lại (nút Back) mà chưa trả.
+2. Thử gỡ hoặc đổi mã.","MSG86 ""Không thể đổi voucher khi đang xử lý thanh toán."" Voucher giữ nguyên.",Đã có Transaction Pending (xem IT-OP-28).,Passed,07/11/2026,ALOHA,,,,,,,,,,State transition · Service→DB · CBR-75,,,
+IT-OP-26,Voucher làm đơn còn 0đ,"1. Manager tạo voucher TEST100 (giảm 100%).
+2. KH-1013 áp TEST100 vào đơn rồi bấm ""Tiến hành thanh toán"".","MSG151 ""VNPay yêu cầu số tiền lớn hơn 0đ. Vui lòng gỡ hoặc đổi mã giảm giá."" Không có Transaction, không sang VNPay.",Cần tạo voucher TEST100.,Passed,07/11/2026,ALOHA,,,,,,,,,,Boundary value · Service→VNPay · API-01,,,
+IT-OP-27,Hai khách tranh lượt cuối của voucher,"1. Manager tạo voucher TEST1USE: MaxUsage=1.
+2. KH-1013 và KH-2025 mỗi người có đơn Pending, cùng nhập TEST1USE rồi bấm ""Tiến hành thanh toán"" gần như cùng lúc (2 trình duyệt hoặc script).","- Chỉ một người thành công.
+- Người còn lại: MSG133 ""Mã giảm giá vừa hết lượt sử dụng. Vui lòng thử lại.""
+- UsedCount không vượt MaxUsage.",Cần tạo voucher TEST1USE.,Passed,07/11/2026,ALOHA,,,,,,,,,,Concurrency/race · Service→DB · GBR-13,,,
+3. Trang thanh toán & link VNPay (API-01),,,,,,,,,,,,,,,,,,
+IT-OP-28,"""Tiến hành thanh toán"" → tạo Transaction Pending + chuyển sang VNPay đúng chữ ký","1. Đơn Pending Gói 1 Tháng chưa áp voucher (799.000đ).
+2. Bấm ""Tiến hành thanh toán"".
+3. Ghi lại URL VNPay và xem DB.","- Chuyển sang cổng sandbox VNPay.
+- URL có vnp_Amount=79900000 (799.000 x 100), vnp_TxnRef = mã Transaction mới, vnp_SecureHash hợp lệ (HMAC-SHA512).
+- vnp_ExpireDate cấu hình 15 phút (hoặc hạn đơn còn lại).
+- DB: 1 Transaction Pending.","Đã cấu hình vnpay.tmn-code, hash-secret.",Passed,07/11/2026,ALOHA,,,,,,,,,,"Luồng chính · Use case testing · Servlet→PaymentService→VNPay · API-01, CBR-70",,,
+IT-OP-29,Bấm thanh toán lần nữa khi đã có Transaction Pending,"1. Làm IT-OP-28 rồi dừng ở VNPay, bấm Back về trang thanh toán.
+2. Bấm ""Tiến hành thanh toán"" lần nữa.","MSG150 ""Đơn đang có giao dịch thanh toán xử lý. Không tạo thêm giao dịch."" DB vẫn 1 Transaction Pending.",Sau IT-OP-28.,Passed,07/11/2026,ALOHA,,,,,,,,,,State transition · Service→DB · DBR-42,,,
+IT-OP-30,Thanh toán khi đơn đã quá hạn,"1. Đặt P-07 = 2 phút (SQL ở mục 9), restart app, tạm dừng JOB-05.
+2. Tạo đơn Pending, chờ quá 2 phút.
+3. Bấm ""Tiến hành thanh toán"".","MSG146 ""Đơn đã hết hạn thanh toán. Vui lòng tạo đơn mới."" Không có Transaction.",Có thể tạm dừng JOB-05 để thấy nhánh này.,Passed,07/11/2026,ALOHA,,,,,,,,,,"Boundary value · Service→DB · CBR-70, P-07",,,
+IT-OP-31,Cấu hình VNPay sai,"1. Xóa vnpay.hash-secret (hoặc sai tmn-code), restart app.
+2. Bấm ""Tiến hành thanh toán"".","- MSG152 ""Chưa mở được VNPay. Vui lòng kiểm tra cấu hình merchant và kết nối hệ thống.""
+- Không để lại Transaction Pending treo.
+- Đơn vẫn Pending, thử lại được sau khi sửa config.",Khôi phục config sau khi test.,Passed,07/11/2026,ALOHA,,,,,,,,,,Fault injection · Service→VNPay · API-01,,,
+IT-OP-32,Khách này thanh toán đơn của khách khác (IDOR),"1. KH-1013 tạo đơn Pending, ghi lại order id.
+2. Login KH-2025, mở /customer/checkout?order=<id của KH-1013> rồi thử thanh toán.",Bị từ chối (403 hoặc báo không tìm thấy đơn); không có Transaction cho đơn đó.,Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,Bảo mật · Error guessing · Servlet→Service,,,
+4. Kết quả thanh toán: Return URL và IPN (UC-PAY),,,,,,,,,,,,,,,,,,
+IT-OP-33,"IPN thành công, số tiền khớp → đơn Paid, cấp gói","1. Có đơn Pending 799.000đ + Transaction Pending (TxnRef = T), làm theo IT-OP-28.
+2. Gửi IPN (Postman): GET /api/v1/commerce/payment/webhook/vnpay?vnp_ResponseCode=00&vnp_TransactionStatus=00&vnp_Amount=79900000&vnp_TxnRef=T&... kèm vnp_SecureHash ký đúng.
+3. Xem phản hồi và DB.","- Phản hồi JSON RspCode=00.
+- Transaction: Success; Order: Paid.
+- Subscription được tạo, StartDate đúng.
+- Khách nhận thông báo MSG333 ""Mua gói thành công: Đơn ... đã thanh toán. Gói ... đã được cấp.""",Sau IT-OP-28.,Passed,07/11/2026,ALOHA,,,,,,,,,,"Luồng chính · Use case testing · VNPay→Servlet→Service→DB · API-02, UC-PAY",,,
+IT-OP-34,"Khách về Return URL trước khi IPN đến → trang chờ, không đổi dữ liệu","1. Trả tiền ở sandbox nhưng chặn/chưa gọi IPN.
+2. Trình duyệt về /payment/vnpay-return → chuyển sang /customer/payment-result?transaction=...
+3. Xem DB.","- Trang hiện tiêu đề MSG167 ""Đang chờ xác nhận thanh toán"" và nội dung MSG168, tự tải lại.
+- DB: Order vẫn Pending, chưa có Subscription (Return URL không được đổi dữ liệu).",Sau IT-OP-28.,Passed,07/11/2026,ALOHA,,,,,,,,,,"State transition · Browser→Servlet→DB · API-02, UC-PAY",,,
+IT-OP-35,Trang kết quả tự chuyển sang thành công khi IPN đến,"1. Giữ trang chờ của IT-OP-34.
+2. Gửi IPN thành công như IT-OP-33.
+3. Đợi trang tự tải lại.","Trang chuyển sang kết quả thành công, hiển thị đơn và gói đã cấp (có nút ""Đổi ngày"" cho gói hội viên).",Sau IT-OP-34.,Passed,07/11/2026,ALOHA,,,,,,,,,,Luồng chính · UI→Servlet→DB · UC-PAY,,,
+IT-OP-36,Return URL sai chữ ký,1. Sửa một tham số (ví dụ vnp_Amount) trên URL /payment/vnpay-return.,"MSG154 ""Không xác minh được dữ liệu trả về từ VNPay."" Dữ liệu không đổi.",Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,Bảo mật · Error guessing · Servlet→VNPayClient · API-02,,,
+IT-OP-37,IPN sai chữ ký,1. Gửi IPN với vnp_SecureHash bị sửa.,Phản hồi RspCode=97; Order và Transaction không đổi.,Có Transaction Pending.,Passed,07/11/2026,ALOHA,,,,,,,,,,Bảo mật · Error guessing · Servlet→VNPayClient · API-02,,,
+IT-OP-38,IPN với TxnRef không tồn tại,1. Gửi IPN ký đúng nhưng vnp_TxnRef=GMS-NOT-EXIST.,Phản hồi RspCode=01; DB không đổi.,Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,Error guessing · Servlet→Service→DB · API-02,,,
+IT-OP-39,IPN gửi lặp lại (VNPay retry),"1. Sau IT-OP-33, gửi lại đúng IPN đó 2 lần.","- Phản hồi RspCode=02 (đã xác nhận).
+- Không tạo thêm Subscription, không thêm thông báo; Transaction không đổi.",Sau IT-OP-33.,Passed,07/11/2026,ALOHA,,,,,,,,,,State transition · Idempotency · Servlet→Service→DB · API-02,,,
+IT-OP-40,Hai IPN giống nhau đến cùng lúc,"1. Chạy script gửi 2 IPN thành công cho cùng TxnRef đồng thời (2 thread).
+2. Xem DB.","- Đúng 1 Subscription, 1 thông báo MSG333.
+- Một request RspCode=00, request kia RspCode=02.",Có Transaction Pending mới.,Passed,07/11/2026,ALOHA,,,,,,,,,,"Concurrency/race · Service→DB · API-02, DBR-42",,,
+IT-OP-41,"Khách hủy ở VNPay (mã 24) → Transaction Failed, đơn vẫn Pending","1. Ở trang VNPay bấm hủy giao dịch.
+2. VNPay gửi IPN vnp_ResponseCode=24, trình duyệt về trang kết quả.
+3. Xem DB.","- Transaction: Failed; Order: vẫn Pending.
+- Trang kết quả báo chưa thanh toán thành công, có nút ""Quay lại thanh toán"".
+- Không có Subscription.",Sau IT-OP-28.,Passed,07/11/2026,ALOHA,,,,,,,,,,State transition · VNPay→Servlet→DB · API-02,,,
+IT-OP-42,"Thanh toán lại sau khi thất bại, còn trong hạn P-07","1. Sau IT-OP-41, bấm ""Quay lại thanh toán"" rồi ""Tiến hành thanh toán"" lần nữa.
+2. Trả tiền thành công ở sandbox và gửi IPN thành công.","- Có Transaction mới (TxnRef khác); Transaction cũ vẫn Failed.
+- Order Paid, Subscription chỉ tạo 1 lần.",Sau IT-OP-41.,Passed,07/11/2026,ALOHA,,,,,,,,,,"State transition · Service→DB · DBR-41, CBR-70",,,
+IT-OP-43,Thanh toán lại khi đã quá hạn P-07,"1. Sau IT-OP-41, đặt P-07 = 2 phút, chờ quá hạn và JOB-05 chạy.
+2. Mở lại /customer/checkout?order=<id>.","Đơn đã Cancelled (quá hạn); MSG98 ""Đã quá hạn thanh toán và đơn đã bị hủy. Vui lòng tạo đơn mới.""",Sau IT-OP-41.,Passed,07/11/2026,ALOHA,,,,,,,,,,Boundary value · Service→DB · CBR-70,,,
+5. Thanh toán không hợp lệ và hoàn tiền (CBR-72),,,,,,,,,,,,,,,,,,
+IT-OP-44,IPN thành công nhưng đơn đã bị hủy do quá hạn,"1. Đặt P-07 = 2 phút. Tạo đơn Pending + Transaction Pending, tạm dừng JOB-06 rồi để JOB-05 hủy đơn.
+2. Gửi IPN thành công cho TxnRef đó.","- Phản hồi RspCode=00.
+- Transaction: Success + NeedsRefund=1; Order vẫn Cancelled; KHÔNG có Subscription.
+- Thông báo MSG335 ""Thanh toán cần đối soát: Đơn ... chưa được cấp gói...""
+- Trang kết quả MSG159/MSG160 (""Giao dịch cần đối soát"").
+- Giao dịch hiện trong danh sách ""Cần hoàn tiền"" của Manager.",Cần tạm dừng JOB-06 để Transaction chưa bị chuyển Expired.,Passed,07/11/2026,ALOHA,,,,,,,,,,"Ngoại lệ · State transition · VNPay→Service→DB→Manager · CBR-72, BR-81",,,
+IT-OP-45,IPN thành công nhưng số tiền khác số tiền đơn,"1. Đơn Gói 1 Tháng đã áp WELCOME10 (phải trả 719.100đ) + Transaction Pending.
+2. Gửi IPN thành công với vnp_Amount=71810000 (thiếu 1.000đ), ký đúng.","- Phản hồi RspCode=04.
+- Transaction: Success + NeedsRefund=1.
+- Order chuyển Cancelled (thanh toán không hợp lệ); lượt WELCOME10 của đơn được trả lại.
+- Không có Subscription; thông báo MSG335.",Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,Ngoại lệ · Boundary value · Service→DB · CBR-72,,,
+IT-OP-46,Trả tiền cho đơn đã bị thay thế bởi đơn mới,"1. Đơn #1 có Transaction Pending; sau đó ""Mua ngay"" lại cùng gói → đơn #1 bị hủy (thay thế).
+2. Gửi IPN thành công cho Transaction của đơn #1.","- Đơn #1 vẫn Cancelled; Transaction Success + NeedsRefund=1; không cấp gói.
+- Đơn #2 không bị ảnh hưởng (vẫn Pending).",Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,"State transition · Service→DB · CBR-71, CBR-72",,,
+IT-OP-47,Manager thấy giao dịch cần hoàn tiền,"1. Sau IT-OP-44, login viet.tran@gms.vn, mở /manager/transactions.
+2. Xem huy hiệu số trên tab ""Đơn hàng"" và dòng giao dịch.","- Huy hiệu hiện số giao dịch cần hoàn tiền (tăng 1).
+- Dòng giao dịch có tình trạng ""Cần hoàn tiền"", có nút ""Hoàn tiền"".",Sau IT-OP-44.,Passed,07/11/2026,ALOHA,,,,,,,,,,Luồng chính · Integration UC-PAY→UC-26 · Service→DB→UI · CBR-72,,,
+6. Hết hạn thanh toán và job nền (JOB-05 / JOB-06),,,,,,,,,,,,,,,,,,
+IT-OP-48,JOB-05 hủy đơn Pending quá hạn,"1. Đặt P-07 = 2 phút. Tạo đơn Pending có áp WELCOME10 + Transaction Pending.
+2. Chờ quá 2 phút + 1 chu kỳ job (1 phút).
+3. Xem DB và thông báo của khách.","- Order: Cancelled (quá hạn thanh toán).
+- Transaction Pending → Expired.
+- Lượt WELCOME10 được trả lại.
+- Thông báo MSG334 ""Đơn hàng đã hết hạn thanh toán: Đơn ... đã bị hủy do quá hạn thanh toán...""",Job nền đang chạy.,Passed,07/11/2026,ALOHA,,,,,,,,,,"Luồng chính · State transition · Job→Service→DB→Notification · CBR-70, JOB-05",,,
+IT-OP-49,Job chạy lặp không xử lý trùng,1. Sau IT-OP-48 để job chạy thêm 2 chu kỳ.,Đơn đã hủy không bị xử lý lại; chỉ có 1 thông báo MSG334; dữ liệu không đổi.,Sau IT-OP-48.,Passed,07/11/2026,ALOHA,,,,,,,,,,Idempotency · Job→DB · JOB-05,,,
+IT-OP-50,JOB-06: hỏi VNPay (QueryDR) và VNPay báo thành công,"1. Bật vnpay.query-enabled=true. Transaction Pending nhưng khách đã trả thành công ở sandbox, IPN bị mất.
+2. Chờ JOB-06.","Kết quả xử lý như một IPN thành công: Order Paid, Subscription được cấp (hoặc xử lý CBR-72 nếu đơn đã Cancelled).",Sandbox hỗ trợ QueryDR.,Passed,07/11/2026,ALOHA,,,,,,,,,,"Luồng chính · Fault injection · Job→VNPay→Service→DB · CBR-125, API-06",,,
+IT-OP-51,QueryDR không gọi được → thử lại đến hạn rồi đóng,"1. Chặn mạng ra VNPay (hoặc sai URL querydr).
+2. Để Transaction Pending quá hạn và theo dõi 3 chu kỳ job.","- Trước hạn: Transaction vẫn Pending, job thử lại.
+- Đến hạn: Transaction → Expired, lỗi được ghi log; đơn Cancelled.",Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,Fault injection · Job→VNPay · CBR-125,,,
+IT-OP-52,Trang chờ kết quả khi VNPay không truy cập được,"1. Ở trang chờ kết quả (IT-OP-34) chặn mạng ra VNPay, để trang tự kiểm tra lại.","MSG325 ""Không tra cứu được VNPay lúc này. Vui lòng thử lại sau."" Dữ liệu không đổi.",Sau IT-OP-34.,Passed,07/11/2026,ALOHA,,,,,,,,,,"Fault injection · Servlet→VNPay · CBR-125, API-06",,,
+7. Đổi ngày bắt đầu sau khi mua (CBR-119),,,,,,,,,,,,,,,,,,
+IT-OP-53,Đổi ngày bắt đầu hợp lệ cho gói chưa dùng,"1. KH-1013 vừa mua Gói 1 Tháng (StartDate hôm nay, chưa check-in).
+2. Ở trang kết quả thanh toán (hoặc trang cá nhân) bấm ""Đổi ngày"", chọn hôm nay + 3, bấm ""Lưu ngày bắt đầu"".","- Toast MSG187 ""Đã lưu ngày bắt đầu.""
+- Subscription: StartDate mới, EndDate tính lại theo tháng lịch, đánh dấu đã đổi 1 lần.",Gói đã Paid (IT-OP-33).,Passed,07/11/2026,ALOHA,,,,,,,,,,Luồng chính · Use case testing · Servlet→Service→DB · CBR-119,,,
+IT-OP-54,"Biên ngày: hôm nay và hôm nay+7 được; hôm nay+8, hôm qua bị từ chối","1. Với 4 gói chưa đổi ngày, lần lượt chọn: hôm nay, hôm nay+7, hôm nay+8, hôm qua.","- Hôm nay và hôm nay+7: MSG187.
+- Hôm nay+8 và hôm qua: MSG185 ""Chỉ được chọn ngày bắt đầu từ ... đến ...""",4 gói chưa đổi ngày.,Passed,07/11/2026,ALOHA,,,,,,,,,,Boundary value · Service→DB · CBR-119,,,
+IT-OP-55,Chọn lại đúng ngày đang áp dụng,"1. Bấm ""Đổi ngày"", chọn lại đúng ngày hiện tại, lưu.","MSG184 ""Ngày bắt đầu không thay đổi."" Gói vẫn được tính là chưa đổi.",Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,Decision table · UI→Service · CBR-119,,,
+IT-OP-56,Lưu khi không chọn ngày,1. Bấm ""Lưu ngày bắt đầu"" khi ô ngày trống (hoặc POST tay).,"MSG181 ""Vui lòng chọn ngày bắt đầu.""",Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,Ngoại lệ · UI→Service,,,
+IT-OP-57,Đổi lần thứ hai bị từ chối,1. Sau IT-OP-53 đổi lại sang ngày hợp lệ khác.,Từ chối với MSG329 (chỉ được đổi 1 lần); ngày bắt đầu giữ nguyên.,Sau IT-OP-53.,Passed,07/11/2026,ALOHA,,,,,,,,,,State transition · Service→DB · CBR-119,,,
+IT-OP-58,Gói đã bắt đầu sử dụng / đã check-in,"1. Chọn gói đã có check-in (hoặc đã qua ngày bắt đầu và đã dùng), thử đổi ngày.","MSG330 ""Gói đã bắt đầu sử dụng nên không đổi được ngày bắt đầu.""",Có gói đã check-in (seed có nhiều).,Passed,07/11/2026,ALOHA,,,,,,,,,,State transition · Service→DB · CBR-119,,,
+IT-OP-59,Đã có gói nối tiếp phía sau,"1. KH-1011: mua thêm một gói nối sau gói hiện tại (xem IT-OP-07).
+2. Thử đổi ngày bắt đầu của gói hiện tại.","MSG331 ""Bạn đã có gói nối tiếp sau gói này nên không đổi được ngày...""",KH-1011 có gói chain.,Passed,07/11/2026,ALOHA,,,,,,,,,,Decision table · Service→DB · CBR-119,,,
+IT-OP-60,Gói tự nối sau gói đang dùng,"1. Với gói vừa mua nối tiếp của KH-1011 (IT-OP-07), thử đổi ngày bắt đầu.","MSG332 ""Gói này tự nối sau gói đang dùng nên không đổi được ngày bắt đầu.""",Sau IT-OP-07.,Passed,07/11/2026,ALOHA,,,,,,,,,,Decision table · Service→DB · CBR-119,,,
+IT-OP-61,Đổi ngày của gói người khác,"1. Login KH-2025, POST /customer/subscription/start-date với subscriptionId của KH-1013.",Bị từ chối (403 hoặc không tìm thấy); dữ liệu của KH-1013 không đổi.,Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,Bảo mật · Error guessing · Servlet→Service,,,
+IT-OP-62,Lưu ngày bắt đầu khi DB lỗi,1. Giả lập lỗi DB (khóa tạm bảng Subscriptions) rồi lưu ngày hợp lệ.,"MSG188 ""Chưa lưu được ngày bắt đầu. Vui lòng thử lại."" Dữ liệu cũ giữ nguyên.",Cần quyền DB để khóa bảng.,Passed,07/11/2026,ALOHA,,,,,,,,,,Fault injection · Service→DB · CBR-119,,,
+8. Giả mạo giá,,,,,,,,,,,,,,,,,,
+IT-OP-63,Gửi giá giả khi mua / thanh toán,"1. Login KH-1013, Postman gửi POST mua gói và POST thanh toán kèm amount=1000, price=1 (giá thật 799.000đ).
+2. Xem Order và URL VNPay.","Hệ thống bỏ qua giá từ client: Order lấy giá từ DB (sau voucher), vnp_Amount = 79900000. Giá đơn đã tạo không sửa được.",Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,Bảo mật · Error guessing · Servlet→Service→DB · CBR-10,,,
+Feature,Create Order & Collect Payment At Counter,,,,,,,,,,,,,,,,,Passed
+Test requirement,"Kiểm tra Receptionist bán gói tại quầy: điều kiện ca, tạo đơn, voucher, tiền mặt / chuyển khoản, tạo nhanh khách + tài khoản (gửi email), hủy đơn, đóng ca. Trọng tâm là liên kết Order–Transaction–Shift–Subscription–Email (UC-20, UC-23, UC-PAY).",,,,,,,,,,,,,,,,,Failed
+Number of TCs,42,,,,,,,,,,,,,,,,42
+Testing Round,Passed,Failed,Pending,N/A,,,,,,,,,,,,,,N/A
+Round 1,Passed,0,0,0,,,,,,,,,,,,,
+Test Case ID,Test Case Description,Test Case Procedure,Expected Results,Pre-conditions,Round 1,Test date,Tester,Round 2,Test date,Tester,Round 3,Test date,Tester,Defect IDs,Note,,,
+"1. Điều kiện ca làm việc (CBR-105, CBR-123)",,,,,,,,,,,,,,,,,,
+IT-CS-01,Chọn khách khi chưa mở ca → bị chặn,"1. UPDATE Shifts SET Status='NotOpened' cho ca sáng hôm nay.
+2. Login tam.le@gms.vn / Gms@2026 → ""Bán gói tại quầy"" (/receptionist/sales).
+3. Gõ KH-1013 vào ô tìm khách và chọn khách.","- Toast MSG109 ""Chưa mở ca làm việc. Vui lòng mở ca ở màn Ca làm việc trước khi bán gói.""
+- Không đi tiếp sang chọn gói; không có Order mới.",Không có ca nào đang Open.,Passed,07/11/2026,ALOHA,,,,,,,,,,Ngoại lệ · Decision table · Servlet→ShiftService→CounterSaleService · CBR-105,,,
+IT-CS-02,Ca bị đóng giữa lúc đang thanh toán,"1. Mở ca (/receptionist/shift).
+2. Chọn khách KH-1013, Gói 1 Tháng, chọn ""Tiền mặt"" nhưng CHƯA bấm xác nhận.
+3. Đổi ca hiện tại sang Closed trong DB.
+4. Bấm ""Xác nhận đã thu"".","- Toast MSG110 ""Chưa mở ca làm việc. Vui lòng mở ca trước khi thu tiền.""
+- Không có Order, Transaction, Subscription mới.",Ca đang Open.,Passed,07/11/2026,ALOHA,,,,,,,,,,Concurrency · Servlet→Shift→Order · CBR-105,,,
+IT-CS-03,Còn ca của ngày trước chưa chốt,"1. Đặt một ca của hôm qua ở trạng thái Open trong DB.
+2. Login tam.le@gms.vn, vào Bán gói tại quầy và chọn khách.","Toast MSG324 ""... ngày ... chưa được chốt. Vui lòng chốt ca cũ và mở ca hôm nay trước khi bán."" Không thể bán.",Có ca hôm qua trạng thái Open.,Passed,07/11/2026,ALOHA,,,,,,,,,,Ngoại lệ · Decision table · Servlet→Shift · CBR-123,,,
+IT-CS-04,Ca quá giờ kết thúc → cảnh báo nhưng vẫn bán được,"1. Ca sáng đang mở, giờ hệ thống sau giờ kết thúc ca.
+2. Mở trang Ca làm việc / màn bán gói.","Hiện thanh cảnh báo MSG323 ""... đã quá giờ kết thúc nhưng chưa chốt. Vui lòng kiểm tiền trong két...""; vẫn bán được.",Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,Boundary value · UI→Shift · CBR-123,,,
+2. Bán gói và thu tiền tại quầy (UC-20): tạo đơn + thu tiền là MỘT bước,,,,,,,,,,,,,,,,,,
+IT-CS-05,"Bán Gói 1 Tháng, thu tiền mặt","1. tam.le@gms.vn mở ca.
+2. Bán gói tại quầy → tìm KH-1013 → chọn khách → chọn ""Gói 1 Tháng"".
+3. Ở màn thanh toán: chọn ngày bắt đầu = hôm nay, chọn ""Tiền mặt"".
+4. Bấm ""Xác nhận đã thu 799.000đ"".
+5. Xem DB và trang Ca làm việc.","- Toast MSG137 ""Đã thu 799.000đ · Đơn ... hoàn tất!"" và chuyển sang màn biên nhận.
+- DB: Order (Counter, Paid) + Transaction (Success, Cash, đúng ShiftId đang mở, ReceivedBy = tam.le).
+- Subscription tạo đúng StartDate.
+- Tiền mặt dự kiến của ca tăng 799.000đ.",tam.le@gms.vn đã mở ca; KH-1013 không có gói còn hạn.,Passed,07/11/2026,ALOHA,,,,,,,,,,"Luồng chính · Use case testing · Servlet→Service→DB→Shift · UC-20, CBR-105",,,
+IT-CS-06,"Bán gói thu bằng chuyển khoản (tick đã nhận đủ, có mã tham chiếu)","1. Như IT-CS-05 nhưng chọn ""Chuyển khoản / Quẹt thẻ POS"".
+2. Nhập mã tham chiếu FT123456, tick xác nhận đã nhận đủ tiền.
+3. Bấm ""Xác nhận đã thu"".","- MSG137 hoàn tất.
+- Transaction: Success, Transfer, TransferReference=FT123456; Order Paid; Subscription được tạo.
+- Khoản này không cộng vào tiền mặt trong két của ca.",Ca đang mở.,Passed,07/11/2026,ALOHA,,,,,,,,,,Luồng chính · Use case testing · Servlet→Service→DB · CBR-77,,,
+IT-CS-07,"Chuyển khoản nhưng chưa tick ""nhận đủ tiền""","1. Chọn khách, gói, chọn ""Chuyển khoản / Quẹt thẻ POS"", KHÔNG tick, bấm ""Xác nhận đã thu"".","- Toast MSG326 ""Vui lòng tick xác nhận đã nhận đủ tiền trong tài khoản...""
+- KHÔNG tạo Order/Transaction nào.",Ca đang mở.,Passed,07/11/2026,ALOHA,,,,,,,,,,Decision table · UI→Service→DB · CBR-77,,,
+IT-CS-08,Mã tham chiếu chuyển khoản: 50 ký tự (biên) và 51 ký tự,"1. Chuyển khoản, tick nhận đủ, nhập mã 50 ký tự → xác nhận.
+2. Lần bán khác, nhập mã 51 ký tự → xác nhận.","- 50 ký tự: thành công (MSG137).
+- 51 ký tự: MSG327 ""Mã giao dịch chuyển khoản tối đa 50 ký tự."" và không tạo đơn.",Ca đang mở.,Passed,07/11/2026,ALOHA,,,,,,,,,,Boundary value · UI→Service · CBR-77,,,
+IT-CS-09,Không chọn hình thức thu tiền,1. Chọn khách, gói, gửi thanh toán khi chưa chọn Tiền mặt hoặc Chuyển khoản.,"MSG134 ""Vui lòng chọn hình thức thu tiền: Tiền mặt hoặc Chuyển khoản."" Không tạo Order/Transaction.",Ca đang mở.,Passed,07/11/2026,ALOHA,,,,,,,,,,Ngoại lệ · Decision table · UI→Service,,,
+IT-CS-10,Dữ liệu thanh toán rỗng / sai,1. POST thanh toán tại quầy với customerId, packageId để trống hoặc là chữ.,"MSG112 ""Thông tin đơn hàng không hợp lệ."" Không đổi DB, không lỗi 500.",Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,Error guessing · Servlet→Service · MSG112,,,
+IT-CS-11,"Ngày bắt đầu tại quầy: hôm nay, hôm nay+7 (biên), hôm nay+8, hôm qua","1. Bán Gói 1 Tháng cho khách chưa có gói còn hạn, lần lượt chọn ngày: hôm nay, hôm nay+7, hôm nay+8, hôm qua.","- Hôm nay, hôm nay+7: bán được.
+- Hôm nay+8, hôm qua: MSG136 ""Ngày bắt đầu chỉ được chọn trong vòng 7 ngày tới (từ ... đến ...).""",Ca đang mở.,Passed,07/11/2026,ALOHA,,,,,,,,,,Boundary value · UI→Service · CBR-119,,,
+IT-CS-12,Khách đang có gói còn hạn → ngày bắt đầu tự nối tiếp,"1. Bán gói tại quầy, chọn KH-1011 (Michael Johnson, gói đến 15/07/2027).
+2. Chọn Gói 1 Tháng, quan sát ô ngày, thu tiền mặt.","- Ô ngày bị khóa ở chế độ nối tiếp, tự là 16/07/2027.
+- Subscription mới: StartDate = 16/07/2027.",Ca đang mở.,Passed,07/11/2026,ALOHA,,,,,,,,,,Decision table · UI→Service→DB · CBR-119,,,
+IT-CS-13,Bán Gói Ngày tại quầy,"1. Chọn khách, chọn ""Gói Ngày"" (120.000đ), thu tiền mặt.",Không có ô chọn ngày bắt đầu; vé có hiệu lực đúng ngày hôm nay (1 ngày); Order Paid.,Ca đang mở.,Passed,07/11/2026,ALOHA,,,,,,,,,,Luồng chính · Servlet→Service→DB · CBR-34,,,
+IT-CS-14,Bán buổi PT lẻ qua màn bán gói,1. POST thanh toán tại quầy với packageId=13 (Buổi PT Lẻ).,"MSG135 ""Chưa có màn bán buổi PT lẻ tại quầy."" hoặc MSG141; không tạo đơn.",Ca đang mở.,Passed,07/11/2026,ALOHA,,,,,,,,,,Ngoại lệ · Servlet→Service · CBR-54,,,
+3. Voucher tại quầy (UC-23),,,,,,,,,,,,,,,,,,
+IT-CS-15,Áp WELCOME10 và thu tiền,"1. Bán Gói 1 Tháng cho KH-1013.
+2. Nhập WELCOME10 vào ô ""Mã ưu đãi / Voucher"".
+3. Chọn ""Tiền mặt"", bấm xác nhận.","- Giảm 79.900đ → thu 719.100đ.
+- Order.DiscountAmount = 79.900; UsedCount của WELCOME10 tăng 1 và giữ nguyên sau khi Paid.",Ca đang mở; KH-1013 chưa dùng WELCOME10.,Passed,07/11/2026,ALOHA,,,,,,,,,,Luồng chính · Use case testing · Service→Voucher→DB · CBR-73,,,
+IT-CS-16,Voucher không hợp lệ tại quầy,1. Thử các voucher lỗi: để trống; mã sai format; không tồn tại; đã tắt; hết hạn; chưa tới ngày; đơn dưới mức tối thiểu; hết lượt.,"Lỗi theo từng mã: MSG123, MSG124, MSG125, MSG126, MSG127, MSG131, MSG128. Không giữ lượt, giá không đổi.",Ca đang mở.,Passed,07/11/2026,ALOHA,,,,,,,,,,"Decision table · Service→DB · CBR-73, CBR-74, CBR-76",,,
+IT-CS-17,Hủy đơn Paid có voucher → trả lượt,"1. Làm IT-CS-15.
+2. Vào trang Ca làm việc, tìm đơn đó, bấm ""Hủy đơn"", nhập lý do.","- Toast MSG277 ""Đã hủy đơn hàng tại quầy thành công.""
+- Order Cancelled; lượt WELCOME10 được trả lại (UsedCount giảm 1).",Sau IT-CS-15.,Passed,07/11/2026,ALOHA,,,,,,,,,,"State transition · Service→Voucher→DB · CBR-11, CBR-73",,,
+IT-CS-18,Tranh lượt cuối voucher: quầy và online cùng lúc,"1. Voucher TEST1USE (MaxUsage=1).
+2. tam.le thu tiền một đơn quầy áp TEST1USE, đồng thời một khách thanh toán online cũng áp TEST1USE.",Chỉ một bên thành công; bên còn lại MSG133. UsedCount không vượt MaxUsage.,Ca đang mở.,Passed,07/11/2026,ALOHA,,,,,,,,,,Concurrency/race · Service→DB · CBR-76,,,
+"4. Tạo nhanh hồ sơ khách tại quầy (CBR-24, CBR-31, CBR-118)",,,,,,,,,,,,,,,,,,
+IT-CS-19,"Tạo hồ sơ Self + tài khoản, gửi mật khẩu tạm qua email","1. Ở màn tìm khách bấm ""+ Tạo hồ sơ"", chọn Loại hồ sơ = Self.
+2. Nhập Họ và tên, SĐT chưa dùng, Ngày sinh, Email thật.
+3. Bấm ""Tạo & Chọn mua gói"".
+4. Xem DB, hộp thư, đăng nhập thử bằng mật khẩu tạm.","- Toast MSG122 ""Đã tạo hồ sơ ... và tài khoản. Mật khẩu tạm đã gửi tới (email che bớt).""
+- DB: 1 Person + 1 Customer + 1 Account (Active), chỉ lưu BCrypt hash.
+- Email có mã khách và mật khẩu tạm; đăng nhập được bằng mật khẩu đó.",SMTP hoạt động.,Passed,07/11/2026,ALOHA,,,,,,,,,,"Luồng chính · Use case testing · Servlet→Service→DB→SMTP · CBR-24, CBR-31",,,
+IT-CS-20,"Gửi email lỗi → rollback, không tạo hồ sơ","1. Tắt SMTP hoặc cấu hình mail sai.
+2. Tạo nhanh khách Self như IT-CS-19.","- Hiện thông báo lỗi hệ thống.
+- DB: KHÔNG có Person, Customer, Account mới (atomic, CBR-31).",Tắt mail server.,Passed,07/11/2026,ALOHA,,,,,,,,,,Fault injection · Atomic transaction · Service→DB→SMTP · CBR-31,,,
+IT-CS-21,SĐT đã thuộc người khác,1. Tạo nhanh khách Self với SĐT đã dùng (0901234513 của KH-1013 hoặc SĐT nhân viên).,MSG120 dưới ô SĐT. Không tạo Person/Account.,Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,Decision table · Service→DB · CBR-118,,,
+IT-CS-22,Email đã có tài khoản,1. Tạo nhanh khách Self với SĐT mới nhưng Email = khanh.trinh@gmail.com.,Lỗi đỏ dưới ô Email: MSG12 (email đã được sử dụng). Không tạo Person/Account.,Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,Decision table · Service→DB · CBR-24,,,
+IT-CS-23,Tạo hồ sơ Dependent (người phụ thuộc),"1. ""+ Tạo hồ sơ"", chọn Loại hồ sơ = Dependent.
+2. Nhập Họ và tên, Ngày sinh, Tên người giám hộ, Mối quan hệ, SĐT người giám hộ hợp lệ.
+3. Bấm ""Tạo & Chọn mua gói"".","- Toast MSG121 ""Đã tạo hồ sơ khách hàng ...""
+- Có Person + Customer, KHÔNG có Account (CBR-21).",Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,"Luồng chính · Service→DB · CBR-21, CBR-118",,,
+IT-CS-24,Lỗi dữ liệu người giám hộ (Dependent),1. Dependent: để trống Tên người giám hộ / Mối quan hệ dài 31 ký tự / SĐT sai.,"Lỗi đỏ dưới đúng ô: MSG115, MSG116, MSG117. Không tạo hồ sơ.",Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,Boundary value · UI→Service · CBR-118,,,
+IT-CS-25,Thiếu/sai dữ liệu hồ sơ Self,1. Họ tên trống / Ngày sinh tương lai / SĐT không đủ 10 số / Email sai / Form rỗng.,"Lần lượt: MSG113, MSG114, MSG118, MSG119 dưới đúng ô; form rỗng: MSG111. Không tạo hồ sơ.",Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,Decision table · UI→Service · DBR-01,,,
+IT-CS-26,Tạo nhanh khách rồi bán gói ngay,"1. Tạo nhanh khách Self (IT-CS-19) → ""Tạo & Chọn mua gói"".
+2. Chọn Gói 1 Tháng, thu tiền mặt.",Đơn gắn đúng khách vừa tạo; Subscription tạo cho khách đó; chỉ có 1 Person cho khách này.,"Sau IT-CS-19, ca đang mở.",Passed,07/11/2026,ALOHA,,,,,,,,,,End-to-end · UI→Service→DB · UC-20,,,
+5. Xử lý đơn quầy đang chờ trên trang Ca làm việc (seed có DH-2026-0035),,,,,,,,,,,,,,,,,,
+IT-CS-27,Xác nhận chuyển khoản cho đơn quầy đang chờ,"1. Login tam.le@gms.vn, mở trang Ca làm việc, tìm đơn DH-2026-0035 (Pending).
+2. Bấm ""Xác nhận chuyển khoản"" và xác nhận.","- Toast MSG276 ""Đã xác nhận thanh toán chuyển khoản thành công.""
+- Order Paid, có Transaction Transfer Success; Subscription được cấp.",Có đơn Pending quầy.,Passed,07/11/2026,ALOHA,,,,,,,,,,Luồng chính · State transition · Servlet→Service→DB · CBR-77,,,
+IT-CS-28,Hủy đơn quầy đang chờ,"1. Dùng đơn quầy Pending (DH-2026-0035 hoặc tương tự).
+2. Bấm ""Hủy đơn"", nhập lý do, xác nhận.","MSG277 ""Đã hủy đơn hàng tại quầy thành công."" Order Cancelled, có lý do; không có Transaction Success.",Có đơn quầy Pending.,Passed,07/11/2026,ALOHA,,,,,,,,,,State transition · Service→DB · CBR-11,,,
+IT-CS-29,Hủy đơn Paid trong cùng ca còn mở,"1. Thu tiền một đơn (IT-CS-05).
+2. Trong cùng ca, bấm ""Hủy đơn"", nhập lý do.","- Order Paid → Cancelled; gói/vé của đơn bị thu hồi.
+- Tiền mặt hoàn trả cho khách.","Sau IT-CS-05, cùng ca.",Passed,07/11/2026,ALOHA,,,,,,,,,,State transition · Service→DB · CBR-11,,,
+IT-CS-30,Hủy đơn Paid của ca khác,"1. Chốt ca A, mở ca B.
+2. Ở ca B tìm đơn Paid tạo ở ca A và thử hủy.","MSG97 ""Chỉ có thể hủy đơn này trong ca đang mở đã tạo đơn."" Đơn không đổi.",Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,Decision table · Service→Shift→DB · CBR-11,,,
+IT-CS-31,Thao tác với đơn không thuộc ca đang mở,1. POST action=confirmTransfer hoặc cancelOrder với orderId thuộc ca đã đóng.,"MSG268 ""Đơn hàng không thuộc ca làm việc đang mở.""",Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,Error guessing · Service→Shift · CBR-11,,,
+IT-CS-32,Hủy đơn đã bị hủy,1. Gửi action=cancelOrder cho đơn đã Cancelled.,"MSG270 ""Đơn hàng này không còn ở trạng thái cho phép hủy.""",Có đơn đã Cancelled.,Passed,07/11/2026,ALOHA,,,,,,,,,,State transition · Service→DB · CBR-11,,,
+IT-CS-33,orderId không hợp lệ,1. Gửi action=confirmTransfer và cancelOrder với orderId=abc hoặc để trống.,"MSG275 ""Đơn hàng không hợp lệ."" Không đổi DB.",Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,Error guessing · Servlet→Service,,,
+IT-CS-34,Hai Receptionist xử lý cùng một đơn Pending,"1. Hai trình duyệt cùng mở trang Ca làm việc.
+2. Cùng lúc bấm ""Xác nhận chuyển khoản"" cho một đơn.","Chỉ một lần thành công; lần kia MSG269 ""Đơn hàng này không còn ở trạng thái chờ xác nhận."" Không cấp trùng Subscription.",Có đơn quầy Pending.,Passed,07/11/2026,ALOHA,,,,,,,,,,Concurrency/race · Service→DB · DBR-42,,,
+"6. Chốt ca (CBR-78, BR-46)",,,,,,,,,,,,,,,,,,
+IT-CS-35,Chốt ca khi còn đơn quầy Pending,"1. Giữ nguyên đơn Pending DH-2026-0035 của ca sáng.
+2. Ở trang Ca làm việc bấm ""Chốt ca"".","MSG87 ""Không thể đóng ca: còn 1 đơn tại quầy đang chờ thanh toán."" Ca vẫn Open.",Đơn Pending còn trong ca.,Passed,07/11/2026,ALOHA,,,,,,,,,,Decision table · Shift→Order→DB · CBR-78,,,
+IT-CS-36,Xử lý hết đơn Pending rồi chốt ca thành công,"1. Xác nhận hoặc hủy các đơn Pending.
+2. ""Chốt ca"", nhập ""Tiền mặt thực tế đếm được"" đúng bằng số hệ thống.","- Toast MSG274 ""Đã chốt ca làm việc và gửi sổ ca lên Quản lý.""
+- Ca Closed (chỉ đọc); sổ ca xuất hiện ở /manager/transactions?tab=shifts.",Sau IT-CS-35.,Passed,07/11/2026,ALOHA,,,,,,,,,,Luồng chính · Integration UC-20→UC-25→UC-26 · Shift→DB→Manager,,,
+IT-CS-37,Tiền đếm lệch → bắt buộc nhập lý do chênh lệch,"1. Thu 799.000đ tiền mặt. Khi chốt ca nhập 700.000đ và để trống ""Lý do chênh lệch"".
+2. Nhập lý do hợp lệ rồi chốt lại.
+3. Thử nhập tiền đếm là chữ hoặc số âm.","- Để trống lý do: bị chặn, yêu cầu nhập lý do (BR-46).
+- Có lý do: chốt được; sổ ca ghi chênh lệch -99.000đ kèm lý do.
+- Tiền đếm sai kiểu: MSG273.",Có thu tiền mặt trong ca.,Passed,07/11/2026,ALOHA,,,,,,,,,,Boundary value · Shift→DB · BR-46,,,
+IT-CS-38,Chốt ca đã chốt (gửi lặp),1. Chốt ca thành công rồi gửi lại POST action=closeShift cho cùng ca.,"MSG267 ""Chỉ có thể chốt ca đang ở trạng thái Đang mở."" Sổ ca không đổi.",Sau khi chốt ca.,Passed,07/11/2026,ALOHA,,,,,,,,,,State transition · Shift→DB · MSG267,,,
+7. Bảo mật và tìm kiếm khách hàng,,,,,,,,,,,,,,,,,,
+IT-CS-39,Chưa đăng nhập hoặc sai role vào màn bán gói quầy,"1. Cửa sổ ẩn danh: mở /receptionist/sales.
+2. Login KH-1013: mở /receptionist/sales.","- Chưa login: 302 về /login?returnUrl=...
+- Khách hàng: 403.",Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,Bảo mật · Error guessing · Filter→Servlet,,,
+IT-CS-40,POST thanh toán quầy thiếu CSRF,1. Gửi POST thanh toán không có csrfToken.,Request bị chặn (403); không tạo Order/Transaction.,Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,Bảo mật · Error guessing · Filter→Servlet,,,
+IT-CS-41,Giả mạo giá khi thu tiền quầy,1. POST thanh toán Gói 1 Tháng kèm amount=1000.,Hệ thống dùng giá trong DB: Transaction.Amount = 799.000đ. Không thể thu sai giá (CBR-10).,Ca đang mở.,Passed,07/11/2026,ALOHA,,,,,,,,,,Bảo mật · Error guessing · Servlet→Service→DB · CBR-10,,,
+IT-CS-42,Tìm kiếm nhanh khách hàng tại quầy qua AJAX Autocomplete (UC-20),"1. Tại màn bán quầy (/receptionist/sales), nhập từ khóa SĐT '0901' vào ô tìm khách.
+2. Quan sát danh sách dropdown gợi ý.","- Gửi GET /receptionist/sales/customers?q=0901.
+- Trả về danh sách JSON gồm Mã khách, Họ tên, SĐT, Gói hiện tại và ngày hết hạn.
+- Bấm chọn khách thì tự động điền thông tin và kiểm tra gói nối tiếp.",Ca đang mở; có khách hàng seed.,Passed,07/11/2026,ALOHA,,,,,,,,,,Luồng chính · UI→Servlet→DB · UC-20,,,
+Feature,Look Up Personal Transaction History,,,,,,,,,,,,,,,,,Passed
+Test requirement,"Kiểm tra khách xem lịch sử giao dịch của chính mình: dữ liệu từ luồng online + quầy hiện đúng, lọc, phân trang, quyền truy cập (UC-24).",,,,,,,,,,,,,,,,,Failed
+Number of TCs,8,,,,,,,,,,,,,,,,8
+Testing Round,Passed,Failed,Pending,N/A,,,,,,,,,,,,,,N/A
+Round 1,Passed,0,0,0,,,,,,,,,,,,,
+Test Case ID,Test Case Description,Test Case Procedure,Expected Results,Pre-conditions,Round 1,Test date,Tester,Round 2,Test date,Tester,Round 3,Test date,Tester,Defect IDs,Note,,,
+1. Lịch sử giao dịch cá nhân (UC-24),,,,,,,,,,,,,,,,,,
+IT-PH-01,Xem lịch sử có giao dịch online và quầy,"1. Sau khi chạy các case mua online (IT-OP-33) và quầy (IT-CS-05) cho KH-1013, login KH-1013 / Gms@2026.
+2. Mở /customer/transactions (tab ""Tất cả"").
+3. Bấm vào một dòng để mở chi tiết.","- Danh sách có cả giao dịch online (VNPay) và quầy, mới nhất trước.
+- Chi tiết hiển thị: Mã đơn, Phương thức, Giá gốc, Giảm giá, Đã gồm VAT, Tạo lúc, Mã tham chiếu.",Có dữ liệu từ IT-OP-33 và IT-CS-05.,Passed,07/11/2026,ALOHA,,,,,,,,,,Luồng chính · Use case testing · Servlet→Service→DB · UC-24,,,
+IT-PH-02,Chỉ thấy giao dịch của chính mình,"1. Login KH-1013, mở lịch sử.
+2. Đối chiếu với DB: chỉ có giao dịch của đơn thuộc KH-1013.",Không có giao dịch nào của khách khác (KH-2025, KH-1011...).,KH-2025 cũng có giao dịch.,Passed,07/11/2026,ALOHA,,,,,,,,,,Bảo mật · Use case testing · Service→DB · UC-24,,,
+IT-PH-03,Lọc theo trạng thái giao dịch,"1. Lần lượt bấm các chip: ""Thành công"", ""Đang chờ"", ""Thất bại"", ""Hết hạn"", ""Tất cả"".",Mỗi chip chỉ hiện giao dịch đúng trạng thái: Success / Pending / Failed / Expired. Số lượng khớp DB.,Khách có đủ 4 loại giao dịch.,Passed,07/11/2026,ALOHA,,,,,,,,,,Decision table · UI→Service→DB · UC-24,,,
+IT-PH-04,Giao dịch cần đối soát hiển thị phần hoàn tiền,"1. Sau IT-OP-44, login khách của giao dịch đó, mở lịch sử và mở chi tiết.
+2. Sau khi Manager hoàn tiền (IT-SH-09), mở lại.","- Trước hoàn: giao dịch Thành công, chi tiết báo cần đối soát/chờ hoàn tiền.
+- Sau hoàn: mục ""Hoàn tiền"" hiển thị đã hoàn.",Sau IT-OP-44.,Passed,07/11/2026,ALOHA,,,,,,,,,,State transition · Integration UC-PAY→UC-24 · CBR-72,,,
+IT-PH-05,Mở chi tiết giao dịch của người khác qua URL,1. Login KH-1013, sửa tham số id trong URL chi tiết sang giao dịch của KH-2025.,Không hiển thị dữ liệu của khách khác (bỏ qua hoặc báo không tìm thấy).,Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,Bảo mật · Error guessing · Servlet→Service,,,
+IT-PH-06,Tham số status / page sai,"1. Mở /customer/transactions?status=abc&page=-1.
+2. Mở ?page=99999 và ?page=xyz.","Không lỗi 500; status lạ coi như ""Tất cả""; page sai về trang hợp lệ.",Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,Boundary value · Error guessing · Servlet→Service,,,
+IT-PH-07,Lịch sử khi DB lỗi,1. Ngắt SQL Server rồi mở /customer/transactions.,"MSG177 ""Chưa tải được lịch sử giao dịch. Vui lòng thử lại."" Không lỗi 500.",Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,Fault injection · Service→DB · UC-24,,,
+IT-PH-08,Chưa đăng nhập / sai role,"1. Ẩn danh mở /customer/transactions.
+2. Login viet.tran@gms.vn (Manager) mở /customer/transactions.","- Chưa login: 302 về /login?returnUrl=...
+- Manager: 403.",Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,Bảo mật · Error guessing · Filter→Servlet,,,
+Feature,Look Up System-Wide Transaction History,,,,,,,,,,,,,,,,,Passed
+Test requirement,"Kiểm tra Manager xem giao dịch toàn hệ thống, lọc/tìm kiếm, tra cứu VNPay thời gian thực (QueryDR), xác nhận hoàn tiền (BR-81), xuất Excel và xem ca đã chốt (UC-26).",,,,,,,,,,,,,,,,,Failed
+Number of TCs,25,,,,,,,,,,,,,,,,25
+Testing Round,Passed,Failed,Pending,N/A,,,,,,,,,,,,,,N/A
+Round 1,Passed,0,0,0,,,,,,,,,,,,,
+Test Case ID,Test Case Description,Test Case Procedure,Expected Results,Pre-conditions,Round 1,Test date,Tester,Round 2,Test date,Tester,Round 3,Test date,Tester,Defect IDs,Note,,,
+1. Danh sách giao dịch toàn hệ thống (UC-26),,,,,,,,,,,,,,,,,,
+IT-SH-01,Manager xem tab Đơn hàng gồm online và quầy,"1. Login viet.tran@gms.vn / Gms@2026.
+2. Mở /manager/transactions (tab ""Đơn hàng"").","- Bảng có cột: Mã giao dịch, Hình thức, Khách hàng, Gói tập, Tiền, Tình trạng, Thao tác.
+- Có đủ đơn Online, Offline · Tiền mặt, Offline · Chuyển khoản.",Có dữ liệu seed + các case OP/CS.,Passed,07/11/2026,ALOHA,,,,,,,,,,Luồng chính · Use case testing · Servlet→Service→DB · UC-26,,,
+IT-SH-02,Tìm kiếm theo từ khóa,"1. Nhập mã đơn / tên khách (ví dụ ""Khánh"") vào ô tìm kiếm, bấm ""Tìm"".
+2. Bấm ""Xóa lọc"".","Chỉ hiện dòng khớp từ khóa; ""Xóa lọc"" trở lại đầy đủ.",Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,Decision table · UI→Service→DB,,,
+IT-SH-03,Lọc theo Hình thức,1. Chọn lần lượt: Online, Offline (tất cả), Offline · Chuyển khoản, Offline · Tiền mặt.,Mỗi lần chỉ hiện giao dịch đúng hình thức.,Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,Decision table · UI→Service→DB,,,
+IT-SH-04,Lọc theo Tình trạng,1. Chọn lần lượt: Cần hoàn tiền, Chờ thanh toán, Đã thanh toán, Đã hoàn tiền, Đã hủy / hết hạn.,"Mỗi lần đúng tình trạng; số dòng ""Cần hoàn tiền"" khớp huy hiệu trên tab.",Có đủ các loại giao dịch.,Passed,07/11/2026,ALOHA,,,,,,,,,,Decision table · Service→DB · BR-81,,,
+IT-SH-05,Lọc theo Từ ngày / Đến ngày (biên),"1. Từ ngày = Đến ngày = hôm nay.
+2. Từ ngày > Đến ngày.
+3. Từ ngày = đầu tháng, Đến ngày = hôm nay.","- Từ = Đến: chỉ giao dịch trong ngày.
+- Từ > Đến: MSG169 ""Ngày bắt đầu không được lớn hơn ngày kết thúc.""
+- Khoảng dài: đủ giao dịch trong khoảng.",Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,Boundary value · UI→Service · MSG169,,,
+IT-SH-06,Kết hợp bộ lọc và phân trang,"1. Chọn Hình thức + Tình trạng + khoảng ngày + từ khóa.
+2. Sang trang 2 rồi quay lại.",Kết quả là giao của các bộ lọc; bộ lọc được giữ khi đổi trang.,Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,Decision table · Servlet→Service,,,
+IT-SH-07,Giao dịch online vừa thanh toán xuất hiện,"1. Khách thanh toán online thành công (IT-OP-33).
+2. Manager tải lại danh sách.","Có dòng mới: Online, Đã thanh toán, đúng số tiền và gói.",Sau IT-OP-33.,Passed,07/11/2026,ALOHA,,,,,,,,,,Luồng chính · Integration UC-PAY→UC-26 · DB,,,
+IT-SH-08,Giao dịch quầy hiển thị đúng hình thức,"1. Thu một đơn chuyển khoản mã FT123456 (IT-CS-06) và một đơn tiền mặt (IT-CS-05).
+2. Manager xem danh sách, bấm ""Chi tiết"".","Dòng ghi ""Offline · Chuyển khoản"" / ""Offline · Tiền mặt""; chi tiết có mã tham chiếu FT123456.",Sau IT-CS-06 và IT-CS-05.,Passed,07/11/2026,ALOHA,,,,,,,,,,Luồng chính · Integration UC-20→UC-26 · DB,,,
+2. Xác nhận hoàn tiền (BR-81),,,,,,,,,,,,,,,,,,
+IT-SH-09,Xác nhận hoàn tiền thành công,"1. Chọn dòng ""Cần hoàn tiền"" (IT-OP-44), bấm ""Hoàn tiền"".
+2. Modal hiện số tiền hoàn cố định = số VNPay đã thu. Nhập ""Ghi chú hoàn tiền"" = ""Đã chuyển trả khách qua STK 0123456789 ngày 07/11"".
+3. Bấm ""Xác nhận đã hoàn tiền"".","- Toast MSG174 ""Đã xác nhận hoàn tiền thành công.""
+- Transaction ghi RefundedAt, RefundedBy = viet.tran, kèm ghi chú.
+- Huy hiệu giảm 1; dòng chuyển sang ""Đã hoàn tiền"".",Có giao dịch cần hoàn (sau IT-OP-44).,Passed,07/11/2026,ALOHA,,,,,,,,,,Luồng chính · Use case testing · Servlet→Service→DB · BR-81,,,
+IT-SH-10,Ghi chú hoàn tiền để trống hoặc ngắn hơn 5 ký tự,"1. Mở modal hoàn tiền, để trống ô ghi chú rồi bấm xác nhận.
+2. Nhập ghi chú '1234' (4 ký tự) rồi bấm xác nhận.","- Lỗi đỏ dưới ô ghi chú: MSG171 ""Ghi chú hoàn tiền phải từ 5 đến 480 ký tự...""
+- DB không thay đổi, giao dịch vẫn là 'Cần hoàn tiền'.",Có giao dịch cần hoàn.,Passed,07/11/2026,ALOHA,,,,,,,,,,Boundary value · UI→Service · BR-81, MSG171,,,
+IT-SH-11,Ghi chú hoàn tiền vượt quá 480 ký tự,1. Thử nhập ghi chú 481 ký tự vào modal hoàn tiền (hoặc POST tay).,"- Bị chặn bởi thuộc tính maxlength=480 trên textarea HTML.
+- Nếu gửi POST vượt 480 ký tự: server từ chối với MSG171; DB không đổi.",Có giao dịch cần hoàn.,Passed,07/11/2026,ALOHA,,,,,,,,,,Boundary value · UI→Service · BR-81,,,
+IT-SH-12,Kiểm tra biên độ dài ghi chú hoàn tiền hợp lệ (5 và 480 ký tự),"1. Giao dịch A: nhập ghi chú đúng 5 ký tự (ví dụ: 'Hoan1').
+2. Giao dịch B: nhập ghi chú đúng 480 ký tự hợp lệ.","- Cả hai giao dịch đều được hoàn tiền thành công (MSG174).
+- Ghi chú lưu trọn vẹn trong DB.",Hai giao dịch cần hoàn.,Passed,07/11/2026,ALOHA,,,,,,,,,,Boundary value · Service→DB · BR-81,,,
+IT-SH-13,Hoàn tiền giao dịch đã hoàn / không cần hoàn,"1. Hoàn lần hai cho giao dịch đã hoàn.
+2. Postman gửi hành động hoàn tiền cho giao dịch bình thường.","MSG173 ""Giao dịch không tồn tại, không yêu cầu hoàn tiền hoặc đã được hoàn trước đó.""",Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,State transition · Service→DB · BR-81,,,
+IT-SH-14,Hai Manager hoàn cùng một giao dịch,1. Hai phiên Manager cùng bấm ""Xác nhận đã hoàn tiền"" cho một giao dịch.,Chỉ một lần thành công; lần kia MSG173; RefundedAt chỉ ghi một lần.,Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,Concurrency/race · Service→DB · BR-81,,,
+IT-SH-15,Mã giao dịch không hợp lệ / không tồn tại,1. POST hoàn tiền với transactionId=abc, rồi 999999.,"abc: MSG158 ""Mã giao dịch không hợp lệ.""; 999999: MSG156 ""Không tìm thấy giao dịch."" Không lỗi 500.",Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,Error guessing · Servlet→Service,,,
+IT-SH-16,Receptionist cố xác nhận hoàn tiền,1. Login tam.le@gms.vn, gửi POST /manager/transactions với action hoàn tiền.,"Bị chặn (403) hoặc MSG172 ""Bạn không có quyền thực hiện xác nhận hoàn tiền.""; DB không đổi.",Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,Bảo mật · Error guessing · Filter→Service · BR-81,,,
+IT-SH-17,"Hoàn tiền xong, khách thấy trạng thái đã hoàn","1. Sau IT-SH-09, login khách của giao dịch, mở lịch sử, xem chi tiết.","Mục ""Hoàn tiền"" hiển thị đã hoàn; không còn trạng thái cần đối soát.",Sau IT-SH-09.,Passed,07/11/2026,ALOHA,,,,,,,,,,Luồng chính · Integration UC-26→UC-24 · DB,,,
+3. Tab Ca làm việc; Tra cứu VNPay & Xuất Excel,,,,,,,,,,,,,,,,,,
+IT-SH-18,Xem sổ ca đã chốt,"1. Sau khi chốt ca (IT-CS-36), login viet.tran@gms.vn, mở /manager/transactions?tab=shifts.","- Có dòng ca vừa chốt: người mở, người chốt, tổng tiền mặt/chuyển khoản, chênh lệch.
+- Số liệu khớp tổng Transaction trong DB.",Sau IT-CS-36.,Passed,07/11/2026,ALOHA,,,,,,,,,,Luồng chính · Integration UC-25→UC-26 · DB,,,
+IT-SH-19,Tab Ca: lọc ngày sai,1. Ở tab Ca đặt Từ ngày > Đến ngày.,MSG169; hợp lệ thì chỉ hiện ca trong khoảng.,Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,Boundary value · UI→Service,,,
+IT-SH-20,Tham số tab lạ,1. Mở /manager/transactions?tab=abc.,"Hiện tab ""Đơn hàng"" mặc định; không lỗi 500.",Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,Error guessing · Servlet,,,
+IT-SH-21,Chưa đăng nhập / Receptionist / Customer vào danh sách toàn hệ thống,"1. Ẩn danh mở /manager/transactions.
+2. Login tam.le@gms.vn và KH-1013, mở cùng URL.","- Chưa login: 302 về /login?returnUrl=...
+- Receptionist / Customer: 403.",Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,Bảo mật · Error guessing · Filter→Servlet,,,
+IT-SH-22,Danh sách khi DB lỗi,1. Ngắt SQL Server, mở /manager/transactions.,Hiện thông báo lỗi tải dữ liệu thân thiện; không stacktrace, không lỗi 500.,Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,Fault injection · Service→DB,,,
+IT-SH-23,POST hoàn tiền thiếu CSRF,1. Manager POST xác nhận hoàn tiền không kèm csrfToken.,Request bị chặn (403); DB không đổi.,Không có,Passed,07/11/2026,ALOHA,,,,,,,,,,Bảo mật · Error guessing · Filter→Servlet,,,
+IT-SH-24,"Manager tra cứu trạng thái giao dịch từ cổng VNPay (QueryDR - UC-26 / SD11)","1. Tại màn hình /manager/transactions, chọn 1 giao dịch online (VNPay), bấm nút 'Tra cứu VNPay' (gửi GET ?action=lookup&transactionId=...).
+2. Quan sát modal hiển thị kết quả.","- Hệ thống gọi vnPayClient.queryTransaction đối soát thời gian thực.
+- Modal hiển thị: Mã tham chiếu VNPay, Ngân hàng thanh toán, Số tiền VNPay ghi nhận, Thời gian thanh toán.
+- Nếu VNPay lỗi/không tìm thấy hoặc đơn seed: hệ thống kích hoạt đối soát dự phòng nội bộ hoặc báo MSG325 'Không tra cứu được VNPay lúc này.'",Có giao dịch online trong danh sách.,Passed,07/11/2026,ALOHA,,,,,,,,,,Luồng chính · Integration UC-26 · Servlet→Service→VNPay · CBR-125, API-06,,,
+IT-SH-25,"Manager xuất danh sách giao dịch ra file Excel (UC-26 / MSG32)","1. Tại tab 'Đơn hàng', áp dụng bộ lọc (ví dụ: Hình thức = Online, Tình trạng = Đã thanh toán).
+2. Bấm nút 'Xuất Excel' (gửi GET /manager/transactions?action=export&...).
+3. Kiểm tra file tải về.","- Trình duyệt tải về file DanhSachGiaoDich_YYYYMMDD.xlsx.
+- File chứa đầy đủ các cột: Mã GD, Mã đơn, Khách hàng, Gói tập, Số tiền, Hình thức, Tình trạng, Thời gian.
+- Toast MSG32 'Đã tải xuống ...' hiển thị.",Có dữ liệu giao dịch.,Passed,07/11/2026,ALOHA,,,,,,,,,,Luồng chính · Use case testing · Servlet→Service→Excel · UC-26, MSG32,,,
+Test Case ID,Scenario Name,Role / Session,Coverage Technique,Given,When,Then (Expected: HTTP Status / Visibility),Status,Defect ID,Notes
+TC-SEC-001,Chưa đăng nhập vào mọi URL luồng giao dịch,(chưa login),Error Guessing,Không có session,"Mở /customer/packages, /customer/checkout?order=1, /customer/transactions, /receptionist/sales, /manager/transactions",Trang thường: 302 về /login?returnUrl=...; AJAX: 401 JSON. Không lộ dữ liệu.,Passed,,Đạt chuẩn bảo mật OWASP Top 10 & phân quyền RBAC
+TC-SEC-002,Sai role truy cập luồng không thuộc quyền,Customer / Receptionist / Manager,Use Case Testing,"Login KH-1013, tam.le@gms.vn, viet.tran@gms.vn",KH-1013 mở /receptionist/sales và /manager/transactions; tam.le mở /manager/transactions và /customer/checkout; viet.tran mở /customer/transactions,HTTP 403 cho mọi truy cập sai role.,Passed,,Đạt chuẩn bảo mật OWASP Top 10 & phân quyền RBAC
+TC-SEC-003,Xem / trả tiền / đổi ngày đơn của khách khác (IDOR),Customer (KH-2025),Error Guessing,KH-1013 có đơn Pending và Subscription,"KH-2025 mở /customer/checkout?order=<của KH-1013>, thử thanh toán, POST đổi ngày bắt đầu với subscriptionId của KH-1013",Bị từ chối (403 / không tìm thấy); dữ liệu KH-1013 không đổi.,Passed,,Đạt chuẩn bảo mật OWASP Top 10 & phân quyền RBAC
+TC-SEC-004,POST thiếu hoặc sai CSRF token,Customer / Receptionist / Manager,Error Guessing,Phiên đã đăng nhập,"POST /customer/packages/purchase, /receptionist/sales (thu tiền), /manager/transactions (hoàn tiền) không kèm csrfToken",Bị chặn (403); không thay đổi DB.,Passed,,Đạt chuẩn bảo mật OWASP Top 10 & phân quyền RBAC
+TC-SEC-005,IPN / Return URL sai chữ ký,(VNPay → server),Error Guessing,Có Transaction Pending,Gửi IPN và Return URL với vnp_SecureHash sai hoặc thiếu,IPN trả RspCode=97; Return URL báo MSG154; không đổi dữ liệu.,Passed,,Đạt chuẩn bảo mật OWASP Top 10 & phân quyền RBAC
+TC-SEC-006,Return URL không được đổi dữ liệu,Customer,Use Case Testing,"Transaction Pending, chưa có IPN","Tự dựng URL /payment/vnpay-return với tham số thành công, chữ ký đúng, nhưng chưa có IPN","Order vẫn Pending, không có Subscription; trang báo đang chờ xác nhận (MSG167).",Passed,,Đạt chuẩn bảo mật OWASP Top 10 & phân quyền RBAC
+TC-SEC-007,Chỉ Manager được xác nhận hoàn tiền,Receptionist,Use Case Testing,Có giao dịch cần hoàn tiền,tam.le@gms.vn gửi POST hoàn tiền (CSRF hợp lệ),403 hoặc MSG172; trạng thái giao dịch không đổi.,Passed,,Đạt chuẩn bảo mật OWASP Top 10 & phân quyền RBAC
+TC-SEC-008,Mật khẩu tạm không lộ trên UI / log,Receptionist,Error Guessing,Tạo nhanh khách Self,"Xem HTML phản hồi, console, log server sau khi tạo khách",Mật khẩu tạm không xuất hiện ở UI hay log; DB chỉ lưu BCrypt hash.,Passed,,Đạt chuẩn bảo mật OWASP Top 10 & phân quyền RBAC
+TC-SEC-009,SQL injection ở ô tìm kiếm / voucher,Manager / Customer,Error Guessing,Có dữ liệu mẫu,Nhập ' OR 1=1 -- vào ô tìm kiếm của /manager/transactions và ô voucher,"Không lỗi 500, không rò dữ liệu; tìm kiếm trả rỗng, voucher báo MSG124.",Passed,,Đạt chuẩn bảo mật OWASP Top 10 & phân quyền RBAC
+TC-SEC-010,XSS: ghi chú hoàn tiền được escape,Manager,Error Guessing,Có giao dịch cần hoàn,Nhập ghi chú hoàn tiền <script>alert(1)</script> rồi mở lại danh sách và chi tiết,"Hiển thị dạng text, không chạy script.",Passed,,Đạt chuẩn bảo mật OWASP Top 10 & phân quyền RBAC
+TC-SEC-011,Không lộ stacktrace,Mọi role,Error Guessing,—,"Gửi packageId, page, orderId sai kiểu hoặc quá lớn","Trang/toast thân thiện, không lộ stacktrace hay tên bảng.",Passed,,Đạt chuẩn bảo mật OWASP Top 10 & phân quyền RBAC
+TC-SEC-012,Không thu tiền khi chưa có ca mở,Receptionist,Use Case Testing,Không có ca Open,Postman gửi trực tiếp POST thanh toán tại quầy,MSG110; không có Transaction.,Passed,,Đạt chuẩn bảo mật OWASP Top 10 & phân quyền RBAC
