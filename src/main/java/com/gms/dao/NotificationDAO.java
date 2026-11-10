@@ -296,7 +296,9 @@ public class NotificationDAO {
                      connection.prepareStatement(sql)) {
 
             statement.setInt(1, accountId);
-            statement.setMaxRows(limit);
+            if (limit > 0) {
+                statement.setMaxRows(limit);
+            }
 
             try (ResultSet resultSet =
                          statement.executeQuery()) {
@@ -361,6 +363,58 @@ public class NotificationDAO {
                      connection.prepareStatement(sql)) {
 
             statement.setInt(1, accountId);
+
+            return statement.executeUpdate();
+        }
+    }
+
+    /**
+     * Tự động đánh dấu đã đọc các thông báo chưa đọc của một tài khoản theo các từ khóa chủ đề (Contextual Auto-read).
+     * Tuyệt đối không thay đổi schema CSDL; chỉ cập nhật các thông báo chưa đọc (ReadAt IS NULL).
+     *
+     * @param accountId ID tài khoản nhận thông báo
+     * @param keywords  Danh sách từ khóa chủ đề (VD: "Bảo trì", "nghỉ phép", "xóa hồ sơ")
+     * @return Số lượng bản ghi đã được cập nhật sang đã đọc
+     * @throws SQLException nếu xảy ra lỗi truy vấn CSDL
+     */
+    public int markReadByKeywords(
+            int accountId,
+            String... keywords
+    ) throws SQLException {
+
+        if (accountId <= 0 || keywords == null || keywords.length == 0) {
+            return 0;
+        }
+
+        StringBuilder sql = new StringBuilder(
+                "UPDATE nr "
+                        + "SET nr.ReadAt = SYSDATETIME() "
+                        + "FROM NotificationRecipients nr "
+                        + "JOIN Notifications n "
+                        + "ON n.NotificationId = nr.NotificationId "
+                        + "WHERE nr.AccountId = ? "
+                        + "AND nr.ReadAt IS NULL "
+                        + "AND n.SentAt IS NOT NULL AND ("
+        );
+
+        for (int i = 0; i < keywords.length; i++) {
+            if (i > 0) {
+                sql.append(" OR ");
+            }
+            sql.append("n.Title LIKE ? OR n.Content LIKE ?");
+        }
+        sql.append(")");
+
+        try (Connection connection = DBContext.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql.toString())) {
+
+            statement.setInt(1, accountId);
+            int paramIndex = 2;
+            for (String keyword : keywords) {
+                String pattern = "%" + (keyword == null ? "" : keyword.trim()) + "%";
+                statement.setString(paramIndex++, pattern);
+                statement.setString(paramIndex++, pattern);
+            }
 
             return statement.executeUpdate();
         }
