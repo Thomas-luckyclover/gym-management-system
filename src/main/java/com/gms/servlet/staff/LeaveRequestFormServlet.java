@@ -5,6 +5,7 @@ import com.gms.constant.SessionKey;
 import com.gms.dto.ServiceResult;
 import com.gms.dto.StaffLeaveFormView;
 import com.gms.dto.LeaveSubmissionPreview;
+import com.gms.service.NotificationService;
 import com.gms.service.StaffLeaveService;
 import com.gms.util.RequestUtil;
 import com.gms.util.DateTimeUtil;
@@ -30,6 +31,7 @@ import java.time.LocalDate;
 public class LeaveRequestFormServlet extends HttpServlet {
 
     private final StaffLeaveService staffLeaveService;
+    private final NotificationService notificationService = new NotificationService();
 
     public LeaveRequestFormServlet() {
         this.staffLeaveService = new StaffLeaveService();
@@ -51,6 +53,7 @@ public class LeaveRequestFormServlet extends HttpServlet {
             return;
         }
 
+        notificationService.markTopicNotificationsRead(accountId, "Nghỉ phép", "nghỉ phép", "ngày nghỉ");
         showForm(request, response, accountId);
     }
 
