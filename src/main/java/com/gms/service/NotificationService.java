@@ -21,7 +21,10 @@ import java.util.regex.Pattern;
  */
 public class NotificationService {
 
-    private static final int BELL_LIMIT = 10;
+    /**
+     * Giới hạn số lượng notification hiển thị trong chuông (0 = không giới hạn, hiển thị tất cả).
+     */
+    private static final int BELL_LIMIT = 0;
 
     /**
      * Chỉ notification hệ thống có title bắt đầu bằng chuỗi này
@@ -33,7 +36,7 @@ public class NotificationService {
     private static final Pattern
             MAINTENANCE_CODE_PATTERN =
             Pattern.compile(
-                    "\\bBT-\\d{4}\\b",
+                    "\\b(MR-\\d{8}-\\d{4}|BT-\\d{4})\\b",
                     Pattern.CASE_INSENSITIVE
             );
 
@@ -302,6 +305,25 @@ public class NotificationService {
             return ServiceResult.fail(
                     Messages.MSG04_SYSTEM_BUSY
             );
+        }
+    }
+
+    /**
+     * Tự động đánh dấu đã đọc các thông báo theo chủ đề (ví dụ: "Bảo trì", "nghỉ phép", "xóa hồ sơ")
+     * khi người dùng truy cập vào trang quản lý tương ứng (Contextual Auto-read).
+     * Bọc lỗi an toàn để không bao giờ làm gián đoạn luồng tải trang chính.
+     */
+    public void markTopicNotificationsRead(
+            int accountId,
+            String... keywords
+    ) {
+        if (accountId <= 0 || keywords == null || keywords.length == 0) {
+            return;
+        }
+        try {
+            notificationDAO.markReadByKeywords(accountId, keywords);
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 
