@@ -168,6 +168,17 @@ public class CounterSaleServlet extends HttpServlet {
 
         boolean transferReceived = "true".equals(request.getParameter("transferReceived"));
         String transferReference = request.getParameter("transferReference");
+        String cashGivenRaw = request.getParameter("cashGiven");
+        Long cashGiven = null;
+        if (cashGivenRaw != null && !cashGivenRaw.isBlank()) {
+            try {
+                String cleanCash = cashGivenRaw.replaceAll("[^0-9]", "");
+                if (!cleanCash.isEmpty()) {
+                    cashGiven = Long.parseLong(cleanCash);
+                }
+            } catch (NumberFormatException ignored) {
+            }
+        }
 
         CounterCheckoutInput input = new CounterCheckoutInput(
                 packageId, customerId, startDate, paymentMethod, voucherCode,
@@ -192,6 +203,14 @@ public class CounterSaleServlet extends HttpServlet {
             CounterSaleReceipt receipt = result.getData();
             if (hasSession) {
                 session.setAttribute("lastReceipt", receipt);
+                if ("Cash".equals(paymentMethod) && cashGiven != null && cashGiven > 0) {
+                    long cashChange = Math.max(0, cashGiven - receipt.getFinalAmount());
+                    session.setAttribute("lastCashGiven", cashGiven);
+                    session.setAttribute("lastCashChange", cashChange);
+                } else {
+                    session.removeAttribute("lastCashGiven");
+                    session.removeAttribute("lastCashChange");
+                }
             }
             RequestUtil.setFlashToast(request, "success", result.getMessage());
             RequestUtil.redirect(request, response, PAGE_URL + "?receipt=" + receipt.getOrderId());
@@ -385,6 +404,8 @@ public class CounterSaleServlet extends HttpServlet {
             if (receiptObj instanceof CounterSaleReceipt) {
                 receipt = (CounterSaleReceipt) receiptObj;
             }
+            request.setAttribute("cashGiven", session.getAttribute("lastCashGiven"));
+            request.setAttribute("cashChange", session.getAttribute("lastCashChange"));
         }
 
         if (receipt == null) {

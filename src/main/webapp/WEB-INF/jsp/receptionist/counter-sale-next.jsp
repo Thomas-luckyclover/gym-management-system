@@ -33,8 +33,8 @@
 <head>
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Xác nhận thanh toán · Super Gym Lễ tân</title>
-    <link rel="stylesheet" href="${ctx}/css/pages/receptionist/counter-sale.css?v=20261105vat">
-    <script src="${ctx}/js/pages/receptionist/counter-sale.js?v=20261109merge" defer></script>
+    <link rel="stylesheet" href="${ctx}/css/pages/receptionist/counter-sale.css?v=20261110v3">
+    <script src="${ctx}/js/pages/receptionist/counter-sale.js?v=20261110v3" defer></script>
 </head>
 <body class="dock theme-staff counter-sale-page">
 <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
@@ -200,7 +200,7 @@
                             </div>
                             <%-- id="paymentMethodsGroup" được dùng trong counter-sale.js, hàm initPaymentMethodToggle() --%>
                             <div class="counter-payment-radios" id="paymentMethodsGroup">
-                                <label class="counter-payment-card active">
+                                <label class="counter-payment-card">
                                     <input type="radio" name="paymentMethod" value="Cash" checked>
                                     <div class="payment-card-content">
                                         <i class="fa-solid fa-money-bill-wave payment-icon is-cash"></i>
@@ -223,15 +223,35 @@
                             </div>
 
                             <%-- CBR-77: chuyển khoản chỉ hoàn tất sau khi lễ tân xác nhận tiền đã về tài khoản phòng tập. --%>
-                            <%-- id="transferConfirmBox" và "transferReceived" được dùng trong counter-sale.js, hàm initPaymentMethodToggle() --%>
-                            <div class="counter-transfer-confirm" id="transferConfirmBox" hidden>
-                                <label class="counter-transfer-tick" for="transferReceived">
-                                    <input type="checkbox" name="transferReceived" value="true" id="transferReceived">
-                                    <span>Tôi đã kiểm tra tiền đã về tài khoản phòng tập, đủ số tiền</span>
+                            <div class="counter-transfer-box" id="transferConfirmBox" hidden>
+                                <div class="transfer-box-header">
+                                    <div class="transfer-header-icon-wrap">
+                                        <i class="fa-solid fa-building-columns transfer-icon"></i>
+                                    </div>
+                                    <div class="transfer-header-texts">
+                                        <h4 class="transfer-title">Xác nhận chuyển khoản / Quẹt POS</h4>
+                                        <p class="transfer-sub">Theo quy định CBR-77: Xác nhận tiền đã thực tế về tài khoản phòng tập hoặc quẹt thẻ POS thành công trước khi hoàn tất.</p>
+                                    </div>
+                                </div>
+                                <label class="transfer-checkbox-label" for="transferReceived">
+                                    <input type="checkbox" name="transferReceived" value="true" id="transferReceived" checked>
+                                    <span class="transfer-checkbox-text">
+                                        <strong>Đã nhận đủ tiền vào tài khoản phòng tập</strong>
+                                        <small>Lễ tân đã kiểm tra thông báo biến động số dư hoặc giữ hóa đơn máy POS</small>
+                                    </span>
                                 </label>
-                                <input type="text" name="transferReference" id="transferReference"
-                                       maxlength="50" autocomplete="off"
-                                       placeholder="Mã giao dịch chuyển khoản (không bắt buộc)">
+                                <div class="transfer-ref-wrap">
+                                    <label for="transferReference" class="transfer-ref-label">
+                                        Mã giao dịch / Mã tham chiếu <span class="transfer-ref-opt">(không bắt buộc)</span>:
+                                    </label>
+                                    <div class="transfer-input-field">
+                                        <i class="fa-solid fa-receipt transfer-field-icon"></i>
+                                        <input type="text" name="transferReference" id="transferReference"
+                                               class="transfer-input"
+                                               maxlength="50" autocomplete="off"
+                                               placeholder="Ví dụ: FT26019384, mã chuẩn chi máy POS...">
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -292,6 +312,34 @@
                                     <dd class="total-amount" id="summaryTotalAmount"><c:out value="${gms:formatMoney(selectedCard.price)}" /></dd>
                                 </div>
                             </dl>
+
+                            <%-- Tiền mặt & Tiền thối lại tích hợp ngay trong Bill (Chuẩn POS thu ngân) --%>
+                            <div class="counter-cash-bill-box" id="cashCalcBox">
+                                <div class="cash-bill-head">
+                                    <span class="cash-bill-title">
+                                        <i class="fa-solid fa-money-bill-wave"></i> Thu tiền mặt
+                                    </span>
+                                </div>
+                                <div class="cash-bill-input-row">
+                                    <label for="cashGivenInput" class="cash-bill-label">Khách đưa:</label>
+                                    <div class="cash-bill-field">
+                                        <input type="text" id="cashGivenInput" name="cashGiven" class="cash-bill-input"
+                                               placeholder="0" autocomplete="off" inputmode="numeric">
+                                        <span class="cash-bill-unit">đ</span>
+                                    </div>
+                                </div>
+                                <div class="cash-bill-divider"></div>
+                                <div class="cash-bill-result-wrap">
+                                    <div class="cash-bill-row is-change" id="changeRow">
+                                        <span class="cash-bill-res-label">Tiền thối lại:</span>
+                                        <strong class="cash-bill-res-val" id="cashChangeVal">0 đ</strong>
+                                    </div>
+                                    <div class="cash-bill-row is-shortage" id="shortageRow" hidden>
+                                        <span class="cash-bill-res-label"><i class="fa-solid fa-circle-exclamation"></i> Khách đưa thiếu:</span>
+                                        <strong class="cash-bill-res-val" id="cashShortageVal">0 đ</strong>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="counter-summary-footer">

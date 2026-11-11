@@ -26,11 +26,17 @@ let selectedPackageCard = null;
 let customerRequestNo = 0;
 let customerSearchTimer = 0;
 
-document.addEventListener("DOMContentLoaded", function () {
+function initAll() {
     initPackagePage();
     initCustomerPage();
     initCheckoutPage();
-});
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initAll);
+} else {
+    initAll();
+}
 
 
 /* ==================== 1. MÀN CHỌN GÓI ==================== */
@@ -510,6 +516,7 @@ function initCheckoutPage() {
     }
 
     initPaymentMethodToggle();
+    initCashCalculator();
     initValidityPicker();
     initVoucherLogic();
     initCheckoutSubmit();
@@ -580,6 +587,8 @@ function initVoucherLogic() {
         if (confirmPaymentText !== null) {
             confirmPaymentText.textContent = "Xác nhận đã thu " + formatMoney(basePrice);
         }
+        checkoutForm.dataset.currentPrice = basePrice;
+        checkoutForm.dispatchEvent(new CustomEvent("pricechange", { detail: { price: basePrice } }));
     }
 
     function toggleClearBtn() {
@@ -675,6 +684,8 @@ function initVoucherLogic() {
                     if (confirmPaymentText !== null) {
                         confirmPaymentText.textContent = "Xác nhận đã thu " + data.finalText;
                     }
+                    checkoutForm.dataset.currentPrice = data.finalAmount;
+                    checkoutForm.dispatchEvent(new CustomEvent("pricechange", { detail: { price: data.finalAmount } }));
                     setVoucherStatus(data.message || "Áp dụng mã giảm giá thành công", "success");
                 } else {
                     resetPricesToOriginal();
@@ -712,41 +723,163 @@ function initVoucherLogic() {
     toggleClearBtn();
 }
 
-// B1: chọn hình thức thu tiền (Tiền mặt / Chuyển khoản) — cập nhật class .active cho thẻ.
+// B1: chọn hình thức thu tiền (Tiền mặt / Chuyển khoản)
 function initPaymentMethodToggle() {
-    const paymentCards = document.querySelectorAll(".counter-payment-card");
-    const box = document.getElementById("transferConfirmBox");
+    const radios = document.querySelectorAll('input[name="paymentMethod"]');
+    const transferBox = document.getElementById("transferConfirmBox");
+    const cashBox = document.getElementById("cashCalcBox");
     const tick = document.getElementById("transferReceived");
 
-    function syncTransferBox() {
+    function syncPaymentBoxes() {
         const checked = document.querySelector('input[name="paymentMethod"]:checked');
         const isTransfer = checked !== null && checked.value === "Transfer";
-        if (box !== null) {
-            box.hidden = !isTransfer;
+        if (transferBox !== null) {
+            if (isTransfer) {
+                transferBox.removeAttribute("hidden");
+                transferBox.hidden = false;
+            } else {
+                transferBox.setAttribute("hidden", "");
+                transferBox.hidden = true;
+            }
+        }
+        if (cashBox !== null) {
+            if (isTransfer) {
+                cashBox.setAttribute("hidden", "");
+                cashBox.hidden = true;
+            } else {
+                cashBox.removeAttribute("hidden");
+                cashBox.hidden = false;
+            }
         }
         if (tick !== null) {
             tick.required = isTransfer;
-            if (!isTransfer) {
-                tick.checked = false;
+            if (isTransfer) {
+                tick.checked = true;
             }
         }
     }
 
-    for (const card of paymentCards) {
-        const radio = card.querySelector('input[type="radio"]');
-        if (radio !== null) {
-            radio.addEventListener("change", function () {
-                for (const otherCard of paymentCards) {
-                    otherCard.classList.remove("active");
-                }
-                if (radio.checked) {
-                    card.classList.add("active");
-                }
-                syncTransferBox();
+    for (const radio of radios) {
+        radio.addEventListener("change", syncPaymentBoxes);
+        const card = radio.closest(".counter-payment-card");
+        if (card !== null) {
+            card.addEventListener("click", function () {
+                setTimeout(syncPaymentBoxes, 10);
             });
         }
     }
-    syncTransferBox();
+    syncPaymentBoxes();
+}
+
+// B1.1: Bộ tính tiền mặt và tiền thừa trả lại cho khách tại quầy
+function initCashCalculator() {
+    const checkoutForm = document.getElementById("checkoutForm");
+    const cashInput = document.getElementById("cashGivenInput");
+    const changeRow = document.getElementById("changeRow");
+    const shortageRow = document.getElementById("shortageRow");
+    const changeVal = document.getElementById("cashChangeVal");
+    const shortageVal = document.getElementById("cashShortageVal");
+
+    if (checkoutForm === null || cashInput === null) {
+        return;
+    }
+
+    function getCurrentPrice() {
+        return parseInt(checkoutForm.dataset.currentPrice || checkoutForm.dataset.basePrice, 10) || 0;
+    }
+
+    function formatNumberWithDots(num) {
+        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    }
+
+    function parseMoney(val) {
+        if (!val) return 0;
+        const clean = val.toString().replace(/[^0-9]/g, "");
+        return parseInt(clean, 10) || 0;
+    }
+
+    function calculateChange() {
+        const total = getCurrentPrice();
+        const rawVal = cashInput.value.trim();
+        const given = parseMoney(rawVal);
+
+        if (rawVal === "") {
+            if (changeRow) changeRow.hidden = false;
+            if (shortageRow) shortageRow.hidden = true;
+            if (changeVal) changeVal.textContent = "0 đ";
+            return;
+        }
+
+        if (given >= total) {
+            const change = given - total;
+            if (changeRow) changeRow.hidden = false;
+            if (shortageRow) shortageRow.hidden = true;
+            if (changeVal) changeVal.textContent = formatMoney(change);
+        } else {
+            const shortage = total - given;
+            if (changeRow) changeRow.hidden = true;
+            if (shortageRow) shortageRow.hidden = false;
+            if (shortageVal) shortageVal.textContent = formatMoney(shortage);
+        }
+    }
+
+    // Mặc định tự động điền đúng số tiền phải thu của gói
+    const initialTotal = getCurrentPrice();
+    if (initialTotal > 0) {
+        cashInput.value = formatNumberWithDots(initialTotal);
+        calculateChange();
+    }
+
+    // Tự động thêm dấu chấm ngăn cách hàng nghìn khi lễ tân gõ tiền
+    cashInput.addEventListener("input", function () {
+        const num = parseMoney(cashInput.value);
+        if (num > 0) {
+            cashInput.value = formatNumberWithDots(num);
+        } else if (cashInput.value.trim() !== "") {
+            cashInput.value = "";
+        }
+        calculateChange();
+    });
+
+    // Khi lễ tân click ra ngoài (blur) mà ô để trống: tự điền lại đúng số tiền đơn hàng
+    cashInput.addEventListener("blur", function () {
+        if (cashInput.value.trim() === "") {
+            const total = getCurrentPrice();
+            cashInput.value = formatNumberWithDots(total);
+            calculateChange();
+        }
+    });
+
+    // Tự tính lại khi giá thay đổi do nhập voucher
+    checkoutForm.addEventListener("pricechange", function (e) {
+        const newPrice = e.detail && e.detail.price ? e.detail.price : getCurrentPrice();
+        cashInput.value = formatNumberWithDots(newPrice);
+        calculateChange();
+    });
+
+    // Chặn submit nếu tiền khách đưa nhỏ hơn tổng tiền phải thu
+    checkoutForm.addEventListener("submit", function (e) {
+        const checked = document.querySelector('input[name="paymentMethod"]:checked');
+        const isCash = checked === null || checked.value === "Cash";
+        if (isCash) {
+            const rawVal = cashInput.value.trim();
+            const given = parseMoney(rawVal);
+            const total = getCurrentPrice();
+            if (rawVal !== "" && given < total) {
+                e.preventDefault();
+                alert("Tiền khách đưa chưa đủ để thanh toán đơn hàng (còn thiếu " + formatMoney(total - given) + ")!");
+                cashInput.focus();
+                const confirmBtn = document.getElementById("confirmPaymentBtn");
+                if (confirmBtn) {
+                    confirmBtn.disabled = false;
+                    const confirmPaymentText = document.getElementById("confirmPaymentText");
+                    if (confirmPaymentText) {
+                        confirmPaymentText.textContent = "Xác nhận đã thu " + formatMoney(total);
+                    }
+                }
+            }
+        }
+    });
 }
 
 // B2: chọn ngày bắt đầu — chuyển đổi giữa Kích hoạt hôm nay và Hẹn ngày khác (trong 7 ngày tới).

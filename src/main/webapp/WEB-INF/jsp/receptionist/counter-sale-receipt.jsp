@@ -130,6 +130,17 @@
                         <span class="receipt-total-val"><c:out value="${gms:formatMoney(receipt.finalAmount)}" /></span>
                     </div>
 
+                    <c:if test="${receipt.paymentMethod eq 'Cash' and not empty cashGiven and cashGiven > 0}">
+                        <div class="receipt-row receipt-row-cash" style="margin-top: 6px;">
+                            <span class="receipt-label">Tiền khách đưa:</span>
+                            <span class="receipt-val"><c:out value="${gms:formatMoney(cashGiven)}" /></span>
+                        </div>
+                        <div class="receipt-row receipt-row-cash">
+                            <span class="receipt-label">Tiền thối lại:</span>
+                            <strong class="receipt-val" style="color: #16a34a;"><c:out value="${gms:formatMoney(cashChange)}" /></strong>
+                        </div>
+                    </c:if>
+
                     <div class="receipt-footer-note">
                         <p>Cảm ơn quý khách đã đồng hành cùng Super Gym!</p>
                         <p><small>Vui lòng giữ phiếu thu để đối chiếu khi cần thiết.</small></p>
