@@ -29,7 +29,7 @@ import java.util.UUID;
 @WebServlet("/receptionist/facilities/report")
 @MultipartConfig(
         fileSizeThreshold = 1024 * 1024,      // 1 MB
-        maxFileSize = 10 * 1024 * 1024,       // 10 MB
+        maxFileSize = 5 * 1024 * 1024,        // 5 MB theo SRS DBR-08
         maxRequestSize = 25 * 1024 * 1024     // 25 MB
 )
 public class MaintenanceReportServlet extends HttpServlet {
@@ -171,18 +171,42 @@ public class MaintenanceReportServlet extends HttpServlet {
                 || "on".equalsIgnoreCase(request.getParameter("warningTagPlaced"))
                 || "1".equals(request.getParameter("warningTagPlaced"));
 
-        // Xử lý upload ảnh (nếu có)
+        // Kiểm tra độ dài ghi chú thiết bị ảnh hưởng (tối đa 100 ký tự theo SRS BR-105, DBR-15)
+        if (affectedItemsNote != null && affectedItemsNote.length() > 100) {
+            request.setAttribute("formError", String.format(Messages.MSG314_NOTE_MAX_LENGTH, 100));
+            request.setAttribute("equipmentItemIds", itemIdsParam);
+            request.setAttribute("incidentType", incidentType);
+            request.setAttribute("priority", priority);
+            request.setAttribute("description", description);
+            request.setAttribute("affectedItemsNote", affectedItemsNote);
+            request.setAttribute("warningTagPlaced", warningTagPlaced);
+            doGet(request, response);
+            return;
+        }
+
+        // Xử lý upload ảnh (nếu có - tối đa 5 MB theo SRS DBR-08)
         String attachedImages = null;
         try {
             Part filePart = request.getPart("imageFile");
             if (filePart != null && filePart.getSize() > 0) {
+                if (filePart.getSize() > com.gms.constant.AppConstants.IMAGE_MAX_BYTES) {
+                    request.setAttribute("formError", String.format(Messages.MSG20_INVALID_IMAGE, "5 MB"));
+                    request.setAttribute("equipmentItemIds", itemIdsParam);
+                    request.setAttribute("incidentType", incidentType);
+                    request.setAttribute("priority", priority);
+                    request.setAttribute("description", description);
+                    request.setAttribute("affectedItemsNote", affectedItemsNote);
+                    request.setAttribute("warningTagPlaced", warningTagPlaced);
+                    doGet(request, response);
+                    return;
+                }
                 String submittedName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
                 String ext = "";
                 int dotIdx = submittedName.lastIndexOf('.');
                 if (dotIdx >= 0) {
                     ext = submittedName.substring(dotIdx).toLowerCase();
                 }
-                if (ext.equals(".jpg") || ext.equals(".jpeg") || ext.equals(".png") || ext.equals(".webp")) {
+                if (ext.equals(".jpg") || ext.equals(".jpeg") || ext.equals(".png")) {
                     String uploadDir = getServletContext().getRealPath("/uploads/maintenance");
                     File dir = new File(uploadDir);
                     if (!dir.exists()) {
@@ -191,6 +215,16 @@ public class MaintenanceReportServlet extends HttpServlet {
                     String newFilename = "mt_" + UUID.randomUUID().toString().substring(0, 8) + ext;
                     filePart.write(uploadDir + File.separator + newFilename);
                     attachedImages = "/uploads/maintenance/" + newFilename;
+                } else {
+                    request.setAttribute("formError", String.format(Messages.MSG20_INVALID_IMAGE, "5 MB"));
+                    request.setAttribute("equipmentItemIds", itemIdsParam);
+                    request.setAttribute("incidentType", incidentType);
+                    request.setAttribute("priority", priority);
+                    request.setAttribute("description", description);
+                    request.setAttribute("affectedItemsNote", affectedItemsNote);
+                    request.setAttribute("warningTagPlaced", warningTagPlaced);
+                    doGet(request, response);
+                    return;
                 }
             }
         } catch (Exception ignored) {

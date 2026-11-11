@@ -29,7 +29,7 @@ import java.util.UUID;
 @WebServlet(urlPatterns = {"/manager/facilities", "/facilities"})
 @MultipartConfig(
         fileSizeThreshold = 1024 * 1024,      // 1 MB
-        maxFileSize = 10 * 1024 * 1024,       // 10 MB
+        maxFileSize = 5 * 1024 * 1024,        // 5 MB theo SRS DBR-08
         maxRequestSize = 25 * 1024 * 1024     // 25 MB
 )
 public class FacilityManagementServlet extends HttpServlet {
@@ -132,17 +132,22 @@ public class FacilityManagementServlet extends HttpServlet {
         String unitLabel = RequestUtil.getTrimmedParam(request, "unitLabel");
         String imageUrl = RequestUtil.getTrimmedParam(request, "imageUrl");
 
-        // Xử lý upload ảnh nếu người dùng chọn file
+        // Xử lý upload ảnh nếu người dùng chọn file (tối đa 5 MB, định dạng JPG/PNG theo SRS DBR-08)
         try {
             Part filePart = request.getPart("imageFile");
             if (filePart != null && filePart.getSize() > 0) {
+                if (filePart.getSize() > com.gms.constant.AppConstants.IMAGE_MAX_BYTES) {
+                    RequestUtil.setFlashToast(request, "danger", String.format(Messages.MSG20_INVALID_IMAGE, "5 MB"));
+                    response.sendRedirect(request.getContextPath() + "/manager/facilities" + (facilityId > 0 ? "?selectedId=" + facilityId : ""));
+                    return;
+                }
                 String submittedName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
                 String ext = "";
                 int dotIdx = submittedName.lastIndexOf('.');
                 if (dotIdx >= 0) {
                     ext = submittedName.substring(dotIdx).toLowerCase();
                 }
-                if (ext.equals(".jpg") || ext.equals(".jpeg") || ext.equals(".png") || ext.equals(".webp")) {
+                if (ext.equals(".jpg") || ext.equals(".jpeg") || ext.equals(".png")) {
                     String uploadDir = getServletContext().getRealPath("/uploads/facilities");
                     File dir = new File(uploadDir);
                     if (!dir.exists()) {
@@ -151,6 +156,10 @@ public class FacilityManagementServlet extends HttpServlet {
                     String newFilename = "fac_" + UUID.randomUUID().toString().substring(0, 8) + ext;
                     filePart.write(uploadDir + File.separator + newFilename);
                     imageUrl = "/uploads/facilities/" + newFilename;
+                } else {
+                    RequestUtil.setFlashToast(request, "danger", String.format(Messages.MSG20_INVALID_IMAGE, "5 MB"));
+                    response.sendRedirect(request.getContextPath() + "/manager/facilities" + (facilityId > 0 ? "?selectedId=" + facilityId : ""));
+                    return;
                 }
             }
         } catch (Exception ignored) {

@@ -367,10 +367,10 @@
                   <i class="fa-solid fa-cloud-arrow-up"></i>
                   <span>Chọn file ảnh</span>
                 </label>
-                <input type="file" id="facilityImageFileInput" name="imageFile" accept="image/png,image/jpeg,image/webp" style="display:none;" onchange="previewFacilityImage(this)">
+                <input type="file" id="facilityImageFileInput" name="imageFile" accept="image/png,image/jpeg" style="display:none;" onchange="previewFacilityImage(this)">
                 <span id="facilityImageFileName" style="font-size: 12px; color: var(--color-primary, #0284c7); display:none; word-break:break-all;"></span>
                 <small class="form-hint" style="display:block; margin-top:2px; color:var(--text-secondary, #64748b); font-size:11px;">
-                  Hỗ trợ JPG, PNG, WEBP. Tự lưu vào thư mục và sinh đường dẫn.
+                  Hỗ trợ JPG, PNG (tối đa 5MB theo SRS DBR-08). Tự lưu vào thư mục và sinh đường dẫn.
                 </small>
               </div>
             </div>
@@ -476,6 +476,18 @@
     function previewFacilityImage(input) {
       if (input.files && input.files[0]) {
         const file = input.files[0];
+        const maxBytes = 5 * 1024 * 1024; // 5 MB (DBR-08)
+        if (file.size > maxBytes) {
+          alert('Ảnh vượt quá dung lượng tối đa 5MB theo quy định (DBR-08).');
+          input.value = '';
+          return;
+        }
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (!['jpg', 'jpeg', 'png'].includes(ext)) {
+          alert('Chỉ chấp nhận ảnh định dạng JPG hoặc PNG theo quy định (DBR-08).');
+          input.value = '';
+          return;
+        }
         const nameSpan = document.getElementById('facilityImageFileName');
         if (nameSpan) {
           nameSpan.textContent = file.name + ' (' + Math.round(file.size / 1024) + ' KB)';

@@ -166,6 +166,13 @@ public class MaintenanceRequestService {
             );
         }
 
+        if (affectedItemsNote != null && affectedItemsNote.trim().length() > 100) {
+            return ServiceResult.failField(
+                    "affectedItemsNote",
+                    String.format(Messages.MSG314_NOTE_MAX_LENGTH, 100)
+            );
+        }
+
         // Loại bỏ trùng lặp id
         List<Integer> uniqueItemIds = equipmentItemIds.stream()
                 .filter(id -> id != null && id > 0)
@@ -404,6 +411,13 @@ public class MaintenanceRequestService {
             );
         }
 
+        if (managerNote != null && managerNote.trim().length() > 500) {
+            return ServiceResult.failField(
+                    "managerNote",
+                    String.format(Messages.MSG314_NOTE_MAX_LENGTH, 500)
+            );
+        }
+
         // Open transaction boundary
         try (Connection connection = openConnection()) {
             connection.setAutoCommit(false);
@@ -574,6 +588,10 @@ public class MaintenanceRequestService {
             boolean setUnderMaintenance,
             String managerNote
     ) {
+        if (managerNote != null && managerNote.trim().length() > 500) {
+            return ServiceResult.fail(String.format(Messages.MSG314_NOTE_MAX_LENGTH, 500));
+        }
+
         if (requestIds == null || requestIds.isEmpty()) {
             return ServiceResult.fail("Vui lòng chọn ít nhất một yêu cầu bảo trì để duyệt.");
         }
