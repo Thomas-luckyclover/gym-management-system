@@ -676,13 +676,19 @@ document.addEventListener("DOMContentLoaded", function () {
     // Thay đổi số dòng/trang (GBR-18), dropdown Tình trạng, Hình thức hoặc Từ ngày, Đến ngày -> tự động lọc ngay
     document.addEventListener("change", function (e) {
         if (e.target.matches("select[data-page-size-select]")) {
-            const form = document.querySelector(".tx-panel .tx-tab.active") && document.querySelector(".tx-panel .tx-tab.active").href.includes("tab=shifts")
+            const isShiftTab = document.querySelector(".tx-panel .tx-tab.active") && document.querySelector(".tx-panel .tx-tab.active").href.includes("tab=shifts");
+            const form = isShiftTab
                     ? document.querySelector('form input[value="shifts"]').closest(".tx-filter-form")
                     : document.querySelector('form input[value="orders"]').closest(".tx-filter-form");
             if (form) {
                 const hiddenPageSize = form.querySelector('input[name="pageSize"]');
                 if (hiddenPageSize) {
                     hiddenPageSize.value = e.target.value;
+                }
+                // Tab 2 (Lịch sử chốt ca) không dùng AJAX, submit form truyền thống tải lại trang
+                if (form.classList.contains("shift-filter-form")) {
+                    form.submit();
+                    return;
                 }
                 clearTimeout(searchTimer);
                 doAjaxFilter(form, 1);
@@ -692,17 +698,25 @@ document.addEventListener("DOMContentLoaded", function () {
         if (e.target.closest(".tx-filters")) {
             const form = e.target.closest(".tx-filter-form");
             if (form) {
+                // Tab 2 (Lịch sử chốt ca) không tự động gọi AJAX khi đổi ngày, chờ người dùng bấm "Lọc"
+                if (form.classList.contains("shift-filter-form")) {
+                    return;
+                }
                 clearTimeout(searchTimer);
                 doAjaxFilter(form, 1);
             }
         }
     });
 
-    // Chặn submit mặc định khi bấm Enter trong form -> chạy AJAX
+    // Chặn submit mặc định khi bấm Enter trong form -> chạy AJAX (chỉ áp dụng cho Tab 1 Đơn hàng)
     document.addEventListener("keydown", function (e) {
         if (e.key === "Enter") {
             const form = e.target.closest(".tx-filter-form");
             if (form) {
+                // Tab 2: Cho phép Enter submit form thông thường
+                if (form.classList.contains("shift-filter-form")) {
+                    return;
+                }
                 e.preventDefault();
                 clearTimeout(searchTimer);
                 doAjaxFilter(form, 1);
@@ -712,6 +726,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
     document.querySelectorAll(".tx-filter-form").forEach(function (form) {
         form.addEventListener("submit", function (e) {
+            // Tab 2 (Lịch sử chốt ca) submit truyền thống về servlet, không dùng AJAX
+            if (form.classList.contains("shift-filter-form")) {
+                return;
+            }
             e.preventDefault();
             clearTimeout(searchTimer);
             doAjaxFilter(form, 1);
@@ -744,6 +762,10 @@ document.addEventListener("DOMContentLoaded", function () {
         // Chuyển trang (Phân trang)
         const pageLink = e.target.closest(".tx-foot-nav a");
         if (pageLink && pageLink.href) {
+            // Tab 2 (Lịch sử chốt ca) chuyển trang thông thường, không dùng AJAX
+            if (pageLink.href.includes("tab=shifts")) {
+                return;
+            }
             e.preventDefault();
             fetchPage(pageLink.href);
             return;
@@ -754,6 +776,10 @@ document.addEventListener("DOMContentLoaded", function () {
         if (clearBtn) {
             const form = clearBtn.closest(".tx-filter-form");
             if (form) {
+                // Tab 2 nút Xóa lọc là thẻ <a> chuyển trang thông thường, không chặn AJAX
+                if (form.classList.contains("shift-filter-form")) {
+                    return;
+                }
                 e.preventDefault();
                 resetForm(form);
                 doAjaxFilter(form, 1);
@@ -761,77 +787,6 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }
     });
-
-    // ===== Đơn hàng trong ca (tab Lịch sử chốt ca, nút "Chi tiết đơn") =====
-    // Gắn theo kiểu ủy quyền vì bảng ca được thay bằng fetchPage khi lọc / đổi trang.
-    const shiftOrdersModal = document.getElementById("shiftOrdersModal");
-
-    document.addEventListener("click", function (event) {
-        const btn = event.target.closest(".btn-view-shift-orders");
-        if (!btn || !shiftOrdersModal) {
-            return;
-        }
-        const info = document.getElementById("txsShiftInfo");
-        if (info) {
-            info.textContent = btn.dataset.shiftLabel || "---";
-        }
-        const tbody = document.getElementById("shiftOrdersModalBody");
-        if (tbody) {
-            tbody.innerHTML = '<tr><td colspan="7">Đang tải…</td></tr>';
-        }
-        openModal(shiftOrdersModal);
-        loadShiftOrders(btn.dataset.shiftId);
-    });
-
-    function loadShiftOrders(shiftId) {
-        const tbody = document.getElementById("shiftOrdersModalBody");
-        fetch(endpoint + "?action=shiftOrders&shiftId=" + encodeURIComponent(shiftId), {
-            headers: {"X-Requested-With": "XMLHttpRequest"}
-        })
-            .then(function (res) {
-                return res.json();
-            })
-            .then(function (res) {
-                if (!tbody) {
-                    return;
-                }
-                if (!res.success || !Array.isArray(res.data)) {
-                    tbody.innerHTML = '<tr><td colspan="7">' + esc(res.message || "Không tải được danh sách đơn.") + "</td></tr>";
-                    return;
-                }
-                if (res.data.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="7">Không có đơn hàng nào trong ca này.</td></tr>';
-                    return;
-                }
-                const methods = {Cash: "Tiền mặt", Transfer: "Chuyển khoản", OnlineGateway: "VNPay"};
-                const states = {
-                    Paid: ["badge-success", "Đã thanh toán"],
-                    Pending: ["badge-warning", "Chờ thanh toán"],
-                    Cancelled: ["badge-danger", "Đã hủy"]
-                };
-                tbody.innerHTML = res.data.map(function (item) {
-                    const st = states[item.orderStatus] || ["badge-neutral", item.orderStatus || "---"];
-                    const reason = item.orderStatus === "Cancelled" && item.cancelReason
-                        ? '<div class="tx-sub">Lý do: ' + esc(item.cancelReason) + "</div>" : "";
-                    const voucher = item.voucherCode ? '<div class="tx-sub">Voucher: ' + esc(item.voucherCode) + "</div>" : "";
-                    return "<tr>"
-                        + '<td><span class="tx-code">' + esc(item.orderCode || "---") + "</span></td>"
-                        + "<td>" + esc(dateTime(item.createdAt)) + "</td>"
-                        + '<td><span class="tx-name">' + esc(item.customerName || "Khách lẻ") + '</span><div class="tx-sub">'
-                        + esc(item.customerPhone || "---") + "</div></td>"
-                        + "<td>" + esc(item.packageName || "---") + voucher + "</td>"
-                        + '<td class="r"><span class="tx-money">' + esc(money(item.totalAmount)) + "</span></td>"
-                        + "<td>" + esc(methods[item.paymentMethod] || item.paymentMethod || "---") + "</td>"
-                        + '<td><span class="badge ' + st[0] + '">' + esc(st[1]) + "</span>" + reason + "</td>"
-                        + "</tr>";
-                }).join("");
-            })
-            .catch(function () {
-                if (tbody) {
-                    tbody.innerHTML = '<tr><td colspan="7">Lỗi kết nối, vui lòng thử lại.</td></tr>';
-                }
-            });
-    }
 
     // Hỗ trợ nút Back/Forward của trình duyệt
     window.addEventListener("popstate", function () {
