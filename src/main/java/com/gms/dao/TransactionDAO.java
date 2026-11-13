@@ -260,34 +260,62 @@ public class TransactionDAO {
 
                     List<TransactionAttemptView> attempts = findAttemptsByOrderId(conn, orderId);
 
-                    ManagerOrderDetailView view = new ManagerOrderDetailView(
-                            rs.getInt("OrderId"),
-                            rs.getString("OrderCode"),
-                            rs.getString("Channel"),
-                            readNullableDateTime(rs, "CreatedAt"),
-                            readNullableDateTime(rs, "PaymentDueAt"),
-                            readNullableDateTime(rs, "PaidAt"),
-                            rs.getString("Status"),
-                            rs.getString("CancelType"),
-                            readNullableDateTime(rs, "CancelledAt"),
-                            rs.getString("CancelReason"),
-                            rs.getString("CreatedByEmployeeName"),
-                            readNullableInt(rs, "ShiftId"),
-                            rs.getString("CustomerName"),
-                            rs.getString("CustomerPhone"),
-                            rs.getString("CustomerEmail"),
-                            rs.getString("PartnerName"),
-                            rs.getString("PackageNameSnapshot"),
-                            rs.getString("PackageDescriptionSnapshot"),
-                            rs.getString("PackageBenefitsSnapshot"),
-                            unitPrice,
-                            discountAmount,
-                            rs.getString("VoucherCode"),
-                            rs.getInt("VatRateSnapshot"),
-                            vatAmount,
-                            totalPayable,
-                            preTaxAmount,
-                            attempts
+                    ManagerOrderDetailView view = new ManagerOrderDetailView(
+
+                            rs.getInt("OrderId"),
+
+                            rs.getString("OrderCode"),
+
+                            rs.getString("Channel"),
+
+                            readNullableDateTime(rs, "CreatedAt"),
+
+                            readNullableDateTime(rs, "PaymentDueAt"),
+
+                            readNullableDateTime(rs, "PaidAt"),
+
+                            rs.getString("Status"),
+
+                            rs.getString("CancelType"),
+
+                            readNullableDateTime(rs, "CancelledAt"),
+
+                            rs.getString("CancelReason"),
+
+                            rs.getString("CreatedByEmployeeName"),
+
+                            readNullableInt(rs, "ShiftId"),
+
+                            rs.getString("CustomerName"),
+
+                            rs.getString("CustomerPhone"),
+
+                            rs.getString("CustomerEmail"),
+
+                            rs.getString("PartnerName"),
+
+                            rs.getString("PackageNameSnapshot"),
+
+                            rs.getString("PackageDescriptionSnapshot"),
+
+                            rs.getString("PackageBenefitsSnapshot"),
+
+                            unitPrice,
+
+                            discountAmount,
+
+                            rs.getString("VoucherCode"),
+
+                            rs.getInt("VatRateSnapshot"),
+
+                            vatAmount,
+
+                            totalPayable,
+
+                            preTaxAmount,
+
+                            attempts
+
                     );
                     loadSubscriptionInfo(conn, orderId, view);
                     return view;
@@ -435,7 +463,7 @@ public class TransactionDAO {
                 + "LEFT JOIN Transactions tRefund ON tRefund.OrderId = o.OrderId AND tRefund.NeedsRefund = 1 AND tRefund.Status = 'Success' "
                 + "LEFT JOIN Employees eRefunder ON eRefunder.EmployeeId = tRefund.RefundedByEmployeeId "
                 + "LEFT JOIN Persons pRefunder ON pRefunder.PersonId = eRefunder.PersonId "
-                + "WHERE 1=1 ";
+                + "WHERE 1=1 "; //where 1=1 để dễ dàng nối các điều kiện lọc khác
     }
 
     private void appendFilterConditions(StringBuilder sql, List<Object> params,
