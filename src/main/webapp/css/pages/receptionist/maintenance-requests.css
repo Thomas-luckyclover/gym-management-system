@@ -316,6 +316,8 @@
   color: var(--color-text);
   font-size: var(--font-size-sm);
   line-height: var(--line-height-normal);
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .maintenance-image-col {
@@ -614,6 +616,22 @@
   flex-direction: column;
   gap: var(--space-3);
   padding: var(--space-3-5) var(--space-4);
+}
+
+.gms-modal .field-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.gms-modal .required-mark {
+  color: var(--color-danger);
+}
+
+.gms-modal .field-label-meta {
+  color: var(--color-text-soft);
+  font-weight: var(--font-weight-regular);
 }
 
 .gms-modal-footer {
