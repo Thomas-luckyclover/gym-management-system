@@ -156,13 +156,12 @@ public class ShiftDAO {
      * Tìm bất kỳ ca nào khác đang ở trạng thái Open trên toàn hệ thống (trừ exceptShiftId).
      */
     public Shift findOtherOpenShift(int exceptShiftId) throws SQLException {
-        return findFirstOpenShift("ShiftId <> ?", exceptShiftId);
+        return findFirstOpenShift("ShiftId <> ?", exceptShiftId);// ShiftId <> ? để tránh tìm chính ca hiện tại đang mở (tương đương dầu !=)
     }
 
     private Shift findFirstOpenShift(String extraCondition, Object param) {
         String sql = "SELECT TOP 1 " + SHIFT_COLUMNS + " FROM Shifts "
-                + "WHERE Status = 'Open' AND " + extraCondition
-                + " ORDER BY WorkDate ASC, CASE WHEN ShiftType = 'Morning' THEN 1 ELSE 2 END";
+                + "WHERE Status = 'Open' AND " + extraCondition;
         try (Connection conn = DBContext.getConnection()) {
             if (conn == null) {
                 return null;
