@@ -9,16 +9,22 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 /**
- * Truy vấn bảng AuditLogs.
+ * DAO quản lý thao tác ghi dữ liệu vào bảng nhật ký kiểm toán ({@code AuditLogs}).
+ *
+ * <p><b>Cách hoạt động:</b> Hỗ trợ chèn bản ghi {@link AuditLog} cả bằng kết nối độc lập lẫn
+ * dùng chung {@code Connection} transaction, đồng thời cắt ngắn chuỗi an toàn theo độ dài tối đa của cột CSDL.</p>
  */
 public class AuditLogDAO {
 
     /**
-     * Ghi một bản ghi AuditLog bằng connection riêng.
+     * Ghi một bản ghi {@code AuditLog} bằng kết nối riêng.
+     *
+     * <p><b>Cách hoạt động:</b> Tự mở kết nối qua {@code DBContext.getConnection()} rồi ủy quyền sang
+     * {@link #insert(Connection, AuditLog)} để chèn bản ghi.</p>
      *
      * @param auditLog dữ liệu nhật ký cần ghi
-     * @return true nếu ghi thành công
-     * @throws SQLException khi truy vấn database lỗi
+     * @return {@code true} nếu ghi thành công 1 dòng
+     * @throws SQLException khi truy vấn cơ sở dữ liệu lỗi
      */
     public boolean insert(AuditLog auditLog) throws SQLException {
         try (Connection conn = DBContext.getConnection()) {
@@ -27,12 +33,15 @@ public class AuditLogDAO {
     }
 
     /**
-     * Ghi AuditLog bằng connection có sẵn để dùng chung transaction.
+     * Ghi bản ghi {@code AuditLog} bằng kết nối có sẵn để dùng chung transaction với thao tác chính.
      *
-     * @param conn connection hiện tại
+     * <p><b>Cách hoạt động:</b> Xử lý giá trị {@code null} cho {@code AccountId}, {@code ActingRole}, {@code EntityId};
+     * gọi {@link #safeTruncate} cắt vừa độ dài cho phép các cột chuỗi rồi thực thi {@code INSERT}.</p>
+     *
+     * @param conn     kết nối CSDL của transaction hiện tại
      * @param auditLog dữ liệu nhật ký cần ghi
-     * @return true nếu ghi thành công
-     * @throws SQLException khi truy vấn database lỗi
+     * @return {@code true} nếu ghi thành công 1 dòng
+     * @throws SQLException khi truy vấn cơ sở dữ liệu lỗi
      */
     public boolean insert(
             Connection conn,
@@ -78,6 +87,12 @@ public class AuditLogDAO {
         }
     }
 
+    /**
+     * Cắt ngắn chuỗi nếu vượt quá độ dài tối đa của cột trong CSDL.
+     *
+     * <p><b>Cách hoạt động:</b> Nếu chuỗi {@code null} hoặc độ dài {@code <= maxLen} thì giữ nguyên;
+     * ngược lại cắt lấy {@code maxLen} ký tự đầu để tránh lỗi tràn độ dài cột khi {@code INSERT}.</p>
+     */
     private static String safeTruncate(String val, int maxLen) {
         if (val == null || val.length() <= maxLen) {
             return val;
