@@ -19,6 +19,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import com.gms.util.DBContext;
 import com.gms.util.DateTimeUtil;
+import com.gms.util.PaginationUtil;
 import com.gms.util.ValidationUtil;
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
@@ -140,6 +141,10 @@ public class ManagerTransactionService {
         }
     }
 
+    // =========================================================================
+    // PHẦN: LỊCH SỬ CHỐT CA (CLOSED SHIFTS HISTORY - TAB 2)
+    // =========================================================================
+
     /**
      * Lấy danh sách lịch sử chốt ca làm việc có phân trang phục vụ Tab 2 của Manager (SRS 7.4.2).
      *
@@ -152,17 +157,17 @@ public class ManagerTransactionService {
     public ServiceResult<PageResult<ClosedShiftHistoryItem>> getClosedShiftsPage(
             LocalDate fromDate, LocalDate toDate, int page, int pageSize) {
 
-        // B1: Kiểm tra khoảng ngày
+        // B1: Kiểm tra khoảng ngày (ngày bắt đầu không được sau ngày kết thúc)
         if (fromDate != null && toDate != null && fromDate.isAfter(toDate)) {
             return ServiceResult.fail(Messages.MSG169_DATE_RANGE_REVERSED);
         }
 
         try {
-            // B2: Đếm tổng số ca chốt
+            // B2: Đếm tổng số ca chốt sổ theo bộ lọc
             int totalItems = shiftDAO.countClosedShiftsHistory(fromDate, toDate);
 
-            // B3: Lấy dữ liệu trang
-            int offset = (page - 1) * pageSize;
+            // B3: Tính offset và lấy dữ liệu trang
+            int offset = PaginationUtil.calculateOffset(page, pageSize);
             List<ClosedShiftHistoryItem> items =
                     shiftDAO.findClosedShiftsHistoryPage(fromDate, toDate, offset, pageSize);
 
