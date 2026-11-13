@@ -14,42 +14,13 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Data Access Object: Quản lý dữ liệu từng cá thể thiết bị (EquipmentItems).
+ * Data Access Object: Truy vấn và cập nhật dữ liệu từng cá thể thiết bị vật lý (EquipmentItems).
  */
 public class EquipmentItemDAO {
 
     /**
-     * Lấy danh sách cá thể máy theo FacilityId, kèm thông tin đơn bảo trì đang mở nếu có (không lấy Retired).
-     */
-    public List<EquipmentItem> findByFacilityId(int facilityId) throws SQLException {
-        String sql = """
-            SELECT ei.EquipmentItemId, ei.FacilityId, ei.ItemCode, ei.ItemLabel, ei.PlacementNote, ei.Status,
-                   f.FacilityName, f.Location,
-                   mr.RequestCode AS ActiveRequestCode, mr.MaintenanceRequestId AS ActiveRequestId
-            FROM EquipmentItems ei
-            JOIN Facilities f ON f.FacilityId = ei.FacilityId
-            LEFT JOIN MaintenanceRequests mr ON mr.EquipmentItemId = ei.EquipmentItemId AND mr.Status IN ('Open', 'InProgress')
-            WHERE ei.FacilityId = ? AND ei.Status <> ?
-            ORDER BY ei.ItemCode
-            """;
-
-        List<EquipmentItem> list = new ArrayList<>();
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, facilityId);
-            ps.setString(2, EquipmentItem.Status.RETIRED.getDbValue());
-
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    list.add(mapResultSetToItem(rs));
-                }
-            }
-        }
-        return list;
-    }
-
-    /**
-     * Lấy toàn bộ cá thể máy theo FacilityId (bao gồm cả cá thể đã Retired) phục vụ màn hình Quản lý của Manager.
+     * Lấy toàn bộ cá thể máy thuộc một dòng máy (bao gồm cả máy đã Retired) cho màn hình Quản lý.
+     * Hàm join bảng Facilities và MaintenanceRequests để kèm thông tin phiếu bảo trì đang mở, đồng thời đẩy các máy đã thanh lý xuống cuối danh sách.
      */
     public List<EquipmentItem> findByFacilityIdForManagement(int facilityId) throws SQLException {
         String sql = """
@@ -80,7 +51,8 @@ public class EquipmentItemDAO {
     }
 
     /**
-     * Lấy tất cả cá thể máy có thể báo hỏng (chưa Retired), gom theo thứ tự dòng máy và mã máy.
+     * Lấy tất cả cá thể máy thuộc các dòng máy đang hiển thị (chưa Retired) để Lễ tân chọn khi báo hỏng.
+     * Hàm lọc Facilities.IsActive = 1 và Status khác Retired, join thêm phiếu bảo trì đang mở để cảnh báo trên giao diện nếu máy đang vướng đơn.
      */
     public List<EquipmentItem> findAllSelectable() throws SQLException {
         String sql = """
@@ -109,7 +81,8 @@ public class EquipmentItemDAO {
     }
 
     /**
-     * Lấy toàn bộ cá thể máy con gom nhóm theo FacilityId (1 query duy nhất tránh N+1).
+     * Lấy toàn bộ cá thể máy con và gom nhóm theo FacilityId thành Map để nạp cho danh sách dòng máy.
+     * Hàm thực thi 1 truy vấn duy nhất (tránh N+1 query), sắp xếp máy Retired xuống cuối mỗi nhóm rồi dùng computeIfAbsent gom vào LinkedHashMap.
      */
     public Map<Integer, List<EquipmentItem>> findAllGroupedByFacility() throws SQLException {
         String sql = """
@@ -137,7 +110,8 @@ public class EquipmentItemDAO {
     }
 
     /**
-     * Tìm 1 cá thể máy theo ID trong transaction.
+     * Tra cứu thông tin 1 cá thể máy theo EquipmentItemId trên kết nối có sẵn (dùng trong transaction).
+     * Hàm join bảng Facilities và đơn bảo trì đang mở (Open/InProgress) để kiểm tra điều kiện trạng thái trước khi tạo/duyệt/đóng phiếu.
      */
     public EquipmentItem findById(Connection conn, int equipmentItemId) throws SQLException {
         String sql = """
@@ -161,14 +135,9 @@ public class EquipmentItemDAO {
         return null;
     }
 
-    public EquipmentItem findById(int equipmentItemId) throws SQLException {
-        try (Connection conn = DBContext.getConnection()) {
-            return findById(conn, equipmentItemId);
-        }
-    }
-
     /**
-     * Thêm mới một cá thể máy vật lý vào nhóm máy (Manager).
+     * Thêm mới một cá thể máy vật lý vào dòng máy cha trong CSDL.
+     * Hàm chuẩn hóa khoảng trắng mã/nhãn/vị trí, INSERT vào bảng EquipmentItems và trả về EquipmentItemId tự tăng.
      */
     public int create(EquipmentItem item) throws SQLException {
         String sql = """
@@ -197,7 +166,8 @@ public class EquipmentItemDAO {
     }
 
     /**
-     * Sửa nhãn máy và ghi chú vị trí của cá thể máy (Manager).
+     * Cập nhật nhãn hiển thị và ghi chú vị trí đặt máy của một cá thể thiết bị.
+     * Hàm chỉ UPDATE ItemLabel và PlacementNote theo EquipmentItemId, giữ nguyên mã ItemCode và trạng thái hiện hành.
      */
     public boolean update(EquipmentItem item) throws SQLException {
         String sql = """
@@ -216,7 +186,8 @@ public class EquipmentItemDAO {
     }
 
     /**
-     * Thanh lý một cá thể máy (chuyển sang trạng thái 'Retired').
+     * Thanh lý một cá thể máy bằng cách chuyển Status sang 'Retired'.
+     * Hàm cập nhật cột Status trong bảng EquipmentItems theo EquipmentItemId và trả về true nếu thành công.
      */
     public boolean retire(int equipmentItemId) throws SQLException {
         String sql = "UPDATE EquipmentItems SET Status = 'Retired' WHERE EquipmentItemId = ?";
@@ -228,7 +199,8 @@ public class EquipmentItemDAO {
     }
 
     /**
-     * Kiểm tra ItemCode đã tồn tại trong hệ thống hay chưa (unique constraint).
+     * Kiểm tra mã cá thể máy (ItemCode) đã tồn tại trong CSDL hay chưa để tránh trùng lặp.
+     * Hàm đếm số bản ghi có cùng ItemCode (có thể loại trừ excludeItemId khi đang cập nhật) và trả về true nếu > 0.
      */
     public boolean isItemCodeExists(String itemCode, Integer excludeItemId) throws SQLException {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM EquipmentItems WHERE ItemCode = ?");
@@ -248,7 +220,8 @@ public class EquipmentItemDAO {
     }
 
     /**
-     * Lấy danh sách các ghi chú vị trí (PlacementNote) không trùng lặp để gợi ý qua thẻ <datalist>.
+     * Lấy danh sách các ghi chú vị trí đặt máy (PlacementNote) không trùng lặp để gợi ý nhập liệu cho Manager.
+     * Hàm lọc các giá trị khác null/rỗng trong bảng EquipmentItems và sắp xếp tăng dần.
      */
     public List<String> findDistinctPlacementNotes() throws SQLException {
         String sql = """
@@ -270,7 +243,8 @@ public class EquipmentItemDAO {
     }
 
     /**
-     * Cập nhật trạng thái của riêng 1 cá thể máy trong transaction.
+     * Cập nhật trạng thái của một cá thể máy trong phạm vi transaction (khi duyệt sang bảo trì hoặc đóng phiếu khôi phục khả dụng).
+     * Hàm chỉ cập nhật khi máy chưa bị Retired (Status <> 'Retired') để bảo vệ dữ liệu thiết bị đã thanh lý.
      */
     public boolean updateStatus(Connection conn, int equipmentItemId, EquipmentItem.Status status) throws SQLException {
         String sql = """
@@ -287,6 +261,9 @@ public class EquipmentItemDAO {
         }
     }
 
+    /**
+     * Ánh xạ một dòng ResultSet thành đối tượng EquipmentItem kèm thông tin dòng máy cha và đơn bảo trì đang mở nếu có.
+     */
     private EquipmentItem mapResultSetToItem(ResultSet rs) throws SQLException {
         EquipmentItem item = new EquipmentItem();
         item.setEquipmentItemId(rs.getInt("EquipmentItemId"));
