@@ -412,13 +412,6 @@ for pt, fixed, start, key in extra_pt:
         pt_package(o, pt, start, fixed, note='khách thường mua gói PT')
         break
 
-# ---- gói PT 82 (khách KH-2005, PT Sơn 15:00) hết hạn sớm ngày 04/11: lúc nạp seed, khối chốt cuối file (JOB-02)
-#      hủy PackageExpired các buổi từ 05/11 và trả khung 15:00 về trống (BF-05 A6, CBR-55)
-_s82 = get('Subscriptions', 82)
-assert _s82['CustomerId'] == 205 and _s82['SubscriptionType'] == 'PTSingle', 'gói 82 phải là gói PT của KH-2005'
-_s82['EndDate'] = d_(2026, 11, 4)
-_s82['_note'] = 'gói PT hết hạn 04/11 → buổi sau đó hủy PackageExpired khi nạp seed (JOB-02, CBR-55)'
-
 # ---- khách vãng lai mua gói ngày rải đều tháng 9 (báo cáo doanh thu có số liệu mỗi ngày)
 WALKIN = [c for i, c in enumerate(BULK) if i % 10 == 9]
 day = d_(2026, 9, 1)
@@ -1046,6 +1039,17 @@ SECTION.update({
 # ============================================================ 17. DỮ LIỆU SYSTEM TEST BF-05 (SQL viết tay)
 # Các việc làm ngày 06/11/2026 khi chạy System Test BF-05: đơn DH-2026-0181…0185, dời / chuyển / hủy buổi,
 # thông báo nhắc buổi 21/10 của Mai, KH-2029 đang bảo lưu. Viết bằng SQL tra ID nên để riêng file.
+# ---- KH-2005 mua thêm gói PT 1 tháng thứ hai, chạy song song gói 82 (khác PT, khác giờ):
+#      05/10 → 05/11/2026 (GBR-03), mọi buổi nằm trong kỳ hạn (BR-64 không cho dời quá ngày hết hạn).
+#      Nạp seed sau 05/11 → JOB-02 chuyển gói Expired, JOB-04 chốt các buổi cuối (MBF-04 A6, CBR-55).
+#      Mã đơn DH-2026-0186: nối sau 0181–0185 của khối System Test (seed_st_bf05.sql) để không trùng.
+_seq = G.ORDER_SEQ[0]
+G.ORDER_SEQ[0] = 185
+_o2005 = order(205, PKG['pt1'], dt_(2026, 9, 28, 11, 0), 'Counter', method='Transfer')
+G.ORDER_SEQ[0] = _seq
+assert get('Orders', _o2005)['OrderCode'] == 'DH-2026-0186'
+pt_package(_o2005, 6, d_(2026, 10, 5), (11, 0), note='KH-2005: gói PT thứ hai, hết hạn tự nhiên 05/11 (MBF-04 A6)')
+
 G.EXTRA_SQL.append(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'seed_st_bf05.sql'), encoding='utf-8').read())
 
 if __name__ == '__main__':

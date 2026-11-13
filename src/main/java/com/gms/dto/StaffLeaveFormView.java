@@ -24,8 +24,8 @@ public class StaffLeaveFormView {
     // Service: cùng DTO dự báo với API preview; JSP hiện trong chú thích nút i.
     private final StaffingPreview staffing;
 
-    // Service: mọi Pending và 10 đơn đã xử lý gần nhất; luôn lấy đủ các phần cùng đợt.
-    private final List<LeaveRequestGroupView> requestGroups;
+    // Một trang lịch sử, gồm cả Pending/Approved/Rejected; giữ đủ các phần cùng đợt.
+    private final PageResult<LeaveRequestGroupView> historyPage;
 
     public StaffLeaveFormView(
             String employeeCode,
@@ -33,15 +33,14 @@ public class StaffLeaveFormView {
             String position,
             LocalTime submissionCutoffTime,
             StaffingPreview staffing,
-            List<LeaveRequestGroupView> requestGroups
+            PageResult<LeaveRequestGroupView> historyPage
     ) {
         this.employeeCode = employeeCode;
         this.fullName = fullName;
         this.position = position;
         this.submissionCutoffTime = submissionCutoffTime;
         this.staffing = staffing;
-        // Tạo danh sách chỉ đọc: JSP được xem nhưng không thêm/xóa nhóm trong dữ liệu form.
-        this.requestGroups = List.copyOf(requestGroups);
+        this.historyPage = historyPage;
     }
 
     public String getEmployeeCode() {
@@ -65,6 +64,10 @@ public class StaffLeaveFormView {
     }
 
     public List<LeaveRequestGroupView> getRequestGroups() {
-        return requestGroups;
+        return historyPage.getItems();
+    }
+
+    public PageResult<LeaveRequestGroupView> getHistoryPage() {
+        return historyPage;
     }
 }

@@ -38,9 +38,9 @@ public class CounterPackageCard {
     // Cách dùng: JSP in bằng gms:formatMoney ở thẻ gói và bill thanh toán.
     private final long price;
 
-    // SystemConfigs: P-08 lúc dựng thẻ, ví dụ 8.
+    // SystemConfigs: P-08 lúc dựng thẻ, ví dụ 10.
     // Ý nghĩa: phần trăm thuế giá trị gia tăng áp dụng cho gói.
-    // Cách dùng: hiện trong "VAT 8% (đã gồm)" ở cột Tóm tắt đơn.
+    // Cách dùng: hiện trong "VAT 10% (đã gồm)" ở cột Tóm tắt đơn.
     private final int vatRate;
 
     // Service: MoneyUtil.calculateVatAmount(price, vatRate), tiền VAT nằm sẵn trong giá.

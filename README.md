@@ -12,7 +12,7 @@ Hệ thống phục vụ 6 nhóm người dùng: **Khách vãng lai, Hội viên
 
 **Công nghệ:** Java 17 · Jakarta Servlet 6 / JSP 3.1 / JSTL 3 · Apache Tomcat 10.1 · SQL Server · Maven · HTML / CSS / JavaScript thuần · VNPay (sandbox) · Gmail SMTP.
 
-**Tài liệu dự án (SRS, thiết kế, báo cáo):** [Google Drive](https://drive.google.com/drive/folders/1FJVCnXGreeBdyfikNVIl7XMqAY3TFDfK)
+**Tài liệu dự án (SRS, thiết kế, báo cáo):** [Google Drive](https://drive.google.com/drive/folders/1EyjqsgdWRmYY5y3ks0pTK2aUMrr7z_Uo)
 
 ## Chức năng chính
 
@@ -56,6 +56,6 @@ Hệ thống phục vụ 6 nhóm người dùng: **Khách vãng lai, Hội viên
 
 ## Lời cảm ơn
 
-Nhóm G5 xin chân thành cảm ơn giảng viên môn SWP391 đã hướng dẫn và góp ý trong suốt quá trình thực hiện dự án,
+Nhóm G5 xin chân thành cảm ơn giảng viên môn SWP391 đã hướng dẫn và góp ý, giúp nhóm hoàn thành môn học,
 cảm ơn Trường Đại học FPT đã tạo môi trường học tập và thực hành, và cảm ơn từng thành viên trong nhóm đã cùng nhau
-hoàn thành Super Gym.
+xây dựng Super Gym.

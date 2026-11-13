@@ -28,10 +28,6 @@ import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.UUID;
-import java.security.cert.X509Certificate;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 
 /**
  * Cổng thanh toán VNPay (API 2.1.0). Tạo URL thanh toán có chữ ký HMAC-SHA512,
@@ -262,32 +258,14 @@ public class VnPayClient {
 
     private static final HttpClient QUERY_HTTP = createQueryHttpClient();
 
+    // Dùng SSL mặc định của JDK: chứng chỉ của VNPay PHẢI được kiểm tra.
+    // KHÔNG tự viết TrustManager "tin mọi chứng chỉ" — kẻ đứng giữa đường mạng (MITM) sẽ giả được
+    // phản hồi QueryDR "đã thanh toán" và GMS cấp gói dù khách chưa trả tiền.
+    // Nếu máy dev báo lỗi PKIX/certificate: cập nhật JDK hoặc import chứng chỉ vào cacerts, không tắt kiểm tra.
     private static HttpClient createQueryHttpClient() {
-        try {
-            TrustManager[] trustAllCerts = new TrustManager[]{
-                new X509TrustManager() {
-                    public X509Certificate[] getAcceptedIssuers() {
-                        return new X509Certificate[0];
-                    }
-
-                    public void checkClientTrusted(X509Certificate[] certs, String authType) {
-                    }
-
-                    public void checkServerTrusted(X509Certificate[] certs, String authType) {
-                    }
-                }
-            };
-            SSLContext sslContext = SSLContext.getInstance("TLS");
-            sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
-            return HttpClient.newBuilder()
-                    .connectTimeout(Duration.ofSeconds(10))
-                    .sslContext(sslContext)
-                    .build();
-        } catch (Exception e) {
-            return HttpClient.newBuilder()
-                    .connectTimeout(Duration.ofSeconds(10))
-                    .build();
-        }
+        return HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(10))
+                .build();
     }
 
     /**
