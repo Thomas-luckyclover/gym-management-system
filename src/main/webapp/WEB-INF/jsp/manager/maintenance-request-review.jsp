@@ -314,7 +314,7 @@
         <div class="gms-modal-body">
           <div class="field">
             <label class="field-label" for="rejectReasonDetailInput">
-              Lý do từ chối <span aria-hidden="true">*</span>
+              <span>Lý do từ chối <span style="color:var(--color-danger)" aria-hidden="true">*</span></span>
             </label>
             <textarea id="rejectReasonDetailInput"
                       name="rejectReason"
