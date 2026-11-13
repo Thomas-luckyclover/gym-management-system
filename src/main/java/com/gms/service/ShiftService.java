@@ -414,46 +414,7 @@ public class ShiftService {
         }
     }
 
-    // ===== 4. Xác nhận Đơn chuyển khoản tại quầy =====
-
-    public ServiceResult<Void> confirmBankTransfer(int accountId, int orderId) {
-        Employee employee = getActiveReceptionist(accountId);
-        if (employee == null) {
-            return ServiceResult.fail(Messages.MSG07_NO_PERMISSION);
-        }
-
-        Shift shift = getShiftOfOrder(orderId);
-        if (shift == null || !shift.isOpen()) {
-            return ServiceResult.fail(Messages.MSG268_ORDER_NOT_IN_OPEN_SHIFT);
-        }
-
-        try (Connection conn = getConnection()) {
-            beginTx(conn);
-            try {
-                LocalDateTime now = LocalDateTime.now(DateTimeUtil.GYM_ZONE);
-                int updated = shiftDAO.confirmBankTransfer(conn, orderId, employee.getEmployeeId(), now);
-                if (updated == 0) {
-                    rollbackTx(conn);
-                    return ServiceResult.fail(Messages.MSG269_ORDER_NOT_AWAITING_CONFIRM);
-                }
-
-                auditLogService.logInTransaction(conn, accountId, Role.RECEPTIONIST,
-                        "Xác nhận chuyển khoản", "Orders", orderId, "Status",
-                        "Pending", "Paid", "Lễ tân xác nhận đã nhận đủ tiền chuyển khoản");
-
-                commitTx(conn);
-                return ServiceResult.ok(null);
-            } catch (SQLException ex) {
-                rollbackTx(conn);
-                throw ex;
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
-        }
-    }
-
-    // ===== 5. Nghiệp vụ Hủy đơn hàng tại quầy =====
+    // ===== 4. Nghiệp vụ Hủy đơn hàng tại quầy =====
 
     public ServiceResult<Void> cancelOrder(int accountId, int orderId, String reason) {
         Employee employee = getActiveReceptionist(accountId);
