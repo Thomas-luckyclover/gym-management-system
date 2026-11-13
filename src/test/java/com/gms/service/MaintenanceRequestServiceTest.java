@@ -676,15 +676,6 @@ class MaintenanceRequestServiceTest {
         }
 
         @Override
-        public List<EquipmentItem> findByFacilityId(int facilityId) {
-            List<EquipmentItem> list = new ArrayList<>();
-            for (EquipmentItem it : items.values()) {
-                if (it.getFacilityId() == facilityId) list.add(it);
-            }
-            return list;
-        }
-
-        @Override
         public List<EquipmentItem> findAllSelectable() {
             List<EquipmentItem> list = new ArrayList<>();
             for (EquipmentItem it : items.values()) {
@@ -727,11 +718,6 @@ class MaintenanceRequestServiceTest {
         @Override
         public MaintenanceRequest findByIdForUpdate(Connection connection, int requestId) {
             return requests.get(requestId);
-        }
-
-        @Override
-        public boolean approve(Connection connection, int requestId, int managerEmployeeId, boolean setUnderMaintenance) {
-            return approve(connection, requestId, managerEmployeeId, setUnderMaintenance, null);
         }
 
         @Override
@@ -783,26 +769,8 @@ class MaintenanceRequestServiceTest {
         }
 
         @Override
-        public boolean updateStatus(Connection connection, int facilityId, Facility.Status status) {
-            Facility f = facilities.get(facilityId);
-            if (f == null) return false;
-            f.setStatus(status);
-            return true;
-        }
-
-                @Override
-        public long countCatalog(String keyword) {
-            return filterFacilities(keyword).size();
-        }
-
-        @Override
         public long countCatalog(String keyword, String location) {
             return filterFacilities(keyword).size();
-        }
-
-        @Override
-        public List<Facility> findCatalogPage(String keyword, int page, int pageSize) {
-            return filterFacilities(keyword);
         }
 
         @Override
