@@ -52,11 +52,16 @@ public class ShiftServlet extends HttpServlet {
      * @param rawCash chuỗi thô người dùng nhập
      * @return chuỗi chỉ chứa số, hoặc "0" nếu rỗng
      */
-    // Lọc bỏ dấu chấm/phẩy do JS format (VD: "2.600.000" -> "2600000") để Long.parseLong không bị lỗi NumberFormatException.
+    // Lọc bỏ dấu chấm/phẩy do JS format (VD: "2.600.000" -> "2600000") nhưng giữ dấu '-' ở đầu để từ chối số âm.
     public static String cleanNumericCash(String rawCash) {
         if (rawCash == null) return "0";
-        String cleanNum = rawCash.replaceAll("[^0-9]", "");
-        return cleanNum.isEmpty() ? "0" : cleanNum;
+        String trimmed = rawCash.trim();
+        boolean negative = trimmed.startsWith("-");
+        String cleanNum = trimmed.replaceAll("[^0-9]", "");
+        if (cleanNum.isEmpty()) {
+            return negative ? "-" : "0";
+        }
+        return negative ? "-" + cleanNum : cleanNum;
     }
 
     private final ShiftService shiftService = new ShiftService();
