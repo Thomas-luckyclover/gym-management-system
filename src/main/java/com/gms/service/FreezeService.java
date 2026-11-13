@@ -5,11 +5,9 @@ import com.gms.constant.Role;
 import com.gms.dao.AccountDAO;
 import com.gms.dao.AuditLogDAO;
 import com.gms.dao.CheckInDAO;
-import com.gms.dao.CustomerDAO;
 import com.gms.dao.EmployeeDAO;
 import com.gms.dao.FreezeRecordDAO;
 import com.gms.dto.CustomerMembershipRow;
-import com.gms.dto.CustomerSearchItem;
 import com.gms.dto.FreezeCustomerView;
 import com.gms.dto.FreezeRecordItemView;
 import com.gms.dto.FreezeSessionImpactView;
@@ -66,7 +64,6 @@ public class FreezeService {
     private final CheckInDAO checkInDAO;
     private final AccountDAO accountDAO;
     private final EmployeeDAO employeeDAO;
-    private final CustomerDAO customerDAO;
     private final SystemConfigService systemConfigService;
     private final SelfServiceGuard selfServiceGuard;
     private final AuditLogDAO auditLogDAO;
@@ -76,7 +73,7 @@ public class FreezeService {
      */
     public FreezeService() {
         this(new FreezeRecordDAO(), new CheckInDAO(), new AccountDAO(), new EmployeeDAO(),
-                new CustomerDAO(), new SystemConfigService(), new SelfServiceGuard(), new AuditLogDAO());
+                new SystemConfigService(), new SelfServiceGuard(), new AuditLogDAO());
     }
 
     /**
@@ -86,7 +83,6 @@ public class FreezeService {
                          CheckInDAO checkInDAO,
                          AccountDAO accountDAO,
                          EmployeeDAO employeeDAO,
-                         CustomerDAO customerDAO,
                          SystemConfigService systemConfigService,
                          SelfServiceGuard selfServiceGuard,
                          AuditLogDAO auditLogDAO) {
@@ -94,7 +90,6 @@ public class FreezeService {
         this.checkInDAO = checkInDAO;
         this.accountDAO = accountDAO;
         this.employeeDAO = employeeDAO;
-        this.customerDAO = customerDAO;
         this.systemConfigService = systemConfigService;
         this.selfServiceGuard = selfServiceGuard;
         this.auditLogDAO = auditLogDAO;
@@ -273,10 +268,10 @@ public class FreezeService {
             List<FreezeRecordItemView> history = freezeRecordDAO.findFreezesByCustomerId(cust.customerId);
             view.setFreezeHistory(history);
 
-            // B8: Nếu có thể bảo lưu, lấy danh sách xem trước các buổi PT bị ảnh hưởng (mặc định thử ngày mai -> maxEndDate)
-            if (view.isEligibleToFreeze() && view.getMinStartDate() != null && view.getMaxEndDate() != null) {
+            // B8: Nếu có thể bảo lưu, lấy sẵn các buổi PT trong phần hạn còn lại để UI tự lọc khi đổi ngày
+            if (view.isEligibleToFreeze() && view.getMinStartDate() != null && view.getPackageEndDate() != null) {
                 List<FreezeSessionImpactView> affected = freezeRecordDAO.findScheduledSessionsInPeriod(
-                        cust.customerId, view.getMinStartDate(), view.getMaxEndDate());
+                        cust.customerId, view.getMinStartDate(), view.getPackageEndDate());
                 view.setAffectedSessions(affected);
             }
 
@@ -288,53 +283,8 @@ public class FreezeService {
         }
     }
 
-    /**
-     * Tra cứu danh sách phân trang khách hàng khi tìm theo một phần tên.
-     */
-    public PageResult<CustomerSearchItem> searchCustomersPage(String keyword, int pageNumber, int pageSize) {
-        if (ValidationUtil.isNullOrEmpty(keyword)) {
-            return new PageResult<>(List.of(), pageNumber, pageSize, 0);
-        }
-        try {
-            long total = checkInDAO.countCustomersByKeyword(keyword.trim());
-            if (total == 0) {
-                return new PageResult<>(List.of(), pageNumber, pageSize, 0);
-            }
-            List<CustomerSearchItem> items = checkInDAO.searchCustomersByKeyword(keyword.trim(), pageNumber, pageSize);
-            return new PageResult<>(items, pageNumber, pageSize, total);
-        } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Lỗi phân trang tìm kiếm khách hàng", e);
-            return new PageResult<>(List.of(), pageNumber, pageSize, 0);
-        }
-    }
-
     // =========================================================================
-    // 2. XEM TRƯỚC CÁC BUỔI PT BỊ ẢNH HƯỞNG (CBR-62 Preview)
-    // =========================================================================
-
-    /**
-     * Lấy danh sách các buổi Scheduled của hội viên trong khoảng thời gian bảo lưu để Lễ tân
-     * thông báo trước cho khách hàng (CBR-62, CBR-67).
-     *
-     * @param customerId mã hội viên
-     * @param startDate ngày bắt đầu bảo lưu
-     * @param plannedEndDate ngày kết thúc bảo lưu
-     * @return danh sách các buổi PT chịu tác động
-     */
-    public List<FreezeSessionImpactView> previewAffectedSessions(int customerId, LocalDate startDate, LocalDate plannedEndDate) {
-        if (customerId <= 0 || startDate == null || plannedEndDate == null || plannedEndDate.isBefore(startDate)) {
-            return List.of();
-        }
-        try {
-            return freezeRecordDAO.findScheduledSessionsInPeriod(customerId, startDate, plannedEndDate);
-        } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Lỗi khi xem trước các buổi PT bị ảnh hưởng bởi bảo lưu", e);
-            return List.of();
-        }
-    }
-
-    // =========================================================================
-    // 3. THỰC HIỆN BẢO LƯU GÓI TẬP (Apply Freeze - Main Flow)
+    // 2. THỰC HIỆN BẢO LƯU GÓI TẬP (Apply Freeze - Main Flow)
     // =========================================================================
 
     /**
@@ -838,14 +788,6 @@ public class FreezeService {
         }
     }
 
-    public List<FreezeRecordItemView> getRecentFreezes(String keyword, int limit) {
-        return getRecentFreezes(keyword, null, limit);
-    }
-
-    public List<FreezeRecordItemView> getRecentFreezes(int limit) {
-        return getRecentFreezes(null, limit);
-    }
-
     /**
      * Lấy danh sách hội viên kèm gói tập Membership phục vụ hiển thị lưới dữ liệu tương tự GymMaster.
      */
@@ -861,10 +803,6 @@ public class FreezeService {
             LOGGER.log(Level.SEVERE, "Lỗi khi lấy danh sách hội viên và gói tập", e);
             return new PageResult<>(List.of(), pageNumber, pageSize, 0);
         }
-    }
-
-    public PageResult<CustomerMembershipRow> getCustomerMembershipsPage(String keyword, int pageNumber, int pageSize) {
-        return getCustomerMembershipsPage(keyword, "ALL", pageNumber, pageSize);
     }
 }
 

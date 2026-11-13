@@ -44,7 +44,6 @@ public class FreezeMembershipServlet extends HttpServlet {
     public static final String VIEW_NAME = "receptionist/freeze-membership";
     public static final String ACTION_APPLY_FREEZE = "applyFreeze";
     public static final String ACTION_CANCEL_FREEZE_EARLY = "cancelFreezeEarly";
-    public static final String ACTION_PREVIEW_SESSIONS = "previewSessions";
 
     private final FreezeService freezeService;
 
@@ -108,7 +107,6 @@ public class FreezeMembershipServlet extends HttpServlet {
         // B5: Lấy toàn bộ lịch sử các đợt bảo lưu (Tab 2)
         List<FreezeRecordItemView> freezeHistoryList = freezeService.getRecentFreezes(historyQuery, historyFilter, 50);
         request.setAttribute("freezeHistoryList", freezeHistoryList);
-        request.setAttribute("recentFreezes", freezeHistoryList); // tương thích ngược
         request.setAttribute("historyQuery", historyQuery);
         request.setAttribute("historyFilter", historyFilter);
         request.setAttribute("activeNav", "freeze");

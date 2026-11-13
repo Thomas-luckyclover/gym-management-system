@@ -98,13 +98,15 @@ public class CheckInDAO {
                 + "cust.CustomerType, cust.Status AS CustomerStatus, p.FullName, p.Phone, p.Avatar "
                 + "FROM Customers cust "
                 + "JOIN Persons p ON cust.PersonId = p.PersonId "
-                + "WHERE (UPPER(cust.CustomerCode) = UPPER(?) OR p.Phone = ?)"
+                + "WHERE (UPPER(cust.CustomerCode) = UPPER(?) OR p.Phone = ? OR LOWER(p.Email) = LOWER(?))"
                 + "  AND cust.DeletedAt IS NULL";
 
         try (Connection conn = DBContext.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, keyword.trim());
-            stmt.setString(2, keyword.trim());
+            String trimmed = keyword.trim();
+            stmt.setString(1, trimmed);
+            stmt.setString(2, trimmed);
+            stmt.setString(3, trimmed);
 
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {

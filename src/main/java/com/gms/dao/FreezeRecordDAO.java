@@ -6,6 +6,7 @@ import com.gms.dto.FreezeSessionImpactView;
 import com.gms.entity.FreezeRecord;
 import com.gms.entity.Subscription;
 import com.gms.util.DBContext;
+import com.gms.util.DateTimeUtil;
 import com.gms.util.SqlUtil;
 
 import java.sql.Connection;
@@ -112,36 +113,6 @@ public class FreezeRecordDAO {
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     return mapResultSetToFreezeRecord(rs);
-                }
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Tra cứu một bản ghi bảo lưu theo ID bằng kết nối riêng (chỉ đọc).
-     */
-    public FreezeRecord findById(int freezeRecordId) throws SQLException {
-        try (Connection conn = DBContext.getConnection()) {
-            String sql = """
-                    SELECT
-                        FreezeRecordId,
-                        SubscriptionId,
-                        HandledByEmployeeId,
-                        StartDate,
-                        PlannedEndDate,
-                        ActualEndDate,
-                        Reason,
-                        CreatedAt
-                    FROM FreezeRecords
-                    WHERE FreezeRecordId = ?
-                    """;
-            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-                stmt.setInt(1, freezeRecordId);
-                try (ResultSet rs = stmt.executeQuery()) {
-                    if (rs.next()) {
-                        return mapResultSetToFreezeRecord(rs);
-                    }
                 }
             }
         }
@@ -579,48 +550,17 @@ public class FreezeRecordDAO {
         }
     }
 
-    /**
-     * Chuyển các buổi PT sang trạng thái Missed (MembershipFrozen) và nhả slot về Free (CBR-62, CBR-68, DBR-36).
-     */
-    public void markSessionsMissedDueToFreeze(Connection conn, List<Integer> sessionIds) throws SQLException {
-        if (sessionIds == null || sessionIds.isEmpty()) {
-            return;
-        }
-
-        String updateSessionSql = """
-                UPDATE Sessions
-                SET Status = 'Missed',
-                    MissedReason = 'MembershipFrozen',
-                    AttendanceMarkedAt = SYSDATETIME()
-                WHERE SessionId = ?
-                  AND Status = 'Scheduled'
-                """;
-
-        String freeSlotSql = """
-                UPDATE t
-                SET Status = 'Free'
-                FROM TimeSlots t
-                JOIN Sessions s ON s.TimeSlotId = t.TimeSlotId
-                WHERE s.SessionId = ?
-                """;
-
-        try (PreparedStatement stmtSession = conn.prepareStatement(updateSessionSql);
-             PreparedStatement stmtSlot = conn.prepareStatement(freeSlotSql)) {
-
-            for (Integer sid : sessionIds) {
-                stmtSession.setInt(1, sid);
-                stmtSession.addBatch();
-
-                stmtSlot.setInt(1, sid);
-                stmtSlot.addBatch();
-            }
-
-            stmtSession.executeBatch();
-            stmtSlot.executeBatch();
-        }
-    }
-
     // ===== 4. Lịch sử và danh sách bảo lưu hiển thị trên giao diện =====
+
+    // Hủy trước StartDate: DB buộc ActualEndDate = StartDate nên dựa vào AuditLog "(Gia hạn +0 ngày)"
+    private static final String CANCELLED_BEFORE_START_SQL =
+            "EXISTS (SELECT 1 FROM AuditLogs al WHERE al.EntityName = 'FreezeRecord'"
+                    + " AND al.EntityId = fr.FreezeRecordId AND al.Action = 'CANCEL_FREEZE_EARLY'"
+                    + " AND al.NewValue LIKE N'%(Gia hạn +0 ngày)%')";
+
+    private static final String CANCELLED_BEFORE_START_COL =
+            "CASE WHEN fr.ActualEndDate IS NOT NULL AND " + CANCELLED_BEFORE_START_SQL
+                    + " THEN 1 ELSE 0 END AS CancelledBeforeStart";
 
     /**
      * Lấy danh sách các lượt bảo lưu mới nhất của hệ thống có hỗ trợ lọc theo từ khóa (tên, mã khách, SĐT...).
@@ -638,9 +578,11 @@ public class FreezeRecordDAO {
         if ("FROZEN".equalsIgnoreCase(statusFilter)) {
             statusSql = " AND fr.ActualEndDate IS NULL ";
         } else if ("CANCELLED".equalsIgnoreCase(statusFilter)) {
-            statusSql = " AND fr.ActualEndDate IS NOT NULL AND fr.ActualEndDate < fr.PlannedEndDate ";
+            statusSql = " AND fr.ActualEndDate IS NOT NULL AND (fr.ActualEndDate < fr.PlannedEndDate OR "
+                    + CANCELLED_BEFORE_START_SQL + ") ";
         } else if ("COMPLETED".equalsIgnoreCase(statusFilter)) {
-            statusSql = " AND fr.ActualEndDate IS NOT NULL AND fr.ActualEndDate >= fr.PlannedEndDate ";
+            statusSql = " AND fr.ActualEndDate IS NOT NULL AND fr.ActualEndDate >= fr.PlannedEndDate AND NOT "
+                    + CANCELLED_BEFORE_START_SQL + " ";
         }
 
         String sql = """
@@ -659,7 +601,10 @@ public class FreezeRecordDAO {
                     empP.FullName AS HandledByEmployeeName,
                     emp.EmployeeCode AS HandledByEmployeeCode,
                     fr.CreatedAt,
-                    s.EndDate AS SubscriptionEndDate
+                    s.EndDate AS SubscriptionEndDate,
+                """
+                + "    " + CANCELLED_BEFORE_START_COL + "\n"
+                + """
                 FROM FreezeRecords fr
                 JOIN Subscriptions s ON s.SubscriptionId = fr.SubscriptionId
                 JOIN Customers c ON c.CustomerId = s.CustomerId
@@ -696,10 +641,6 @@ public class FreezeRecordDAO {
         return list;
     }
 
-    public List<FreezeRecordItemView> findRecentFreezes(int limit) throws SQLException {
-        return findRecentFreezes(null, limit);
-    }
-
     /**
      * Lấy toàn bộ lịch sử các lần bảo lưu của một khách hàng cụ thể.
      */
@@ -720,7 +661,10 @@ public class FreezeRecordDAO {
                     empP.FullName AS HandledByEmployeeName,
                     emp.EmployeeCode AS HandledByEmployeeCode,
                     fr.CreatedAt,
-                    s.EndDate AS SubscriptionEndDate
+                    s.EndDate AS SubscriptionEndDate,
+                """
+                + "    " + CANCELLED_BEFORE_START_COL + "\n"
+                + """
                 FROM FreezeRecords fr
                 JOIN Subscriptions s ON s.SubscriptionId = fr.SubscriptionId
                 JOIN Customers c ON c.CustomerId = s.CustomerId
@@ -764,38 +708,39 @@ public class FreezeRecordDAO {
             return null;
         }
         String trimmed = keyword.trim();
+        String escaped = escapeLike(trimmed);
+        List<String> params = new ArrayList<>();
+
+        // Kiểm tra email trước nhánh startsWith("KH") để email như "khanh@gmail.com" vẫn tìm theo Email.
+        if (trimmed.contains("@")) {
+            params.add("%" + escaped + "%");
+            return new SearchCondition("p.Email LIKE ? ESCAPE '\\'", params);
+        }
+
         String upper = trimmed.toUpperCase();
         boolean isNumeric = trimmed.matches("\\d+");
         boolean startsWithKh = upper.startsWith("KH");
 
-        List<String> params = new ArrayList<>();
-        String escaped = escapeLike(trimmed);
-        String startsWithPattern = escaped + "%";
-        String wordBoundaryPattern = "% " + escaped + "%";
+        params.add(escaped + "%");
+        params.add("% " + escaped + "%");
 
+        final String nameMatchSql = "(p.FullName COLLATE Latin1_General_100_CI_AI LIKE ? ESCAPE '\\' OR p.FullName COLLATE Latin1_General_100_CI_AI LIKE ? ESCAPE '\\')";
+        final String emailPrefixSql = "p.Email LIKE ? ESCAPE '\\'";
         if (startsWithKh) {
-            // Khách nhập mã hội viên (ví dụ KH-1001, KH-20,...) hoặc tên bắt đầu bằng Kh
-            String sql = "((p.FullName COLLATE Latin1_General_100_CI_AI LIKE ? ESCAPE '\\' OR p.FullName COLLATE Latin1_General_100_CI_AI LIKE ? ESCAPE '\\') OR c.CustomerCode LIKE ?)";
-            params.add(startsWithPattern);
-            params.add(wordBoundaryPattern);
-            params.add("%" + trimmed + "%");
-            return new SearchCondition(sql, params);
+            // Khách nhập mã hội viên (ví dụ KH-1001, KH-20,...) hoặc tiền tố tên/email bắt đầu bằng Kh
+            params.add("%" + escaped + "%");
+            params.add(escaped + "%");
+            return new SearchCondition("(" + nameMatchSql + " OR c.CustomerCode LIKE ? ESCAPE '\\' OR " + emailPrefixSql + ")", params);
         } else if (isNumeric) {
             // Khách nhập số điện thoại hoặc đuôi số mã hội viên (ví dụ 0901234504, 2038,...)
-            String sql = "((p.FullName COLLATE Latin1_General_100_CI_AI LIKE ? ESCAPE '\\' OR p.FullName COLLATE Latin1_General_100_CI_AI LIKE ? ESCAPE '\\') OR c.CustomerCode LIKE ? OR p.Phone LIKE ?)";
-            params.add(startsWithPattern);
-            params.add(wordBoundaryPattern);
-            params.add("%" + trimmed + "%");
-            params.add("%" + trimmed + "%");
-            return new SearchCondition(sql, params);
-        } else {
-            // Khách nhập chữ cái/tên thông thường (ví dụ 'h', 'an', 'long', 'hồng',...)
-            // Tìm theo đầu họ tên hoặc đầu từng từ sau dấu cách để 'hồng' không bị khớp nhầm vào 'phong'
-            String sql = "(p.FullName COLLATE Latin1_General_100_CI_AI LIKE ? ESCAPE '\\' OR p.FullName COLLATE Latin1_General_100_CI_AI LIKE ? ESCAPE '\\')";
-            params.add(startsWithPattern);
-            params.add(wordBoundaryPattern);
-            return new SearchCondition(sql, params);
+            params.add("%" + escaped + "%");
+            params.add("%" + escaped + "%");
+            return new SearchCondition("(" + nameMatchSql + " OR c.CustomerCode LIKE ? ESCAPE '\\' OR p.Phone LIKE ? ESCAPE '\\')", params);
         }
+        // Khách nhập chữ cái/tên thông thường (ví dụ 'h', 'an', 'hồng',...) hoặc tiền tố email (ví dụ 'do.mai')
+        // Tìm theo đầu họ tên, đầu từng từ sau dấu cách, hoặc đầu email để 'hồng' không khớp nhầm vào 'phong'
+        params.add(escaped + "%");
+        return new SearchCondition("(" + nameMatchSql + " OR " + emailPrefixSql + ")", params);
     }
 
     private String escapeLike(String text) {
@@ -814,19 +759,41 @@ public class FreezeRecordDAO {
     }
 
     private String buildFilterCondition(String filter) {
-        if (filter == null || filter.trim().isEmpty() || "ALL".equalsIgnoreCase(filter.trim())) {
+        if (filter == null || filter.trim().isEmpty()) {
             return "";
         }
         String upper = filter.trim().toUpperCase();
         if ("FROZEN".equals(upper)) {
             return " AND openFr.FreezeRecordId IS NOT NULL ";
-        } else if ("ELIGIBLE".equals(upper)) {
+        }
+        if ("ELIGIBLE".equals(upper)) {
             return " AND s.SubscriptionId IS NOT NULL AND s.Status = 'Active' AND openFr.FreezeRecordId IS NULL AND COALESCE(s.FreezeUsed, 0) < COALESCE(s.MaxFreezesSnapshot, 1) AND s.StartDate <= CAST(SYSDATETIME() AS DATE) AND s.EndDate >= CAST(SYSDATETIME() AS DATE) ";
-        } else if ("ACTIVE".equals(upper)) {
-            return " AND s.SubscriptionId IS NOT NULL AND s.Status = 'Active' ";
         }
         return "";
     }
+
+    private static final String CUSTOMER_MEMBERSHIPS_FROM_SQL = """
+            FROM Customers c
+            JOIN Persons p ON p.PersonId = c.PersonId
+            CROSS APPLY (
+                SELECT TOP 1 sub.*, o.PackageId
+                FROM Subscriptions sub
+                JOIN Orders o ON o.OrderId = sub.OrderId
+                JOIN Packages pkg ON pkg.PackageId = o.PackageId
+                WHERE sub.CustomerId = c.CustomerId
+                  AND sub.SubscriptionType = 'Membership'
+                  AND pkg.PackageType = 'Membership'
+                  AND o.Status != 'Cancelled'
+                  AND (sub.Status = 'Frozen' OR (sub.Status = 'Active' AND sub.EndDate >= CAST(SYSDATETIME() AS DATE)))
+                ORDER BY
+                    CASE sub.Status WHEN 'Frozen' THEN 1 WHEN 'Active' THEN 2 ELSE 3 END,
+                    CASE WHEN sub.StartDate <= CAST(SYSDATETIME() AS DATE) THEN 0 ELSE 1 END,
+                    sub.StartDate ASC
+            ) s
+            LEFT JOIN Packages pkg ON pkg.PackageId = s.PackageId
+            LEFT JOIN FreezeRecords openFr ON openFr.SubscriptionId = s.SubscriptionId AND openFr.ActualEndDate IS NULL
+            WHERE c.DeletedAt IS NULL
+            """;
 
     /**
      * Đếm tổng số khách hàng khớp từ khóa và bộ lọc trạng thái phục vụ phân trang lưới quản lý hội viên.
@@ -834,28 +801,8 @@ public class FreezeRecordDAO {
     public long countCustomerMemberships(String keyword, String filter) throws SQLException {
         SearchCondition cond = buildSearchCondition(keyword);
         String filterCond = buildFilterCondition(filter);
-        String sql = """
-                SELECT COUNT(*)
-                FROM Customers c
-                JOIN Persons p ON p.PersonId = c.PersonId
-                CROSS APPLY (
-                    SELECT TOP 1 sub.*, o.PackageId
-                    FROM Subscriptions sub
-                    JOIN Orders o ON o.OrderId = sub.OrderId
-                    JOIN Packages pkg ON pkg.PackageId = o.PackageId
-                    WHERE sub.CustomerId = c.CustomerId 
-                      AND sub.SubscriptionType = 'Membership'
-                      AND pkg.PackageType = 'Membership'
-                      AND o.Status != 'Cancelled'
-                      AND (sub.Status = 'Frozen' OR (sub.Status = 'Active' AND sub.EndDate >= CAST(SYSDATETIME() AS DATE)))
-                    ORDER BY 
-                        CASE sub.Status WHEN 'Frozen' THEN 1 WHEN 'Active' THEN 2 ELSE 3 END,
-                        CASE WHEN sub.StartDate <= CAST(SYSDATETIME() AS DATE) THEN 0 ELSE 1 END,
-                        sub.StartDate ASC
-                ) s
-                LEFT JOIN FreezeRecords openFr ON openFr.SubscriptionId = s.SubscriptionId AND openFr.ActualEndDate IS NULL
-                WHERE c.DeletedAt IS NULL
-                """
+        String sql = "SELECT COUNT(*)\n"
+                + CUSTOMER_MEMBERSHIPS_FROM_SQL
                 + (cond != null ? " AND " + cond.sqlCondition + " " : "")
                 + filterCond;
 
@@ -873,10 +820,6 @@ public class FreezeRecordDAO {
             }
         }
         return 0;
-    }
-
-    public long countCustomerMemberships(String keyword) throws SQLException {
-        return countCustomerMemberships(keyword, "ALL");
     }
 
     /**
@@ -906,27 +849,8 @@ public class FreezeRecordDAO {
                     openFr.FreezeRecordId AS OpenFreezeId,
                     openFr.StartDate AS OpenFreezeStart,
                     openFr.PlannedEndDate AS OpenFreezeEnd
-                FROM Customers c
-                JOIN Persons p ON p.PersonId = c.PersonId
-                CROSS APPLY (
-                    SELECT TOP 1 sub.*, o.PackageId
-                    FROM Subscriptions sub
-                    JOIN Orders o ON o.OrderId = sub.OrderId
-                    JOIN Packages pkg ON pkg.PackageId = o.PackageId
-                    WHERE sub.CustomerId = c.CustomerId 
-                      AND sub.SubscriptionType = 'Membership'
-                      AND pkg.PackageType = 'Membership'
-                      AND o.Status != 'Cancelled'
-                      AND (sub.Status = 'Frozen' OR (sub.Status = 'Active' AND sub.EndDate >= CAST(SYSDATETIME() AS DATE)))
-                    ORDER BY 
-                        CASE sub.Status WHEN 'Frozen' THEN 1 WHEN 'Active' THEN 2 ELSE 3 END,
-                        CASE WHEN sub.StartDate <= CAST(SYSDATETIME() AS DATE) THEN 0 ELSE 1 END,
-                        sub.StartDate ASC
-                ) s
-                LEFT JOIN Packages pkg ON pkg.PackageId = s.PackageId
-                LEFT JOIN FreezeRecords openFr ON openFr.SubscriptionId = s.SubscriptionId AND openFr.ActualEndDate IS NULL
-                WHERE c.DeletedAt IS NULL
                 """
+                + CUSTOMER_MEMBERSHIPS_FROM_SQL
                 + (cond != null ? " AND " + cond.sqlCondition + " " : "")
                 + filterCond
                 + """
@@ -957,11 +881,6 @@ public class FreezeRecordDAO {
             }
         }
         return list;
-    }
-
-    public List<CustomerMembershipRow> findCustomerMemberships(String keyword, int pageNumber, int pageSize)
-            throws SQLException {
-        return findCustomerMemberships(keyword, "ALL", pageNumber, pageSize);
     }
 
     // ===== 5. Ánh xạ ResultSet thành Entity / DTO (đặt cuối class) =====
@@ -1064,17 +983,18 @@ public class FreezeRecordDAO {
         Timestamp ts = rs.getTimestamp("CreatedAt");
         item.setCreatedAt(ts != null ? ts.toLocalDateTime() : null);
 
+        boolean cancelledBeforeStart = isCancelledBeforeStart(rs);
         if (actual == null) {
             item.setStatusLabel("Đang bảo lưu");
             item.setStatusBadgeClass("badge-warning");
             item.setCanCancelEarly(true);
-            long days = ChronoUnit.DAYS.between(start, LocalDate.now()) + 1;
+            long days = ChronoUnit.DAYS.between(start, DateTimeUtil.today()) + 1;
             item.setDaysFrozen((int) Math.max(0, days));
-        } else if (actual.isBefore(planned)) {
+        } else if (cancelledBeforeStart || actual.isBefore(planned)) {
             item.setStatusLabel("Hủy sớm");
             item.setStatusBadgeClass("badge-info");
             item.setCanCancelEarly(false);
-            long days = ChronoUnit.DAYS.between(start, actual) + 1;
+            long days = cancelledBeforeStart ? 0 : ChronoUnit.DAYS.between(start, actual) + 1;
             item.setDaysFrozen((int) Math.max(0, days));
         } else {
             item.setStatusLabel("Đã hoàn thành");
@@ -1085,6 +1005,14 @@ public class FreezeRecordDAO {
         }
 
         return item;
+    }
+
+    private boolean isCancelledBeforeStart(ResultSet rs) {
+        try {
+            return rs.getBoolean("CancelledBeforeStart");
+        } catch (SQLException ignored) {
+            return false;
+        }
     }
 
     /**

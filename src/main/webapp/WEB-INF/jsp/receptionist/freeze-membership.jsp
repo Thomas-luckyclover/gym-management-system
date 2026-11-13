@@ -16,9 +16,9 @@
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Bảo lưu gói tập · Super Gym Lễ tân</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/customer-list.css?v=20261031-fixed-page">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/freeze-membership.css?v=20261101_v38">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/freeze-membership.css?v=20261113_v39">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css?v=20261106_v2">
-    <script src="${pageContext.request.contextPath}/js/pages/receptionist/freeze-membership.js?v=20261101_v23" defer></script>
+    <script src="${pageContext.request.contextPath}/js/pages/receptionist/freeze-membership.js?v=20261113_v24" defer></script>
     <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js?v=20261106_v2" defer></script>
 </head>
 
@@ -192,10 +192,22 @@
                                         <div class="pt-impact-box" id="ptImpactBox" role="alert">
                                             <div class="banner-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
                                             <div class="banner-content">
-                                                <h4>Lưu ý: Có <b>${fn:length(freezeCustomer.affectedSessions)} buổi tập PT</b> trong thời gian bảo lưu</h4>
+                                                <h4>Lưu ý: Có <b id="ptImpactCountText">${fn:length(freezeCustomer.affectedSessions)} buổi tập PT</b> trong thời gian bảo lưu</h4>
                                                 <p>
                                                     Theo quy chế phòng tập, các buổi tập PT trong kỳ bảo lưu vẫn giữ lịch hẹn. Nếu hội viên không mở lại thẻ tập trước giờ tập, hệ thống sẽ tự động ghi nhận vắng. Lễ tân vui lòng nhắc nhở hội viên.
                                                 </p>
+                                                <ul class="pt-impact-list" id="ptImpactList">
+                                                    <c:forEach var="pt" items="${freezeCustomer.affectedSessions}">
+                                                        <li data-slot-date="${pt.slotDate}">
+                                                            <b><c:out value="${gms:formatDate(pt.slotDate)}" /></b>
+                                                            (<c:out value="${gms:formatTime(pt.startTime)}" />–<c:out value="${gms:formatTime(pt.endTime)}" />)
+                                                            · PT: <c:out value="${pt.ptName}" />
+                                                            <c:if test="${not pt.willBeMissed}">
+                                                                <span class="pt-keep-tag">(vẫn giữ lịch vì bạn tập còn thẻ)</span>
+                                                            </c:if>
+                                                        </li>
+                                                    </c:forEach>
+                                                </ul>
                                             </div>
                                         </div>
                                     </c:if>
@@ -260,25 +272,6 @@
                                                 </c:choose>
                                             </span>
                                         </div>
-                                    </div>
-
-                                    <div class="ineligible-guidance-box">
-                                        <div class="guidance-icon"><i class="fa-solid fa-circle-info"></i></div>
-                                        <div class="guidance-content">
-                                            <strong>Lưu ý nghiệp vụ dành cho Lễ tân:</strong>
-                                            <p>Gói tập này không thể tạo bảo lưu thêm theo chính sách hiện hành. Đối với các tình huống bất khả kháng (sự cố y tế, tai nạn có giấy xác nhận điều trị từ bệnh viện, công tác đột xuất), vui lòng liên hệ <b>Quản lý cơ sở (Manager)</b> để được hỗ trợ phê duyệt ngoại lệ.</p>
-                                        </div>
-                                    </div>
-
-                                    <div class="ineligible-actions">
-                                        <c:if test="${not empty freezeCustomer.freezeHistory}">
-                                            <a href="#custFreezeHistory" class="btn btn-outline btn-sm">
-                                                <i class="fa-solid fa-clock-rotate-left"></i> Xem lịch sử bảo lưu (${fn:length(freezeCustomer.freezeHistory)} đợt)
-                                            </a>
-                                        </c:if>
-                                        <a href="${pageContext.request.contextPath}/receptionist/freeze?tab=members" class="btn btn-ghost btn-sm">
-                                            <i class="fa-solid fa-arrow-left"></i> Quay lại danh sách hội viên
-                                        </a>
                                     </div>
                                 </div>
                             </c:if>
@@ -406,7 +399,6 @@
                                         <option value="ALL" <c:if test="${empty currentFilter or currentFilter == 'ALL'}">selected</c:if>>Tất cả trạng thái</option>
                                         <option value="FROZEN" <c:if test="${currentFilter == 'FROZEN'}">selected</c:if>>Đang bảo lưu</option>
                                         <option value="ELIGIBLE" <c:if test="${currentFilter == 'ELIGIBLE'}">selected</c:if>>Đủ điều kiện bảo lưu</option>
-                                        <option value="ACTIVE" <c:if test="${currentFilter == 'ACTIVE'}">selected</c:if>>Hoạt động</option>
                                     </select>
                                 </div>
                                 <div class="bf07-filter-actions">
@@ -505,24 +497,22 @@
                                                 <td class="gym-action-cell" style="text-align: center;">
                                                     <c:choose>
                                                         <c:when test="${row.isCurrentlyFrozen()}">
-                                                            <a href="${pageContext.request.contextPath}/receptionist/freeze?tab=members&q=${row.customerCode}"
-                                                               class="btn btn-outline btn-sm" title="Mở lại thẻ tập trước hạn">
-                                                                Mở lại
-                                                            </a>
+                                                            <c:set var="rowActionTitle" value="Mở lại thẻ tập trước hạn" />
+                                                            <c:set var="rowActionLabel" value="Mở lại" />
                                                         </c:when>
                                                         <c:when test="${row.isEligibleToFreeze()}">
-                                                            <a href="${pageContext.request.contextPath}/receptionist/freeze?tab=members&q=${row.customerCode}"
-                                                               class="btn btn-outline btn-sm" title="Tạo bảo lưu gói tập">
-                                                                Bảo lưu
-                                                            </a>
+                                                            <c:set var="rowActionTitle" value="Tạo bảo lưu gói tập" />
+                                                            <c:set var="rowActionLabel" value="Bảo lưu" />
                                                         </c:when>
                                                         <c:otherwise>
-                                                            <button type="button" class="btn btn-outline btn-sm btn-disabled" disabled
-                                                                    title="Không đủ điều kiện bảo lưu">
-                                                                Bảo lưu
-                                                            </button>
+                                                            <c:set var="rowActionTitle" value="Xem chi tiết và lịch sử bảo lưu" />
+                                                            <c:set var="rowActionLabel" value="Xem" />
                                                         </c:otherwise>
                                                     </c:choose>
+                                                    <a href="${pageContext.request.contextPath}/receptionist/freeze?tab=members&q=${row.customerCode}"
+                                                       class="btn btn-outline btn-sm" title="${rowActionTitle}">
+                                                        ${rowActionLabel}
+                                                    </a>
                                                 </td>
                                             </tr>
                                         </c:forEach>
