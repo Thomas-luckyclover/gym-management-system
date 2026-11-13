@@ -74,17 +74,26 @@ public class MaintenanceReportServlet extends HttpServlet {
         // B2: Tải thông tin các máy cá thể và dòng máy cha
         ServiceResult<List<EquipmentItem>> itemsResult = maintenanceRequestService.getSelectableEquipmentItems();
         java.util.List<EquipmentItem> selectedItems = new java.util.ArrayList<>();
+        String blockedItemCode = null;
 
         if (itemsResult.isSuccess() && itemsResult.getData() != null) {
             for (EquipmentItem item : itemsResult.getData()) {
-                if (targetItemIds.contains(item.getEquipmentItemId()) && !item.isRetired()) {
-                    selectedItems.add(item);
+                if (targetItemIds.contains(item.getEquipmentItemId())) {
+                    // Chỉ cho vào Bước 2 khi máy đang Khả dụng và chưa có đơn Open/InProgress (BR-105 & GBR-13)
+                    if (item.isAvailable()) {
+                        selectedItems.add(item);
+                    } else if (!item.isRetired() && blockedItemCode == null) {
+                        blockedItemCode = item.getItemCode();
+                    }
                 }
             }
         }
 
         if (selectedItems.isEmpty()) {
-            RequestUtil.setFlashToast(request, "warning", Messages.MSG242_MAINTENANCE_DEVICE_INACTIVE);
+            String warningMsg = (blockedItemCode != null)
+                    ? "Thiết bị " + blockedItemCode + " đang trong quá trình bảo trì hoặc đã có yêu cầu chờ duyệt."
+                    : Messages.MSG242_MAINTENANCE_DEVICE_INACTIVE;
+            RequestUtil.setFlashToast(request, "warning", warningMsg);
             response.sendRedirect(request.getContextPath() + "/receptionist/facilities");
             return;
         }
