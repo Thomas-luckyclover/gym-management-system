@@ -9,7 +9,7 @@
         <title>Giao dịch toàn hệ thống · Super Gym</title>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css?v=20261106_v2">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/transaction-list.css?v=20261102">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/transaction-list.css?v=20261113">
 
         <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js?v=20261106_v2" defer></script>
         <script src="${pageContext.request.contextPath}/js/pages/manager/transaction-list.js?v=<%= System.currentTimeMillis() %>" defer></script>
@@ -315,10 +315,10 @@
                         </c:if>
 
                         <%-- ===================================================================
-                             TAB 2: LỊCH SỬ CHỐT CA
+                             TAB 2: LỊCH SỬ CHỐT CA (ĐỐI SOÁT TIỀN MẶT & CHÊNH LỆCH CA)
                              =================================================================== --%>
                         <c:if test="${currentTab == 'shifts'}">
-                            <form action="${pageContext.request.contextPath}/manager/transactions" method="get" class="tx-filter-form">
+                            <form action="${pageContext.request.contextPath}/manager/transactions" method="get" class="tx-filter-form shift-filter-form">
                                 <input type="hidden" name="tab" value="shifts">
                                 <input type="hidden" name="pageSize" value="${shiftPage.pageSize}">
                                 <div class="tx-filters">
@@ -327,6 +327,7 @@
                                     <label for="sTo">Đến ngày</label>
                                     <input class="tx-select" type="date" id="sTo" name="to" value="${shiftToDate}">
                                     <div class="tx-filters-end">
+                                        <button class="btn btn-primary btn-sm" type="submit">Lọc</button>
                                         <a class="btn btn-ghost btn-sm" href="${pageContext.request.contextPath}/manager/transactions?tab=shifts">Xóa lọc</a>
                                     </div>
                                 </div>
@@ -359,7 +360,6 @@
                                                                 <c:choose>
                                                                     <c:when test="${shift.shiftType == 'Morning'}">Ca sáng</c:when>
                                                                     <c:when test="${shift.shiftType == 'Afternoon'}">Ca chiều</c:when>
-                                                                    <c:when test="${shift.shiftType == 'Evening'}">Ca tối</c:when>
                                                                     <c:otherwise><c:out value="${shift.shiftType}" /></c:otherwise>
                                                                 </c:choose>
                                                                 · <c:out value="${gms:formatTime(shift.openedAt.toLocalTime())}" /> &rarr; <c:out value="${gms:formatTime(shift.closedAt.toLocalTime())}" />
@@ -369,24 +369,32 @@
                                                         <td><span class="tx-name"><c:out value="${shift.closedByName}" default="---" /></span></td>
                                                         <td class="r"><span class="tx-pay"><c:out value="${gms:formatMoney(shift.expectedCash)}" /></span></td>
                                                         <td class="r"><span class="tx-money"><c:out value="${gms:formatMoney(shift.countedCash)}" /></span></td>
-                                                        <td>
-                                                            <div class="tx-tip"
-                                                                 <c:if test="${shift.variance != 0 and not empty shift.varianceReason}">data-tip="Lý do: <c:out value='${shift.varianceReason}' />" tabindex="0"</c:if>>
-                                                                <c:choose>
-                                                                    <c:when test="${shift.variance == 0}"><span class="badge badge-success">Khớp</span></c:when>
-                                                                    <c:when test="${shift.variance < 0}"><span class="badge badge-danger">Thiếu <c:out value="${gms:formatMoney(-shift.variance)}" /></span></c:when>
-                                                                    <c:otherwise><span class="badge badge-info">Dư <c:out value="${gms:formatMoney(shift.variance)}" /></span></c:otherwise>
-                                                                </c:choose>
-                                                            </div>
+                                                        <td style="min-width: 140px; max-width: 220px;">
+                                                            <c:choose>
+                                                                <c:when test="${shift.variance == 0}"><span class="badge badge-success">Khớp</span></c:when>
+                                                                <c:when test="${shift.variance < 0}"><span class="badge badge-danger">Thiếu <c:out value="${gms:formatMoney(-shift.variance)}" /></span></c:when>
+                                                                <c:otherwise><span class="badge badge-info">Dư <c:out value="${gms:formatMoney(shift.variance)}" /></span></c:otherwise>
+                                                            </c:choose>
+                                                            <c:if test="${shift.variance != 0 and not empty shift.varianceReason}">
+                                                                <div class="tx-sub tx-reason-clamp"
+                                                                     onclick="this.classList.toggle('expanded')"
+                                                                     title="Bấm để xem đầy đủ / thu gọn">Lý do: <c:out value="${shift.varianceReason}" /></div>
+                                                            </c:if>
                                                         </td>
-                                                        <td class="r"><span class="tx-pay"><c:out value="${gms:formatMoney(shift.totalBankTransfer)}" /></span></td>
-                                                        <td class="r"><span class="tx-pay"><c:out value="${shift.totalInvoiceCount}" /></span></td>
-                                                        <%-- Nút xem các đơn bán trong ca → transaction-list.js gọi GET ?action=shiftOrders&shiftId= (SystemTransactionServlet) --%>
-                                                        <td>
-                                                            <button type="button" class="btn btn-outline btn-sm btn-view-shift-orders"
-                                                                    data-shift-id="${shift.shiftId}"
-                                                                    data-shift-label="<c:out value='${shift.shiftType == "Morning" ? "Ca sáng" : (shift.shiftType == "Afternoon" ? "Ca chiều" : shift.shiftType)}' /> <c:out value='${gms:formatDate(shift.workDate)}' />"
-                                                                    title="Xem danh sách đơn hàng trong ca này">Chi tiết đơn</button>
+                                                        <td class="r" style="white-space: nowrap;"><span class="tx-pay"><c:out value="${gms:formatMoney(shift.totalBankTransfer)}" /></span></td>
+                                                        <td class="r" style="white-space: nowrap;"><span class="tx-pay"><c:out value="${shift.totalInvoiceCount}" /></span></td>
+                                                        <%-- Nút xem các đơn bán trong ca → GET ?tab=shifts&shiftId=... (SystemTransactionServlet nạp đơn của ca, popup dưới trang mở sẵn) --%>
+                                                        <td style="white-space: nowrap;">
+                                                            <c:url var="shiftOrdersUrl" value="/manager/transactions">
+                                                                <c:param name="tab" value="shifts" />
+                                                                <c:param name="pageSize" value="${shiftPage.pageSize}" />
+                                                                <c:param name="page" value="${shiftPage.pageNumber}" />
+                                                                <c:if test="${not empty shiftFromDate}"><c:param name="from" value="${shiftFromDate}" /></c:if>
+                                                                <c:if test="${not empty shiftToDate}"><c:param name="to" value="${shiftToDate}" /></c:if>
+                                                                <c:param name="shiftId" value="${shift.shiftId}" />
+                                                            </c:url>
+                                                            <a class="btn btn-outline btn-sm" href="${shiftOrdersUrl}"
+                                                               title="Xem danh sách đơn hàng trong ca này">Chi tiết đơn</a>
                                                         </td>
                                                     </tr>
                                                 </c:forEach>
@@ -498,15 +506,41 @@
 
         <%-- =====================================================================
              POPUP 3: ĐƠN HÀNG TRONG CA — mở từ nút "Chi tiết đơn" ở tab Lịch sử chốt ca
-             Dữ liệu: transaction-list.js gọi GET ?action=shiftOrders&shiftId= → JSON danh sách đơn
+             Dữ liệu: SystemTransactionServlet nạp sẵn shiftOrders khi URL có ?tab=shifts&shiftId=
+             (không AJAX): có selectedShiftId thì popup được in sẵn với class "open".
+             Đóng popup = link về cùng trang nhưng bỏ shiftId.
              ===================================================================== --%>
-        <div class="tx-overlay" id="shiftOrdersModal" aria-hidden="true" role="dialog" aria-labelledby="txsTitle">
+        <c:if test="${currentTab == 'shifts'}">
+            <c:url var="closeShiftOrdersUrl" value="/manager/transactions">
+                <c:param name="tab" value="shifts" />
+                <c:param name="pageSize" value="${shiftPage.pageSize}" />
+                <c:param name="page" value="${shiftPage.pageNumber}" />
+                <c:if test="${not empty shiftFromDate}"><c:param name="from" value="${shiftFromDate}" /></c:if>
+                <c:if test="${not empty shiftToDate}"><c:param name="to" value="${shiftToDate}" /></c:if>
+            </c:url>
+        </c:if>
+        <div class="tx-overlay ${not empty selectedShiftId ? 'open' : ''}" id="shiftOrdersModal"
+             aria-hidden="${not empty selectedShiftId ? 'false' : 'true'}" role="dialog" aria-labelledby="txsTitle">
             <div class="tx-modal">
                 <div class="tx-mh">
                     <div>
-                        <h3 id="txsTitle">Đơn hàng trong ca · <span id="txsShiftInfo">---</span></h3>
+                        <h3 id="txsTitle">Đơn hàng trong ca ·
+                            <span id="txsShiftInfo">
+                                <c:choose>
+                                    <c:when test="${not empty selectedShift}">
+                                        <c:choose>
+                                            <c:when test="${selectedShift.shiftType == 'Morning'}">Ca sáng</c:when>
+                                            <c:when test="${selectedShift.shiftType == 'Afternoon'}">Ca chiều</c:when>
+                                            <c:otherwise><c:out value="${selectedShift.shiftType}" /></c:otherwise>
+                                        </c:choose>
+                                        <c:out value="${gms:formatDate(selectedShift.workDate)}" />
+                                    </c:when>
+                                    <c:otherwise>---</c:otherwise>
+                                </c:choose>
+                            </span>
+                        </h3>
                     </div>
-                    <button type="button" class="tx-x" data-modal-close aria-label="Đóng">&times;</button>
+                    <a class="tx-x" href="${closeShiftOrdersUrl}" aria-label="Đóng">&times;</a>
                 </div>
 
                 <div class="tx-mb">
@@ -523,13 +557,62 @@
                                     <th>Trạng thái</th>
                                 </tr>
                             </thead>
-                            <tbody id="shiftOrdersModalBody"></tbody>
+                            <tbody>
+                                <c:choose>
+                                    <c:when test="${not empty shiftOrdersError}">
+                                        <tr><td colspan="7"><c:out value="${shiftOrdersError}" /></td></tr>
+                                    </c:when>
+                                    <c:when test="${empty shiftOrders}">
+                                        <tr><td colspan="7">Không có đơn hàng nào trong ca này.</td></tr>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <c:forEach var="order" items="${shiftOrders}">
+                                            <tr>
+                                                <td><span class="tx-code"><c:out value="${order.orderCode}" default="---" /></span></td>
+                                                <td><c:out value="${gms:formatDateTime(order.createdAt)}" /></td>
+                                                <td>
+                                                    <span class="tx-name"><c:out value="${order.customerName}" default="Khách lẻ" /></span>
+                                                    <div class="tx-sub"><c:out value="${order.customerPhone}" default="---" /></div>
+                                                </td>
+                                                <td>
+                                                    <c:out value="${order.packageName}" default="---" />
+                                                    <c:if test="${not empty order.voucherCode}">
+                                                        <div class="tx-sub">Voucher: <c:out value="${order.voucherCode}" /></div>
+                                                    </c:if>
+                                                </td>
+                                                <td class="r"><span class="tx-money"><c:out value="${gms:formatMoney(order.totalAmount)}" /></span></td>
+                                                <td>
+                                                    <c:choose>
+                                                        <c:when test="${order.paymentMethod == 'Cash'}">Tiền mặt</c:when>
+                                                        <c:when test="${order.paymentMethod == 'Transfer'}">Chuyển khoản</c:when>
+                                                        <c:when test="${order.paymentMethod == 'OnlineGateway'}">VNPay</c:when>
+                                                        <c:otherwise><c:out value="${order.paymentMethod}" default="---" /></c:otherwise>
+                                                    </c:choose>
+                                                </td>
+                                                <td style="min-width: 140px; max-width: 220px;">
+                                                    <c:choose>
+                                                        <c:when test="${order.orderStatus == 'Paid'}"><span class="badge badge-success">Đã thanh toán</span></c:when>
+                                                        <c:when test="${order.orderStatus == 'Pending'}"><span class="badge badge-warning">Chờ thanh toán</span></c:when>
+                                                        <c:when test="${order.orderStatus == 'Cancelled'}"><span class="badge badge-danger">Đã hủy</span></c:when>
+                                                        <c:otherwise><span class="badge badge-neutral"><c:out value="${order.orderStatus}" default="---" /></span></c:otherwise>
+                                                    </c:choose>
+                                                    <c:if test="${order.orderStatus == 'Cancelled' and not empty order.cancelReason}">
+                                                        <div class="tx-sub tx-reason-clamp"
+                                                             onclick="this.classList.toggle('expanded')"
+                                                             title="Bấm để xem đầy đủ / thu gọn">Lý do: <c:out value="${order.cancelReason}" /></div>
+                                                    </c:if>
+                                                </td>
+                                            </tr>
+                                        </c:forEach>
+                                    </c:otherwise>
+                                </c:choose>
+                            </tbody>
                         </table>
                     </div>
                 </div>
 
                 <div class="tx-mf">
-                    <button type="button" class="btn btn-ghost" data-modal-close>Đóng</button>
+                    <a class="btn btn-ghost" href="${closeShiftOrdersUrl}">Đóng</a>
                 </div>
             </div>
         </div>
