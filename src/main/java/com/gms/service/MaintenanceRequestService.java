@@ -7,6 +7,7 @@ import com.gms.dao.EmployeeDAO;
 import com.gms.dao.EquipmentItemDAO;
 import com.gms.dao.FacilityDAO;
 import com.gms.dao.MaintenanceRequestDAO;
+import com.gms.dao.NotificationDAO;
 import com.gms.dto.PageResult;
 import com.gms.dto.ServiceResult;
 import com.gms.entity.Account;
@@ -21,6 +22,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -33,6 +35,8 @@ import java.util.Map;
  * {@code FacilityDAO}), đồng thời ghi {@code AuditLog} và gửi {@code Notification} trong cùng transaction.</p>
  */
 public class MaintenanceRequestService {
+
+    private static final int BATCH_NOTIFICATION_PREVIEW_LIMIT = 5;
 
     private final MaintenanceRequestDAO maintenanceRequestDAO;
     private final FacilityDAO facilityDAO;
@@ -267,7 +271,7 @@ public class MaintenanceRequestService {
                     request.setReportedByEmployeeId(receptionist.getEmployeeId());
                     request.setPriority(priority);
                     request.setIncidentType(incidentType);
-                    request.setAffectedItemsNote(affectedItemsNote);
+                    request.setAffectedItemsNote(affectedItemsNote != null && !affectedItemsNote.isBlank() ? affectedItemsNote.trim() : null);
                     request.setWarningTagPlaced(warningTagPlaced);
                     request.setDescription(description.trim());
                     request.setAttachedImages(attachedImages);
@@ -293,14 +297,23 @@ public class MaintenanceRequestService {
                     summaryItems.add(equipmentItem.getItemCode() + " (" + facilityName + ")");
                 }
 
-                // Gửi thông báo (Notification) cho Quản lý về phiếu bảo trì mới
+                // Gửi thông báo (Notification) cho Quản lý về phiếu bảo trì mới (giữ gọn <= 500 ký tự khi báo nhiều máy)
                 String notifTitle = createdCodes.size() == 1
-                        ? "Bảo trì · Yêu cầu mới " + createdCodes.get(0)
-                        : "Bảo trì · " + createdCodes.size() + " yêu cầu mới";
+                        ? NotificationDAO.safeTruncate(
+                                "Bảo trì · Yêu cầu mới " + createdCodes.get(0),
+                                NotificationDAO.TITLE_MAX_LENGTH
+                        )
+                        : NotificationDAO.safeTruncate(
+                                "Bảo trì · " + createdCodes.size() + " yêu cầu mới",
+                                NotificationDAO.TITLE_MAX_LENGTH
+                        );
 
                 String notifContent = createdCodes.size() == 1
-                        ? createdCodes.get(0) + " · " + summaryItems.get(0) + " vừa được Lễ tân báo hỏng."
-                        : "Lễ tân vừa báo hỏng " + createdCodes.size() + " máy: " + String.join(", ", summaryItems);
+                        ? NotificationDAO.safeTruncate(
+                                createdCodes.get(0) + " · " + summaryItems.get(0) + " vừa được Lễ tân báo hỏng.",
+                                NotificationDAO.CONTENT_MAX_LENGTH
+                        )
+                        : buildBatchReportNotificationContent(createdCodes.size(), summaryItems);
 
                 notificationService.notifyRoleInTransaction(
                         connection,
@@ -585,38 +598,22 @@ public class MaintenanceRequestService {
                         null
                 );
 
-                EquipmentItem notifItem = equipmentItemDAO.findById(connection, request.getEquipmentItemId());
-                Facility notifFac = (notifItem != null) ? facilityDAO.findById(connection, notifItem.getFacilityId()) : null;
-                String deviceDetail = "";
-                if (notifItem != null) {
-                    String facName = (notifFac != null && notifFac.getFacilityName() != null)
-                            ? notifFac.getFacilityName() : "";
-                    String itemCode = notifItem.getItemCode() != null ? notifItem.getItemCode() : "";
-                    String itemLabel = notifItem.getItemLabel() != null ? notifItem.getItemLabel() : "";
-                    if (!itemLabel.isBlank() && !itemLabel.equalsIgnoreCase(itemCode)) {
-                        deviceDetail = facName + " (" + itemCode + " - " + itemLabel + ")";
-                    } else {
-                        deviceDetail = facName + " (" + itemCode + ")";
-                    }
-                }
-                if (deviceDetail.isBlank()) {
-                    deviceDetail = "Mã máy #" + request.getEquipmentItemId();
-                }
-
-                StringBuilder notifContent = new StringBuilder();
-                notifContent.append(request.getRequestCode())
-                        .append(" · ")
-                        .append(deviceDetail)
-                        .append(": Quản lý đã duyệt yêu cầu, chuyển sang trạng thái Đang xử lý.");
-                if (managerNote != null && !managerNote.isBlank()) {
-                    notifContent.append("\n\nGhi chú: ").append(managerNote.trim());
-                }
+                String deviceDetail = buildDeviceDetail(connection, request.getEquipmentItemId(), true);
+                String baseContent = request.getRequestCode()
+                        + " · "
+                        + deviceDetail
+                        + ": Quản lý đã duyệt yêu cầu, chuyển sang trạng thái Đang xử lý.";
+                String notifContent = buildNotificationWithOptionalNote(
+                        baseContent,
+                        "\n\nGhi chú: ",
+                        managerNote
+                );
 
                 notificationService.notifyEmployeeInTransaction(
                         connection,
                         request.getReportedByEmployeeId(),
                         "Bảo trì · Đã được duyệt",
-                        notifContent.toString()
+                        notifContent
                 );
 
                 connection.commit();
@@ -684,6 +681,7 @@ public class MaintenanceRequestService {
                 }
 
                 int approvedCount = 0;
+                Map<Integer, List<BatchNotificationEntry>> approvedByReporter = new LinkedHashMap<>();
 
                 for (int reqId : validIds) {
                     MaintenanceRequest request = maintenanceRequestDAO.findByIdForUpdate(connection, reqId);
@@ -747,39 +745,10 @@ public class MaintenanceRequestService {
                             managerNote
                     );
 
-                    EquipmentItem notifItem = equipmentItemDAO.findById(connection, request.getEquipmentItemId());
-                    Facility notifFac = (notifItem != null) ? facilityDAO.findById(connection, notifItem.getFacilityId()) : null;
-                    String deviceDetail = "";
-                    if (notifItem != null) {
-                        String facName = (notifFac != null && notifFac.getFacilityName() != null)
-                                ? notifFac.getFacilityName() : "";
-                        String itemCode = notifItem.getItemCode() != null ? notifItem.getItemCode() : "";
-                        String itemLabel = notifItem.getItemLabel() != null ? notifItem.getItemLabel() : "";
-                        if (!itemLabel.isBlank() && !itemLabel.equalsIgnoreCase(itemCode)) {
-                            deviceDetail = facName + " (" + itemCode + " - " + itemLabel + ")";
-                        } else {
-                            deviceDetail = facName + " (" + itemCode + ")";
-                        }
-                    }
-                    if (deviceDetail.isBlank()) {
-                        deviceDetail = "Mã máy #" + request.getEquipmentItemId();
-                    }
-
-                    StringBuilder notifContent = new StringBuilder();
-                    notifContent.append(request.getRequestCode())
-                            .append(" · ")
-                            .append(deviceDetail)
-                            .append(": Quản lý đã duyệt yêu cầu, chuyển sang trạng thái Đang xử lý.");
-                    if (managerNote != null && !managerNote.isBlank()) {
-                        notifContent.append("\n\nGhi chú: ").append(managerNote.trim());
-                    }
-
-                    notificationService.notifyEmployeeInTransaction(
-                            connection,
-                            request.getReportedByEmployeeId(),
-                            "Bảo trì · Đã được duyệt",
-                            notifContent.toString()
-                    );
+                    String deviceDetail = buildDeviceDetail(connection, request.getEquipmentItemId(), true);
+                    approvedByReporter
+                            .computeIfAbsent(request.getReportedByEmployeeId(), k -> new ArrayList<>())
+                            .add(new BatchNotificationEntry(request.getRequestCode(), deviceDetail));
 
                     approvedCount++;
                 }
@@ -787,6 +756,38 @@ public class MaintenanceRequestService {
                 if (approvedCount == 0) {
                     connection.rollback();
                     return ServiceResult.fail("Không có yêu cầu bảo trì nào ở trạng thái Chờ duyệt được chọn.");
+                }
+
+                for (Map.Entry<Integer, List<BatchNotificationEntry>> group : approvedByReporter.entrySet()) {
+                    List<BatchNotificationEntry> entries = group.getValue();
+                    String notifTitle;
+                    String baseContent;
+
+                    if (entries.size() == 1) {
+                        BatchNotificationEntry single = entries.get(0);
+                        notifTitle = "Bảo trì · Đã được duyệt";
+                        baseContent = single.requestCode
+                                + " · "
+                                + single.deviceDetail
+                                + ": Quản lý đã duyệt yêu cầu, chuyển sang trạng thái Đang xử lý.";
+                    } else {
+                        notifTitle = NotificationDAO.safeTruncate(
+                                "Bảo trì · " + entries.size() + " yêu cầu đã duyệt",
+                                NotificationDAO.TITLE_MAX_LENGTH
+                        );
+                        baseContent = buildBatchStatusNotificationContent(
+                                "Quản lý đã duyệt ",
+                                ", chuyển sang trạng thái Đang xử lý.",
+                                entries
+                        );
+                    }
+
+                    notificationService.notifyEmployeeInTransaction(
+                            connection,
+                            group.getKey(),
+                            notifTitle,
+                            buildNotificationWithOptionalNote(baseContent, "\n\nGhi chú: ", managerNote)
+                    );
                 }
 
                 connection.commit();
@@ -896,22 +897,17 @@ public class MaintenanceRequestService {
                         rejectReason.trim()
                 );
 
-                EquipmentItem rejectItem = equipmentItemDAO.findById(connection, request.getEquipmentItemId());
-                Facility rejectFac = (rejectItem != null) ? facilityDAO.findById(connection, rejectItem.getFacilityId()) : null;
-                String rejectDeviceDetail = "";
-                if (rejectItem != null) {
-                    String facName = (rejectFac != null && rejectFac.getFacilityName() != null) ? rejectFac.getFacilityName() : "";
-                    rejectDeviceDetail = facName + " (" + rejectItem.getItemCode() + ")";
-                } else {
-                    rejectDeviceDetail = "Mã máy #" + request.getEquipmentItemId();
-                }
+                String rejectDeviceDetail = buildDeviceDetail(connection, request.getEquipmentItemId(), false);
+                String rejectBaseContent = request.getRequestCode()
+                        + " · "
+                        + rejectDeviceDetail
+                        + ": Quản lý đã từ chối yêu cầu.";
 
                 notificationService.notifyEmployeeInTransaction(
                         connection,
                         request.getReportedByEmployeeId(),
                         "Bảo trì · Bị từ chối",
-                        request.getRequestCode() + " · " + rejectDeviceDetail
-                                + ": Quản lý đã từ chối yêu cầu.\n\nLý do: " + rejectReason.trim()
+                        buildNotificationWithOptionalNote(rejectBaseContent, "\n\nLý do: ", rejectReason)
                 );
 
                 connection.commit();
@@ -1071,30 +1067,17 @@ public class MaintenanceRequestService {
                 );
 
                 if (request.getReviewedByEmployeeId() != null) {
-                    EquipmentItem closeItem = equipmentItemDAO.findById(connection, request.getEquipmentItemId());
-                    Facility closeFac = (closeItem != null) ? facilityDAO.findById(connection, closeItem.getFacilityId()) : null;
-                    String closeDeviceDetail = "";
-                    if (closeItem != null) {
-                        String facName = (closeFac != null && closeFac.getFacilityName() != null) ? closeFac.getFacilityName() : "";
-                        closeDeviceDetail = facName + " (" + closeItem.getItemCode() + ")";
-                    } else {
-                        closeDeviceDetail = "Mã máy #" + request.getEquipmentItemId();
-                    }
-
-                    StringBuilder closeContent = new StringBuilder();
-                    closeContent.append(request.getRequestCode())
-                            .append(" · ")
-                            .append(closeDeviceDetail)
-                            .append(": Yêu cầu đã được Lễ tân nghiệm thu và đóng.");
-                    if (acceptanceNote != null && !acceptanceNote.isBlank()) {
-                        closeContent.append("\n\nNghiệm thu: ").append(acceptanceNote.trim());
-                    }
+                    String closeDeviceDetail = buildDeviceDetail(connection, request.getEquipmentItemId(), false);
+                    String closeBaseContent = request.getRequestCode()
+                            + " · "
+                            + closeDeviceDetail
+                            + ": Yêu cầu đã được Lễ tân nghiệm thu và đóng.";
 
                     notificationService.notifyEmployeeInTransaction(
                             connection,
                             request.getReviewedByEmployeeId(),
                             "Bảo trì · Đã hoàn tất",
-                            closeContent.toString()
+                            buildNotificationWithOptionalNote(closeBaseContent, "\n\nNghiệm thu: ", acceptanceNote)
                     );
                 }
 
@@ -1163,6 +1146,7 @@ public class MaintenanceRequestService {
                 }
 
                 int closedCount = 0;
+                Map<Integer, List<BatchNotificationEntry>> closedByReviewer = new LinkedHashMap<>();
 
                 for (int reqId : validIds) {
                     MaintenanceRequest request = maintenanceRequestDAO.findByIdForUpdate(connection, reqId);
@@ -1232,31 +1216,10 @@ public class MaintenanceRequestService {
                     );
 
                     if (request.getReviewedByEmployeeId() != null) {
-                        EquipmentItem closeItem = equipmentItemDAO.findById(connection, request.getEquipmentItemId());
-                        Facility closeFac = (closeItem != null) ? facilityDAO.findById(connection, closeItem.getFacilityId()) : null;
-                        String closeDeviceDetail = "";
-                        if (closeItem != null) {
-                            String facName = (closeFac != null && closeFac.getFacilityName() != null) ? closeFac.getFacilityName() : "";
-                            closeDeviceDetail = facName + " (" + closeItem.getItemCode() + ")";
-                        } else {
-                            closeDeviceDetail = "Mã máy #" + request.getEquipmentItemId();
-                        }
-
-                        StringBuilder closeContent = new StringBuilder();
-                        closeContent.append(request.getRequestCode())
-                                .append(" · ")
-                                .append(closeDeviceDetail)
-                                .append(": Yêu cầu đã được Lễ tân nghiệm thu và đóng.");
-                        if (acceptanceNote != null && !acceptanceNote.isBlank()) {
-                            closeContent.append("\n\nNghiệm thu: ").append(acceptanceNote.trim());
-                        }
-
-                        notificationService.notifyEmployeeInTransaction(
-                                connection,
-                                request.getReviewedByEmployeeId(),
-                                "Bảo trì · Đã hoàn tất",
-                                closeContent.toString()
-                        );
+                        String closeDeviceDetail = buildDeviceDetail(connection, request.getEquipmentItemId(), false);
+                        closedByReviewer
+                                .computeIfAbsent(request.getReviewedByEmployeeId(), k -> new ArrayList<>())
+                                .add(new BatchNotificationEntry(request.getRequestCode(), closeDeviceDetail));
                     }
 
                     closedCount++;
@@ -1265,6 +1228,38 @@ public class MaintenanceRequestService {
                 if (closedCount == 0) {
                     connection.rollback();
                     return ServiceResult.fail("Không có yêu cầu bảo trì nào ở trạng thái Đang xử lý được chọn.");
+                }
+
+                for (Map.Entry<Integer, List<BatchNotificationEntry>> group : closedByReviewer.entrySet()) {
+                    List<BatchNotificationEntry> entries = group.getValue();
+                    String notifTitle;
+                    String baseContent;
+
+                    if (entries.size() == 1) {
+                        BatchNotificationEntry single = entries.get(0);
+                        notifTitle = "Bảo trì · Đã hoàn tất";
+                        baseContent = single.requestCode
+                                + " · "
+                                + single.deviceDetail
+                                + ": Yêu cầu đã được Lễ tân nghiệm thu và đóng.";
+                    } else {
+                        notifTitle = NotificationDAO.safeTruncate(
+                                "Bảo trì · " + entries.size() + " yêu cầu đã hoàn tất",
+                                NotificationDAO.TITLE_MAX_LENGTH
+                        );
+                        baseContent = buildBatchStatusNotificationContent(
+                                "Lễ tân đã nghiệm thu và đóng ",
+                                ".",
+                                entries
+                        );
+                    }
+
+                    notificationService.notifyEmployeeInTransaction(
+                            connection,
+                            group.getKey(),
+                            notifTitle,
+                            buildNotificationWithOptionalNote(baseContent, "\n\nNghiệm thu: ", acceptanceNote)
+                    );
                 }
 
                 connection.commit();
@@ -1666,6 +1661,135 @@ public class MaintenanceRequestService {
         }
 
         return employee;
+    }
+
+    /**
+     * Dựng chuỗi mô tả ngắn gọn cá thể máy kèm tên nhóm máy phục vụ hiển thị thông báo.
+     */
+    private String buildDeviceDetail(
+            Connection connection,
+            int equipmentItemId,
+            boolean includeItemLabel
+    ) throws SQLException {
+        EquipmentItem item = equipmentItemDAO.findById(connection, equipmentItemId);
+        if (item == null) {
+            return "Mã máy #" + equipmentItemId;
+        }
+        Facility facility = facilityDAO.findById(connection, item.getFacilityId());
+        String facName = (facility != null && facility.getFacilityName() != null)
+                ? facility.getFacilityName()
+                : "";
+        String itemCode = item.getItemCode() != null ? item.getItemCode() : "";
+        String itemLabel = item.getItemLabel() != null ? item.getItemLabel() : "";
+
+        String detail;
+        if (includeItemLabel && !itemLabel.isBlank() && !itemLabel.equalsIgnoreCase(itemCode)) {
+            detail = facName + " (" + itemCode + " - " + itemLabel + ")";
+        } else {
+            detail = facName + " (" + itemCode + ")";
+        }
+
+        return detail.isBlank() ? ("Mã máy #" + equipmentItemId) : detail;
+    }
+
+    /**
+     * Tạo nội dung thông báo báo hỏng hàng loạt luôn nằm trong giới hạn 500 ký tự của {@code Notifications.Content}.
+     *
+     * <p><b>Cách hoạt động:</b> Hiển thị toàn bộ khi {@code <= 5} máy và đủ độ dài; với số lượng lớn (như 60 máy),
+     * chỉ liệt kê tối đa {@value #BATCH_NOTIFICATION_PREVIEW_LIMIT} máy đầu vừa khung ký tự kèm phần tóm tắt
+     * {@code " và N máy khác."} để tránh lỗi cắt chuỗi từ SQL Server.</p>
+     */
+    private static String buildBatchReportNotificationContent(
+            int totalCount,
+            List<String> summaryItems
+    ) {
+        String prefix = "Lễ tân vừa báo hỏng " + totalCount + " máy: ";
+        if (summaryItems.size() <= BATCH_NOTIFICATION_PREVIEW_LIMIT) {
+            String full = prefix + String.join(", ", summaryItems);
+            if (full.length() <= NotificationDAO.CONTENT_MAX_LENGTH) {
+                return full;
+            }
+        }
+
+        int maxPreview = Math.min(BATCH_NOTIFICATION_PREVIEW_LIMIT, summaryItems.size());
+        StringBuilder preview = new StringBuilder();
+        int included = 0;
+
+        for (int i = 0; i < maxPreview; i++) {
+            String item = summaryItems.get(i);
+            int remaining = totalCount - (i + 1);
+            String suffix = remaining > 0 ? " và " + remaining + " máy khác." : "";
+            String candidate = preview.length() == 0 ? item : preview + ", " + item;
+            if (prefix.length() + candidate.length() + suffix.length() <= NotificationDAO.CONTENT_MAX_LENGTH) {
+                if (preview.length() > 0) {
+                    preview.append(", ");
+                }
+                preview.append(item);
+                included = i + 1;
+            } else {
+                break;
+            }
+        }
+
+        if (included == 0 && !summaryItems.isEmpty()) {
+            int remaining = totalCount - 1;
+            String suffix = remaining > 0 ? " và " + remaining + " máy khác." : "";
+            int available = NotificationDAO.CONTENT_MAX_LENGTH - prefix.length() - suffix.length();
+            String firstItem = available > 3 ? NotificationDAO.safeTruncate(summaryItems.get(0), available) : "";
+            return NotificationDAO.safeTruncate(prefix + firstItem + suffix, NotificationDAO.CONTENT_MAX_LENGTH);
+        }
+
+        int remaining = totalCount - included;
+        String suffix = remaining > 0 ? " và " + remaining + " máy khác." : "";
+        return NotificationDAO.safeTruncate(prefix + preview + suffix, NotificationDAO.CONTENT_MAX_LENGTH);
+    }
+
+    /**
+     * Dựng nội dung tóm tắt cho thông báo duyệt hoặc đóng hàng loạt nhiều yêu cầu bảo trì.
+     */
+    private static String buildBatchStatusNotificationContent(
+            String actionPrefix,
+            String actionSuffix,
+            List<BatchNotificationEntry> entries
+    ) {
+        int total = entries.size();
+        int maxPreview = Math.min(BATCH_NOTIFICATION_PREVIEW_LIMIT, total);
+        StringBuilder codes = new StringBuilder();
+        for (int i = 0; i < maxPreview; i++) {
+            if (i > 0) {
+                codes.append(", ");
+            }
+            codes.append(entries.get(i).requestCode);
+        }
+        String overflow = total > maxPreview ? ", ..." : "";
+        String content = actionPrefix + total + " yêu cầu (" + codes + overflow + ")" + actionSuffix;
+        return NotificationDAO.safeTruncate(content, NotificationDAO.CONTENT_MAX_LENGTH);
+    }
+
+    /**
+     * Ghép thêm ghi chú/lý do tùy chọn vào nội dung thông báo và bảo đảm tổng độ dài không vượt quá 500 ký tự.
+     */
+    private static String buildNotificationWithOptionalNote(
+            String baseContent,
+            String notePrefix,
+            String rawNote
+    ) {
+        String safeBase = NotificationDAO.safeTruncate(baseContent, NotificationDAO.CONTENT_MAX_LENGTH);
+        if (rawNote == null || rawNote.isBlank()) {
+            return safeBase;
+        }
+        String trimmedNote = rawNote.trim();
+        if (safeBase.length() + notePrefix.length() + trimmedNote.length() <= NotificationDAO.CONTENT_MAX_LENGTH) {
+            return safeBase + notePrefix + trimmedNote;
+        }
+        int availableForNote = NotificationDAO.CONTENT_MAX_LENGTH - safeBase.length() - notePrefix.length();
+        if (availableForNote < 10) {
+            return safeBase;
+        }
+        return safeBase + notePrefix + NotificationDAO.safeTruncate(trimmedNote, availableForNote);
+    }
+
+    private record BatchNotificationEntry(String requestCode, String deviceDetail) {
     }
 
 }
