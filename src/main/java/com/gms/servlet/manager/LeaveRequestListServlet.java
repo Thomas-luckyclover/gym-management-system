@@ -32,15 +32,18 @@ public class LeaveRequestListServlet extends HttpServlet {
     private static final String VIEW_NAME = "manager/leave-request-list";
 
     private final LeaveRequestService leaveRequestService;
-    private final NotificationService notificationService = new NotificationService();
+    private final NotificationService notificationService;
 
     public LeaveRequestListServlet() {
-        this(new LeaveRequestService());
+        this(new LeaveRequestService(), new NotificationService());
     }
 
-    /** Truyền Service giả để kiểm tra bộ lọc mà không cần truy vấn DB thật. */
-    LeaveRequestListServlet(LeaveRequestService leaveRequestService) {
+    /** Truyền Service giả để kiểm tra bộ lọc mà không cần truy vấn DB thật.
+     *  Cả NotificationService cũng phải truyền vào: doGet gọi markTopicNotificationsRead (ghi DB),
+     *  để "new" thẳng trong field thì test chạm DB thật và hỏng. */
+    LeaveRequestListServlet(LeaveRequestService leaveRequestService, NotificationService notificationService) {
         this.leaveRequestService = leaveRequestService;
+        this.notificationService = notificationService;
     }
 
     /**

@@ -7,6 +7,7 @@ import com.gms.dto.LeaveRequestItemView;
 import com.gms.dto.PageResult;
 import com.gms.dto.ServiceResult;
 import com.gms.service.LeaveRequestService;
+import com.gms.service.NotificationService;
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -33,7 +34,7 @@ class LeaveRequestListServletTest {
 
     @BeforeEach
     void setUp() {
-        servlet = new LeaveRequestListServlet(service);
+        servlet = new LeaveRequestListServlet(service, mock(NotificationService.class));
         HttpSession session = mock(HttpSession.class);
         when(request.getSession(false)).thenReturn(session);
         when(session.getAttribute(SessionKey.ACCOUNT_ID)).thenReturn(10);
