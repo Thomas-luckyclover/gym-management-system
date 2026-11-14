@@ -18,6 +18,8 @@ import java.util.List;
  */
 public class FacilityService {
 
+    private static final String MSG_ITEM_LABEL_EXISTS = "Tên hiển thị / Quy cách '%s' đã tồn tại trong nhóm máy này.";
+
     private final FacilityDAO facilityDAO;
     private final EquipmentItemDAO equipmentItemDAO;
     private final MaintenanceRequestDAO maintenanceRequestDAO;
@@ -103,16 +105,25 @@ public class FacilityService {
         if (!ValidationUtil.isLengthValid(name, 3, 100)) {
             return ServiceResult.failField("facilityName", Messages.MSG218_FACILITY_NAME_LENGTH);
         }
+        facility.setFacilityName(name.trim());
 
         if (facility.getCategory() == null) {
             return ServiceResult.failField("category", Messages.MSG219_FACILITY_CATEGORY_REQUIRED);
         }
 
-        String unitLabel = facility.getUnitLabel();
-        if (unitLabel == null || unitLabel.isBlank()) {
+        String location = facility.getLocation() != null ? facility.getLocation().trim() : "";
+        if (location.length() > 100) {
+            return ServiceResult.failField("location", "Khu vực đặt tối đa 100 ký tự.");
+        }
+        facility.setLocation(location);
+
+        String unitLabel = facility.getUnitLabel() != null ? facility.getUnitLabel().trim() : "";
+        if (unitLabel.isEmpty()) {
             facility.setUnitLabel("máy");
         } else if (unitLabel.length() > 15) {
             return ServiceResult.failField("unitLabel", Messages.MSG220_FACILITY_UNIT_LENGTH);
+        } else {
+            facility.setUnitLabel(unitLabel);
         }
 
         // B2: Gọi DAO để cập nhật hoặc tạo mới trong CSDL
@@ -159,7 +170,7 @@ public class FacilityService {
 
     /**
      * Thêm mới hoặc cập nhật thông tin một cá thể máy vật lý.
-     * Hàm kiểm tra mã máy (tự chuẩn hóa chữ in hoa), nhãn máy, ghi chú vị trí và kiểm tra trùng ItemCode trước khi gọi create hoặc update qua EquipmentItemDAO.
+     * Hàm kiểm tra mã máy (tự chuẩn hóa chữ in hoa), nhãn máy, ghi chú vị trí và kiểm tra trùng ItemCode, ItemLabel trong nhóm trước khi gọi create hoặc update qua EquipmentItemDAO.
      */
     public ServiceResult<Integer> saveEquipmentItem(EquipmentItem item) {
         if (item == null) {
@@ -186,12 +197,17 @@ public class FacilityService {
         if (placement != null && placement.trim().length() > 100) {
             return ServiceResult.failField("placementNote", Messages.MSG227_ITEM_LOCATION_LENGTH);
         }
+        item.setPlacementNote(placement != null && !placement.isBlank() ? placement.trim() : null);
 
+        Integer excludeId = item.getEquipmentItemId() > 0 ? item.getEquipmentItemId() : null;
         try {
             // Kiểm tra trùng mã cá thể máy trong CSDL
-            Integer excludeId = item.getEquipmentItemId() > 0 ? item.getEquipmentItemId() : null;
             if (equipmentItemDAO.isItemCodeExists(item.getItemCode(), excludeId)) {
-                return ServiceResult.failField("itemCode", String.format(Messages.MSG228_ITEM_CODE_EXISTS, item.getItemCode()));
+                return duplicateEquipmentField("itemCode", Messages.MSG228_ITEM_CODE_EXISTS, item.getItemCode());
+            }
+            // Kiểm tra trùng nhãn hiển thị trong cùng nhóm máy (khớp UQ_EquipmentItems_FacilityLabel)
+            if (equipmentItemDAO.isItemLabelExists(item.getFacilityId(), item.getItemLabel(), excludeId)) {
+                return duplicateEquipmentField("itemLabel", MSG_ITEM_LABEL_EXISTS, item.getItemLabel());
             }
 
             if (item.getEquipmentItemId() > 0) {
@@ -209,9 +225,46 @@ public class FacilityService {
                 return ServiceResult.ok(generatedId);
             }
         } catch (SQLException e) {
+            ServiceResult<Integer> duplicateError = resolveEquipmentDuplicateError(e, item, excludeId);
+            if (duplicateError != null) {
+                return duplicateError;
+            }
             e.printStackTrace();
             return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
         }
+    }
+
+    /**
+     * Chuyển đổi lỗi trùng khóa duy nhất SQL Server (2601/2627) trên bảng EquipmentItems
+     * thành thông báo lỗi cụ thể theo trường dữ liệu thay vì trả thông báo chung MSG04.
+     */
+    private ServiceResult<Integer> resolveEquipmentDuplicateError(
+            SQLException e, EquipmentItem item, Integer excludeId) {
+        if (e.getErrorCode() != 2601 && e.getErrorCode() != 2627) {
+            return null;
+        }
+        String message = e.getMessage() != null ? e.getMessage() : "";
+        if (message.contains("UQ_EquipmentItems_FacilityLabel")) {
+            return duplicateEquipmentField("itemLabel", MSG_ITEM_LABEL_EXISTS, item.getItemLabel());
+        }
+        if (message.contains("UQ_EquipmentItems_ItemCode")) {
+            return duplicateEquipmentField("itemCode", Messages.MSG228_ITEM_CODE_EXISTS, item.getItemCode());
+        }
+        try {
+            if (equipmentItemDAO.isItemLabelExists(item.getFacilityId(), item.getItemLabel(), excludeId)) {
+                return duplicateEquipmentField("itemLabel", MSG_ITEM_LABEL_EXISTS, item.getItemLabel());
+            }
+            if (equipmentItemDAO.isItemCodeExists(item.getItemCode(), excludeId)) {
+                return duplicateEquipmentField("itemCode", Messages.MSG228_ITEM_CODE_EXISTS, item.getItemCode());
+            }
+        } catch (SQLException ignored) {
+            // Bỏ qua để fallback về thông báo hệ thống chung phía caller
+        }
+        return null;
+    }
+
+    private ServiceResult<Integer> duplicateEquipmentField(String fieldName, String messageTemplate, String value) {
+        return ServiceResult.failField(fieldName, String.format(messageTemplate, value));
     }
 
     /**
