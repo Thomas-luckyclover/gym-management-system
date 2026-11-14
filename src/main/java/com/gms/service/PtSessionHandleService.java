@@ -55,6 +55,11 @@ public class PtSessionHandleService {
     private final NotificationDAO notificationDAO = new NotificationDAO();
     private final SystemConfigService configService = new SystemConfigService();
 
+    
+    // Đây là mảng ghép để tách mở đóng transaction ra khỏi việc cần làm
+    // Vấn đề : 3 nút lặp lại cùng 1 khuôn => dùng chung
+    // Định nghĩa interface: TransactionWork là baats cứ thứ gì có hàm run: nhận 1 Connection, trả 1 ServiceResult<LocalDate> và có thể ném exception
+    // Hàm khuôn inTransaction nhận interface đó
     @FunctionalInterface
     interface TransactionWork {
         ServiceResult<LocalDate> run(Connection connection) throws SQLException;
@@ -236,21 +241,31 @@ public class PtSessionHandleService {
             String reason,
             LocalDateTime now) {
         // B1: kiểm lựa chọn khung và ghi chú
+        // createNew: slotIdText 2 trường hhopwj 1 là String "73" - buổi muốn đổi sang hoặc là String "new"
         boolean createNew = NEW_SLOT_VALUE.equals(slotIdText == null ? "" : slotIdText.trim());
+        
         Integer slotId = createNew ? null : parseSlotId(slotIdText);
         if (!createNew && slotId == null) {
             return ServiceResult.fail(Messages.MSG313_PT_NEW_SLOT_REQUIRED);
         }
+        
+        
+        // Nếu là "new" => parseDate(newDateText)
+        // nếu là "new" => parseQuarterTime(newStartTime)
         LocalDate newDate = createNew ? parseDate(newDateText) : null;
         LocalTime newStart = createNew ? parseQuarterTime(newStartText) : null;
         if (createNew && (newDate == null || newStart == null)) {
             return ServiceResult.fail(Messages.MSG336_PT_NEW_SLOT_TIME_REQUIRED);
         }
+        
+        // Lí do: < max, ko cần < min do ko bắt buộc - nghiệp vụ: PT có thể ghi chú tối đa 500 kí tự
         String note = trimToNull(reason);
         if (note != null && note.length() > REASON_MAX) {
             return ServiceResult.fail(String.format(Messages.MSG314_NOTE_MAX_LENGTH, REASON_MAX));
         }
 
+        
+        // Mở Transaction
         return inTransaction(connection -> {
             // B2: khóa PT + khóa buổi
             int ptId = lockPt(connection, accountId);
@@ -261,6 +276,7 @@ public class PtSessionHandleService {
                     now);
 
             // B3: chọn "Giờ khác" → tạo khung mới làm khung đích
+            // Nếu "new" => create slot mới, ko thì lấy slotId đã có sẵn
             int targetSlotId = createNew
                     ? createSlotForMove(
                             connection,
@@ -281,7 +297,7 @@ public class PtSessionHandleService {
                 throw new IllegalArgumentException(Messages.MSG103_SLOT_ALREADY_TAKEN);
             }
 
-            // B5: dời buổi sang khung mới, trả khung cũ
+            // B5: dời buổi sang khung mới. Sau đó trả khung cũ
             moveTo(
                     connection,
                     session,
@@ -306,22 +322,6 @@ public class PtSessionHandleService {
         });
     }
 
-    /** HÀM PHỤ (bản cũ của reschedule, chỉ chọn khung có sẵn) — giữ để code / test cũ gọi được; chuyển sang bản đầy đủ ngay trên. */
-    public ServiceResult<LocalDate> reschedule(
-            int accountId,
-            int sessionId,
-            String slotIdText,
-            String reason,
-            LocalDateTime now) {
-        return reschedule(
-                accountId,
-                sessionId,
-                slotIdText,
-                null,
-                null,
-                reason,
-                now);
-    }
 
     /** HÀM PHỤ (reschedule B1, transfer B1) — ô timeSlotId → số dương; sai → null. */
     static Integer parseSlotId(String text) {
@@ -363,6 +363,8 @@ public class PtSessionHandleService {
      * B3: ghi khung (PtScheduleDAO.insertOrReopenSlot — SQL tự chặn chồng giờ lần nữa) rồi đọc lại id.
      * Lỗi → IllegalArgumentException kèm câu báo → inTransaction rollback, trả câu lỗi cho PT.
      */
+    
+    // Hàm này chỉ tạo khung và trả về id. Việc dời là của moveTo sau đó.
     private int createSlotForMove(
             Connection connection,
             PtHandleView session,
@@ -371,8 +373,11 @@ public class PtSessionHandleService {
             LocalTime start,
             LocalDateTime now) throws SQLException {
         // B1: ngày phải trong khoảng dời được
+        // 1.1 Ngày sớm nhatas được chọn
         LocalDate from = max(now.toLocalDate(), session.getTermStart());
+        // 1.2 Ngày muộn nhất được chọn
         LocalDate to = min(now.toLocalDate().plusDays(MOVE_SEARCH_DAYS - 1), session.getTermEnd());
+        //nếu date trước from và sau to thì báo lỗi
         if (date.isBefore(from) || date.isAfter(to)) {
             throw new IllegalArgumentException(String.format(
                     Messages.MSG337_PT_NEW_SLOT_DATE_RANGE,
@@ -388,7 +393,12 @@ public class PtSessionHandleService {
         if (!end.isAfter(start)) {
             throw new IllegalArgumentException(String.format(Messages.MSG338_PT_NEW_SLOT_PAST_MIDNIGHT, minutes));
         }
+        
+        
+        // Tại PtSlotDraft
         PtSlotDraft draft = new PtSlotDraft(date, start, end);
+        // validateDraft: cần 6 thứ để kiểm: List of nháp gồm 1 nháp - do hàm đòi List, các khung đã có của PT trong ngày đó, đơn nghỉ của PT trong ngày đó, ngày nghỉ/giờ riêng, giờ mở cửa mặc định, giờ hiện tại
+        // ko hợp lệ thì ném lỗi, Ktra xem draft có thỏa mãn các yếu tố ko
         PtScheduleService.validateDrafts(
                 List.of(draft),
                 scheduleDAO.findSlotsForPublish(
@@ -405,8 +415,11 @@ public class PtSessionHandleService {
                 hours,
                 now);
 
-        // B3: ghi khung rồi đọc lại mã khung
+        // B3: ghi khung rồi đọc lại mã khung 
+        // 2 câu SQL: 1 câu Withdrawn về lại Free + 1 câu              
         scheduleDAO.insertOrReopenSlot(connection, ptId, draft);
+        
+        // Sau khi ghi xong, đọc lại rồi trả lại slotId 
         Integer slotId = scheduleDAO.findSlotIdByStart(
                 connection,
                 ptId,
@@ -450,12 +463,16 @@ public class PtSessionHandleService {
             int accountId,
             String reason,
             LocalDateTime now) throws SQLException {
-        // B1: lấy khung đích (vừa bị người khác lấy → báo lỗi)
+        
+        
+        // B1: lấy khung đích (vừa bị người khác lấy → báo lỗi), đổi free về booked
+        // Nếu ko lấy được
         if (!handleDAO.bookSlot(connection, target.getTimeSlotId())) {
             throw new IllegalArgumentException(Messages.MSG103_SLOT_ALREADY_TAKEN);
         }
 
         // B2: đổi khung, PT, hoa hồng của buổi
+        // Nếu ko đổi được
         if (!handleDAO.moveSession(
                 connection,
                 session.getSessionId(),
@@ -480,6 +497,9 @@ public class PtSessionHandleService {
     }
 
     /** HÀM PHỤ (reschedule, loadTarget) — "Thứ 3 05/11/2026 18:00–19:30" cho câu thông báo / lỗi. */
+    // PtHandleSlot { SlotDate = 2026-11-05, StartTime = 18:00, EndTime = 19:30 }
+    //                ↓ slotText
+    // "Thứ 5 05/11/2026 18:00–19:30"
     private static String slotText(PtHandleSlot slot) {
         return dayLabel(slot.getSlotDate()).replace(" · ", " ") + "/" + slot.getSlotDate().getYear() + " "
                 + DateTimeUtil.formatTime(slot.getStartTime()) + "–" + DateTimeUtil.formatTime(slot.getEndTime());
@@ -509,10 +529,16 @@ public class PtSessionHandleService {
             return ServiceResult.fail(Messages.MSG316_PT_TARGET_REQUIRED);
         }
 
+        
+        // return inTransaction(  connection -> { ...các bước B2, B3, B4, B5... }  ); => connection là tham số duy nhất
+        // transfer không tự chạy khối { … }. Nó chỉ đưa khối đó cho inTransaction. Bên trong, inTransaction mới gọi work.run() để chạy khối
         return inTransaction(connection -> {
             // B2: khóa PT + khóa buổi
             int ptId = lockPt(connection, accountId);
-            PtHandleView session = loadOpenSession(
+            // hàm đọc và khóa buổi
+            // Sau đó hàm ktra xem buổi đó còn xử lý đc ko
+            // 
+            PtHandleView session = loadOpenSession( // Nó nghĩa là buổi còn “mở”, tức còn xử lý được. Tên hàm đọc là: “lấy buổi, với điều kiện buổi còn mở để xử lý”.
                     connection,
                     sessionId,
                     ptId,
@@ -524,6 +550,8 @@ public class PtSessionHandleService {
                     session,
                     slotId,
                     now);
+            
+            
             boolean samePt = target.getPtEmployeeId() == ptId;
             boolean sameTime = target.getSlotDate().equals(session.getSlotDate())
                     && target.getStartTime().equals(session.getStartTime())

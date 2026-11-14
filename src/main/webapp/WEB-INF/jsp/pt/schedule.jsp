@@ -76,6 +76,7 @@
                               data-duration="${week.sessionMinutes}"
                               data-axis-start="${week.axisStartHour * 60}" data-axis-end="${week.axisEndHour * 60}"
                               data-draft-key="${draftAccountId}:${week.weekStart}"
+                              <%-- data-next-key và data-next-url: nút "Chép sang tuần sau" --%>
                               data-next-key="${draftAccountId}:${week.nextWeek}" data-next-url="${nextWeekUrl}">
 
                             <section class="panel pt-plan-board" aria-labelledby="pt-plan-range">

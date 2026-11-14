@@ -8,36 +8,83 @@ import java.util.ArrayList;
 /**
  * DTO 1 NGÀY (1 cột) của màn Lịch dạy — Service TẠO: PtScheduleService.buildEmptyWeek / buildDay; fillWeek thêm khung.
  * JSP đọc: _schedule-day.jspf (biến day), _schedule-toolbar.jspf (danh sách ngày thêm được khung).
+ *
+ * NGUỒN DỮ LIỆU CỦA 1 CỘT (4 nguồn DB, còn lại tính từ URL ?date= và đồng hồ hệ thống):
+ *   OperatingHourExceptions  → closedAllDay, openTime / closeTime (ngày có giờ riêng)
+ *   SystemConfigs            → P-17 giờ mở cửa mặc định (openTime / closeTime), P-06 thời lượng buổi (firstStart / lastStart)
+ *   LeaveRequests            → leaveLabel, leaveDetails, leaveBookings (chỉ đơn Pending / Approved)
+ *   TimeSlots + Sessions     → items, leaveBookings (+ Subscriptions, Orders, Customers, Persons lấy tên khách)
  */
 public class PtScheduleDay {
     // ===== IN RA MÀN =====
-    // ← thứ Hai + i → "dd/MM", data-date của cột (JS thả khung nháp vào đúng ngày)
+
+    // ← weekStart + i (i = 0…6) — KHÔNG đọc DB (từ URL ?date= → thứ Hai)
+    //   → "dd/MM", data-date của cột (JS thả khung nháp vào đúng ngày)
     private LocalDate date;
-    // ← "Thứ 2"…"Chủ nhật" → tên cột
+
+    // ← tính từ date: "Thứ 2"…"Chủ nhật" (PtScheduleService.dayName) — KHÔNG đọc DB
+    //   → tên cột
     private String dayName;
-    // ← date = hôm nay → tô cột + nhãn "Hôm nay", ngày chọn sẵn trong "Thêm khung"
+
+    // ← date = hôm nay (đồng hồ hệ thống DateTimeUtil.now) — KHÔNG đọc DB
+    //   → tô cột + nhãn "Hôm nay", ngày chọn sẵn trong "Thêm khung"
     private boolean today;
-    // ← date < hôm nay → cột mờ
+
+    // ← date < hôm nay (đồng hồ hệ thống) — KHÔNG đọc DB
+    //   → cột mờ, không thêm khung được
     private boolean past;
-    // ← OperatingHourExceptions.IsClosedAllDay → nhãn "Phòng nghỉ", "Phòng nghỉ cả ngày"
+
+    // ← BẢNG OperatingHourExceptions.IsClosedAllDay (dòng có ApplyDate = date), không có dòng → false
+    //   DAO: PtScheduleDAO.findHourExceptions · Service: buildDay
+    //   → nhãn "Phòng nghỉ", "Phòng nghỉ cả ngày"; không thêm khung được
     private boolean closedAllDay;
-    // ← buildLeaveLabel: "Nghỉ phép ca sáng · chờ duyệt" → nút mở chi tiết đơn nghỉ
+
+    // ← BẢNG LeaveRequests.ShiftType (Morning/Afternoon/FullDay → ca sáng/ca chiều/cả ngày)
+    //   + LeaveRequests.Status (Pending → "chờ duyệt", Approved → "đã duyệt"; Rejected bị loại ngay trong SQL)
+    //   lọc: EmployeeId = PT, date nằm trong FromDate…ToDate (DAO tách đơn nhiều ngày thành từng ngày)
+    //   DAO: PtScheduleDAO.findLeaves · Service: buildLeaveLabel
+    //   → "Nghỉ phép ca sáng · chờ duyệt" ở đầu cột, nút mở chi tiết đơn nghỉ
     private String leaveLabel;
-    // ← buildLeaveDetails: nhãn + lý do từng đơn → nội dung khi mở
+
+    // ← BẢNG LeaveRequests: nhãn như leaveLabel + LeaveRequests.Reason ("Lý do: …")
+    //   Service: buildLeaveDetails
+    //   → nội dung khi mở chi tiết nghỉ phép
     private String leaveDetails;
-    // ← fillWeek: buổi có khách trùng ca nghỉ → "N buổi trùng ca nghỉ" + danh sách
+
+    // ← BẢNG Sessions.Status = 'Scheduled' + TimeSlots.StartTime/EndTime trùng ca nghỉ trong LeaveRequests
+    //   + tên khách (Persons.FullName qua Subscriptions → Customers, gói đôi qua Orders.PartnerCustomerId)
+    //   Service: fillWeek (isOnLeave) — đơn nghỉ không ẩn buổi đã đặt, chỉ nhắc PT dời (CBR-83)
+    //   → "N buổi trùng ca nghỉ" + danh sách "giờ · tên khách · trạng thái"
     private List<String> leaveBookings = new ArrayList<>();
-    // ← setAddRange: phút sớm nhất được thêm khung (null = ngày không thêm được) → data-first; quyết định nút "Thêm khung"
+
+    // ← tính từ openTime (làm tròn LÊN mốc 15'), hôm nay thì lấy sau giờ hiện tại — gián tiếp từ
+    //   OperatingHourExceptions / SystemConfigs P-17 · Service: setAddRange (BR-100)
+    //   null = ngày không thêm được khung (đã qua / phòng nghỉ / hôm nay đã quá muộn)
+    //   → data-first; quyết định nút "Thêm khung"
+    //   VD P-17 05:30–22:00 → 330 (phút)
     private Integer firstStartMinute;
-    // ← setAddRange: phút muộn nhất được bắt đầu khung → data-last
+
+    // ← closeTime − SystemConfigs P-06 (làm tròn XUỐNG mốc 15') · Service: setAddRange (BR-100)
+    //   → data-last: phút muộn nhất được bắt đầu khung
+    //   VD 22:00 − 90' = 20:30 → 1230 (phút)
     private Integer lastStartMinute;
-    // ← fillWeek: các khung / buổi (PtScheduleItem) trong ngày → các ô trên cột
+
+    // ← BẢNG TimeSlots (khung Free / Held: findOpenSlots)
+    //   + BẢNG Sessions JOIN TimeSlots, Subscriptions, Orders, Customers, Persons (buổi: findSessions)
+    //   Service: merge (bỏ ô trùng TimeSlotId) → fillWeek → classify (booked / held / locked / free)
+    //   → các ô trên cột
     private List<PtScheduleItem> items = List.of();
 
     // ===== DÙNG ĐỂ TÍNH (không in thẳng) =====
-    // ← P-17 hoặc giờ ngoại lệ của ngày → setAddRange, trục giờ
+
+    // ← BẢNG OperatingHourExceptions.OpenTime nếu ngày có dòng ngoại lệ,
+    //   không có → BẢNG SystemConfigs ConfigKey = 'P-17' (giờ mở cửa mặc định)
+    //   Service: buildDay (giờ ngoại lệ thiếu / sai thứ tự → lỗi → MSG04)
+    //   → setAddRange, trục giờ của tuần
     private LocalTime openTime;
-    // ← như trên
+
+    // ← BẢNG OperatingHourExceptions.CloseTime, không có → SystemConfigs 'P-17' (như openTime)
+    //   → setAddRange, trục giờ của tuần
     private LocalTime closeTime;
 
     public LocalDate getDate() { return date; }

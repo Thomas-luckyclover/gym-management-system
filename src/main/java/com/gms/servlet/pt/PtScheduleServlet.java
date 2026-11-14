@@ -23,7 +23,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
- * SERVLET MÀN LỊCH DẠY PT + HỘP XỬ LÝ BUỔI — /pt/schedule (UC-29 công bố khung rảnh, UC-30 dời / chuyển / hủy buổi).
+ * SERVLET MÀN LỊCH DẠY PT + HỘP XỬ LÝ BUỔI — /pt/schedule (UC-30 công bố khung rảnh, UC-34 dời / chuyển / hủy buổi).
  *
  * VIỆC CỦA SERVLET: đọc tham số → gọi PtScheduleService / PtSessionHandleService → đặt attribute / toast → forward JSP, redirect hoặc JSON.
  *   Servlet KHÔNG kiểm luật (giờ mở cửa, ca nghỉ, chồng khung, lịch khách…): Service làm hết.
@@ -119,14 +119,14 @@ public class PtScheduleServlet extends HttpServlet {
         LocalDate today = now.toLocalDate();
 
         LocalDate date = PtScheduleService.parseDate(request.getParameter("date"), today);
-        request.setAttribute("today", today);
-        request.setAttribute("viewDate", date);
+        request.setAttribute("today", today); //Attribute 1: để tô màu cho cột "HÔM NAY"
+        request.setAttribute("viewDate", date); //Attribute 2: Ngày đang xem, giữ khi chuyển Tuần ↔ Danh sách
 
         ServiceResult<PtScheduleWeek> result = scheduleService.getWeek(accountId, date, now);
         if (result.isSuccess()) {
-            request.setAttribute("week", result.getData());
+            request.setAttribute("week", result.getData()); // Attribute 3: Thành công PTScheduleWeek
         } else {
-            request.setAttribute("scheduleError", result.getMessage());
+            request.setAttribute("scheduleError", result.getMessage()); // Attribute 4: Thất bại PTScheduleWeek: Khi 1. Không phải Working PT hoặc lỗi cấu hình DB
         }
     }
 
@@ -139,7 +139,7 @@ public class PtScheduleServlet extends HttpServlet {
             view = "list";
         }
 
-        request.setAttribute("view", view);
+        request.setAttribute("view", view); // Attribute 5: Chọn bảng tuần hay danh sách
     }
 
     /**
