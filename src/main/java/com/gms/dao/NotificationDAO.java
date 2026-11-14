@@ -24,12 +24,23 @@ import java.util.List;
  */
 public class NotificationDAO {
 
+    /**
+     * Độ dài tối đa của cột {@code Notifications.Title} trong CSDL (NVARCHAR(100)).
+     */
+    public static final int TITLE_MAX_LENGTH = 100;
+
+    /**
+     * Độ dài tối đa của cột {@code Notifications.Content} trong CSDL (NVARCHAR(500)).
+     */
+    public static final int CONTENT_MAX_LENGTH = 500;
+
     // ===== Tạo notification hệ thống =====
 
     /**
      * Tạo một bản ghi thông báo hệ thống tự động (không gắn nhân viên gửi) trong transaction.
      *
-     * <p><b>Cách hoạt động:</b> Chèn bản ghi mới vào {@code Notifications} với {@code SentByEmployeeId = NULL},
+     * <p><b>Cách hoạt động:</b> Cắt gọn an toàn {@code title} (<= 100 ký tự) và {@code content} (<= 500 ký tự)
+     * khớp độ dài cột CSDL, chèn bản ghi mới vào {@code Notifications} với {@code SentByEmployeeId = NULL},
      * {@code SentAt = SYSDATETIME()}, bật {@code RETURN_GENERATED_KEYS} để lấy và trả về {@code NotificationId}.</p>
      *
      * @param connection kết nối CSDL đang mở transaction
@@ -48,14 +59,17 @@ public class NotificationDAO {
                 + "(SentByEmployeeId, Title, Content, Audience, ScheduledAt, SentAt) "
                 + "VALUES (NULL, ?, ?, ?, NULL, SYSDATETIME())";
 
+        String safeTitle = safeTruncate(title, TITLE_MAX_LENGTH);
+        String safeContent = safeTruncate(content, CONTENT_MAX_LENGTH);
+
         try (PreparedStatement statement =
                      connection.prepareStatement(
                              sql,
                              Statement.RETURN_GENERATED_KEYS
                      )) {
 
-            statement.setString(1, title);
-            statement.setString(2, content);
+            statement.setString(1, safeTitle);
+            statement.setString(2, safeContent);
             statement.setString(
                     3,
                     Notification.Audience.INDIVIDUAL.getDbValue()
@@ -75,6 +89,30 @@ public class NotificationDAO {
         throw new SQLException(
                 "Không nhận được NotificationId."
         );
+    }
+
+    /**
+     * Cắt gọn chuỗi an toàn theo độ dài tối đa của cột {@code Notifications}, giữ dấu {@code ...} khi bị cắt.
+     */
+    public static String safeTruncate(String value, int maxLen) {
+        if (value == null) {
+            return null;
+        }
+        if (maxLen <= 0) {
+            return "";
+        }
+        String trimmed = value.trim();
+        if (trimmed.length() <= maxLen) {
+            return trimmed;
+        }
+        if (maxLen <= 3) {
+            return trimmed.substring(0, maxLen);
+        }
+        String prefix = trimmed.substring(0, maxLen - 3).stripTrailing();
+        if (prefix.isEmpty()) {
+            return trimmed.substring(0, maxLen);
+        }
+        return prefix + "...";
     }
 
     /**
