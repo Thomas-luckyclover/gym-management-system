@@ -740,6 +740,24 @@ CREATE TABLE LeaveRequests (
 );
 GO
 
+-- Bảng lưu lịch sử chuyển người duyệt (BF-05)
+CREATE TABLE LeaveRequestTransfers (
+    TransferId     INT IDENTITY(1,1) NOT NULL,
+    LeaveRequestId INT           NOT NULL,
+    FromEmployeeId INT           NOT NULL,
+    ToEmployeeId   INT           NOT NULL,
+    Note           NVARCHAR(200) NULL,
+    CreatedAt      DATETIME2(0)  NOT NULL CONSTRAINT DF_LRT_CreatedAt DEFAULT (SYSDATETIME()),
+    CONSTRAINT PK_LeaveRequestTransfers PRIMARY KEY (TransferId),
+    CONSTRAINT FK_LRT_Request FOREIGN KEY (LeaveRequestId) REFERENCES LeaveRequests(LeaveRequestId),
+    CONSTRAINT FK_LRT_From    FOREIGN KEY (FromEmployeeId) REFERENCES Employees(EmployeeId),
+    CONSTRAINT FK_LRT_To      FOREIGN KEY (ToEmployeeId)   REFERENCES Employees(EmployeeId),
+    CONSTRAINT CK_LRT_Diff    CHECK (FromEmployeeId <> ToEmployeeId)
+);
+GO
+CREATE INDEX IX_LRT_Request ON LeaveRequestTransfers(LeaveRequestId, CreatedAt);
+GO
+
 CREATE TABLE Facilities (
     FacilityId   INT IDENTITY(1,1) NOT NULL,
     FacilityName NVARCHAR(100) NOT NULL,
