@@ -691,6 +691,9 @@
   margin: var(--space-0-5) var(--space-0) var(--space-0) var(--space-0);
   color: var(--color-warning-ink);
   font-size: var(--font-size-xs);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: pre-wrap;
 }
 
 .incident-image-col {
@@ -758,6 +761,8 @@
 .grid-val {
   color: var(--color-text);
   font-size: var(--font-size-xs);
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .history-block {
@@ -857,9 +862,12 @@
 
 /* Khối trạng thái tiến trình xử lý */
 .process-status-box {
+  min-width: 0;
   padding: var(--space-2) var(--space-2-5);
   border-radius: var(--radius-sm);
   font-size: var(--font-size-xs);
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .process-status-box.success {
@@ -926,6 +934,9 @@
   margin: var(--space-0-5) var(--space-0) var(--space-0) var(--space-0);
   color: var(--color-text);
   font-size: var(--font-size-xs);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: pre-wrap;
 }
 
 .modal-checkbox-row {
