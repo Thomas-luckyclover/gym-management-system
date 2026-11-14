@@ -120,7 +120,7 @@
 - `develop` đổi `LeaveRequests`: bỏ `LeaveDate`, thay bằng khoảng `FromDate`..`ToDate` (+ `Days`, `AssignedToEmployeeId`). 2 câu SQL của nhánh này còn đọc `LeaveDate` → màn Lịch dạy, Xử lý buổi, Bán gói PT lỗi "Hệ thống đang bận". Đã sửa:
   - `PtScheduleDAO.findLeaves`: lấy đơn có khoảng chạm [from, to], tách thành 1 `LeaveInfo` / ngày (`isOnLeave` giữ nguyên).
   - `PtSessionHandleDAO.SLOT_SQL`: `t.SlotDate BETWEEN lr.FromDate AND lr.ToDate`.
-- `2_Seed_Data.sql` trên develop đã được sửa tay phần LeaveRequests / LeaveRequestTransfers, **chưa khớp `tools/seeddata.py`** → KHÔNG chạy lại `seeddata.py` cho tới khi người sửa phần nghỉ phép cập nhật generator (chạy lại sẽ xóa dữ liệu của họ).
+- `2_Seed_Data.sql` trên develop đã được sửa tay phần LeaveRequests, **chưa khớp `tools/seeddata.py`** → KHÔNG chạy lại `seeddata.py` cho tới khi người sửa phần nghỉ phép cập nhật generator (chạy lại sẽ xóa dữ liệu của họ).
 
 ## Chỉ số cơ thể: thêm Tỷ lệ cơ + hint box 2 màn + sửa lỗi ngày Bán gói PT (25/10/2026, ĐÃ CODE)
 - **DB đổi**: `BodyMeasurements.MusclePercent DECIMAL(3,1) NULL` + `CK_BodyMeasurements_Muscle` (10–70). Seed: các lần đo InBody có % cơ, lần "Tự cân ở nhà" để trống. DB đang chạy chỉ cần thêm cột (không phải nạp lại seed):
@@ -739,3 +739,12 @@ Theo agents.md Phần 5: **chưa ai sửa schema**. Trước khi sửa: copy sch
 - Giữ nguyên: bảng `Feedbacks` và phần khách đánh giá PT.
 - Cần nạp lại database: `0_Reset_Database.sql` → `1_Init_Schema.sql` → `2_Seed_Data.sql`.
 - Cần sửa SRS: P-22, DBR-69 và các chỗ nhắc điểm PT.
+
+
+## 10/11/2026 — Bỏ bảng LeaveRequestTransfers chưa dùng
+
+- Lý do: bảng thêm ở commit `8704821b` (20/10/2026, "lịch sử chuyển người duyệt" — BF-05) nhưng không có DAO / Service / Servlet / JSP / seed nào đọc hay ghi; bảng luôn trống, không bảng nào trỏ khóa ngoại tới.
+- Đã bỏ: bảng `LeaveRequestTransfers` và index `IX_LRT_Request` trong `1_Init_Schema.sql`.
+- Giữ nguyên: bảng `LeaveRequests` và toàn bộ luồng nghỉ phép hiện có.
+- Database local: chạy `DROP TABLE IF EXISTS LeaveRequestTransfers;` trong DB `GMS` (không cần nạp lại seed), hoặc nạp lại `0_Reset_Database.sql` → `1_Init_Schema.sql` → `2_Seed_Data.sql`.
+- Cần đối chiếu SRS: BF-05 có còn yêu cầu chuyển người duyệt không; nếu làm lại thì lấy định nghĩa bảng cũ từ commit `8704821b`.
