@@ -167,6 +167,10 @@
   box-shadow: var(--shadow-card);
 }
 
+.maintenance-card-main {
+  min-width: 0;
+}
+
 .maintenance-card-main:only-child {
   grid-column: 1 / -1;
 }
@@ -186,9 +190,12 @@
 }
 
 .maintenance-card-head strong {
+  min-width: 0;
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text);
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 /* Nhóm badge trạng thái + cảnh báo */
@@ -259,6 +266,8 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
+  min-width: 0;
+  max-width: 100%;
   color: var(--color-text-soft);
   font-size: var(--font-size-xs);
 }
@@ -272,9 +281,12 @@
 }
 
 .maintenance-meta b {
+  min-width: 0;
   color: var(--color-text);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 /* Giá trị Ưu tiên = Khẩn: đổi sang màu đỏ sáng + đậm hơn */
@@ -316,6 +328,8 @@
   color: var(--color-text);
   font-size: var(--font-size-sm);
   line-height: var(--line-height-normal);
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .maintenance-image-col {
@@ -359,8 +373,9 @@
   white-space: nowrap;
 }
 
-/* Thanh "Chờ Quản lý duyệt": nền xanh đen sáng hơn thẻ, vạch cam bên trái, chữ sáng hơn */
+/* Thanh tiến trình ("Chờ Quản lý duyệt", "Đã duyệt", "Bị từ chối", "Đã nghiệm thu"): chống tràn chuỗi dài */
 .maintenance-progress {
+  min-width: 0;
   padding: var(--space-2) var(--space-2-5);
   border-left: var(--border-width-accent) solid var(--brand-sunset);
   border-radius: var(--radius-sm);
@@ -368,6 +383,8 @@
   color: var(--color-text-soft);
   font-size: var(--font-size-xs);
   line-height: var(--line-height-snug);
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 /* Tên người duyệt và nội dung ghi chú chuyển sang trắng/sáng để dễ đọc */
@@ -380,6 +397,8 @@
   margin-top: var(--space-1);
   color: var(--color-text-soft);
   font-size: var(--font-size-xs);
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .maintenance-progress .manager-note b {
@@ -528,6 +547,8 @@
   color: var(--color-text);
   font-size: var(--font-size-xs);
   line-height: var(--line-height-normal);
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .bulk-modal-tags {
@@ -614,6 +635,22 @@
   flex-direction: column;
   gap: var(--space-3);
   padding: var(--space-3-5) var(--space-4);
+}
+
+.gms-modal .field-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.gms-modal .required-mark {
+  color: var(--color-danger);
+}
+
+.gms-modal .field-label-meta {
+  color: var(--color-text-soft);
+  font-weight: var(--font-weight-regular);
 }
 
 .gms-modal-footer {

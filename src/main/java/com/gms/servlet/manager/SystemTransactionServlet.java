@@ -15,6 +15,7 @@ import com.gms.service.AccountSettingsService;
 import com.gms.service.ManagerTransactionService;
 import com.gms.util.DateTimeUtil;
 import com.gms.util.JsonUtil;
+import com.gms.util.PaginationUtil;
 import com.gms.util.RequestUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -27,6 +28,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Controller màn hình Giao dịch toàn hệ thống cho Quản lý (Màn #43 - UC-26, SRS
@@ -55,7 +58,6 @@ public class SystemTransactionServlet extends HttpServlet {
     private static final String TAB_SHIFTS = "shifts";
     private static final String ACTION_EXPORT = "export";
     private static final String ACTION_DETAIL = "detail";
-    private static final String ACTION_SHIFT_ORDERS = "shiftOrders";
     private static final String ACTION_REFUND = "refund";
     private static final String ACTION_LOOKUP = "lookup";
 
@@ -83,12 +85,6 @@ public class SystemTransactionServlet extends HttpServlet {
         // B2b: Tra cứu kết quả thật tại VNPay (API-06, chỉ đọc)
         if (ACTION_LOOKUP.equalsIgnoreCase(action)) {
             handleLookupAjax(request, response);
-            return;
-        }
-
-        // B2c: Danh sách các đơn hàng trong ca làm việc dạng JSON cho modal AJAX
-        if (ACTION_SHIFT_ORDERS.equalsIgnoreCase(action)) {
-            handleShiftOrdersAjax(request, response);
             return;
         }
 
@@ -237,54 +233,77 @@ public class SystemTransactionServlet extends HttpServlet {
         request.setAttribute("toDate", to);
     }
 
+    // =========================================================================
+    // PHẦN: LỊCH SỬ CHỐT CA (CLOSED SHIFT HISTORY - TAB 2)
+    // Tải dữ liệu thuần Server-side (không dùng AJAX), forward dữ liệu sang JSP
+    // =========================================================================
+
+    /**
+     * Tải dữ liệu phân trang cho Tab 2: Lịch sử ca làm việc đã chốt sổ.
+     */
     private void renderClosedShiftsTab(HttpServletRequest request) {
+        // B1: Đọc bộ lọc ngày và tham số phân trang từ request
         LocalDate from = DateTimeUtil.parseHtmlDate(request.getParameter("from"));
         LocalDate to = DateTimeUtil.parseHtmlDate(request.getParameter("to"));
-        int page = RequestUtil.getIntParam(request, "page", 1);
-        int pageSize = RequestUtil.getIntParam(request, "pageSize", 10);
-        if (pageSize != 10 && pageSize != 20 && pageSize != 50) {
-            pageSize = 10;
-        }
+        int page = PaginationUtil.getPageNumber(request);
+        int pageSize = PaginationUtil.getPageSize(request);
 
+        // B2: Gọi Service lấy danh sách lịch sử ca đã chốt
         ServiceResult<PageResult<ClosedShiftHistoryItem>> shiftResult = managerTransactionService.getClosedShiftsPage(
                 from, to, page, pageSize);
 
+        // B3: Đẩy kết quả ra request attribute để JSP hiển thị
         if (shiftResult.isSuccess()) {
             request.setAttribute("shiftPage", shiftResult.getData());
         } else {
             request.setAttribute("shiftPage",
-                    new PageResult<ClosedShiftHistoryItem>(java.util.Collections.emptyList(), page, pageSize, 0));
+                    new PageResult<>(Collections.emptyList(), page, pageSize, 0));
             request.setAttribute("pageError", shiftResult.getMessage());
         }
 
+        // B4: Giữ lại giá trị bộ lọc ngày trên form tìm kiếm
         request.setAttribute("shiftFromDate", from);
         request.setAttribute("shiftToDate", to);
+
+        // B5: Bấm "Chi tiết đơn" của một ca (URL có shiftId) thì nạp thêm danh sách đơn trong ca đó
+        int shiftId = RequestUtil.getIntParam(request, "shiftId", 0);
+        if (shiftId > 0) {
+            loadShiftOrders(request, shiftResult, shiftId);
+        }
+    }
+
+    /**
+     * Nạp danh sách đơn hàng của một ca để JSP hiển thị popup "Đơn hàng trong ca".
+     */
+    private void loadShiftOrders(HttpServletRequest request,
+            ServiceResult<PageResult<ClosedShiftHistoryItem>> shiftResult, int shiftId) {
+
+        // B1: Gọi Service lấy các đơn thuộc ca
+        ServiceResult<List<ManagerTransactionItem>> ordersResult = managerTransactionService.getOrdersByShift(shiftId);
+        if (ordersResult.isSuccess()) {
+            request.setAttribute("shiftOrders", ordersResult.getData());
+        } else {
+            request.setAttribute("shiftOrders", Collections.emptyList());
+            request.setAttribute("shiftOrdersError", ordersResult.getMessage());
+        }
+
+        // B2: Tìm ca đang chọn trong trang hiện tại để hiển thị tiêu đề popup (vd: Ca sáng 12/11/2026)
+        if (shiftResult.isSuccess()) {
+            for (ClosedShiftHistoryItem item : shiftResult.getData().getItems()) {
+                if (item.getShiftId() == shiftId) {
+                    request.setAttribute("selectedShift", item);
+                    break;
+                }
+            }
+        }
+
+        // B3: Cờ để JSP mở sẵn popup khi tải trang
+        request.setAttribute("selectedShiftId", shiftId);
     }
 
     /**
      * Xử lý AJAX lấy thông tin chi tiết đơn hàng và các lần thanh toán.
      */
-    /**
-     * Xử lý AJAX lấy danh sách các đơn hàng thuộc một ca làm việc cụ thể.
-     */
-    private void handleShiftOrdersAjax(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-        int shiftId = RequestUtil.getIntParam(request, "shiftId", 0);
-        if (shiftId <= 0) {
-            JsonUtil.writeJson(response, HttpServletResponse.SC_BAD_REQUEST,
-                    JsonResponse.error("Mã ca làm việc không hợp lệ."));
-            return;
-        }
-
-        ServiceResult<java.util.List<ManagerTransactionItem>> result = managerTransactionService.getOrdersByShift(shiftId);
-        if (result.isSuccess()) {
-            JsonUtil.writeJson(response, HttpServletResponse.SC_OK, JsonResponse.success(result.getData()));
-        } else {
-            JsonUtil.writeJson(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                    JsonResponse.error(result.getMessage()));
-        }
-    }
-
     private void handleOrderDetailAjax(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         int orderId = RequestUtil.getIntParam(request, "orderId", 0);

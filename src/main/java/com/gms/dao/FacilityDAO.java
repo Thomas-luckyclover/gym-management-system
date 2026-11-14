@@ -15,63 +15,16 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Data Access Object: Quản lý truy vấn danh mục dòng máy (Facilities) và tính toán số lượng cá thể con.
+ * Data Access Object: Truy vấn dữ liệu dòng máy (Facilities) và tổng hợp trạng thái các cá thể con.
  */
 public class FacilityDAO {
 
     private final EquipmentItemDAO equipmentItemDAO = new EquipmentItemDAO();
 
     /**
-     * Lấy danh sách các dòng máy khả dụng (chưa ngừng sử dụng hoàn toàn và IsActive = 1) để lễ tân chọn.
+     * Đếm tổng số dòng máy đang hoạt động theo từ khóa và khu vực cho danh mục của Lễ tân.
+     * Hàm nối động điều kiện lọc từ khóa/khu vực trên bảng Facilities (chỉ lấy IsActive = 1) rồi thực thi SELECT COUNT(*).
      */
-    public List<Facility> findSelectableFacilities() throws SQLException {
-        String sql = """
-            SELECT f.FacilityId, f.FacilityName, f.Category, f.Location, f.ImageUrl, f.UnitLabel, f.IsActive,
-                   ISNULL(ei_stats.TotalCount, 0) AS TotalQuantity,
-                   ISNULL(ei_stats.AvailableCount, 0) AS AvailableQuantity,
-                   ISNULL(ei_stats.MaintenanceCount, 0) AS PendingQuantity,
-                   CASE 
-                       WHEN f.IsActive = 0 OR ISNULL(ei_stats.TotalCount, 0) = 0 THEN 'Retired'
-                       WHEN ISNULL(ei_stats.AvailableCount, 0) > 0 THEN 'Available'
-                       ELSE 'UnderMaintenance'
-                   END AS ComputedStatus
-            FROM Facilities f
-            LEFT JOIN (
-                SELECT ei.FacilityId,
-                       COUNT(*) AS TotalCount,
-                       SUM(CASE WHEN ei.Status = 'Available' AND active_mr.EquipmentItemId IS NULL THEN 1 ELSE 0 END) AS AvailableCount,
-                       SUM(CASE WHEN ei.Status = 'UnderMaintenance' OR active_mr.EquipmentItemId IS NOT NULL THEN 1 ELSE 0 END) AS MaintenanceCount
-                FROM EquipmentItems ei
-                LEFT JOIN (
-                    SELECT DISTINCT EquipmentItemId
-                    FROM MaintenanceRequests
-                    WHERE Status IN ('Open', 'InProgress') AND EquipmentItemId IS NOT NULL
-                ) active_mr ON active_mr.EquipmentItemId = ei.EquipmentItemId
-                WHERE ei.Status <> 'Retired'
-                GROUP BY ei.FacilityId
-            ) ei_stats ON ei_stats.FacilityId = f.FacilityId
-            WHERE f.IsActive = 1 AND ISNULL(ei_stats.TotalCount, 0) > 0
-            ORDER BY f.FacilityName, f.FacilityId
-            """;
-
-        List<Facility> facilities = new ArrayList<>();
-        try (Connection connection = DBContext.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql);
-             ResultSet resultSet = statement.executeQuery()) {
-            while (resultSet.next()) {
-                facilities.add(mapResultSetToFacility(resultSet));
-            }
-        }
-        return facilities;
-    }
-
-    /**
-     * Đếm tổng số dòng máy theo từ khóa tìm kiếm (dành cho lễ tân: chỉ IsActive = 1).
-     */
-    public long countCatalog(String keyword) throws SQLException {
-        return countCatalog(keyword, (String) null);
-    }
-
     public long countCatalog(String keyword, String location) throws SQLException {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM Facilities f WHERE f.IsActive = 1 ");
         List<Object> parameters = new ArrayList<>();
@@ -89,17 +42,10 @@ public class FacilityDAO {
         return 0;
     }
 
-    public long countCatalog(String keyword, Facility.Category category, Facility.Status status) throws SQLException {
-        return countCatalog(keyword, (String) null);
-    }
-
     /**
-     * Lấy danh sách dòng máy phân trang kèm danh sách các cá thể máy con.
+     * Lấy danh sách dòng máy phân trang (chỉ IsActive = 1) kèm thống kê khả dụng và danh sách cá thể con.
+     * Hàm thống kê số máy Available/đang bảo trì từ EquipmentItems và MaintenanceRequests, sắp xếp ưu tiên dòng máy còn máy sẵn sàng, phân trang bằng OFFSET/FETCH rồi nạp map cá thể con một lần để tránh N+1 query.
      */
-    public List<Facility> findCatalogPage(String keyword, int page, int pageSize) throws SQLException {
-        return findCatalogPage(keyword, (String) null, page, pageSize);
-    }
-
     public List<Facility> findCatalogPage(String keyword, String location, int page, int pageSize) throws SQLException {
         StringBuilder sql = new StringBuilder("""
             SELECT f.FacilityId, f.FacilityName, f.Category, f.Location, f.ImageUrl, f.UnitLabel, f.IsActive,
@@ -157,9 +103,9 @@ public class FacilityDAO {
             }
         }
 
-        // Bổ sung danh sách các cá thể máy con cho từng dòng máy (tránh N+1 bằng map)
+        // Bổ sung danh sách các cá thể máy con chưa thanh lý cho từng dòng máy (tránh N+1 bằng map)
         if (!facilities.isEmpty()) {
-            Map<Integer, List<EquipmentItem>> itemsMap = equipmentItemDAO.findAllGroupedByFacility();
+            Map<Integer, List<EquipmentItem>> itemsMap = equipmentItemDAO.findAllGroupedByFacility(false);
             for (Facility f : facilities) {
                 List<EquipmentItem> items = itemsMap.get(f.getFacilityId());
                 if (items != null) {
@@ -171,12 +117,9 @@ public class FacilityDAO {
         return facilities;
     }
 
-    public List<Facility> findCatalogPage(String keyword, Facility.Category category, Facility.Status status, int page, int pageSize) throws SQLException {
-        return findCatalogPage(keyword, page, pageSize);
-    }
-
     /**
-     * Lấy toàn bộ danh sách dòng máy (bao gồm cả ẩn/ngừng hoạt động) phục vụ màn hình Quản lý của Manager.
+     * Lấy toàn bộ danh sách dòng máy (bao gồm cả dòng máy đang ẩn) phục vụ màn hình Quản lý cơ sở vật chất của Manager.
+     * Hàm tổng hợp số lượng khả dụng/đang bảo trì từ bảng EquipmentItems và MaintenanceRequests, sắp xếp dòng máy đang hoạt động lên trước rồi gắn danh sách cá thể con cho từng dòng máy.
      */
     public List<Facility> findAllForManagement() throws SQLException {
         String sql = """
@@ -217,7 +160,7 @@ public class FacilityDAO {
         }
 
         if (!facilities.isEmpty()) {
-            Map<Integer, List<EquipmentItem>> itemsMap = equipmentItemDAO.findAllGroupedByFacility();
+            Map<Integer, List<EquipmentItem>> itemsMap = equipmentItemDAO.findAllGroupedByFacility(true);
             for (Facility f : facilities) {
                 List<EquipmentItem> items = itemsMap.get(f.getFacilityId());
                 if (items != null) {
@@ -229,14 +172,8 @@ public class FacilityDAO {
     }
 
     /**
-     * Cập nhật trạng thái Facility (hỗ trợ tương thích ngược).
-     */
-    public boolean updateStatus(Connection connection, int facilityId, Facility.Status status) throws SQLException {
-        return true;
-    }
-
-    /**
-     * Thêm mới một nhóm máy / cơ sở vật chất (Manager).
+     * Thêm mới một dòng máy (nhóm cơ sở vật chất) vào CSDL.
+     * Hàm INSERT dữ liệu vào bảng Facilities và đọc khóa chính vừa tự tăng qua getGeneratedKeys() để trả về ID mới.
      */
     public int create(Facility facility) throws SQLException {
         String sql = """
@@ -266,7 +203,8 @@ public class FacilityDAO {
     }
 
     /**
-     * Cập nhật thông tin một nhóm máy (Manager).
+     * Cập nhật thông tin một dòng máy trong CSDL theo FacilityId.
+     * Hàm thực thi câu lệnh UPDATE trên bảng Facilities và trả về true nếu có ít nhất 1 dòng bị ảnh hưởng.
      */
     public boolean update(Facility facility) throws SQLException {
         String sql = """
@@ -289,7 +227,8 @@ public class FacilityDAO {
     }
 
     /**
-     * Ẩn hoặc Hiện một nhóm máy (IsActive: 1 = hoạt động, 0 = ẩn/tạm dừng).
+     * Bật hoặc tắt trạng thái hiển thị của một dòng máy (IsActive = 1 là hiển thị, 0 là ẩn).
+     * Hàm chỉ cập nhật cột IsActive theo FacilityId bằng PreparedStatement và trả về true nếu cập nhật thành công.
      */
     public boolean toggleActive(int facilityId, boolean isActive) throws SQLException {
         String sql = "UPDATE Facilities SET IsActive = ? WHERE FacilityId = ?";
@@ -301,10 +240,10 @@ public class FacilityDAO {
         }
     }
 
-    private void appendCatalogFilters(StringBuilder sql, List<Object> parameters, String keyword) {
-        appendCatalogFilters(sql, parameters, keyword, null);
-    }
-
+    /**
+     * Nối điều kiện lọc theo khu vực và từ khóa (tên dòng máy, vị trí, danh mục tiếng Anh/Việt) vào câu SQL danh mục.
+     * Hàm dùng collation không phân biệt dấu/hoa thường (CI_AI) kết hợp tra cứu mã Category khớp từ khóa rồi đẩy giá trị vào danh sách tham số.
+     */
     private void appendCatalogFilters(StringBuilder sql, List<Object> parameters, String keyword, String location) {
         if (location != null && !location.isBlank()) {
             sql.append(" AND f.Location = ? ");
@@ -347,11 +286,15 @@ public class FacilityDAO {
         }
     }
 
+    /**
+     * Gán lần lượt danh sách tham số động vào PreparedStatement theo đúng kiểu dữ liệu (Integer hoặc String).
+     */
     private void setCatalogParameters(PreparedStatement statement, List<Object> parameters) throws SQLException {
         for (int i = 0; i < parameters.size(); i++) {
             Object value = parameters.get(i);
-            if (value instanceof Integer intVal) {
-                statement.setInt(i + 1, intVal);
+            // "instanceof rồi ép kiểu" kiểu cũ: Compile on Save của NetBeans 17 không dịch được "instanceof Integer intVal".
+            if (value instanceof Integer) {
+                statement.setInt(i + 1, (Integer) value);
             } else {
                 statement.setString(i + 1, String.valueOf(value));
             }
@@ -359,7 +302,8 @@ public class FacilityDAO {
     }
 
     /**
-     * Tra cứu 1 dòng máy theo ID.
+     * Tra cứu thông tin chi tiết một dòng máy theo ID trên kết nối có sẵn (dùng trong transaction).
+     * Hàm join bảng thống kê các cá thể con chưa Retired và đơn bảo trì đang mở để tính ComputedStatus rồi ánh xạ thành Facility.
      */
     public Facility findById(Connection connection, int facilityId) throws SQLException {
         String sql = """
@@ -402,7 +346,8 @@ public class FacilityDAO {
     }
 
     /**
-     * Lấy thông tin một dòng máy theo ID (tự quản lý connection).
+     * Lấy thông tin chi tiết một dòng máy theo ID (tự mở và đóng connection riêng).
+     * Hàm ủy quyền cho findById(Connection, int) trong khối try-with-resources của DBContext.
      */
     public Facility findById(int facilityId) throws SQLException {
         try (Connection conn = DBContext.getConnection()) {
@@ -411,7 +356,8 @@ public class FacilityDAO {
     }
 
     /**
-     * Lấy danh sách các vị trí / khu vực duy nhất đang có trong hệ thống để phục vụ lọc thẻ tag.
+     * Lấy danh sách các khu vực/vị trí không trùng lặp từ bảng Facilities để hiển thị thẻ lọc nhanh.
+     * Hàm lọc các dòng có Location khác null/rỗng rồi sắp xếp theo thứ tự bảng chữ cái.
      */
     public List<String> findDistinctLocations() throws SQLException {
         String sql = "SELECT DISTINCT Location FROM Facilities WHERE Location IS NOT NULL AND LTRIM(RTRIM(Location)) <> '' ORDER BY Location";
@@ -426,6 +372,9 @@ public class FacilityDAO {
         return list;
     }
 
+    /**
+     * Ánh xạ một dòng dữ liệu ResultSet thành đối tượng Facility kèm số liệu tồn/bảo trì và trạng thái tính toán.
+     */
     private Facility mapResultSetToFacility(ResultSet resultSet) throws SQLException {
         int totalQuantity = resultSet.getInt("TotalQuantity");
         int pendingQuantity = resultSet.getInt("PendingQuantity");

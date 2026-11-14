@@ -1,5 +1,6 @@
 package com.gms.service;
 
+import com.gms.constant.Messages;
 import com.gms.dao.EquipmentItemDAO;
 import com.gms.dao.MaintenanceRequestDAO;
 import java.sql.Connection;
@@ -131,6 +132,211 @@ public class FacilityServiceTest {
     }
 
     @Test
+    @DisplayName("Thêm cá thể máy: Báo lỗi rõ ràng khi trùng ItemLabel trong cùng nhóm máy")
+    void saveEquipmentItem_duplicateLabelInSameFacility_fails() {
+        EquipmentItem item = new EquipmentItem();
+        item.setFacilityId(1);
+        item.setItemCode("TM-003");
+        item.setItemLabel("số 1"); // trùng với item 1 ("Số 1") trong facilityId = 1
+
+        ServiceResult<Integer> result = facilityService.saveEquipmentItem(item);
+        assertFalse(result.isSuccess());
+        assertTrue(result.getFieldErrors().containsKey("itemLabel"));
+        assertEquals("Tên hiển thị / Quy cách 'số 1' đã tồn tại trong nhóm máy này.", result.getMessage());
+    }
+
+    @Test
+    @DisplayName("Thêm cá thể máy: Cho phép trùng ItemLabel ở nhóm máy khác")
+    void saveEquipmentItem_sameLabelInDifferentFacility_success() {
+        EquipmentItem item = new EquipmentItem();
+        item.setFacilityId(2);
+        item.setItemCode("BK-001");
+        item.setItemLabel("Số 1");
+
+        ServiceResult<Integer> result = facilityService.saveEquipmentItem(item);
+        assertTrue(result.isSuccess());
+        assertTrue(result.getData() > 0);
+    }
+
+    @Test
+    @DisplayName("Cập nhật cá thể máy: Cho phép giữ nguyên ItemLabel của chính nó")
+    void saveEquipmentItem_updateKeepingOwnLabel_success() {
+        EquipmentItem item = new EquipmentItem();
+        item.setEquipmentItemId(1);
+        item.setFacilityId(1);
+        item.setItemCode("TM-001");
+        item.setItemLabel("Số 1");
+        item.setPlacementNote("Gần cửa chính");
+
+        ServiceResult<Integer> result = facilityService.saveEquipmentItem(item);
+        assertTrue(result.isSuccess());
+        assertEquals(1, result.getData());
+    }
+
+    @Test
+    @DisplayName("Lưu cá thể máy: Lỗi SQL trùng UQ_EquipmentItems_FacilityLabel (2627) được map về lỗi itemLabel thay vì MSG04")
+    void saveEquipmentItem_sqlDuplicateLabel2627_returnsClearFieldError() {
+        fakeEquipmentItemDAO.sqlExceptionOnWrite = new SQLException(
+                "Violation of UNIQUE KEY constraint 'UQ_EquipmentItems_FacilityLabel'. Cannot insert duplicate key in object 'dbo.EquipmentItems'.",
+                "23000",
+                2627);
+
+        EquipmentItem item = new EquipmentItem();
+        item.setFacilityId(1);
+        item.setItemCode("TM-009");
+        item.setItemLabel("Số 9");
+
+        ServiceResult<Integer> result = facilityService.saveEquipmentItem(item);
+        assertFalse(result.isSuccess());
+        assertTrue(result.getFieldErrors().containsKey("itemLabel"));
+        assertEquals("Tên hiển thị / Quy cách 'Số 9' đã tồn tại trong nhóm máy này.", result.getMessage());
+    }
+
+    @Test
+    @DisplayName("Lưu cá thể máy: Lỗi SQL trùng UQ_EquipmentItems_ItemCode (2627) được map về lỗi itemCode thay vì MSG04")
+    void saveEquipmentItem_sqlDuplicateCode2627_returnsClearFieldError() {
+        fakeEquipmentItemDAO.sqlExceptionOnWrite = new SQLException(
+                "Violation of UNIQUE KEY constraint 'UQ_EquipmentItems_ItemCode'.",
+                "23000",
+                2627);
+
+        EquipmentItem item = new EquipmentItem();
+        item.setFacilityId(1);
+        item.setItemCode("TM-009");
+        item.setItemLabel("Số 9");
+
+        ServiceResult<Integer> result = facilityService.saveEquipmentItem(item);
+        assertFalse(result.isSuccess());
+        assertTrue(result.getFieldErrors().containsKey("itemCode"));
+        assertEquals(String.format(Messages.MSG228_ITEM_CODE_EXISTS, "TM-009"), result.getMessage());
+    }
+
+    @Test
+    @DisplayName("Lưu nhóm máy: Kiểm tra các biên độ dài, null và chuẩn hóa khoảng trắng")
+    void saveFacility_boundaries_validatedAndNormalized() {
+        assertFalse(facilityService.saveFacility(null).isSuccess());
+
+        Facility minFacility = new Facility();
+        minFacility.setFacilityName("  ABC  ");
+        minFacility.setCategory(Facility.Category.MACHINES);
+        minFacility.setLocation(null);
+        minFacility.setUnitLabel("   ");
+        ServiceResult<Integer> minRes = facilityService.saveFacility(minFacility);
+        assertTrue(minRes.isSuccess());
+        assertEquals("ABC", fakeFacilityDAO.facilities.get(minRes.getData()).getFacilityName());
+        assertEquals("", fakeFacilityDAO.facilities.get(minRes.getData()).getLocation());
+        assertEquals("máy", fakeFacilityDAO.facilities.get(minRes.getData()).getUnitLabel());
+
+        Facility maxFacility = new Facility();
+        maxFacility.setFacilityName(" " + "F".repeat(100) + " ");
+        maxFacility.setCategory(Facility.Category.CARDIO);
+        maxFacility.setLocation(" " + "L".repeat(100) + " ");
+        maxFacility.setUnitLabel(" " + "U".repeat(15) + " ");
+        ServiceResult<Integer> maxRes = facilityService.saveFacility(maxFacility);
+        assertTrue(maxRes.isSuccess());
+        assertEquals(100, fakeFacilityDAO.facilities.get(maxRes.getData()).getFacilityName().length());
+        assertEquals(100, fakeFacilityDAO.facilities.get(maxRes.getData()).getLocation().length());
+        assertEquals(15, fakeFacilityDAO.facilities.get(maxRes.getData()).getUnitLabel().length());
+
+        Facility tooLongLocation = new Facility();
+        tooLongLocation.setFacilityName("Tạ đòn");
+        tooLongLocation.setCategory(Facility.Category.FREE_WEIGHTS);
+        tooLongLocation.setLocation("L".repeat(101));
+        ServiceResult<Integer> locFail = facilityService.saveFacility(tooLongLocation);
+        assertFalse(locFail.isSuccess());
+        assertTrue(locFail.getFieldErrors().containsKey("location"));
+
+        Facility tooLongUnit = new Facility();
+        tooLongUnit.setFacilityName("Tạ đơn");
+        tooLongUnit.setCategory(Facility.Category.FREE_WEIGHTS);
+        tooLongUnit.setUnitLabel("U".repeat(16));
+        ServiceResult<Integer> unitFail = facilityService.saveFacility(tooLongUnit);
+        assertFalse(unitFail.isSuccess());
+        assertTrue(unitFail.getFieldErrors().containsKey("unitLabel"));
+    }
+
+    @Test
+    @DisplayName("Lưu cá thể máy: Kiểm tra biên độ dài và khoảng trắng cho mã, nhãn, vị trí")
+    void saveEquipmentItem_lengthAndWhitespaceBoundaries() {
+        assertFalse(facilityService.saveEquipmentItem(null).isSuccess());
+
+        EquipmentItem badFacility = new EquipmentItem();
+        badFacility.setFacilityId(0);
+        badFacility.setItemCode("AB");
+        badFacility.setItemLabel("1");
+        assertTrue(facilityService.saveEquipmentItem(badFacility).getFieldErrors().containsKey("facilityId"));
+
+        // Biên tối thiểu: mã 2 ký tự (chuẩn hóa uppercase), nhãn 1 ký tự, placement khoảng trắng -> null
+        EquipmentItem minItem = new EquipmentItem();
+        minItem.setFacilityId(1);
+        minItem.setItemCode("  ab  ");
+        minItem.setItemLabel(" X ");
+        minItem.setPlacementNote("   ");
+        ServiceResult<Integer> minRes = facilityService.saveEquipmentItem(minItem);
+        assertTrue(minRes.isSuccess());
+        assertEquals("AB", fakeEquipmentItemDAO.items.get(minRes.getData()).getItemCode());
+        assertEquals("X", fakeEquipmentItemDAO.items.get(minRes.getData()).getItemLabel());
+        assertEquals(null, fakeEquipmentItemDAO.items.get(minRes.getData()).getPlacementNote());
+
+        // Biên tối đa: mã 20, nhãn 50, vị trí 100
+        EquipmentItem maxItem = new EquipmentItem();
+        maxItem.setFacilityId(1);
+        maxItem.setItemCode("C".repeat(20));
+        maxItem.setItemLabel("L".repeat(50));
+        maxItem.setPlacementNote(" " + "P".repeat(100) + " ");
+        ServiceResult<Integer> maxRes = facilityService.saveEquipmentItem(maxItem);
+        assertTrue(maxRes.isSuccess());
+        assertEquals(100, fakeEquipmentItemDAO.items.get(maxRes.getData()).getPlacementNote().length());
+
+        // Vượt biên tối đa: mã 21, nhãn 51, vị trí 101, và trùng nhãn khi thêm khoảng trắng
+        EquipmentItem overCode = new EquipmentItem();
+        overCode.setFacilityId(1);
+        overCode.setItemCode("C".repeat(21));
+        overCode.setItemLabel("OK");
+        assertTrue(facilityService.saveEquipmentItem(overCode).getFieldErrors().containsKey("itemCode"));
+
+        EquipmentItem overLabel = new EquipmentItem();
+        overLabel.setFacilityId(1);
+        overLabel.setItemCode("OK-01");
+        overLabel.setItemLabel("L".repeat(51));
+        assertTrue(facilityService.saveEquipmentItem(overLabel).getFieldErrors().containsKey("itemLabel"));
+
+        EquipmentItem overPlacement = new EquipmentItem();
+        overPlacement.setFacilityId(1);
+        overPlacement.setItemCode("OK-02");
+        overPlacement.setItemLabel("OK 2");
+        overPlacement.setPlacementNote("P".repeat(101));
+        assertTrue(facilityService.saveEquipmentItem(overPlacement).getFieldErrors().containsKey("placementNote"));
+
+        EquipmentItem paddedDuplicateLabel = new EquipmentItem();
+        paddedDuplicateLabel.setFacilityId(1);
+        paddedDuplicateLabel.setItemCode("TM-999");
+        paddedDuplicateLabel.setItemLabel("  Số 1  ");
+        assertTrue(facilityService.saveEquipmentItem(paddedDuplicateLabel).getFieldErrors().containsKey("itemLabel"));
+    }
+
+    @Test
+    @DisplayName("Lưu cá thể máy: Fallback lỗi SQL 2601 không kèm tên constraint và lỗi SQL khác 50000")
+    void saveEquipmentItem_sqlDuplicate2601FallbackAndUnexpectedSqlError() {
+        fakeEquipmentItemDAO.simulateLabelExistsAfterSqlError = true;
+        fakeEquipmentItemDAO.sqlExceptionOnWrite = new SQLException("Duplicate key row", "23000", 2601);
+
+        EquipmentItem dupItem = new EquipmentItem();
+        dupItem.setFacilityId(1);
+        dupItem.setItemCode("TM-888");
+        dupItem.setItemLabel("Nhãn mới");
+        ServiceResult<Integer> dupRes = facilityService.saveEquipmentItem(dupItem);
+        assertFalse(dupRes.isSuccess());
+        assertTrue(dupRes.getFieldErrors().containsKey("itemLabel"));
+
+        fakeEquipmentItemDAO.simulateLabelExistsAfterSqlError = false;
+        fakeEquipmentItemDAO.sqlExceptionOnWrite = new SQLException("Unexpected DB timeout", "HY000", 50000);
+        ServiceResult<Integer> busyRes = facilityService.saveEquipmentItem(dupItem);
+        assertFalse(busyRes.isSuccess());
+        assertEquals(Messages.MSG04_SYSTEM_BUSY, busyRes.getMessage());
+    }
+
+    @Test
     @DisplayName("Thêm cá thể máy: Thành công")
     void saveEquipmentItem_valid_success() {
         EquipmentItem item = new EquipmentItem();
@@ -221,6 +427,9 @@ public class FacilityServiceTest {
     private static class FakeEquipmentItemDAO extends EquipmentItemDAO {
         final Map<Integer, EquipmentItem> items = new HashMap<>();
         int nextId = 200;
+        SQLException sqlExceptionOnWrite;
+        boolean simulateLabelExistsAfterSqlError = false;
+        private int labelCheckCount = 0;
 
         @Override
         public List<EquipmentItem> findByFacilityIdForManagement(int facilityId) {
@@ -241,7 +450,26 @@ public class FacilityServiceTest {
         }
 
         @Override
-        public int create(EquipmentItem item) {
+        public boolean isItemLabelExists(int facilityId, String itemLabel, Integer excludeId) {
+            labelCheckCount++;
+            if (simulateLabelExistsAfterSqlError && labelCheckCount > 1) {
+                return true;
+            }
+            for (EquipmentItem i : items.values()) {
+                if (excludeId != null && i.getEquipmentItemId() == excludeId) continue;
+                if (i.getFacilityId() == facilityId && i.getItemLabel() != null
+                        && i.getItemLabel().equalsIgnoreCase(itemLabel)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        @Override
+        public int create(EquipmentItem item) throws SQLException {
+            if (sqlExceptionOnWrite != null) {
+                throw sqlExceptionOnWrite;
+            }
             int id = nextId++;
             item.setEquipmentItemId(id);
             items.put(id, item);
@@ -249,7 +477,10 @@ public class FacilityServiceTest {
         }
 
         @Override
-        public boolean update(EquipmentItem item) {
+        public boolean update(EquipmentItem item) throws SQLException {
+            if (sqlExceptionOnWrite != null) {
+                throw sqlExceptionOnWrite;
+            }
             items.put(item.getEquipmentItemId(), item);
             return true;
         }

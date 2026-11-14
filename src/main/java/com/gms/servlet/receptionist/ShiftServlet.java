@@ -52,11 +52,16 @@ public class ShiftServlet extends HttpServlet {
      * @param rawCash chuỗi thô người dùng nhập
      * @return chuỗi chỉ chứa số, hoặc "0" nếu rỗng
      */
-    // Lọc bỏ dấu chấm/phẩy do JS format (VD: "2.600.000" -> "2600000") để Long.parseLong không bị lỗi NumberFormatException.
+    // Lọc bỏ dấu chấm/phẩy do JS format (VD: "2.600.000" -> "2600000") nhưng giữ dấu '-' ở đầu để từ chối số âm.
     public static String cleanNumericCash(String rawCash) {
         if (rawCash == null) return "0";
-        String cleanNum = rawCash.replaceAll("[^0-9]", "");
-        return cleanNum.isEmpty() ? "0" : cleanNum;
+        String trimmed = rawCash.trim();
+        boolean negative = trimmed.startsWith("-");
+        String cleanNum = trimmed.replaceAll("[^0-9]", "");
+        if (cleanNum.isEmpty()) {
+            return negative ? "-" : "0";
+        }
+        return negative ? "-" + cleanNum : cleanNum;
     }
 
     private final ShiftService shiftService = new ShiftService();
@@ -77,8 +82,7 @@ public class ShiftServlet extends HttpServlet {
         String query = RequestUtil.getTrimmedParam(request, "q");
         String method = RequestUtil.getTrimmedParam(request, "method");
         String status = RequestUtil.getTrimmedParam(request, "status");
-        int shiftIdParam = RequestUtil.getIntParam(request, "shiftId", 0);
-        Integer shiftId = shiftIdParam > 0 ? shiftIdParam : null;
+        int shiftId = RequestUtil.getIntParam(request, "shiftId", 0);
 
         int page = PaginationUtil.getPageNumber(request);
         int pageSize = AppConstants.DEFAULT_PAGE_SIZE;
@@ -176,7 +180,7 @@ public class ShiftServlet extends HttpServlet {
         ServiceResult<Void> result = shiftService.closeShift(accountId, shiftId, countedCash, varianceReason);
         if (result.isSuccess()) {
             RequestUtil.setFlashToast(request, "success", Messages.MSG274_SHIFT_CLOSED);
-            redirectToShift(request, response, 0);
+            redirectToShift(request, response, 0);//cố tình truyền shiftId=0 để quay về trang ưu tiên hiển thị
         } else {
             RequestUtil.setFlashToast(request, "error", result.getMessage());
             redirectToShift(request, response, shiftId);
@@ -185,18 +189,17 @@ public class ShiftServlet extends HttpServlet {
 
     /**
      * Xử lý Lễ tân xác nhận đã nhận tiền chuyển khoản cho đơn hàng quầy (CBR-77).
+     * Điều hướng trực tiếp sang trang Bán gói tập (?order=...) để Lễ tân chốt xác nhận thu tiền.
      */
     private void handleConfirmTransfer(HttpServletRequest request, HttpServletResponse response,
                                        int accountId, int shiftId) throws IOException {
         int orderId = RequestUtil.getIntParam(request, "orderId", 0);
-        if (orderId <= 0) {
+        if (orderId > 0) {
+            RequestUtil.redirect(request, response, "/receptionist/pt-sales?order=" + orderId);
+        } else {
             RequestUtil.setFlashToast(request, "error", Messages.MSG275_ORDER_INVALID);
             redirectToShift(request, response, shiftId);
-            return;
         }
-
-        ServiceResult<Void> result = shiftService.confirmBankTransfer(accountId, orderId);
-        finishAction(request, response, shiftId, result, Messages.MSG276_TRANSFER_CONFIRMED);
     }
 
     /**
@@ -226,7 +229,7 @@ public class ShiftServlet extends HttpServlet {
     }
 
     private void redirectToShift(HttpServletRequest request, HttpServletResponse response, int shiftId)
-            throws IOException {
+            throws IOException {//điều hướng trình quay trở lại đúng ca mà họ thao tác
         String path = shiftId > 0 ? "/receptionist/shift?shiftId=" + shiftId : "/receptionist/shift";
         RequestUtil.redirect(request, response, path);
     }

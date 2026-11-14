@@ -14,7 +14,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Service Layer: Quản lý nghiệp vụ danh mục cơ sở vật chất và cá thể máy (Facilities & EquipmentItems).
+ * Service Layer: Xử lý nghiệp vụ quản lý danh mục dòng máy và cá thể thiết bị vật lý (Facilities & EquipmentItems).
  */
 public class FacilityService {
 
@@ -22,18 +22,18 @@ public class FacilityService {
     private final EquipmentItemDAO equipmentItemDAO;
     private final MaintenanceRequestDAO maintenanceRequestDAO;
 
+    /**
+     * Khởi tạo Service mặc định cùng các DAO cần thiết cho nghiệp vụ quản lý cơ sở vật chất.
+     */
     public FacilityService() {
         this.facilityDAO = new FacilityDAO();
         this.equipmentItemDAO = new EquipmentItemDAO();
         this.maintenanceRequestDAO = new MaintenanceRequestDAO();
     }
 
-    public FacilityService(FacilityDAO facilityDAO, EquipmentItemDAO equipmentItemDAO) {
-        this.facilityDAO = facilityDAO;
-        this.equipmentItemDAO = equipmentItemDAO;
-        this.maintenanceRequestDAO = new MaintenanceRequestDAO();
-    }
-
+    /**
+     * Khởi tạo Service cho phép tiêm DAO giả lập (dùng chủ yếu trong unit test).
+     */
     public FacilityService(FacilityDAO facilityDAO, EquipmentItemDAO equipmentItemDAO, MaintenanceRequestDAO maintenanceRequestDAO) {
         this.facilityDAO = facilityDAO;
         this.equipmentItemDAO = equipmentItemDAO;
@@ -41,7 +41,8 @@ public class FacilityService {
     }
 
     /**
-     * Lấy toàn bộ danh mục nhóm máy cho màn hình Quản lý Manager (kèm danh sách cá thể con).
+     * Lấy toàn bộ danh mục dòng máy phục vụ màn hình Quản lý cơ sở vật chất của Manager.
+     * Hàm gọi FacilityDAO tải cả dòng máy đang hiển thị lẫn đang ẩn kèm các cá thể con, rồi bọc trong ServiceResult.
      */
     public ServiceResult<List<Facility>> getAllFacilitiesForManagement() {
         try {
@@ -54,7 +55,8 @@ public class FacilityService {
     }
 
     /**
-     * Lấy thông tin 1 nhóm máy theo ID.
+     * Lấy thông tin chi tiết một dòng máy theo ID kèm toàn bộ danh sách cá thể máy con thuộc dòng đó.
+     * Hàm kiểm tra tính hợp lệ của ID, truy vấn Facility từ FacilityDAO rồi nạp thêm danh sách EquipmentItem của dòng máy.
      */
     public ServiceResult<Facility> getFacilityById(int facilityId) {
         if (facilityId <= 0) {
@@ -75,23 +77,8 @@ public class FacilityService {
     }
 
     /**
-     * Lấy danh sách các cá thể máy con của một nhóm máy.
-     */
-    public ServiceResult<List<EquipmentItem>> getItemsByFacilityId(int facilityId) {
-        if (facilityId <= 0) {
-            return ServiceResult.ok(Collections.emptyList());
-        }
-        try {
-            List<EquipmentItem> items = equipmentItemDAO.findByFacilityIdForManagement(facilityId);
-            return ServiceResult.ok(items);
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
-        }
-    }
-
-    /**
-     * Lấy danh sách các vị trí PlacementNote không trùng lặp để gợi ý người dùng (dùng datalist).
+     * Lấy danh sách các ghi chú vị trí đặt máy không trùng lặp để gợi ý tự động hoàn thành (datalist) khi nhập liệu.
+     * Hàm ủy quyền cho EquipmentItemDAO truy vấn các PlacementNote duy nhất và trả về danh sách rỗng nếu có lỗi SQL.
      */
     public List<String> getPlacementSuggestions() {
         try {
@@ -103,10 +90,11 @@ public class FacilityService {
     }
 
     /**
-     * Thêm mới hoặc cập nhật một nhóm cơ sở vật chất.
+     * Thêm mới hoặc cập nhật thông tin một dòng máy (nhóm cơ sở vật chất).
+     * Hàm kiểm tra độ dài tên, danh mục, đơn vị tính hợp lệ rồi gọi update (khi FacilityId > 0) hoặc create (bật mặc định IsActive = true).
      */
     public ServiceResult<Integer> saveFacility(Facility facility) {
-        // B1: Validate dữ liệu đầu vào
+        // B1: Kiểm tra dữ liệu đầu vào
         if (facility == null) {
             return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
         }
@@ -115,19 +103,28 @@ public class FacilityService {
         if (!ValidationUtil.isLengthValid(name, 3, 100)) {
             return ServiceResult.failField("facilityName", Messages.MSG218_FACILITY_NAME_LENGTH);
         }
+        facility.setFacilityName(name.trim());
 
         if (facility.getCategory() == null) {
             return ServiceResult.failField("category", Messages.MSG219_FACILITY_CATEGORY_REQUIRED);
         }
 
-        String unitLabel = facility.getUnitLabel();
-        if (unitLabel == null || unitLabel.isBlank()) {
+        String location = facility.getLocation() != null ? facility.getLocation().trim() : "";
+        if (location.length() > 100) {
+            return ServiceResult.failField("location", Messages.MSG341_FACILITY_LOCATION_LENGTH);
+        }
+        facility.setLocation(location);
+
+        String unitLabel = facility.getUnitLabel() != null ? facility.getUnitLabel().trim() : "";
+        if (unitLabel.isEmpty()) {
             facility.setUnitLabel("máy");
         } else if (unitLabel.length() > 15) {
             return ServiceResult.failField("unitLabel", Messages.MSG220_FACILITY_UNIT_LENGTH);
+        } else {
+            facility.setUnitLabel(unitLabel);
         }
 
-        // B2: Gọi DAO lưu dữ liệu
+        // B2: Gọi DAO để cập nhật hoặc tạo mới trong CSDL
         try {
             if (facility.getFacilityId() > 0) {
                 boolean updated = facilityDAO.update(facility);
@@ -150,7 +147,8 @@ public class FacilityService {
     }
 
     /**
-     * Ẩn hoặc Hiện một nhóm cơ sở vật chất.
+     * Bật hiển thị hoặc ẩn một dòng máy khỏi danh mục chọn của Lễ tân.
+     * Hàm kiểm tra facilityId > 0 rồi gọi FacilityDAO.toggleActive để cập nhật cột IsActive.
      */
     public ServiceResult<Void> toggleFacilityActive(int facilityId, boolean isActive) {
         if (facilityId <= 0) {
@@ -169,7 +167,8 @@ public class FacilityService {
     }
 
     /**
-     * Thêm mới hoặc cập nhật một cá thể máy vật lý.
+     * Thêm mới hoặc cập nhật thông tin một cá thể máy vật lý.
+     * Hàm kiểm tra mã máy (tự chuẩn hóa chữ in hoa), nhãn máy, ghi chú vị trí và kiểm tra trùng ItemCode, ItemLabel trong nhóm trước khi gọi create hoặc update qua EquipmentItemDAO.
      */
     public ServiceResult<Integer> saveEquipmentItem(EquipmentItem item) {
         if (item == null) {
@@ -196,12 +195,17 @@ public class FacilityService {
         if (placement != null && placement.trim().length() > 100) {
             return ServiceResult.failField("placementNote", Messages.MSG227_ITEM_LOCATION_LENGTH);
         }
+        item.setPlacementNote(placement != null && !placement.isBlank() ? placement.trim() : null);
 
+        Integer excludeId = item.getEquipmentItemId() > 0 ? item.getEquipmentItemId() : null;
         try {
-            // Kiểm tra trùng ItemCode
-            Integer excludeId = item.getEquipmentItemId() > 0 ? item.getEquipmentItemId() : null;
+            // Kiểm tra trùng mã cá thể máy trong CSDL
             if (equipmentItemDAO.isItemCodeExists(item.getItemCode(), excludeId)) {
-                return ServiceResult.failField("itemCode", String.format(Messages.MSG228_ITEM_CODE_EXISTS, item.getItemCode()));
+                return duplicateEquipmentField("itemCode", Messages.MSG228_ITEM_CODE_EXISTS, item.getItemCode());
+            }
+            // Kiểm tra trùng nhãn hiển thị trong cùng nhóm máy (khớp UQ_EquipmentItems_FacilityLabel)
+            if (equipmentItemDAO.isItemLabelExists(item.getFacilityId(), item.getItemLabel(), excludeId)) {
+                return duplicateEquipmentField("itemLabel", Messages.MSG342_ITEM_LABEL_EXISTS, item.getItemLabel());
             }
 
             if (item.getEquipmentItemId() > 0) {
@@ -219,13 +223,51 @@ public class FacilityService {
                 return ServiceResult.ok(generatedId);
             }
         } catch (SQLException e) {
+            ServiceResult<Integer> duplicateError = resolveEquipmentDuplicateError(e, item, excludeId);
+            if (duplicateError != null) {
+                return duplicateError;
+            }
             e.printStackTrace();
             return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
         }
     }
 
     /**
-     * Thanh lý một cá thể máy vật lý (chuyển sang 'Retired').
+     * Chuyển đổi lỗi trùng khóa duy nhất SQL Server (2601/2627) trên bảng EquipmentItems
+     * thành thông báo lỗi cụ thể theo trường dữ liệu thay vì trả thông báo chung MSG04.
+     */
+    private ServiceResult<Integer> resolveEquipmentDuplicateError(
+            SQLException e, EquipmentItem item, Integer excludeId) {
+        if (e.getErrorCode() != 2601 && e.getErrorCode() != 2627) {
+            return null;
+        }
+        String message = e.getMessage() != null ? e.getMessage() : "";
+        if (message.contains("UQ_EquipmentItems_FacilityLabel")) {
+            return duplicateEquipmentField("itemLabel", Messages.MSG342_ITEM_LABEL_EXISTS, item.getItemLabel());
+        }
+        if (message.contains("UQ_EquipmentItems_ItemCode")) {
+            return duplicateEquipmentField("itemCode", Messages.MSG228_ITEM_CODE_EXISTS, item.getItemCode());
+        }
+        try {
+            if (equipmentItemDAO.isItemLabelExists(item.getFacilityId(), item.getItemLabel(), excludeId)) {
+                return duplicateEquipmentField("itemLabel", Messages.MSG342_ITEM_LABEL_EXISTS, item.getItemLabel());
+            }
+            if (equipmentItemDAO.isItemCodeExists(item.getItemCode(), excludeId)) {
+                return duplicateEquipmentField("itemCode", Messages.MSG228_ITEM_CODE_EXISTS, item.getItemCode());
+            }
+        } catch (SQLException ignored) {
+            // Bỏ qua để fallback về thông báo hệ thống chung phía caller
+        }
+        return null;
+    }
+
+    private ServiceResult<Integer> duplicateEquipmentField(String fieldName, String messageTemplate, String value) {
+        return ServiceResult.failField(fieldName, String.format(messageTemplate, value));
+    }
+
+    /**
+     * Thanh lý một cá thể máy vật lý (chuyển sang trạng thái 'Retired').
+     * Hàm kiểm tra an toàn trước khi thanh lý: từ chối nếu máy vẫn còn phiếu bảo trì đang mở hoặc đang xử lý, ngược lại gọi EquipmentItemDAO.retire.
      */
     public ServiceResult<Void> retireEquipmentItem(int equipmentItemId) {
         if (equipmentItemId <= 0) {
@@ -233,7 +275,7 @@ public class FacilityService {
         }
         try {
             if (maintenanceRequestDAO.hasActiveRequest(equipmentItemId)) {
-                return ServiceResult.fail("Không thể thanh lý: Thiết bị đang có yêu cầu bảo trì chưa hoàn thành.");
+                return ServiceResult.fail(Messages.MSG343_ITEM_RETIRE_HAS_MAINTENANCE);
             }
             boolean updated = equipmentItemDAO.retire(equipmentItemId);
             if (!updated) {

@@ -37,6 +37,13 @@
   background-color: var(--primary-subtle, #fff7ed);
 }
 
+/* Tab CHƯA chọn nằm thẳng trên nền khu làm việc (xanh cobalt ở chế độ sáng, xanh đen ở chế độ tối), không nằm trên
+   thẻ trắng → chữ xám #64748b gần như chìm vào nền (14/11: tương phản 1.9:1). Dùng màu chữ phụ dành cho nền tối.
+   Tab đang chọn và tab đang rê chuột có nền sáng riêng nên giữ nguyên. */
+body.dock .catalogue-nav-tabs .catalogue-tab-item:not(.active):not(:hover) {
+  color: var(--arena-on-dark-soft);
+}
+
 .catalogue-tab-item .badge {
   font-size: var(--font-size-xs, 11px);
   padding: 2px 6px;

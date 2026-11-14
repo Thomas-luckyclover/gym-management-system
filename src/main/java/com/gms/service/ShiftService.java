@@ -103,7 +103,7 @@ public class ShiftService {
             return unclosedPast;
         }
 
-        List<Shift> shifts = shiftDAO.findTodayShifts(today);
+        List<Shift> shifts = shiftDAO.findTodayShifts(today);//lấy 2 ca trong ngày hôm nay
         if (shifts == null || shifts.isEmpty()) {
             return null;
         }
@@ -111,7 +111,7 @@ public class ShiftService {
         Shift morning = null;
         Shift afternoon = null;
         for (Shift s : shifts) {
-            if (s.isOpen()) {
+            if (s.isOpen()) {//nếu có ca đang mở thì ưu tiên hiển thị ca đó
                 return s;
             }
             if (s.getShiftType() == Shift.ShiftType.MORNING) {
@@ -122,9 +122,14 @@ public class ShiftService {
         }
 
         if (afternoon != null && (afternoon.isClosed() || (morning != null && morning.isClosed()))) {
+            //nếu ca chiều đã chốt hoặc ca sáng đã chốt thì ưu tiên hiển thị ca chiều
             return afternoon;
         }
 
+
+        // Khi cả 2 ca đều chưa mở/chưa chốt: xét theo giờ thực tế
+        // - Từ 13:00 trở đi: nhân viên vào quầy buổi chiều -> gợi ý Ca Chiều
+        // - Trước 13:00: gợi ý Ca Sáng (nếu thiếu ca sáng thì lấy ca đầu tiên)
         boolean isAfternoonTime = !LocalDateTime.now(DateTimeUtil.GYM_ZONE)
                 .toLocalTime().isBefore(AppConstants.AFTERNOON_SHIFT_START);
         if (isAfternoonTime && afternoon != null) {
@@ -151,10 +156,12 @@ public class ShiftService {
             shiftDAO.ensureShiftsForDate(today);
 
             // B3: Xác định ca cần hiển thị (theo shiftId trên URL hoặc ca hiện tại)
+            //Lúc mới vào trang shiftId = null, khi bấm chuyển ca thì shiftId = id của ca được chọn
             Shift shift = (requestedShiftId != null && requestedShiftId > 0)
                     ? shiftDAO.findById(requestedShiftId)
                     : null;
             if (shift == null) {
+                //tìm ca hiện tại hoặc ca đang mở trong ngày hôm nay (CBR-104)
                 shift = findCurrentOrActiveShift(today);
             }
             if (shift == null) {
@@ -162,17 +169,22 @@ public class ShiftService {
             }
 
             // B4: Tải thông tin nhân viên, KPI, đơn chờ xử lý và danh sách ca trong ngày
+            //lấy tên người mở ca (nếu có) để hiển thị trên màn hình chi tiết ca làm việc
             String openedByName = shiftDAO.findEmployeeFullName(shift.getOpenedByEmployeeId());
+            //lấy tên người chốt ca (nếu có) để hiển thị trên màn hình chi tiết ca làm việc
             String closedByName = shiftDAO.findEmployeeFullName(shift.getClosedByEmployeeId());
+            //hển thị 4 thẻ kpi: tổng tiền mặt, tổng chuyển khoản, tổng thu, tổng đơn chờ xử lý
             ShiftMetrics metrics = shiftDAO.calculateShiftMetrics(shift.getShiftId());
+            //Lấy danh sách đơn Pending trong ca để hiển thị cảnh báo và chặn chốt ca
             List<ShiftTransactionItem> pendingOrders = shiftDAO.findPendingOrdersInShift(shift.getShiftId());
+            //Lấy 2 ca trong ngày hôm nay thứ tự sáng > chiều để hiển thị danh sách ca làm việc trên màn hình chi tiết ca
             List<Shift> todayShifts = shiftDAO.findTodayShifts(shift.getWorkDate());
 
             // B5: Tải danh sách giao dịch có lọc và phân trang
-            int validPage = Math.max(page, 1);
-            int validPageSize = pageSize > 0 ? pageSize : AppConstants.DEFAULT_PAGE_SIZE;
+            int validPage = Math.max(page, 1);//chuẩn hóa số trang hiện tại
+            int validPageSize = pageSize > 0 ? pageSize : AppConstants.DEFAULT_PAGE_SIZE;//chuẩn hóa số dòng hiển thị mỗi trang
             int totalItems = shiftDAO.countTransactions(shift.getShiftId(), search, method, status);
-            int offset = (validPage - 1) * validPageSize;
+            int offset = (validPage - 1) * validPageSize;//số dòng cần bỏ qua để phân trang
 
             List<ShiftTransactionItem> items = shiftDAO.findTransactionsPage(
                     shift.getShiftId(), search, method, status, offset, validPageSize);
@@ -181,58 +193,72 @@ public class ShiftService {
             for (ShiftTransactionItem item : items) {
                 item.setCanCancel(shift.isOpen() && !item.isCancelled() && !isOrderOfStaff(accountId, item.getOrderId()));
                 item.setCanConfirmTransfer(shift.isOpen() && item.isPending());
-            }
+            }//lễ tân chỉ được bấm hủy đơn khi đồng thời thỏa mãn các điều kiện
+            // 1. Ca đang mở (Open) 2. Đơn chưa hủy (không phải Cancelled) 3. Đơn không phải do chính lễ tân này lập ra
+            //nút xác nhận chuyển khoản chỉ hiển thị khi đồng thời thỏa mãn các điều kiện
+            // 1. Ca đang mở (Open) 2. Đơn đang chờ xác nhận (Pending)
             PageResult<ShiftTransactionItem> transactionsPage = new PageResult<>(
-                    items, validPage, validPageSize, totalItems);
+                    items, validPage, validPageSize, totalItems);//một trang đối tượng có phân trang
 
             // B7: Đánh giá trạng thái cảnh báo và khả năng mở ca (nếu ca đang NotOpened)
             LocalDateTime now = LocalDateTime.now(DateTimeUtil.GYM_ZONE);
-            boolean unclosedPastShift = shift.isOpen() && shift.getWorkDate().isBefore(today);
-            boolean overdue = shift.isOpen()
+            boolean unclosedPastShift = shift.isOpen() && shift.getWorkDate().isBefore(today);//bắt lỗi ca hôm qua quên chưa chốt
+            boolean overdue = shift.isOpen()//bắt lỗi ca sáng bị trễ giờ
                     && shift.getShiftType() == Shift.ShiftType.MORNING
                     && shift.getWorkDate().equals(today)
                     && !now.toLocalTime().isBefore(AppConstants.AFTERNOON_SHIFT_START);
 
-            boolean canOpen = false;
-            boolean pastShift = false;
-            String shiftNotOpenedReason = null;
-            Shift blockingOpenShift = null;
+            boolean canOpen = false;//cờ cho phép mở ca (true) hoặc không (false)
+            boolean pastShift = false;//cờ đánh dấu ca làm việc thực sự đã qua trong quá khứ (không thể mở lại)
+            String shiftNotOpenedReason = null;//lý do không cho phép mở ca (khi notOpened = true và canOpen = false)
+            Shift blockingOpenShift = null;//lưu lại ca làm việc đang mở khiến ca này bị chặn
 
+            //khối lệnh này chạy khi ca ở trạng thái chưa mở
+            //kiểm tra xem ca này được phép mở hay không nếu không thì lý do cụ thể là gì
             if (shift.isNotOpened()) {
-                if (!today.equals(shift.getWorkDate())) {
-                    if (shift.getWorkDate().isBefore(today)) {
+                if (!today.equals(shift.getWorkDate())) {//kiểm tra ngày của ca này là ca quá khư hoặc tương lai
+                    if (shift.getWorkDate().isBefore(today)) {//kiểm tra ngày của ca này có trước hôm nay hay không
                         shiftNotOpenedReason = "Ca làm việc của ngày đã qua trong quá khứ, không thể mở lại.";
                         pastShift = true;
                     } else {
                         shiftNotOpenedReason = "Ca làm việc thuộc ngày trong tương lai, chưa thể mở.";
                     }
-                } else if (shiftDAO.isGymClosedOnDate(today)) {
+                } else if (shiftDAO.isGymClosedOnDate(today)) {//kiểm tra hôm nay có phải ngày nghỉ của phòng tập hay không
                     shiftNotOpenedReason = Messages.MSG258_SHIFT_GYM_CLOSED;
                 } else {
-                    Shift otherOpen = findAnyOtherOpenShift(shift.getShiftId(), todayShifts);
-                    if (otherOpen != null) {
-                        blockingOpenShift = otherOpen;
-                        shiftNotOpenedReason = otherOpen.getWorkDate().isBefore(today)
+
+                    Shift afternoonShift = findShiftByType(todayShifts, Shift.ShiftType.AFTERNOON);
+                    boolean isMorning = shift.getShiftType() == Shift.ShiftType.MORNING;
+                    boolean afternoonClosed = afternoonShift != null && afternoonShift.isClosed();
+                    boolean afterMorningEnd = !now.toLocalTime().isBefore(AppConstants.AFTERNOON_SHIFT_START);//sau 13:00
+
+                    Shift otherOpen = null;
+                    if (isMorning && afternoonClosed) {//là ca sáng và ca chiều đã chốt
+                        shiftNotOpenedReason = "Ca chiều hôm nay đã chốt. Ca sáng đã kết thúc và không thể mở lại.";
+                        pastShift = true;
+                    } else if (isMorning && afterMorningEnd) {//là ca sáng và sau 13:00
+                        shiftNotOpenedReason = Messages.MSG264_SHIFT_MORNING_OVER;
+                        pastShift = true;
+                    } else if ((otherOpen = findAnyOtherOpenShift(shift.getShiftId())) != null) {//nếu có ca khác đang mở
+                        blockingOpenShift = otherOpen;//lưu lại ca đang mở
+                        shiftNotOpenedReason = otherOpen.getWorkDate().isBefore(today)//kiểm tra xem ca đang mở là ca của hôm qua hay hôm nay
                                 ? "Ca làm việc ngày " + DateTimeUtil.formatDate(otherOpen.getWorkDate())
                                         + " (" + otherOpen.getShiftType().getDisplayName() + ") chưa được chốt sổ. Vui lòng chốt ca cũ trước."
                                 : String.format(Messages.MSG261_SHIFT_OTHER_OPEN_SHORT, otherOpen.getShiftType().getDisplayName());
-                    } else if (shift.getShiftType() == Shift.ShiftType.MORNING) {
-                        Shift afternoonShift = findShiftByType(todayShifts, Shift.ShiftType.AFTERNOON);
-                        if (afternoonShift != null && afternoonShift.isClosed()) {
-                            shiftNotOpenedReason = "Ca chiều hôm nay đã chốt. Ca sáng đã kết thúc và không thể mở lại.";
-                            pastShift = true;
-                        } else if (!now.toLocalTime().isBefore(AppConstants.AFTERNOON_SHIFT_START)) {
-                            shiftNotOpenedReason = Messages.MSG264_SHIFT_MORNING_OVER;
-                            pastShift = true;
-                        } else {
-                            canOpen = true;
-                        }
-                    } else {
+                    } else if (isMorning) {
+                        canOpen = true;
+                    } else {//trường hợp đang ở ca chiều
                         Shift morningShift = findShiftByType(todayShifts, Shift.ShiftType.MORNING);
-                        if (morningShift != null && morningShift.isNotOpened()
+                        LocalTime afternoonEnd = afternoonShiftEnd();//lấy giờ đóng cửa của ca chiều (22:00)
+                        if (afternoonEnd != null && !now.toLocalTime().isBefore(afternoonEnd)) {
+                            // Đã quá giờ đóng cửa: ca chiều hôm nay đã qua, không mở được nữa
+                            shiftNotOpenedReason = afternoonShiftOverMessage(afternoonEnd);
+                            pastShift = true;
+                        } else if (morningShift != null && morningShift.isNotOpened()
                                 && now.toLocalTime().isBefore(AppConstants.AFTERNOON_SHIFT_START)) {
+                            //Ca sáng chưa mở và chưa quá 13:00: không được nhảy cóc mở ca chiều
                             shiftNotOpenedReason = Messages.MSG266_SHIFT_AFTERNOON_NOT_YET;
-                        } else {
+                        } else {//còn lại
                             canOpen = true;
                         }
                     }
@@ -243,7 +269,7 @@ public class ShiftService {
                     metrics, transactionsPage, pendingOrders, todayShifts,
                     search, method, status, canOpen, shiftNotOpenedReason, pastShift,
                     unclosedPastShift, overdue, blockingOpenShift);
-            return ServiceResult.ok(view);
+            return ServiceResult.ok(view);//trả về kết quả khi thực hiện xong 1 hàm service kèm dữ liệu của nó
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -261,66 +287,77 @@ public class ShiftService {
 
         try {
             // B1: Kiểm tra trạng thái và ngày làm việc của ca
-            Shift shift = shiftDAO.findById(shiftId);
-            if (shift == null) {
+            Shift shift = shiftDAO.findById(shiftId);//tìm ca làm việc theo shiftId
+            if (shift == null) {//kiểm tra xem shiftId gửi lên có tồn tại trong DB hay không, tránh NullPointerException cho đoạn bên dưới
                 return ServiceResult.fail(String.format(Messages.MSG08_NOT_FOUND, "ca làm việc"));
             }
-            if (!shift.isNotOpened()) {
+            if (!shift.isNotOpened()) {//kiểm tra xem ca này ở trạng thái chưa mở hay không, tránh 2 lễ tân cùng bấm mở ca dẫn đến lỗi chồng chéo
                 return ServiceResult.fail(Messages.MSG255_SHIFT_ALREADY_OPENED_OR_CLOSED);
             }
 
             LocalDate today = DateTimeUtil.today();
-            if (!today.equals(shift.getWorkDate())) {
+            if (!today.equals(shift.getWorkDate())) {//chặn mở ca của ngày khác hôm nay (quá khứ hoặc tương lai)
                 return ServiceResult.fail(shift.getWorkDate().isBefore(today)
                         ? Messages.MSG256_SHIFT_PAST_DAY
                         : Messages.MSG257_SHIFT_FUTURE_DAY);
             }
-            if (shiftDAO.isGymClosedOnDate(today)) {
+            if (shiftDAO.isGymClosedOnDate(today)) {//chặn mở ca vào ngày nghỉ của phòng tập
                 return ServiceResult.fail(Messages.MSG258_SHIFT_GYM_CLOSED);
             }
+            //Trong trường hợp lễ tân treo màn hình lúc đầu nút mở ca vẫn hiện nhưng treo quá giờ 13:00 thì bấm mở ca sẽ bị chặn
+            //Không bao h tin tưởng dữ liệu từ fe, tránh dùng f12 hoặc postman chỉnh request
 
             // B2: Kiểm tra xung đột ca đang mở và thứ tự ca Sáng -> Chiều (CBR-104)
             List<Shift> todayShifts = shiftDAO.findTodayShifts(today);
-            Shift otherOpen = findAnyOtherOpenShift(shiftId, todayShifts);
+            Shift otherOpen = findAnyOtherOpenShift(shiftId);//tìm xem có ca nào khác đang mở hay không (trừ ca hiện tại)
             if (otherOpen != null) {
-                if (otherOpen.getWorkDate().isBefore(today)) {
+                if (otherOpen.getWorkDate().isBefore(today)) {//nếu ca đang mở là ca của quá khứ
                     return ServiceResult.fail(String.format(Messages.MSG259_SHIFT_OLD_NOT_CLOSED,
                             otherOpen.getShiftType().getDisplayName(), DateTimeUtil.formatDate(otherOpen.getWorkDate())));
                 }
                 return ServiceResult.fail(String.format(Messages.MSG260_SHIFT_OTHER_OPEN,
-                        otherOpen.getShiftType().getDisplayName()));
+                        otherOpen.getShiftType().getDisplayName()));//nếu ca đang mở là ca của hôm nay thì chặn mở ca khác
             }
 
             LocalDateTime now = LocalDateTime.now(DateTimeUtil.GYM_ZONE);
             if (shift.getShiftType() == Shift.ShiftType.MORNING) {
-                Shift afternoonShift = findShiftByType(todayShifts, Shift.ShiftType.AFTERNOON);
+                Shift afternoonShift = findShiftByType(todayShifts, Shift.ShiftType.AFTERNOON);//lấy ca chiều
                 if (afternoonShift != null && afternoonShift.isClosed()) {
                     return ServiceResult.fail(Messages.MSG262_SHIFT_MORNING_AFTER_AFTERNOON_CLOSED);
+                    //Không thể mở ca sáng hôm nay nếu ca chiều hôm nay đã chốt
                 }
                 if (!now.toLocalTime().isBefore(AppConstants.AFTERNOON_SHIFT_START)) {
                     return ServiceResult.fail(Messages.MSG264_SHIFT_MORNING_OVER);
+                    //Không thể mở ca sáng hôm nay nếu đã quá 13:00 (quá giờ quy định)
                 }
             } else {
-                Shift morningShift = findShiftByType(todayShifts, Shift.ShiftType.MORNING);
+                LocalTime afternoonEnd = afternoonShiftEnd();//lấy giờ đóng cửa của ca chiều (22:00)
+                if (afternoonEnd != null && !now.toLocalTime().isBefore(afternoonEnd)) {
+                    return ServiceResult.fail(afternoonShiftOverMessage(afternoonEnd));
+                    //Không thể mở ca chiều hôm nay nếu đã quá giờ đóng cửa
+                }
+                Shift morningShift = findShiftByType(todayShifts, Shift.ShiftType.MORNING);//lấy ca sáng
                 if (morningShift != null && morningShift.isNotOpened()
                         && now.toLocalTime().isBefore(AppConstants.AFTERNOON_SHIFT_START)) {
                     return ServiceResult.fail(Messages.MSG266_SHIFT_AFTERNOON_NOT_YET);
+                    //nếu bây giờ là trước 13:00 mà ca sáng hôm nay chưa mở thì không được nhảy cóc mở ca chiều
                 }
             }
 
             // B3: Cập nhật trạng thái ca sang Open và ghi AuditLog trong cùng transaction
+            //Dùng chung 1 connection để update ca và ghi log trong cùng transaction, nếu 1 trong 2 lỗi thì rollback đảm bảo tính toàn vẹn dữ liệu
             try (Connection conn = getConnection()) {
-                beginTx(conn);
+                beginTx(conn);//tắt auto-commit(tự động lưu vào db mà lưu vào bộ nhớ tạm) để bắt đầu transaction
                 try {
                     int updated = shiftDAO.openShift(conn, shiftId, employee.getEmployeeId(), now);
                     if (updated == 0) {
-                        rollbackTx(conn);
+                        rollbackTx(conn);//bỏ tất cả thay đổi trong transaction này như chưa có gì xảy ra
                         return ServiceResult.fail(Messages.MSG22_CONCURRENT_EDIT);
                     }
                     auditLogService.logInTransaction(conn, accountId, Role.RECEPTIONIST,
                             "Mở ca làm việc", "Shifts", shiftId, "Status",
                             "NotOpened", "Open", "Mở " + shift.getShiftType().getDisplayName());
-                    commitTx(conn);
+                    commitTx(conn);//thực hiện lưu tất cả thay đổi trong transaction này vào db, nếu lỗi thì rollback
                     return ServiceResult.ok(null);
                 } catch (SQLException ex) {
                     rollbackTx(conn);
@@ -350,11 +387,12 @@ public class ShiftService {
             if (shift == null) {
                 return ServiceResult.fail(String.format(Messages.MSG08_NOT_FOUND, "ca làm việc"));
             }
-            if (!shift.isOpen()) {
+            if (!shift.isOpen()) {//Chỉ cho chốt ca trạng thái open
                 return ServiceResult.fail(Messages.MSG267_SHIFT_CLOSE_ONLY_OPEN);
             }
 
             List<ShiftTransactionItem> pendingOrders = shiftDAO.findPendingOrdersInShift(shiftId);
+            //Kiểm tra xem ca này còn đơn Pending hay không, nếu còn thì chặn chốt ca và hiển thị cảnh báo
             if (!pendingOrders.isEmpty()) {
                 return ServiceResult.fail(String.format(Messages.MSG87_CLOSE_SHIFT_PENDING_ORDERS, pendingOrders.size()));
             }
@@ -362,16 +400,18 @@ public class ShiftService {
             // B2: Tính chênh lệch tiền mặt so với sổ sách (DBR-55, BR-46)
             long expectedCash = shiftDAO.calculateShiftMetrics(shiftId).getCashTotal();
             long discrepancy = countedCash - expectedCash;
-            String trimmedReason = varianceReason != null ? varianceReason.trim() : null;
+            String trimmedReason = varianceReason != null ? varianceReason.trim() : null;//cắt chuỗi
 
             if (discrepancy != 0) {
                 String reasonError = validateReasonLength(trimmedReason, "Số tiền đếm được bị chênh lệch so với sổ sách. ");
+                //Kiểm tra độ dài lý do chênh lệch tiền mặt (GBR-09: 5–500 ký tự)
                 if (reasonError != null) {
                     return ServiceResult.fail(reasonError);
                 }
             }
 
             // B3: Chốt ca và ghi AuditLog trong cùng transaction
+
             try (Connection conn = getConnection()) {
                 beginTx(conn);
                 try {
@@ -403,46 +443,7 @@ public class ShiftService {
         }
     }
 
-    // ===== 4. Xác nhận Đơn chuyển khoản tại quầy =====
-
-    public ServiceResult<Void> confirmBankTransfer(int accountId, int orderId) {
-        Employee employee = getActiveReceptionist(accountId);
-        if (employee == null) {
-            return ServiceResult.fail(Messages.MSG07_NO_PERMISSION);
-        }
-
-        Shift shift = getShiftOfOrder(orderId);
-        if (shift == null || !shift.isOpen()) {
-            return ServiceResult.fail(Messages.MSG268_ORDER_NOT_IN_OPEN_SHIFT);
-        }
-
-        try (Connection conn = getConnection()) {
-            beginTx(conn);
-            try {
-                LocalDateTime now = LocalDateTime.now(DateTimeUtil.GYM_ZONE);
-                int updated = shiftDAO.confirmBankTransfer(conn, orderId, employee.getEmployeeId(), now);
-                if (updated == 0) {
-                    rollbackTx(conn);
-                    return ServiceResult.fail(Messages.MSG269_ORDER_NOT_AWAITING_CONFIRM);
-                }
-
-                auditLogService.logInTransaction(conn, accountId, Role.RECEPTIONIST,
-                        "Xác nhận chuyển khoản", "Orders", orderId, "Status",
-                        "Pending", "Paid", "Lễ tân xác nhận đã nhận đủ tiền chuyển khoản");
-
-                commitTx(conn);
-                return ServiceResult.ok(null);
-            } catch (SQLException ex) {
-                rollbackTx(conn);
-                throw ex;
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
-        }
-    }
-
-    // ===== 5. Nghiệp vụ Hủy đơn hàng tại quầy =====
+    // ===== 4. Nghiệp vụ Hủy đơn hàng tại quầy =====
 
     public ServiceResult<Void> cancelOrder(int accountId, int orderId, String reason) {
         Employee employee = getActiveReceptionist(accountId);
@@ -523,21 +524,32 @@ public class ShiftService {
         return null;
     }
 
-    private Shift findAnyOtherOpenShift(int currentShiftId, List<Shift> todayShifts) {
+    /**
+     * Giờ kết thúc ca chiều = giờ đóng cửa phòng tập (P-17, dạng HH:mm-HH:mm).
+     * Trả về null nếu không đọc được cấu hình, khi đó không chặn theo giờ đóng cửa.
+     */
+    protected LocalTime afternoonShiftEnd() {
         try {
-            Shift other = shiftDAO.findOtherOpenShift(currentShiftId);
-            if (other != null) {
-                return other;
-            }
+            return PtScheduleService.parseOpeningHours(
+                    new SystemConfigService().getString(SystemConfigService.OPENING_HOURS))[1];//trả về 22:00
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private static String afternoonShiftOverMessage(LocalTime afternoonEnd) {
+        return "Đã quá thời gian ca chiều (kết thúc lúc " + afternoonEnd
+                + "). Ca chiều hôm nay đã kết thúc và không thể mở lại.";
+    }
+
+    private Shift findAnyOtherOpenShift(int currentShiftId) {
+        try {
+            return shiftDAO.findOtherOpenShift(currentShiftId);
         } catch (SQLException e) {
             e.printStackTrace();
+            return null;
         }
-        for (Shift s : todayShifts) {
-            if (s.getShiftId() != currentShiftId && s.isOpen()) {
-                return s;
-            }
-        }
-        return null;
     }
 
     private Shift findShiftByType(List<Shift> shifts, Shift.ShiftType type) {

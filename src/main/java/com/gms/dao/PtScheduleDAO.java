@@ -29,6 +29,11 @@ import java.util.List;
 public class PtScheduleDAO {
     // Buổi có khách của PT trong khoảng ngày: Sessions JOIN TimeSlots, Subscriptions, Orders, khách (+ người tập cùng PTCouple).
     // SessionNo = số thứ tự buổi trong gói (ROW_NUMBER) → "Buổi n/N".
+    
+    // Sessions
+    // JOIN TIMESLOTS => LẤY THÔNG TIN GIỜ CỦA BUỔI, NGÀY CỦA BUỔI
+    // JOIN SUBSCRIPTION => LẤY KHÁCH + TỔNG SỐ BUỔI 
+    // JOIN ORDERS: lấy tên gói + người tập
     private static final String SESSIONS_SQL = """
             WITH NumberedSessions AS (
                 SELECT s.SessionId, s.Status AS SessionStatus, s.PtEmployeeId,

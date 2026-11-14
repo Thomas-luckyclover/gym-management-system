@@ -7,6 +7,7 @@ import com.gms.dto.PageResult;
 import com.gms.dto.ServiceResult;
 import com.gms.entity.MaintenanceRequest;
 import com.gms.service.MaintenanceRequestService;
+import com.gms.service.NotificationService;
 import com.gms.util.PaginationUtil;
 import com.gms.util.RequestUtil;
 import jakarta.servlet.ServletException;
@@ -39,6 +40,9 @@ public class MaintenanceRequestServlet extends HttpServlet {
     private final MaintenanceRequestService maintenanceRequestService =
             new MaintenanceRequestService();
 
+    private final NotificationService notificationService =
+            new NotificationService();
+
     @Override
     protected void doGet(
             HttpServletRequest request,
@@ -51,6 +55,9 @@ public class MaintenanceRequestServlet extends HttpServlet {
             RequestUtil.redirect(request, response, "/login");
             return;
         }
+
+        // Tự động đánh dấu đã đọc các thông báo bảo trì của Lễ tân này khi vào trang
+        notificationService.markTopicNotificationsRead(accountId, "Bảo trì");
 
         renderPage(request, response, accountId);
     }
@@ -207,7 +214,7 @@ public class MaintenanceRequestServlet extends HttpServlet {
             RequestUtil.setFlashToast(
                     request,
                     "success",
-                    "Đã nghiệm thu và đóng thành công " + result.getData() + " yêu cầu bảo trì."
+                    String.format(Messages.MSG350_MAINTENANCE_BATCH_CLOSE_SUCCESS, result.getData())
             );
         } else {
             RequestUtil.setFlashToast(

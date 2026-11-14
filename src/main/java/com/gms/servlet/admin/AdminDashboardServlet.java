@@ -1,191 +1,166 @@
 package com.gms.servlet.admin;
 
+import com.gms.constant.Messages;
+import com.gms.dto.AdminDashboardView;
 import com.gms.dto.ServiceResult;
 import com.gms.service.SystemReportService;
 import com.gms.util.DateTimeUtil;
-import com.gms.util.MoneyUtil;
-import com.gms.util.RequestUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 
 /**
- * Servlet Dashboard Admin (URL /admin/dashboard) — báo cáo vận hành, doanh thu, hoa hồng PT và audit.
+ * Báo cáo vận hành hệ thống cho Quản trị viên (#68 System Operational Report, UC-44).
  *
- * <p>Theo khoảng ngày được chọn; có thể xuất CSV cùng bộ lọc đang xem.</p>
+ * Hỗ trợ:
+ * - GET /admin/dashboard: hiển thị báo cáo theo khoảng ngày (mặc định từ đầu tháng đến hôm nay).
+ * - GET /admin/dashboard?fromDate=...&toDate=...&export=csv: xuất file CSV UTF-8 BOM (UC-44, GBR-33).
  */
 @WebServlet("/admin/dashboard")
 public class AdminDashboardServlet extends HttpServlet {
 
-    private static final String VIEW_NAME = "admin/dashboard";
-    private static final String ACTION_EXPORT_CSV = "exportCsv";
+    private static final String VIEW_PATH = "/WEB-INF/jsp/admin/dashboard.jsp";
+    private static final byte[] UTF8_BOM = new byte[] { (byte) 0xEF, (byte) 0xBB, (byte) 0xBF };
 
-    private final SystemReportService systemReportService = new SystemReportService();
+    private final SystemReportService systemReportService;
 
-    /**
-     * GET /admin/dashboard — hiện dashboard theo khoảng ngày; action=exportCsv thì xuất CSV.
-     */
+    public AdminDashboardServlet() {
+        this(new SystemReportService());
+    }
+
+    public AdminDashboardServlet(SystemReportService systemReportService) {
+        this.systemReportService = Objects.requireNonNull(systemReportService);
+    }
+
+    /** Cho phép test ghi đè ngày hiện tại để cố định khoảng mặc định đầu tháng → hôm nay. */
+    protected LocalDate currentDate() {
+        return DateTimeUtil.today();
+    }
+
     @Override
-    protected void doGet(
-            HttpServletRequest request,
-            HttpServletResponse response
-    ) throws ServletException, IOException {
-        // B1: đọc khoảng ngày; lần đầu vào trang dùng ngày 1 tháng hiện tại tới hôm nay.
-        String fromValue = RequestUtil.getTrimmedParam(request, "fromDate");
-        String toValue = RequestUtil.getTrimmedParam(request, "toDate");
-        String action = RequestUtil.getTrimmedParam(request, "action");
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        LocalDate today = currentDate();
+        LocalDate defaultFrom = today.withDayOfMonth(1);
+        LocalDate defaultTo = today;
 
-        LocalDate fromDate = DateTimeUtil.parseHtmlDate(fromValue);
-        LocalDate toDate = DateTimeUtil.parseHtmlDate(toValue);
+        DateParseOutcome fromOutcome = parseDateParam(
+                request.getParameter("fromDate"), defaultFrom, "Từ ngày");
+        DateParseOutcome toOutcome = parseDateParam(
+                request.getParameter("toDate"), defaultTo, "Đến ngày");
 
-        boolean isFirstLoad = fromValue == null && toValue == null;
-        if (isFirstLoad) {
-            toDate = DateTimeUtil.today();
-            fromDate = toDate.withDayOfMonth(1);
+        LocalDate fromDate = fromOutcome.date;
+        LocalDate toDate = toOutcome.date;
+        String fromError = fromOutcome.error;
+        String toError = toOutcome.error;
+
+        if (fromError == null && toError == null && fromDate.isAfter(toDate)) {
+            toError = Messages.MSG16_DATE_RANGE_REVERSED;
         }
 
-        // B2: gọi Service tổng hợp báo cáo và validate lại khoảng ngày ở server.
-        ServiceResult<Map<String, Object>> result = systemReportService.getAdminDashboard(
-                fromDate,
-                toDate
-        );
+        boolean isInvalidRange = fromError != null || toError != null;
+        boolean isExportCsv = "csv".equalsIgnoreCase(request.getParameter("export"));
 
-        // B3: nếu người dùng yêu cầu CSV và dữ liệu hợp lệ thì xuất đúng bộ lọc hiện tại.
-        if (ACTION_EXPORT_CSV.equals(action) && result.isSuccess()) {
-            writeCsv(response, result.getData());
+        request.setAttribute("fromDateValue", fromOutcome.inputValue);
+        request.setAttribute("toDateValue", toOutcome.inputValue);
+        request.setAttribute("fromError", fromError);
+        request.setAttribute("toError", toError);
+        request.setAttribute("isInvalidRange", isInvalidRange);
+        request.setAttribute("noDataMessage", Messages.MSG03_NO_DATA_IN_RANGE);
+
+        if (isInvalidRange) {
+            request.setAttribute("emptyInRange", false);
+            request.setAttribute("exportedMessage", "");
+            if (isExportCsv) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            }
+            request.getRequestDispatcher(VIEW_PATH).forward(request, response);
             return;
         }
 
-        // B4: chuẩn bị dữ liệu cho View.
-        request.setAttribute("activeSidebar", "dashboard");
-        request.setAttribute("fromDate", fromDate);
-        request.setAttribute("toDate", toDate);
-
-        if (result.isSuccess()) {
-            request.setAttribute("dashboard", result.getData());
-        } else {
-            request.setAttribute("pageError", result.getMessage());
+        ServiceResult<AdminDashboardView> result = systemReportService.getAdminDashboard(fromDate, toDate);
+        if (!result.isSuccess()) {
+            request.setAttribute("errorMessage", result.getMessage());
+            request.setAttribute("emptyInRange", false);
+            request.setAttribute("exportedMessage", "");
+            if (isExportCsv) {
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            }
+            request.getRequestDispatcher(VIEW_PATH).forward(request, response);
+            return;
         }
 
-        RequestUtil.forward(request, response, VIEW_NAME);
+        AdminDashboardView view = result.getData();
+        if (isExportCsv) {
+            writeCsvResponse(response, fromDate, toDate, view);
+            return;
+        }
+
+        String fileName = SystemReportService.buildCsvFileName(fromDate, toDate);
+        request.setAttribute("report", view);
+        request.setAttribute("emptyInRange", view.isEmptyInRange());
+        request.setAttribute("exportedMessage", String.format(Messages.MSG32_EXPORTED, fileName));
+        request.getRequestDispatcher(VIEW_PATH).forward(request, response);
     }
 
-    private void writeCsv(
+    /**
+     * Phân tích tham số ngày từ URL:
+     * - Thiếu tham số (null) -> dùng mặc định.
+     * - Chuỗi rỗng ("") -> người dùng xóa trống khi gửi form -> báo MSG09.
+     * - Sai định dạng URL (VD ?fromDate=abc) -> bỏ qua giá trị lỗi và rơi về mặc định (GBR-20).
+     */
+    private DateParseOutcome parseDateParam(String rawParam, LocalDate fallback, String fieldLabel) {
+        if (rawParam == null) {
+            return new DateParseOutcome(fallback, fallback.toString(), null);
+        }
+        String trimmed = rawParam.trim();
+        if (trimmed.isEmpty()) {
+            return new DateParseOutcome(null, "", String.format(Messages.MSG09_REQUIRED, fieldLabel));
+        }
+        LocalDate parsed = DateTimeUtil.parseHtmlDate(trimmed);
+        if (parsed == null) {
+            return new DateParseOutcome(fallback, fallback.toString(), null);
+        }
+        return new DateParseOutcome(parsed, parsed.toString(), null);
+    }
+
+    /** Xuất file CSV kèm UTF-8 BOM để mở đúng tiếng Việt có dấu trên Excel. */
+    private void writeCsvResponse(
             HttpServletResponse response,
-            Map<String, Object> dashboard
+            LocalDate fromDate,
+            LocalDate toDate,
+            AdminDashboardView view
     ) throws IOException {
-        LocalDate fromDate = (LocalDate) dashboard.get("fromDate");
-        LocalDate toDate = (LocalDate) dashboard.get("toDate");
+        String fileName = SystemReportService.buildCsvFileName(fromDate, toDate);
+        String csvContent = systemReportService.buildCsv(view);
 
-        response.setCharacterEncoding("UTF-8");
         response.setContentType("text/csv; charset=UTF-8");
-        response.setHeader(
-                "Content-Disposition",
-                "attachment; filename=admin-report-" + fromDate + "-to-" + toDate + ".csv"
-        );
+        response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+        response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
 
-        try (PrintWriter writer = response.getWriter()) {
-            // BOM giúp Excel nhận đúng UTF-8 khi mở CSV tiếng Việt.
-            writer.write('\ufeff');
-            writer.println("Báo cáo vận hành hệ thống Admin");
-            writer.println("Từ ngày," + escapeCsv(DateTimeUtil.formatDate(fromDate)));
-            writer.println("Đến ngày," + escapeCsv(DateTimeUtil.formatDate(toDate)));
-            writer.println();
-
-            writer.println("TỔNG QUAN");
-            writer.println("Chỉ số,Giá trị");
-            writer.println("Tổng doanh thu," + escapeCsv(MoneyUtil.formatMoney((Long) dashboard.get("totalRevenue"))));
-            writer.println("Lượt check-in," + dashboard.get("checkInCount"));
-
-            Map<String, Object> dayPassSummary = castMap(dashboard.get("dayPassSummary"));
-            writer.println("Lượt vé ngày," + dayPassSummary.get("count"));
-            writer.println("Doanh thu vé ngày," + escapeCsv(MoneyUtil.formatMoney((Long) dayPassSummary.get("revenue"))));
-            writer.println();
-
-            writer.println("DOANH THU THEO GÓI");
-            writer.println("Tên gói,Số giao dịch,Doanh thu,Trong đó VAT");
-            for (Map<String, Object> row : castList(dashboard.get("revenueByPackage"))) {
-                writer.println(
-                        escapeCsv((String) row.get("packageName")) + ","
-                                + row.get("transactionCount") + ","
-                                + escapeCsv(MoneyUtil.formatMoney((Long) row.get("revenue"))) + ","
-                                + escapeCsv(MoneyUtil.formatMoney((Long) row.get("vatAmount")))
-                );
-            }
-            writer.println();
-
-            writer.println("HOA HỒNG PT");
-            writer.println("Mã PT,Họ tên,Số buổi được tính,Tổng hoa hồng");
-            for (Map<String, Object> row : castList(dashboard.get("ptCommissions"))) {
-                writer.println(
-                        escapeCsv((String) row.get("employeeCode")) + ","
-                                + escapeCsv((String) row.get("fullName")) + ","
-                                + row.get("sessionCount") + ","
-                                + escapeCsv(MoneyUtil.formatMoney((Long) row.get("commissionAmount")))
-                );
-            }
-            writer.println();
-
-            writer.println("AUDIT & BẢO MẬT");
-            writer.println("Hoạt động đăng nhập,Số lần");
-            Map<String, Integer> loginActions = castIntegerMap(dashboard.get("loginAuditActions"));
-            writer.println("SignIn," + loginActions.get("SignIn"));
-            writer.println("SignInFailed," + loginActions.get("SignInFailed"));
-            writer.println("AccountLocked," + loginActions.get("AccountLocked"));
-            writer.println("Tài khoản bị khóa," + dashboard.get("lockedAccountCount"));
-            writer.println("Thay đổi tài khoản," + dashboard.get("accountAuditChangeCount"));
-            writer.println();
-
-            writer.println("THAO TÁC NHẠY CẢM THEO LOẠI");
-            writer.println("Action,Số lần");
-            for (Map.Entry<String, Integer> entry : castIntegerMap(dashboard.get("sensitiveAuditLogsByAction")).entrySet()) {
-                writer.println(escapeCsv(entry.getKey()) + "," + entry.getValue());
-            }
-            writer.println();
-
-            writer.println("THAO TÁC NHẠY CẢM THEO NGƯỜI THỰC HIỆN");
-            writer.println("AccountId,Người thực hiện,Vai trò,Số lần");
-            for (Map<String, Object> row : castList(dashboard.get("sensitiveAuditActors"))) {
-                Object accountId = row.get("accountId");
-                writer.println(
-                        escapeCsv(accountId == null ? "System" : String.valueOf(accountId)) + ","
-                                + escapeCsv((String) row.get("actorName")) + ","
-                                + escapeCsv((String) row.get("actorRole")) + ","
-                                + row.get("total")
-                );
-            }
+        try (OutputStream out = response.getOutputStream()) {
+            out.write(UTF8_BOM);
+            out.write(csvContent.getBytes(StandardCharsets.UTF_8));
+            out.flush();
         }
     }
 
-    private String escapeCsv(String value) {
-        if (value == null) {
-            return "";
+    private static final class DateParseOutcome {
+        private final LocalDate date;
+        private final String inputValue;
+        private final String error;
+
+        private DateParseOutcome(LocalDate date, String inputValue, String error) {
+            this.date = date;
+            this.inputValue = inputValue;
+            this.error = error;
         }
-
-        String escaped = value.replace("\"", "\"\"");
-        return "\"" + escaped + "\"";
-    }
-
-    @SuppressWarnings("unchecked")
-    private Map<String, Object> castMap(Object value) {
-        return (Map<String, Object>) value;
-    }
-
-    @SuppressWarnings("unchecked")
-    private Map<String, Integer> castIntegerMap(Object value) {
-        return (Map<String, Integer>) value;
-    }
-
-    @SuppressWarnings("unchecked")
-    private List<Map<String, Object>> castList(Object value) {
-        return (List<Map<String, Object>>) value;
     }
 }

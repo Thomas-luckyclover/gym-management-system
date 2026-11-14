@@ -5,6 +5,7 @@ import com.gms.dto.CustomerDashboardView;
 import com.gms.dto.ServiceResult;
 import com.gms.service.CustomerDashboardService;
 import com.gms.service.MyPtSessionService;
+import com.gms.service.NotificationService;
 import com.gms.util.DateTimeUtil;
 import com.gms.util.RequestUtil;
 import jakarta.servlet.ServletException;
@@ -39,6 +40,7 @@ public class MyPtSessionServlet extends HttpServlet {
 
     private final CustomerDashboardService dashboardService = new CustomerDashboardService();
     private final MyPtSessionService sessionService = new MyPtSessionService();
+    private final NotificationService notificationService = new NotificationService();
 
 
 
@@ -61,6 +63,9 @@ public class MyPtSessionServlet extends HttpServlet {
             RequestUtil.redirect(request, response, "/login?returnUrl=" + PAGE_URL);
             return;
         }
+
+        // Tự động đánh dấu đã đọc các thông báo lịch tập PT của khách hàng khi vào trang
+        notificationService.markTopicNotificationsRead(accountId, "buổi tập", "dời buổi tập", "hủy buổi tập", "Gói PT");
 
         // B2: tên khách ở topbar + lịch tuần / tháng
         loadHeader(request, accountId);

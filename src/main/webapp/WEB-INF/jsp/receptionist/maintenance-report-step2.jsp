@@ -270,7 +270,7 @@
                       <i class="fa-solid fa-camera upload-icon" aria-hidden="true"></i>
                       <div class="drop-text-group">
                         <span class="drop-main-text">Chụp / tải ảnh sự cố</span>
-                        <span class="drop-sub-text">JPG, PNG, WEBP tối đa 10MB</span>
+                        <span class="drop-sub-text">JPG, PNG tối đa 5MB</span>
                       </div>
                     </div>
                     <div class="image-preview" id="imagePreview" style="display: none;"></div>
@@ -411,6 +411,18 @@
       fileInput.addEventListener('change', function () {
         if (this.files && this.files[0]) {
           var file = this.files[0];
+          if (file.size > 5 * 1024 * 1024) {
+            alert('Chỉ chấp nhận ảnh JPG hoặc PNG, tối đa 5 MB.');
+            clearUploadedImage();
+            return;
+          }
+          var dotIdx = file.name.lastIndexOf('.');
+          var ext = dotIdx >= 0 ? file.name.substring(dotIdx).toLowerCase() : '';
+          if (ext !== '.jpg' && ext !== '.jpeg' && ext !== '.png') {
+            alert('Chỉ chấp nhận ảnh JPG hoặc PNG, tối đa 5 MB.');
+            clearUploadedImage();
+            return;
+          }
           var reader = new FileReader();
           reader.onload = function (e) {
             var shortName = formatShortFilename(file.name, 26);

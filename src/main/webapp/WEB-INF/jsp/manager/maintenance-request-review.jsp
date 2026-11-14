@@ -7,7 +7,7 @@
 <head>
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Duyệt yêu cầu ${item.request.requestCode} · Super Gym Quản lý</title>
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/maintenance-requests.css?v=20261031v4">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/maintenance-requests.css?v=20261114v1">
 
 </head>
 
@@ -314,7 +314,7 @@
         <div class="gms-modal-body">
           <div class="field">
             <label class="field-label" for="rejectReasonDetailInput">
-              Lý do từ chối <span aria-hidden="true">*</span>
+              <span>Lý do từ chối <span style="color:var(--color-danger)" aria-hidden="true">*</span></span>
             </label>
             <textarea id="rejectReasonDetailInput"
                       name="rejectReason"

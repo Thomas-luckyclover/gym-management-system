@@ -7,7 +7,7 @@
 <head>
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Yêu cầu bảo trì · Super Gym Quản lý</title>
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/maintenance-requests.css?v=20261026v1">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/maintenance-requests.css?v=20261114v1">
 
 </head>
 
@@ -161,16 +161,16 @@
             <table class="maintenance-data-table">
               <thead>
                 <tr>
-                  <th style="width: 44px; text-align: center;">
+                  <th class="col-check">
                     <input type="checkbox" id="checkAllOpen" class="bulk-checkbox" title="Chọn tất cả đơn chờ duyệt">
                   </th>
-                  <th style="width: 110px;">MÃ</th>
-                  <th style="width: 220px;">THIẾT BỊ · MÁY</th>
-                  <th>SỰ CỐ</th>
-                  <th style="width: 110px;">ƯU TIÊN</th>
-                  <th style="width: 170px;">NGÀY BÁO · NGƯỜI BÁO</th>
-                  <th style="width: 140px;">TRẠNG THÁI</th>
-                  <th style="width: 130px; text-align: right;">THAO TÁC</th>
+                  <th class="col-code">MÃ</th>
+                  <th class="col-device">THIẾT BỊ · MÁY</th>
+                  <th class="col-incident">SỰ CỐ</th>
+                  <th class="col-priority">ƯU TIÊN</th>
+                  <th class="col-reporter">NGÀY BÁO · NGƯỜI BÁO</th>
+                  <th class="col-status">TRẠNG THÁI</th>
+                  <th class="col-actions">THAO TÁC</th>
                 </tr>
               </thead>
               <tbody>
@@ -179,7 +179,7 @@
                     <c:forEach var="item" items="${requestPage.items}">
                       <tr>
                         <%-- Cột Chọn hàng loạt --%>
-                        <td style="text-align: center;">
+                        <td class="col-check">
                           <c:choose>
                             <c:when test="${item.request.open}">
                               <input type="checkbox"
@@ -195,12 +195,12 @@
                         </td>
 
                         <%-- Cột MÃ --%>
-                        <td>
+                        <td class="col-code">
                           <strong class="request-code"><c:out value="${item.request.requestCode}" /></strong>
                         </td>
 
                         <%-- Cột THIẾT BỊ · MÁY --%>
-                        <td>
+                        <td class="col-device">
                           <div class="cell-device-info">
                             <strong class="device-name"><c:out value="${item.facilityName}" /></strong>
                             <span class="device-item-code">
@@ -218,10 +218,16 @@
                         </td>
 
                         <%-- Cột SỰ CỐ --%>
-                        <td>
+                        <td class="col-incident">
                           <div class="cell-incident-info">
                             <strong class="incident-title"><c:out value="${item.request.incidentType.displayName}" /></strong>
-                            <p class="incident-desc"><c:out value="${item.request.description}" /></p>
+                            <div class="incident-desc-wrap">
+                              <p class="incident-desc"><c:out value="${item.request.description}" /></p>
+                              <button type="button"
+                                      class="incident-desc-toggle"
+                                      aria-expanded="false"
+                                      hidden>... Xem thêm</button>
+                            </div>
                             <c:if test="${item.request.warningTagPlaced}">
                               <span class="warning-tag-pill">Đã treo biển ngừng dùng</span>
                             </c:if>
@@ -229,14 +235,14 @@
                         </td>
 
                         <%-- Cột ƯU TIÊN --%>
-                        <td>
+                        <td class="col-priority">
                           <span class="priority-label priority-${item.request.priority.dbValue.toLowerCase()}">
                             <c:out value="${item.request.priority.displayName}" />
                           </span>
                         </td>
 
                         <%-- Cột NGÀY BÁO · NGƯỜI BÁO --%>
-                        <td>
+                        <td class="col-reporter">
                           <div class="cell-reporter-info">
                             <span class="report-date">${gms:formatDate(item.request.reportedAt.toLocalDate())}</span>
                             <span class="reporter-name"><c:out value="${item.reporterName}" /></span>
@@ -244,7 +250,7 @@
                         </td>
 
                         <%-- Cột TRẠNG THÁI --%>
-                        <td>
+                        <td class="col-status">
                           <c:choose>
                             <c:when test="${item.request.open}">
                               <span class="status-badge badge-open">● Chờ duyệt</span>
@@ -262,7 +268,7 @@
                         </td>
 
                         <%-- Cột THAO TÁC --%>
-                        <td style="text-align: right;">
+                        <td class="col-actions">
                           <a class="btn ${item.request.open ? 'btn-primary' : 'btn-outline'} btn-sm"
                              href="${pageContext.request.contextPath}/manager/maintenance-requests/review?id=${item.request.maintenanceRequestId}">
                             ${item.request.open ? 'Xem & duyệt' : 'Xem chi tiết'}
@@ -510,6 +516,74 @@
           }
         });
       }
+
+      // Rút gọn mô tả sự cố dài quá 2 dòng và hiển thị nút "... Xem thêm" để mở toàn bộ nội dung
+      var descWraps = document.querySelectorAll('.incident-desc-wrap');
+
+      function refreshIncidentDescTruncations() {
+        descWraps.forEach(function (wrap) {
+          var desc = wrap.querySelector('.incident-desc');
+          var toggleBtn = wrap.querySelector('.incident-desc-toggle');
+          if (!desc || !toggleBtn) return;
+
+          var wasExpanded = desc.classList.contains('is-expanded');
+          if (wasExpanded) {
+            desc.classList.remove('is-expanded');
+          }
+
+          var isOverflowing = desc.scrollHeight > desc.clientHeight + 1;
+
+          if (wasExpanded && isOverflowing) {
+            desc.classList.add('is-expanded');
+          }
+
+          if (isOverflowing) {
+            desc.classList.add('is-expandable');
+            toggleBtn.hidden = false;
+            var isNowExpanded = desc.classList.contains('is-expanded');
+            toggleBtn.setAttribute('aria-expanded', isNowExpanded ? 'true' : 'false');
+            toggleBtn.textContent = isNowExpanded ? 'Thu gọn' : '... Xem thêm';
+          } else {
+            desc.classList.remove('is-expandable', 'is-expanded');
+            toggleBtn.hidden = true;
+            toggleBtn.setAttribute('aria-expanded', 'false');
+          }
+        });
+      }
+
+      function toggleIncidentDesc(wrap) {
+        var desc = wrap.querySelector('.incident-desc');
+        var toggleBtn = wrap.querySelector('.incident-desc-toggle');
+        if (!desc || !toggleBtn || toggleBtn.hidden) return;
+
+        var expanded = desc.classList.toggle('is-expanded');
+        toggleBtn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        toggleBtn.textContent = expanded ? 'Thu gọn' : '... Xem thêm';
+      }
+
+      descWraps.forEach(function (wrap) {
+        var desc = wrap.querySelector('.incident-desc');
+        var toggleBtn = wrap.querySelector('.incident-desc-toggle');
+
+        if (toggleBtn) {
+          toggleBtn.addEventListener('click', function () {
+            toggleIncidentDesc(wrap);
+          });
+        }
+
+        if (desc) {
+          desc.addEventListener('click', function () {
+            if (!desc.classList.contains('is-expandable')) return;
+            var selection = window.getSelection ? window.getSelection().toString() : '';
+            if (selection) return;
+            toggleIncidentDesc(wrap);
+          });
+        }
+      });
+
+      refreshIncidentDescTruncations();
+      window.addEventListener('load', refreshIncidentDescTruncations);
+      window.addEventListener('resize', refreshIncidentDescTruncations);
     })();
   </script>
 </body>

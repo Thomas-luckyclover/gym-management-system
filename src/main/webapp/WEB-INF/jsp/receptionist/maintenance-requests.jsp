@@ -7,7 +7,7 @@
 <head>
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Yêu cầu bảo trì · Super Gym Lễ tân</title>
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/maintenance-requests.css?v=20261031bulk1">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/maintenance-requests.css?v=20261114v1">
 
 </head>
 
@@ -445,7 +445,8 @@
 
           <div class="field" style="margin-top: 6px;">
             <label class="field-label" for="bulkAcceptanceNoteInput">
-              Ghi chú nghiệm thu chung <span style="color:var(--color-danger)">*</span> (5 - 500 ký tự)
+              <span>Ghi chú nghiệm thu chung <span class="required-mark">*</span></span>
+              <span class="field-label-meta">(5 - 500 ký tự)</span>
             </label>
             <textarea id="bulkAcceptanceNoteInput"
                       name="acceptanceNote"

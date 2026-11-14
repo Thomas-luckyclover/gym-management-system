@@ -30,6 +30,7 @@ public class PtSessionHandleDAO {
     //   GymClosed (phòng nghỉ) · PtOnLeave (PT có đơn nghỉ trùng ca) · CustomerBusy (khách có buổi khác chồng giờ)
     //   · HasGymAccess (CBR-117: khách có Membership không bảo lưu, HOẶC có DayPass, ngày đó).
     private static final String SLOT_SQL = """
+            -- Lấy đúng khung số 73, khóa nó lại, nhưng chỉ khi khung còn trống, không ai giữ, chưa có buổi, và PT chủ khung đang làm việc
             SELECT t.TimeSlotId, t.PtEmployeeId, p.FullName AS PtName, e.CommissionRate,
                    t.SlotDate, t.StartTime, t.EndTime,
                    CASE WHEN EXISTS (SELECT 1 FROM OperatingHourExceptions x

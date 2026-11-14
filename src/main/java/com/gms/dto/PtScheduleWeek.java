@@ -13,21 +13,35 @@ import java.util.List;
 public class PtScheduleWeek {
     // ===== IN RA MÀN =====
     // ← thứ Hai của tuần đang xem → "dd/MM – …" trên thanh tuần, khóa nháp (data-draft-key)
+    // Lấy từ URL ?date= → quay về thứ Hai
     private LocalDate weekStart;
     // ← Chủ nhật → "… – dd/MM/yyyy"
+    // weekEnd = weekStart + 6
     private LocalDate weekEnd;
+    
+    
+    // prevWeek + nextWeek = weekStart + hoặc - 7
+    // currentWeek: So weekStart với đồng hồ hệ thống
     // ← weekStart − 1 tuần → link "‹" (?date=)
     private LocalDate prevWeek;
     // ← weekStart + 1 tuần → link "›", nút "Chép sang tuần sau" (data-next-url)
     private LocalDate nextWeek;
     // ← tuần chứa hôm nay → ẩn nút "Tuần này" khi đang ở tuần này
     private boolean currentWeek;
+    
+    
+    // Lấy từ SystemConfigs: Giờ đóng mở cửa mặc định or ngoại lệ: P-17
     // ← giờ mở cửa sớm nhất trong tuần (P-17 / ngày ngoại lệ / khung có sẵn) → hàng giờ đầu của trục
     private int axisStartHour;
     // ← giờ đóng cửa muộn nhất (làm tròn lên) → hàng giờ cuối
     private int axisEndHour;
+    
+    
     // ← SystemConfigs P-06 (thời lượng 1 buổi) → "Kết thúc … · N phút", ô ẩn duration của form Công bố
+    // Đọc từ SystemConfigs: P-06
     private int sessionMinutes;
+    
+    
     // ← 7 PtScheduleDay (T2 → CN) → 7 cột ngày
     private List<PtScheduleDay> days = List.of();
 

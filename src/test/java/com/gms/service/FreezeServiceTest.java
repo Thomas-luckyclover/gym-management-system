@@ -5,7 +5,6 @@ import com.gms.constant.Role;
 import com.gms.dao.AccountDAO;
 import com.gms.dao.AuditLogDAO;
 import com.gms.dao.CheckInDAO;
-import com.gms.dao.CustomerDAO;
 import com.gms.dao.EmployeeDAO;
 import com.gms.dao.FreezeRecordDAO;
 import com.gms.dto.FreezeCustomerView;
@@ -53,7 +52,6 @@ class FreezeServiceTest {
     private FakeCheckInDAO fakeCheckInDAO;
     private FakeAccountDAO fakeAccountDAO;
     private FakeEmployeeDAO fakeEmployeeDAO;
-    private FakeCustomerDAO fakeCustomerDAO;
     private FakeSystemConfigService fakeSystemConfigService;
     private FakeSelfServiceGuard fakeSelfServiceGuard;
     private FakeAuditLogDAO fakeAuditLogDAO;
@@ -73,14 +71,13 @@ class FreezeServiceTest {
         fakeCheckInDAO = new FakeCheckInDAO();
         fakeAccountDAO = new FakeAccountDAO();
         fakeEmployeeDAO = new FakeEmployeeDAO();
-        fakeCustomerDAO = new FakeCustomerDAO();
         fakeSystemConfigService = new FakeSystemConfigService();
         fakeSelfServiceGuard = new FakeSelfServiceGuard();
         fakeAuditLogDAO = new FakeAuditLogDAO();
 
         freezeService = new TestableFreezeService(
                 fakeFreezeRecordDAO, fakeCheckInDAO, fakeAccountDAO, fakeEmployeeDAO,
-                fakeCustomerDAO, fakeSystemConfigService, fakeSelfServiceGuard, fakeAuditLogDAO);
+                fakeSystemConfigService, fakeSelfServiceGuard, fakeAuditLogDAO);
 
         // Tạo tài khoản Lễ tân hợp lệ
         Account staffAcc = new Account(STAFF_ACCOUNT_ID, STAFF_PERSON_ID, "hash",
@@ -352,10 +349,6 @@ class FreezeServiceTest {
         assertEquals(end, record.getPlannedEndDate());
         assertNull(record.getActualEndDate());
 
-        // Kiểm tra CBR-62: Buổi PT trong kỳ bảo lưu KHÔNG bị chốt Missed lúc tạo bảo lưu (giữ Scheduled để JOB-04 chốt sau)
-        List<Integer> missedIds = fakeFreezeRecordDAO.getMissedSessionIds();
-        assertTrue(missedIds.isEmpty(), "Buổi PT trong kỳ bảo lưu không bị chốt Missed ngay lúc lưu (CBR-62)");
-
         // Kiểm tra AuditLog được ghi lại
         AuditLog log = fakeAuditLogDAO.getLastLog();
         assertNotNull(log);
@@ -389,7 +382,6 @@ class FreezeServiceTest {
 
         assertTrue(res.isSuccess());
         assertTrue(res.getMessage().contains("2 buổi PT"));
-        assertTrue(fakeFreezeRecordDAO.getMissedSessionIds().isEmpty(), "Các buổi PT không bị chốt Missed ngay lúc lưu (CBR-62)");
     }
 
     @Test
@@ -694,10 +686,10 @@ class FreezeServiceTest {
     static class TestableFreezeService extends FreezeService {
         TestableFreezeService(FreezeRecordDAO freezeRecordDAO, CheckInDAO checkInDAO,
                               AccountDAO accountDAO, EmployeeDAO employeeDAO,
-                              CustomerDAO customerDAO, SystemConfigService systemConfigService,
+                              SystemConfigService systemConfigService,
                               SelfServiceGuard selfServiceGuard, AuditLogDAO auditLogDAO) {
             super(freezeRecordDAO, checkInDAO, accountDAO, employeeDAO,
-                    customerDAO, systemConfigService, selfServiceGuard, auditLogDAO);
+                    systemConfigService, selfServiceGuard, auditLogDAO);
         }
 
         @Override
@@ -723,7 +715,6 @@ class FreezeServiceTest {
         private final Map<Integer, FreezeRecord> freezeRecords = new HashMap<>();
         private final Map<Integer, String> customerStatuses = new HashMap<>();
         private final List<FreezeRecord> expiredFreezes = new ArrayList<>();
-        private final List<Integer> missedSessionIds = new ArrayList<>();
         private List<FreezeSessionImpactView> scheduledSessions = new ArrayList<>();
         private FreezeRecord lastInserted;
 
@@ -778,10 +769,6 @@ class FreezeServiceTest {
             return customerStatuses.get(customerId);
         }
 
-        List<Integer> getMissedSessionIds() {
-            return missedSessionIds;
-        }
-
         @Override
         public int insert(Connection conn, FreezeRecord record) {
             record.setFreezeRecordId(999);
@@ -792,11 +779,6 @@ class FreezeServiceTest {
 
         @Override
         public FreezeRecord findById(Connection conn, int freezeRecordId) {
-            return freezeRecords.get(freezeRecordId);
-        }
-
-        @Override
-        public FreezeRecord findById(int freezeRecordId) {
             return freezeRecords.get(freezeRecordId);
         }
 
@@ -937,22 +919,7 @@ class FreezeServiceTest {
         }
 
         @Override
-        public void markSessionsMissedDueToFreeze(Connection conn, List<Integer> sessionIds) {
-            missedSessionIds.addAll(sessionIds);
-        }
-
-        @Override
         public List<FreezeRecordItemView> findRecentFreezes(String keyword, int limit) {
-            return List.of();
-        }
-
-        @Override
-        public List<FreezeRecordItemView> findRecentFreezes(int limit) {
-            return List.of();
-        }
-
-        @Override
-        public List<FreezeRecordItemView> findFreezesByCustomerId(int customerId) {
             return List.of();
         }
     }
@@ -1005,9 +972,6 @@ class FreezeServiceTest {
         public Employee findByPersonId(int personId) {
             return employees.get(personId);
         }
-    }
-
-    static class FakeCustomerDAO extends CustomerDAO {
     }
 
     static class FakeSystemConfigService extends SystemConfigService {

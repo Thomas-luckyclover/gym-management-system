@@ -1,414 +1,363 @@
-/* ===== Đầu báo cáo và bộ lọc ===== */
-.report-head {
-    display: grid;
-    gap: var(--space-5);
-    margin-bottom: var(--space-6);
+/* ==========================================================================
+   dashboard.css — Báo cáo vận hành hệ thống cho Admin (#68, UC-44).
+   Kế thừa chuẩn nút bấm (.btn), bộ chữ 3 vai và bảng dữ liệu từ common.css.
+   ========================================================================== */
+
+.filter-card {
+  padding: var(--space-4) var(--space-5);
+  margin-bottom: var(--space-6);
 }
 
-.report-title-block h2,
-.section-heading h2,
-.card-heading h3 {
-    margin: 0;
-    color: var(--color-text);
-    font-family: var(--font-heading);
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-3) var(--space-4);
 }
 
-.report-title-block h2,
-.section-heading h2 {
-    font-size: var(--font-size-xl);
+.filter-fields {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-3);
 }
 
-.card-heading h3 {
-    font-size: var(--font-size-lg);
+.filter-fields .field {
+  margin-bottom: 0;
+  gap: var(--space-1-5);
+  flex: 0 1 auto;
 }
 
-.report-title-block p,
-.section-heading p,
-.card-heading p {
-    margin: var(--space-1) 0 0;
-    color: var(--color-text-soft);
-    line-height: var(--line-height-relaxed);
+.filter-fields label {
+  font-family: var(--font-brand-body);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-muted);
 }
 
-.report-filter {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
-    align-items: end;
-    gap: var(--space-3);
-    padding: var(--space-4);
-    border: var(--border-width) solid var(--color-border);
-    border-radius: var(--radius-md);
-    background: var(--color-surface);
+.filter-fields input[type="date"] {
+  width: auto;
+  min-width: calc(var(--space-12) * 3.15);
+  font-family: var(--font-brand-body);
+  font-size: var(--font-size-sm);
+  font-variant-numeric: var(--font-numeric);
+  accent-color: var(--color-primary);
 }
 
-.report-filter-field {
-    display: grid;
-    gap: var(--space-1-5);
+.filter-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2-5);
 }
 
-.report-filter-field label {
-    color: var(--color-text);
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-semibold);
+.range-presets {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
 }
 
-.report-date-input {
-    width: 100%;
-    height: var(--control-height-md);
-    padding: 0 var(--space-3);
-    border: var(--border-width) solid var(--color-border);
-    border-radius: var(--radius-sm);
-    background: var(--color-surface);
-    color: var(--color-text);
-    box-shadow: none;
-    outline: none;
+.filter-actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
 }
 
-.report-date-input:hover {
-    border-color: var(--color-border-strong);
-    box-shadow: none;
+.filter-actions .btn.is-disabled,
+.filter-actions .btn[aria-disabled="true"] {
+  opacity: var(--opacity-disabled);
+  pointer-events: none;
+  cursor: not-allowed;
 }
 
-.report-date-input:focus {
-    border-color: var(--color-primary);
-    box-shadow: none;
+/* Trạng thái nút chọn nhanh đang được chọn */
+html body.dock .range-presets .chip.is-active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-on-primary);
+  font-weight: var(--font-weight-semibold);
 }
 
-.report-filter-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2);
+html body.dock:not(.no-arena) .range-presets .chip.is-active {
+  background: var(--arena-ember);
+  border-color: var(--arena-ember-border);
+  color: var(--arena-ink-on-bright);
 }
 
-.report-filter-actions .btn {
-    min-height: var(--control-height-md);
+/* Hộp thông báo (lỗi DB / khoảng ngày trống dữ liệu) */
+.notice {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2-5);
+  padding: var(--space-3-5) var(--space-4);
+  margin-bottom: var(--space-6);
+  border-radius: var(--radius-md);
+  border: var(--border-width) solid var(--color-border);
+  font-family: var(--font-brand-body);
+  font-size: var(--font-size-sm);
 }
 
-.report-error {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    margin-bottom: var(--space-5);
-    padding: var(--space-3) var(--space-4);
-    border: var(--border-width) solid var(--color-danger-border);
-    border-radius: var(--radius-sm);
-    background: var(--color-danger-tint);
-    color: var(--color-danger-ink);
+.notice-error {
+  background: var(--color-danger-tint);
+  border-color: var(--color-danger-border);
+  color: var(--color-danger-ink);
 }
 
-/* ===== Các khối báo cáo ===== */
-.dashboard-section {
-    display: grid;
-    gap: var(--space-5);
-    margin-top: var(--space-7);
+.notice-info {
+  background: var(--color-info-tint);
+  border-color: var(--color-info-border);
+  color: var(--color-info-ink);
 }
 
-.section-heading {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: var(--space-4);
+html[data-theme="dark"] body.dock .notice-error {
+  background: color-mix(in srgb, var(--color-danger) 18%, var(--arena-surface));
+  border-color: var(--arena-error-on-dark);
+  color: var(--arena-on-dark);
 }
 
-/* Bảng điểm 4 chỉ số: nền đen liền khối, ô đầu tô màu chủ đạo, số lật kiểu bảng giờ tàu */
-/* Ô rộng tối thiểu 200px, không đủ chỗ thì tự xuống hàng và ô hàng dưới giãn lấp kín;
-   vạch chia = khe 1px lộ nền vạch (đúng ở mọi cách xếp hàng) */
-.metric-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--border-width);
-    overflow: hidden;
-    border-radius: var(--radius-md);
-    background: var(--color-board-line);
-    box-shadow: var(--shadow-lift);
+html[data-theme="dark"] body.dock .notice-info {
+  background: color-mix(in srgb, var(--color-info) 16%, var(--arena-surface));
+  border-color: var(--arena-ice);
+  color: var(--arena-on-dark);
 }
 
-.report-card {
-    border: var(--border-width) solid var(--color-border);
-    border-radius: var(--radius-md);
-    background: var(--color-surface);
+/* Khu vực nội dung báo cáo */
+.report-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  margin-bottom: var(--space-8);
+}
+
+.report-section-audit {
+  padding-top: var(--space-6);
+  border-top: var(--border-width-thick) solid var(--color-role-admin);
+}
+
+.section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.section-head .section-title {
+  margin: 0;
+}
+
+/* Lưới KPI vận hành & doanh thu */
+.kpi-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-4);
 }
 
 .metric-card {
-    display: grid;
-    align-content: start;
-    gap: var(--space-2);
-    flex: 1 1 200px;
-    min-width: 0;
-    padding: var(--space-4-5) var(--space-5);
-    background: var(--color-board);
-    color: var(--color-text);
-    /* Cỡ số co theo bề rộng ô (đơn vị cqi) */
-    container-type: inline-size;
-}
-
-
-
-.metric-card-primary {
-    background: var(--color-primary);
-    border-right-color: transparent;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius-md);
+  border: var(--border-width) solid var(--color-border);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
 }
 
 .metric-label {
-    color: var(--color-text-muted);
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-semibold);
-}
-
-.metric-card-primary .metric-label,
-.metric-card-primary .metric-note {
-    color: color-mix(in srgb, var(--color-on-primary) 82%, transparent);
+  font-family: var(--font-brand-body);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-muted);
 }
 
 .metric-value {
-    color: var(--color-text);
-    font-family: var(--font-heading);
-    font-variant-numeric: tabular-nums;
-    /* 10cqi: "999.999.999 ₫" vẫn vừa ô 200px, không bị cắt */
-    font-size: clamp(var(--font-size-lg), 11cqi, 3.25rem);
-    font-weight: var(--font-weight-extrabold);
-    letter-spacing: var(--letter-spacing-tight);
-    line-height: var(--line-height-tight);
-    white-space: nowrap;
+  font-family: var(--font-brand-display);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+  letter-spacing: -0.02em;
+  font-variant-numeric: var(--font-numeric);
 }
 
-.metric-note {
-    color: var(--color-text-muted);
-    font-size: var(--font-size-xs);
-    line-height: var(--line-height-relaxed);
+/* Độ ưu tiên cao hơn common.css (0,4,2) để thẻ Tổng doanh thu tương phản tốt trên cả Sáng & Tối */
+html body.dock:not(.no-arena) .metric-card.metric-card-primary {
+  background: var(--brand-ocean-deep);
+  border-color: var(--brand-aqua-soft);
 }
 
-
-.report-stack,
-.audit-detail-grid {
-    display: grid;
-    gap: var(--space-4);
+html body.dock:not(.no-arena) .metric-card.metric-card-primary .metric-label {
+  color: var(--arena-on-dark-soft);
 }
 
-.report-card {
-    overflow: hidden;
+html body.dock:not(.no-arena) .metric-card.metric-card-primary .metric-value {
+  color: var(--brand-aqua-soft);
 }
 
-.card-heading {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: var(--space-3);
-    padding: var(--space-4);
-    border-bottom: var(--border-width) solid var(--color-border);
+html:where(:not([data-theme="dark"])) body.dock .content .metric-card.metric-card-primary {
+  background: var(--zone-card);
+  border-color: var(--zone-accent);
+  box-shadow: inset 0 var(--border-width-thick) 0 var(--zone-accent), var(--shadow-card);
+}
+
+/* Thẻ tóm tắt Audit & bảo mật */
+.audit-grid {
+  display: grid;
+  grid-template-columns: minmax(calc(var(--space-12) * 5.5), 1.4fr) repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.audit-card-login {
+  gap: var(--space-3);
+}
+
+.audit-stat-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.audit-stat-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-top: var(--space-2);
+  border-top: var(--border-width) solid var(--color-border);
+  font-family: var(--font-brand-body);
+  font-size: var(--font-size-sm);
+}
+
+.audit-stat-list li:first-child {
+  padding-top: 0;
+  border-top: none;
+}
+
+.audit-stat-list .stat-num {
+  font-family: var(--font-brand-body);
+  font-weight: var(--font-weight-semibold);
+  font-variant-numeric: var(--font-numeric);
+}
+
+html body.dock:not(.no-arena) .metric-card.audit-highlight {
+  background: var(--arena-surface);
+  border-color: var(--arena-card-line);
+  box-shadow: inset 0 var(--border-width-thick) 0 var(--color-role-admin), var(--shadow-card);
+}
+
+html body.dock:not(.no-arena) .metric-card.audit-highlight .metric-label {
+  color: var(--arena-on-dark-soft);
+}
+
+html body.dock:not(.no-arena) .metric-card.audit-highlight .metric-value {
+  color: var(--arena-on-dark);
+}
+
+html:where(:not([data-theme="dark"])) body.dock .content .metric-card.audit-highlight {
+  background: var(--color-role-admin-tint);
+  border-color: var(--color-role-admin);
+  box-shadow: inset 0 var(--border-width-thick) 0 var(--color-role-admin), var(--shadow-card);
+}
+
+/* Bảng dữ liệu kế thừa common.css, tiêu đề card gọn sạch */
+.card.table-card {
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.table-card .card-title {
+  margin: 0;
+  padding: var(--space-4) var(--space-5) var(--space-3);
+  font-family: var(--font-brand-display);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-heading);
+  color: var(--color-text);
 }
 
 .table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.data-table {
+  font-family: var(--font-brand-body);
+  font-size: var(--font-size-sm);
+}
+
+/* Thắng độ ưu tiên (0,2,5) trong common.css để tiêu đề cột số căn phải thẳng với số liệu */
+html body.dock table.data-table:not(.no-gms-table) thead th.num,
+html body.dock table.data-table:not(.no-gms-table) tbody td.num {
+  text-align: right;
+  font-variant-numeric: var(--font-numeric);
+  white-space: nowrap;
+}
+
+.data-table td.mono {
+  font-family: var(--font-brand-mono);
+  font-size: var(--font-size-xs);
+  white-space: nowrap;
+}
+
+.data-table td.table-empty {
+  padding: var(--space-6) var(--space-4);
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.audit-tables-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+  align-items: start;
+}
+
+/* Responsive */
+@media (max-width: 1080px) {
+  .kpi-grid-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .audit-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .audit-card-login {
+    grid-column: 1 / -1;
+  }
+
+  .audit-tables-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .filter-fields,
+  .filter-fields .field,
+  .filter-fields input[type="date"] {
     width: 100%;
-    overflow-x: auto;
+    min-width: 100%;
+  }
+
+  .kpi-grid-4,
+  .audit-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
-.report-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.report-table th,
-.report-table td {
-    padding: var(--space-3) var(--space-4);
-    border-bottom: var(--border-width) solid var(--color-border);
-    text-align: left;
-    vertical-align: top;
-}
-
-.report-table th {
-    background: var(--color-surface-muted);
-    color: var(--color-text-soft);
-    font-size: var(--font-size-xs);
-    font-weight: var(--font-weight-semibold);
-    letter-spacing: var(--letter-spacing-wide);
-    text-transform: uppercase;
-}
-
-.report-table tbody tr:last-child td {
-    border-bottom: 0;
-}
-
-.report-table tbody tr:hover td {
-    background: var(--color-surface-hover);
-}
-
-.number-cell {
-    text-align: right !important;
-    white-space: nowrap;
-}
-
-.tabular {
-    font-family: var(--font-heading);
-    font-variant-numeric: tabular-nums;
-    font-variant-numeric: tabular-nums;
-}
-
-.empty-state {
-    padding: var(--space-6) var(--space-4);
-    color: var(--color-text-soft);
-    text-align: center;
-}
-
-.report-empty {
-    border: var(--border-width) dashed var(--color-border-strong);
-    border-radius: var(--radius-md);
-    background: var(--color-surface-muted);
-}
-
-/* ===== Audit metrics chỉ Admin thấy ===== */
-.audit-section {
-    padding-top: var(--space-2);
-    border-top: var(--border-width-accent) solid var(--color-role-admin);
-}
-
-.audit-heading h2 {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-}
-
-.audit-heading h2 i {
-    color: var(--color-role-admin);
-}
-
-.audit-summary-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: var(--space-3);
-}
-
-.compact-card {
-    padding-bottom: var(--space-2);
-}
-
-.compact-card .card-heading {
-    border-bottom: 0;
-    padding-bottom: var(--space-2);
-}
-
-.stat-list {
-    margin: 0;
-    padding: 0 var(--space-4) var(--space-3);
-}
-
-.stat-list > div {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-3);
-    padding: var(--space-2) 0;
-    border-top: var(--border-width) solid var(--color-border);
-}
-
-.stat-list dt {
-    color: var(--color-text-soft);
-}
-
-.stat-list dd {
-    margin: 0;
-    color: var(--color-text);
-    font-weight: var(--font-weight-bold);
-}
-
-.audit-highlight {
-    background: var(--color-role-admin-tint);
-}
-
-.account-id {
-    display: block;
-    margin-top: var(--space-0-5);
-    color: var(--color-text-muted);
-    font-size: var(--font-size-xs);
-}
-
-/* ===== Responsive ===== */
-@media (max-width: 1000px) {
-    .audit-summary-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-@media (max-width: 720px) {
-    .dock .topbar,
-    .dock .content {
-        padding-right: var(--layout-gutter-mobile);
-        padding-left: calc(var(--layout-gutter-mobile) + var(--space-6));
-    }
-
-    .report-filter {
-        grid-template-columns: 1fr;
-    }
-
-    .report-filter-actions,
-    .report-filter-actions .btn {
-        width: 100%;
-    }
-
-    .section-heading {
-        flex-direction: column;
-    }
-
-    .metric-card {
-        flex-basis: 150px;
-    }
-}
-.report-date-control {
-    position: relative;
-}
-
-.report-date-control .report-date-input {
-    padding-right: calc(var(--control-height-md) + var(--space-1));
-}
-
-.report-calendar-button {
-    position: absolute;
-    top: 50%;
-    right: var(--space-1);
-    display: grid;
-    place-items: center;
-    width: calc(var(--control-height-md) - var(--space-2));
-    height: calc(var(--control-height-md) - var(--space-2));
-    padding: 0;
-    border: 0;
-    border-radius: var(--radius-sm);
-    background: transparent;
-    color: var(--color-text-soft);
-    cursor: pointer;
-    transform: translateY(-50%);
-}
-
-.report-calendar-button:hover {
-    background: var(--color-primary-tint);
-    color: var(--color-primary);
-}
-
-.report-calendar-button:focus-visible {
-    outline: var(--border-width) solid var(--color-primary);
-    outline-offset: var(--border-width);
-}
-
-.report-native-date {
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    width: var(--space-1);
-    height: var(--space-1);
-    opacity: 0;
-    pointer-events: none;
-}
-
-/* Bộ lọc dùng được bằng bàn phím; chỉ số đồng nhất với báo cáo quản lý. */
-.report-date-input:focus-visible {
-  outline: var(--focus-outline-width) solid var(--brand-aqua);
-  outline-offset: var(--focus-outline-offset);
-}
-.dock .metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
-.dock .metric-card { padding: var(--space-5); }
-.dock .metric-value { font-size: var(--font-size-2xl); }
-@media (max-width: 1279px) {
-  .dock .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-@media (max-width: 480px) {
-  .dock .metric-grid { grid-template-columns: minmax(0, 1fr); }
+/* Chế độ SÁNG (14/11): tiêu đề mục ("Vận hành & doanh thu", "Audit & bảo mật") nằm THẲNG trên nền xanh cobalt,
+   không nằm trong thẻ trắng. Luật "tiêu đề ngoài thẻ = chữ trắng" của common.css bỏ sót vì khối bọc tên là
+   .dashboard-section (khớp [class*="-section"] nên bị coi là thẻ) → chữ xanh đen trên nền xanh, khó đọc.
+   Dấu ">" để chỉ đổi tiêu đề mục, không đụng tiêu đề nằm trong thẻ trắng bên dưới. */
+html:where(:not([data-theme="dark"])) body.dock .content .dashboard-section > .section-heading h2 {
+  color: var(--arena-on-dark);
 }

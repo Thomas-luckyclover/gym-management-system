@@ -435,31 +435,6 @@ class ShiftServiceTest {
     }
 
     @Test
-    @DisplayName("BF-03 A1 Flow & CBR-77: Xác nhận chuyển khoản ngân hàng thành công trong ca đang mở")
-    void testConfirmBankTransfer_Success() {
-        Shift shift = new Shift(6, LocalDate.now(), Shift.ShiftType.MORNING,
-                30, null, Shift.Status.OPEN, LocalDateTime.now(), null, null, null, null);
-        ((TestableShiftService) shiftService).setOrderShift(shift);
-
-        ServiceResult<Void> result = shiftService.confirmBankTransfer(10, 201);
-
-        assertTrue(result.isSuccess(), "Xác nhận chuyển khoản cho đơn trong ca mở phải thành công");
-    }
-
-    @Test
-    @DisplayName("CBR-77: Chặn xác nhận chuyển khoản khi ca đã chốt hoặc không ở trạng thái Open")
-    void testConfirmBankTransfer_BlockedWhenShiftNotOpen() {
-        Shift closedShift = new Shift(7, LocalDate.now(), Shift.ShiftType.MORNING,
-                30, 30, Shift.Status.CLOSED, LocalDateTime.now().minusHours(4), LocalDateTime.now(), 1000000L, 1000000L, null);
-        ((TestableShiftService) shiftService).setOrderShift(closedShift);
-
-        ServiceResult<Void> result = shiftService.confirmBankTransfer(10, 202);
-
-        assertFalse(result.isSuccess(), "Không thể xác nhận chuyển khoản cho ca đã chốt");
-        assertTrue(result.getMessage().contains("đang mở"));
-    }
-
-    @Test
     @DisplayName("CBR-115: Chặn Lễ tân tự hủy đơn hàng thuộc hồ sơ khách của chính mình")
     void testCancelOrder_BlockedForStaffOwnProfile() {
         ((TestableShiftService) shiftService).setOwnCustomerProfile(true);
@@ -651,11 +626,6 @@ class ShiftServiceTest {
                 currentShift.setCountedCash(countedCash);
                 currentShift.setVarianceReason(varianceReason);
             }
-            return 1;
-        }
-
-        @Override
-        public int confirmBankTransfer(Connection conn, int orderId, int employeeId, LocalDateTime completedAt) {
             return 1;
         }
 

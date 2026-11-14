@@ -92,12 +92,23 @@ public class MyBookingService {
             if (customerId == null) {
                 return ServiceResult.fail(Messages.MSG07_NO_PERMISSION);
             }
+            
+            
+            // tạo đối tượng
             MyBookingView view = new MyBookingView();
+            // Ghi lại hôm nay là thứ mấy, lấy thời diểm hiện tại + thứ + value đổi ra số, T2 => 1, T3 => 2
+            // Tô ô "hôm nay"
             view.setTodayWeekday(now.getDayOfWeek().getValue());
 
+            
+            
             // B2: mọi gói PT của khách, chia 2 tab Đang tập / Đã kết thúc
             for (MyPtPackageView p : sessionDAO.findMyPackages(customerId, now.toLocalDate())) {
+                
+                // fillPackage: typeLabel: "PT cá nhân"/"PT đôi", zaloUrl: link Zalo của PT, partnerName: tên người kia của gói đôi
                 fillPackage(p, customerId);
+                
+                //chia 2 tab: "Đang tập" và "Đã kết thúc"
                 if (p.isActive()) {
                     view.getActivePackages().add(p);
                 } else {
@@ -127,10 +138,16 @@ public class MyBookingService {
             sessionService.fillDisplay(sessions, customerId, now);
 
             // B6: đếm buổi, tìm "Buổi tới", gom danh sách "Cần để ý"
-            countSessions(view, sessions, now);
+            countSessions(view, sessions, now); // đếm buổi
+            
+            // danh sách buổi sắp tơi smaf khách chưa vào được gym vì chưa có gói thành viên hoặc vé ngày. Tạo khung "cần để ý" ở cuối màn
             view.setWatchList(buildWatchList(sessions));
+            
+            // gom watchList thành từng nhóm rồi cất vào view
             view.setWatchGroups(groupByReason(view.getWatchList()));
 
+            
+            
             // B7: xem gói → lịch cố định · xem buổi lẻ → sắp tới trước
             if (selected != null) {
                 fillPackageDetail(

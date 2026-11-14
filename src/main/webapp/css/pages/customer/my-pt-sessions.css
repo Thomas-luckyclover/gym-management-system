@@ -401,6 +401,43 @@ body.session-detail-open { overflow: hidden; }
   .schedule-week .session-card .session-status { max-width: 100%; white-space: normal; }
 }
 
+/* THẺ BUỔI CO THEO BỀ RỘNG CỦA CHÍNH NÓ (14/11) — không theo bề rộng màn hình.
+   Vì sao: khối 901–1100px ở trên đo MÀN HÌNH, nhưng cột lịch còn hẹp ở cả màn 1280–1440px khi thanh bên đang mở
+   (cột ~120–150px) → nhãn "Đang cập nhật" (nowrap) dài hơn thẻ, tràn sang cột bên, các thẻ cao thấp không đều.
+   Cách làm: thẻ là "container" → CSS hỏi bề rộng THẺ (@container), thẻ hẹp thì tự đổi cách xếp.
+     - Ô bớt đệm ngang → thẻ rộng thêm 8px ở mọi màn.
+     - Cột lưới của mặt thẻ là minmax(0, 1fr) → chữ dài không đẩy thẻ rộng ra ngoài ô.
+     - Thẻ hẹp (≤ 10rem): giờ được xuống dòng ở dấu "–"; nhãn trạng thái thành DẢI CHÂN THẺ chạy hết chiều ngang
+       (bỏ chấm tròn vì dải đã có nền màu + chữ), chữ dài quá thì chia 2 dòng cân nhau thay vì tràn. */
+.schedule-week tbody td { padding-inline: var(--space-2); }
+/* Trong khu làm việc, common.css (mục ARENA: "html body.dock table… tbody td") ép đệm ô 14px 16px và thắng mọi
+   luật đệm của file này (kể cả khối 901–1100px ở trên) → mỗi cột mất 32px cho đệm. Viết lại đủ mạnh để thắng. */
+html body.dock .my-pt-page .schedule-week tbody td { padding: var(--space-2-5) var(--space-2); vertical-align: top; }
+.schedule-week .session-card { container-type: inline-size; min-width: 0; }
+.schedule-week .session-card summary { grid-template-columns: minmax(0, 1fr); }
+.schedule-week .session-card .session-status { max-width: 100%; }
+
+@container (max-width: 10rem) {
+  .schedule-week .session-card summary > strong { white-space: normal; }
+  .schedule-week .session-card .session-status { white-space: normal; text-wrap: balance; line-height: var(--line-height-snug); }
+
+  /* Dải chân thẻ: mặt thẻ bỏ đệm, từng dòng chữ tự giữ lề → dải nhãn chạm 2 mép thẻ. */
+  html body.dock:not(.no-arena) .my-pt-page .schedule-week .session-card summary { gap: 0; padding: 0; }
+  html body.dock:not(.no-arena) .my-pt-page .schedule-week .session-card summary > :not(.session-status, .visually-hidden) {
+    padding: var(--space-0-5) var(--space-2) 0;
+  }
+  html body.dock:not(.no-arena) .my-pt-page .schedule-week .session-card summary > strong { padding-top: var(--space-2); }
+  html body.dock:not(.no-arena) .my-pt-page .schedule-week .session-card .session-status {
+    justify-self: stretch;
+    max-width: none;
+    margin-top: var(--space-2);
+    padding: var(--space-1) var(--space-1-5) var(--space-1) var(--space-2);
+    border-width: var(--border-width) 0 0;
+    border-radius: 0;
+  }
+  html body.dock:not(.no-arena) .my-pt-page .schedule-week .session-card .session-status::before { display: none; }
+}
+
 @media (max-width: 700px) {
   .schedule-month-stats { flex-basis: 100%; margin-left: 0; }
 }

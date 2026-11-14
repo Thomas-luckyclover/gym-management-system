@@ -1095,6 +1095,86 @@ public final class Messages {
         // khoản khác ở tab khác) → về trang chính.
         public static final String MSG340_PAGE_OF_OTHER_ACCOUNT = "Trang này không dành cho tài khoản đang đăng nhập. Nếu bạn vừa đăng nhập tài khoản khác ở tab khác, các tab cũ cũng dùng tài khoản mới.";
 
+        // ===== 6.8 Cơ sở vật chất, Bảo trì (bổ sung & thông báo chuông) và Báo cáo Admin =====
+
+        /** Vị trí khu vực đặt nhóm cơ sở vật chất vượt 100 ký tự. */
+        public static final String MSG341_FACILITY_LOCATION_LENGTH = "Khu vực đặt tối đa 100 ký tự.";
+
+        /** Trùng tên hiển thị / quy cách trong cùng nhóm máy. %s = nhãn máy. */
+        public static final String MSG342_ITEM_LABEL_EXISTS = "Tên hiển thị / Quy cách '%s' đã tồn tại trong nhóm máy này.";
+
+        /** Thanh lý cá thể máy khi vẫn còn phiếu bảo trì chưa hoàn tất (CBR-99). */
+        public static final String MSG343_ITEM_RETIRE_HAS_MAINTENANCE = "Không thể thanh lý: Thiết bị đang có yêu cầu bảo trì chưa hoàn thành.";
+
+        /** Báo hỏng thiết bị đang bảo trì hoặc đã có yêu cầu chờ duyệt (BR-105, GBR-13). %s = mã máy. */
+        public static final String MSG344_MAINTENANCE_ITEM_BUSY = "Thiết bị %s đang trong quá trình bảo trì hoặc đã có yêu cầu chờ duyệt.";
+
+        /** Duyệt hàng loạt yêu cầu bảo trì khi chưa chọn yêu cầu nào. */
+        public static final String MSG345_MAINTENANCE_BATCH_APPROVE_REQUIRED = "Vui lòng chọn ít nhất một yêu cầu bảo trì để duyệt.";
+
+        /** Duyệt hàng loạt yêu cầu bảo trì nhưng không có yêu cầu nào còn Chờ duyệt. */
+        public static final String MSG346_MAINTENANCE_BATCH_APPROVE_NONE_OPEN = "Không có yêu cầu bảo trì nào ở trạng thái Chờ duyệt được chọn.";
+
+        /** Duyệt hàng loạt yêu cầu bảo trì thành công. %d = số yêu cầu đã duyệt. */
+        public static final String MSG347_MAINTENANCE_BATCH_APPROVE_SUCCESS = "Đã phê duyệt thành công %d yêu cầu bảo trì.";
+
+        /** Nghiệm thu hàng loạt yêu cầu bảo trì khi chưa chọn yêu cầu nào. */
+        public static final String MSG348_MAINTENANCE_BATCH_CLOSE_REQUIRED = "Vui lòng chọn ít nhất một yêu cầu bảo trì để nghiệm thu.";
+
+        /** Nghiệm thu hàng loạt yêu cầu bảo trì nhưng không có yêu cầu nào Đang xử lý. */
+        public static final String MSG349_MAINTENANCE_BATCH_CLOSE_NONE_IN_PROGRESS = "Không có yêu cầu bảo trì nào ở trạng thái Đang xử lý được chọn.";
+
+        /** Nghiệm thu hàng loạt yêu cầu bảo trì thành công. %d = số yêu cầu đã đóng. */
+        public static final String MSG350_MAINTENANCE_BATCH_CLOSE_SUCCESS = "Đã nghiệm thu và đóng thành công %d yêu cầu bảo trì.";
+
+        /** Thông báo chuông gửi Quản lý khi có 1 yêu cầu bảo trì mới. %s = mã yêu cầu (BT-xxxx). */
+        public static final String MSG351_NOTIF_MAINTENANCE_NEW_TITLE = "Bảo trì · Yêu cầu mới %s";
+
+        /** Thông báo chuông gửi Quản lý khi có nhiều yêu cầu bảo trì mới. %d = số lượng yêu cầu. */
+        public static final String MSG352_NOTIF_MAINTENANCE_BATCH_NEW_TITLE = "Bảo trì · %d yêu cầu mới";
+
+        /** Nội dung thông báo chuông báo hỏng 1 thiết bị. %s = mã yêu cầu, %s = chi tiết máy. */
+        public static final String MSG353_NOTIF_MAINTENANCE_NEW_CONTENT = "%s · %s vừa được Lễ tân báo hỏng.";
+
+        /** Nội dung thông báo chuông báo hỏng nhiều thiết bị. %d = số máy, %s = danh sách tóm tắt (kèm hậu tố nếu dài). */
+        public static final String MSG354_NOTIF_MAINTENANCE_BATCH_NEW_CONTENT = "Lễ tân vừa báo hỏng %d máy: %s";
+
+        /** Hậu tố tóm tắt khi số máy báo hỏng vượt giới hạn hiển thị thông báo (<= 500 ký tự). %d = số máy còn lại. */
+        public static final String MSG355_NOTIF_MAINTENANCE_BATCH_MORE_ITEMS = " và %d máy khác.";
+
+        /** Thông báo chuông gửi Lễ tân khi 1 yêu cầu bảo trì được duyệt. */
+        public static final String MSG356_NOTIF_MAINTENANCE_APPROVED_TITLE = "Bảo trì · Đã được duyệt";
+
+        /** Nội dung thông báo chuông khi 1 yêu cầu bảo trì được duyệt. %s = mã yêu cầu, %s = chi tiết máy. */
+        public static final String MSG357_NOTIF_MAINTENANCE_APPROVED_CONTENT = "%s · %s: Quản lý đã duyệt yêu cầu, chuyển sang trạng thái Đang xử lý.";
+
+        /** Thông báo chuông gửi Lễ tân khi nhiều yêu cầu bảo trì được duyệt hàng loạt. %d = số yêu cầu. */
+        public static final String MSG358_NOTIF_MAINTENANCE_BATCH_APPROVED_TITLE = "Bảo trì · %d yêu cầu đã duyệt";
+
+        /** Nội dung thông báo chuông khi duyệt hàng loạt yêu cầu. %d = số yêu cầu, %s = danh sách mã yêu cầu. */
+        public static final String MSG359_NOTIF_MAINTENANCE_BATCH_APPROVED_CONTENT = "Quản lý đã duyệt %d yêu cầu (%s), chuyển sang trạng thái Đang xử lý.";
+
+        /** Thông báo chuông gửi Lễ tân khi 1 yêu cầu bảo trì bị từ chối. */
+        public static final String MSG360_NOTIF_MAINTENANCE_REJECTED_TITLE = "Bảo trì · Bị từ chối";
+
+        /** Nội dung thông báo chuông khi 1 yêu cầu bảo trì bị từ chối. %s = mã yêu cầu, %s = chi tiết máy. */
+        public static final String MSG361_NOTIF_MAINTENANCE_REJECTED_CONTENT = "%s · %s: Quản lý đã từ chối yêu cầu.";
+
+        /** Thông báo chuông gửi Quản lý khi 1 yêu cầu bảo trì đã nghiệm thu và đóng. */
+        public static final String MSG362_NOTIF_MAINTENANCE_CLOSED_TITLE = "Bảo trì · Đã hoàn tất";
+
+        /** Nội dung thông báo chuông khi 1 yêu cầu được Lễ tân nghiệm thu và đóng. %s = mã yêu cầu, %s = chi tiết máy. */
+        public static final String MSG363_NOTIF_MAINTENANCE_CLOSED_CONTENT = "%s · %s: Yêu cầu đã được Lễ tân nghiệm thu và đóng.";
+
+        /** Thông báo chuông gửi Quản lý khi nhiều yêu cầu được nghiệm thu hàng loạt. %d = số yêu cầu. */
+        public static final String MSG364_NOTIF_MAINTENANCE_BATCH_CLOSED_TITLE = "Bảo trì · %d yêu cầu đã hoàn tất";
+
+        /** Nội dung thông báo chuông khi đóng hàng loạt yêu cầu. %d = số yêu cầu, %s = danh sách mã yêu cầu. */
+        public static final String MSG365_NOTIF_MAINTENANCE_BATCH_CLOSED_CONTENT = "Lễ tân đã nghiệm thu và đóng %d yêu cầu (%s).";
+
+        /** Toast (info) · Báo cáo vận hành Admin: đổi khoảng ngày nhưng chưa bấm "Xem báo cáo" trước khi xuất CSV. */
+        public static final String MSG366_REPORT_RANGE_CHANGED_BEFORE_EXPORT = "Khoảng ngày đã thay đổi. Vui lòng bấm \"Xem báo cáo\" trước khi xuất CSV.";
+
         private Messages() {
         }
 }

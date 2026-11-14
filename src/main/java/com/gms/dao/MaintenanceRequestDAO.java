@@ -12,40 +12,33 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Data Access Object (DAO) Layer: Manages persistence and retrieval of MaintenanceRequest records.
+ * DAO quản lý thao tác dữ liệu cho bảng yêu cầu bảo trì ({@code MaintenanceRequests}).
  *
- * <p><b>Architectural Responsibility:</b></p>
- * Encapsulates all SQL execution, parameter mapping, and ResultSet extraction for maintenance requests
- * (UC-28 and UC-29). Handles database locking hints (e.g., UPDLOCK, HOLDLOCK) to ensure safe concurrent
- * code generation and atomic state transitions under the control of the Service layer's transaction boundaries.
+ * <p><b>Cách hoạt động:</b> Đóng gói toàn bộ câu lệnh SQL tạo mã phiếu tuần tự ({@code BT-xxxx}),
+ * thêm mới, lọc và phân trang cho Lễ tân / Quản lý, cũng như các bước chuyển trạng thái
+ * ({@code Open} -> {@code InProgress} -> {@code Rejected}/{@code Closed}) có sử dụng gợi ý khóa
+ * {@code WITH (UPDLOCK, HOLDLOCK)} để đảm bảo an toàn đồng thời trong transaction của tầng Service.</p>
  */
 public class MaintenanceRequestDAO {
 
     // ===== Tạo yêu cầu =====
 
     /**
-     * Generates the next sequential maintenance request code (e.g. 'BT-0001') within the caller's transaction.
+     * Sinh mã phiếu bảo trì tuần tự tiếp theo (ví dụ {@code BT-0001}) trong transaction đang mở.
      *
-     * <p><b>Concurrency & Lock Handling:</b></p>
-     * Uses SQL Server locking hints {@code WITH (UPDLOCK, HOLDLOCK)}:
-     * <ul>
-     *   <li>{@code UPDLOCK}: Acquires an update lock instead of a shared lock, signaling intent to update.</li>
-     *   <li>{@code HOLDLOCK}: Holds the lock until the enclosing transaction commits or rolls back
-     *       (equivalent to SERIALIZABLE isolation for this table).</li>
-     * </ul>
-     * This serializes concurrent request creations without creating new database objects (sequences or triggers),
-     * completely preventing duplicate code collisions while honoring the strict zero-database-modification rule.
+     * <p><b>Cách hoạt động:</b> Thực thi {@code SELECT MAX(...)+1} kèm khóa {@code WITH (UPDLOCK, HOLDLOCK)}
+     * trên bảng {@code MaintenanceRequests} để tuần tự hóa các giao dịch tạo phiếu đồng thời (tránh trùng mã),
+     * kiểm tra giới hạn tối đa {@code 9999} rồi định dạng thành chuỗi {@code BT-%04d}.</p>
      *
-     * @param connection database connection with an active transaction
-     * @return next formatted request code, e.g., "BT-0001"
-     * @throws SQLException if a query error occurs or code exceeds 9999 limit
+     * @param connection kết nối CSDL đang mở transaction
+     * @return mã phiếu bảo trì mới dạng {@code BT-0001}
+     * @throws SQLException khi truy vấn lỗi hoặc vượt giới hạn mã {@code 9999}
      */
     public String generateNextRequestCode(Connection connection)
             throws SQLException {
@@ -71,12 +64,16 @@ public class MaintenanceRequestDAO {
     }
 
     /**
-     * Thêm yêu cầu bảo trì.
+     * Thêm mới một yêu cầu bảo trì vào cơ sở dữ liệu với trạng thái khởi tạo {@code Open}.
      *
-     * @param connection connection đang mở transaction
-     * @param request yêu cầu cần thêm
-     * @return id yêu cầu mới
-     * @throws SQLException khi thêm thất bại
+     * <p><b>Cách hoạt động:</b> Gán các thông tin thiết bị, người báo cáo, mức độ ưu tiên, loại sự cố,
+     * mô tả và ảnh đính kèm vào {@code PreparedStatement} có bật {@code Statement.RETURN_GENERATED_KEYS},
+     * thực thi {@code INSERT} rồi lấy ID sinh tự động gán ngược vào {@code request}.</p>
+     *
+     * @param connection kết nối CSDL đang mở transaction
+     * @param request    đối tượng yêu cầu bảo trì cần lưu
+     * @return ID yêu cầu bảo trì vừa tạo
+     * @throws SQLException khi thêm mới thất bại hoặc không nhận được khóa tự tăng
      */
     public int insert(
             Connection connection,
@@ -121,16 +118,16 @@ public class MaintenanceRequestDAO {
     // ===== Tra cứu chi tiết =====
 
     /**
-     * Finds and locks a maintenance request row for update within an active transaction.
+     * Tìm và khóa bản ghi yêu cầu bảo trì để cập nhật an toàn trong transaction.
      *
-     * <p><b>Concurrency Control:</b> Uses {@code WITH (UPDLOCK, HOLDLOCK)} to obtain an exclusive
-     * lock on the specific request row until the transaction completes. This prevents race conditions
-     * where two managers might simultaneously review, approve, or reject the same request.</p>
+     * <p><b>Cách hoạt động:</b> Truy vấn bảng {@code MaintenanceRequests} với gợi ý khóa
+     * {@code WITH (UPDLOCK, HOLDLOCK)} và nối bảng {@code EquipmentItems} để lấy kèm {@code FacilityId},
+     * ngăn hai quản lý hoặc lễ tân duyệt/từ chối/đóng cùng một phiếu tại một thời điểm.</p>
      *
-     * @param connection database connection with an active transaction
-     * @param requestId  ID of the request to lock and read
-     * @return locked MaintenanceRequest entity, or null if not found
-     * @throws SQLException if a database access error occurs
+     * @param connection kết nối CSDL đang mở transaction
+     * @param requestId  ID phiếu bảo trì cần khóa và đọc
+     * @return đối tượng {@code MaintenanceRequest} đã khóa, hoặc {@code null} nếu không tồn tại
+     * @throws SQLException khi truy vấn CSDL lỗi
      */
     public MaintenanceRequest findByIdForUpdate(
             Connection connection,
@@ -159,6 +156,16 @@ public class MaintenanceRequestDAO {
         return null;
     }
 
+    /**
+     * Lấy thông tin chi tiết đầy đủ của một yêu cầu bảo trì (kèm tên thiết bị, vị trí, tên nhân viên) để hiển thị.
+     *
+     * <p><b>Cách hoạt động:</b> Ghép mệnh đề chọn chi tiết từ {@link #buildViewSelect()} với điều kiện lọc
+     * theo {@code MaintenanceRequestId}, thực thi truy vấn và ánh xạ dòng kết quả sang {@link MaintenanceRequestView}.</p>
+     *
+     * @param requestId ID yêu cầu bảo trì cần xem chi tiết
+     * @return đối tượng {@link MaintenanceRequestView}, hoặc {@code null} nếu không tìm thấy
+     * @throws SQLException khi truy vấn CSDL lỗi
+     */
     public MaintenanceRequestView findViewById(int requestId)
             throws SQLException {
 
@@ -180,66 +187,20 @@ public class MaintenanceRequestDAO {
         return null;
     }
 
-    public MaintenanceRequestView findViewByRequestCode(String requestCode)
-            throws SQLException {
-
-        if (requestCode == null || requestCode.isBlank()) {
-            return null;
-        }
-
-        String sql = buildViewSelect()
-                + " WHERE mr.RequestCode = ?";
-
-        try (Connection connection = DBContext.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
-
-            statement.setString(1, requestCode.trim());
-
-            try (ResultSet resultSet = statement.executeQuery()) {
-                if (resultSet.next()) {
-                    return mapResultSetToView(resultSet);
-                }
-            }
-        }
-
-        return null;
-    }
-
-    public MaintenanceRequestView findActiveByEquipmentItemId(int equipmentItemId)
-            throws SQLException {
-
-        if (equipmentItemId <= 0) {
-            return null;
-        }
-
-        String sql = buildViewSelect()
-                + " WHERE mr.EquipmentItemId = ? "
-                + "ORDER BY CASE WHEN mr.Status IN ('Open', 'InProgress') THEN 0 ELSE 1 END, "
-                + "mr.ReportedAt DESC, mr.MaintenanceRequestId DESC";
-
-        try (Connection connection = DBContext.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
-
-            statement.setInt(1, equipmentItemId);
-
-            try (ResultSet resultSet = statement.executeQuery()) {
-                if (resultSet.next()) {
-                    return mapResultSetToView(resultSet);
-                }
-            }
-        }
-
-        return null;
-    }
-
-    // ===== Danh sách Receptionist (Xem tất cả yêu cầu theo quy tắc mới) =====
+    // ===== Danh sách Lễ tân (Xem tất cả yêu cầu theo quy tắc nghiệp vụ) =====
 
     /**
-     * Counts requests visible to Receptionists with optional multi-attribute filters.
+     * Đếm tổng số yêu cầu bảo trì hiển thị cho Lễ tân theo bộ lọc đa điều kiện.
      *
-     * <p><b>Business Rule (BF-06 Requirement #7):</b> Receptionists now have full visibility of all
-     * maintenance requests system-wide (delegates to {@code countAll}) to answer member questions
-     * regarding machine availability regardless of which staff member filed the initial report.</p>
+     * <p><b>Cách hoạt động:</b> Lễ tân được quyền theo dõi toàn bộ phiếu bảo trì trong hệ thống để kiểm tra
+     * tình trạng máy phục vụ hội viên, nên hàm này ủy quyền trực tiếp cho {@link #countAll}.</p>
+     *
+     * @param keyword      từ khóa tìm kiếm (mã phiếu, mã máy, tên thiết bị, mô tả, người báo)
+     * @param status       lọc theo trạng thái phiếu (có thể {@code null})
+     * @param priority     lọc theo mức độ ưu tiên (có thể {@code null})
+     * @param reportedDate lọc theo ngày báo cáo (có thể {@code null})
+     * @return tổng số bản ghi khớp điều kiện lọc
+     * @throws SQLException khi truy vấn CSDL lỗi
      */
     public long countForReceptionist(
             String keyword,
@@ -250,20 +211,21 @@ public class MaintenanceRequestDAO {
         return countAll(keyword, status, priority, reportedDate);
     }
 
-    public long countForReceptionist(
-            int employeeId,
-            String keyword,
-            MaintenanceRequest.Status status
-    ) throws SQLException {
-        return countForReceptionist(keyword, status, null, null);
-    }
-
     /**
-     * Retrieves paginated maintenance requests for Receptionists.
+     * Truy vấn danh sách yêu cầu bảo trì có phân trang dành cho Lễ tân.
      *
-     * <p><b>Ordering Strategy:</b> Orders by status priority:
-     * {@code Open (0) -> InProgress (1) -> Rejected (2) -> Closed (3)}, then {@code ReportedAt DESC}.
-     * This ensures urgent actionable requests stay at the top of the receptionist's operational view.</p>
+     * <p><b>Cách hoạt động:</b> Nối truy vấn từ {@link #buildViewSelect()}, áp dụng bộ lọc động qua
+     * {@link #appendFilters}, sắp xếp theo thứ tự ưu tiên trạng thái
+     * ({@code Open -> InProgress -> Rejected -> Closed}) rồi {@code ReportedAt DESC} và cắt trang bằng {@code OFFSET/FETCH}.</p>
+     *
+     * @param keyword      từ khóa tìm kiếm
+     * @param status       trạng thái cần lọc (có thể {@code null})
+     * @param priority     mức độ ưu tiên cần lọc (có thể {@code null})
+     * @param reportedDate ngày báo cáo cần lọc (có thể {@code null})
+     * @param page         số trang hiện tại (bắt đầu từ 1)
+     * @param pageSize     số dòng mỗi trang
+     * @return danh sách {@link MaintenanceRequestView} thuộc trang yêu cầu
+     * @throws SQLException khi truy vấn CSDL lỗi
      */
     public List<MaintenanceRequestView> findForReceptionist(
             String keyword,
@@ -294,18 +256,21 @@ public class MaintenanceRequestDAO {
         return executeViewList(sql.toString(), parameters);
     }
 
-    public List<MaintenanceRequestView> findForReceptionist(
-            int employeeId,
-            String keyword,
-            MaintenanceRequest.Status status,
-            int page,
-            int pageSize
-    ) throws SQLException {
-        return findForReceptionist(keyword, status, null, null, page, pageSize);
-    }
+    // ===== Danh sách Quản lý =====
 
-    // ===== Danh sách Manager =====
-
+    /**
+     * Đếm tổng số yêu cầu bảo trì trong toàn hệ thống theo bộ lọc.
+     *
+     * <p><b>Cách hoạt động:</b> Thực thi {@code SELECT COUNT(*)} trên {@code MaintenanceRequests} kết nối với
+     * thiết bị, dòng thiết bị và nhân viên báo cáo, gắn điều kiện lọc động bằng {@link #appendFilters}.</p>
+     *
+     * @param keyword      từ khóa tìm kiếm
+     * @param status       trạng thái cần lọc (có thể {@code null})
+     * @param priority     mức độ ưu tiên cần lọc (có thể {@code null})
+     * @param reportedDate ngày báo cáo cần lọc (có thể {@code null})
+     * @return tổng số bản ghi khớp bộ lọc
+     * @throws SQLException khi truy vấn CSDL lỗi
+     */
     public long countAll(
             String keyword,
             MaintenanceRequest.Status status,
@@ -341,13 +306,22 @@ public class MaintenanceRequestDAO {
         return 0;
     }
 
-    public long countAll(
-            String keyword,
-            MaintenanceRequest.Status status
-    ) throws SQLException {
-        return countAll(keyword, status, null, null);
-    }
-
+    /**
+     * Truy vấn danh sách yêu cầu bảo trì có phân trang dành cho Quản lý.
+     *
+     * <p><b>Cách hoạt động:</b> Xây dựng câu SQL chọn đầy đủ thông tin từ {@link #buildViewSelect()},
+     * chèn điều kiện lọc qua {@link #appendFilters}, ưu tiên phiếu {@code Open} lên đầu và phân trang
+     * bằng {@code OFFSET/FETCH NEXT}.</p>
+     *
+     * @param keyword      từ khóa tìm kiếm
+     * @param status       trạng thái cần lọc (có thể {@code null})
+     * @param priority     mức độ ưu tiên cần lọc (có thể {@code null})
+     * @param reportedDate ngày báo cáo cần lọc (có thể {@code null})
+     * @param page         số trang hiện tại
+     * @param pageSize     số dòng mỗi trang
+     * @return danh sách {@link MaintenanceRequestView} thuộc trang yêu cầu
+     * @throws SQLException khi truy vấn CSDL lỗi
+     */
     public List<MaintenanceRequestView> findAll(
             String keyword,
             MaintenanceRequest.Status status,
@@ -377,15 +351,15 @@ public class MaintenanceRequestDAO {
         return executeViewList(sql.toString(), parameters);
     }
 
-    public List<MaintenanceRequestView> findAll(
-            String keyword,
-            MaintenanceRequest.Status status,
-            int page,
-            int pageSize
-    ) throws SQLException {
-        return findAll(keyword, status, null, null, page, pageSize);
-    }
-
+    /**
+     * Thống kê số lượng yêu cầu bảo trì theo từng trạng thái để hiển thị bộ đếm nhanh trên giao diện.
+     *
+     * <p><b>Cách hoạt động:</b> Khởi tạo sẵn {@code Map} chứa tất cả giá trị trong {@code Status.values()} với
+     * số lượng {@code 0}, rồi chạy {@code GROUP BY Status} để cập nhật số đếm thực tế từ bảng {@code MaintenanceRequests}.</p>
+     *
+     * @return {@code Map<StatusDbValue, Count>} bảo đảm đủ mọi trạng thái theo thứ tự khai báo enum
+     * @throws SQLException khi truy vấn CSDL lỗi
+     */
     public Map<String, Integer> countByStatus() throws SQLException {
         String sql = "SELECT Status, COUNT(*) AS Total "
                 + "FROM MaintenanceRequests "
@@ -415,27 +389,20 @@ public class MaintenanceRequestDAO {
     // ===== Duyệt / từ chối / đóng =====
 
     /**
-     * Approves an Open request to InProgress within an active transaction.
+     * Duyệt yêu cầu bảo trì từ trạng thái {@code Open} sang {@code InProgress} trong transaction.
      *
-     * <p><b>State Transition Guard:</b> The condition {@code WHERE MaintenanceRequestId = ? AND Status = 'Open'}
-     * ensures atomic state transition: if the request is no longer 'Open' (e.g., cancelled or concurrently
-     * reviewed), 0 rows are updated and the method returns false, prompting the caller to roll back.</p>
+     * <p><b>Cách hoạt động:</b> Cập nhật người duyệt, thời điểm duyệt, cờ tạm ngừng máy và ghi chú quản lý
+     * với điều kiện ràng buộc {@code WHERE MaintenanceRequestId = ? AND Status = 'Open'} để bảo đảm
+     * chuyển trạng thái nguyên tử (chỉ trả về {@code true} khi cập nhật đúng 1 dòng).</p>
      *
-     * @param connection          transactional connection
-     * @param requestId           ID of the request to approve
-     * @param managerEmployeeId   employee ID of the reviewing manager
-     * @param setUnderMaintenance whether the manager flagged the equipment item for UnderMaintenance
-     * @return true if successfully approved, false otherwise
+     * @param connection          kết nối CSDL đang mở transaction
+     * @param requestId           ID yêu cầu bảo trì cần duyệt
+     * @param managerEmployeeId   ID nhân viên quản lý thực hiện duyệt
+     * @param setUnderMaintenance cờ đánh dấu có đưa cá thể thiết bị sang {@code UnderMaintenance} hay không
+     * @param managerNote         ghi chú xử lý của quản lý (tùy chọn)
+     * @return {@code true} nếu duyệt thành công, {@code false} nếu trạng thái phiếu không còn là {@code Open}
+     * @throws SQLException khi cập nhật CSDL lỗi
      */
-    public boolean approve(
-            Connection connection,
-            int requestId,
-            int managerEmployeeId,
-            boolean setUnderMaintenance
-    ) throws SQLException {
-        return approve(connection, requestId, managerEmployeeId, setUnderMaintenance, null);
-    }
-
     public boolean approve(
             Connection connection,
             int requestId,
@@ -467,10 +434,17 @@ public class MaintenanceRequestDAO {
     }
 
     /**
-     * Rejects an Open request within an active transaction, saving the rejection reason.
+     * Từ chối một yêu cầu bảo trì đang ở trạng thái {@code Open} trong transaction.
      *
-     * <p><b>State Transition Guard:</b> Requires {@code Status = 'Open'}. Once rejected, the request
-     * transitions out of active status, immediately releasing the facility's {@code PendingQuantity}.</p>
+     * <p><b>Cách hoạt động:</b> Cập nhật trạng thái sang {@code Rejected}, lưu người duyệt, thời gian duyệt
+     * và lý do từ chối với điều kiện {@code AND Status = 'Open'} để tránh xung đột duyệt đồng thời.</p>
+     *
+     * @param connection        kết nối CSDL đang mở transaction
+     * @param requestId         ID yêu cầu bảo trì cần từ chối
+     * @param managerEmployeeId ID nhân viên quản lý thực hiện từ chối
+     * @param rejectReason      lý do từ chối
+     * @return {@code true} nếu từ chối thành công đúng 1 dòng, ngược lại {@code false}
+     * @throws SQLException khi cập nhật CSDL lỗi
      */
     public boolean reject(
             Connection connection,
@@ -500,10 +474,17 @@ public class MaintenanceRequestDAO {
     }
 
     /**
-     * Closes an InProgress request upon post-maintenance inspection and acceptance by a Receptionist.
+     * Đóng (nghiệm thu hoàn tất) một yêu cầu bảo trì đang ở trạng thái {@code InProgress} trong transaction.
      *
-     * <p><b>State Transition Guard:</b> Requires {@code Status = 'InProgress'}. Closing the request
-     * decrements {@code PendingQuantity} and increments {@code AvailableQuantity} on subsequent catalog queries.</p>
+     * <p><b>Cách hoạt động:</b> Chuyển trạng thái sang {@code Closed}, lưu ID lễ tân nghiệm thu, thời điểm đóng
+     * và ghi chú nghiệm thu với ràng buộc {@code AND Status = 'InProgress'} để đảm bảo chỉ đóng phiếu đang xử lý.</p>
+     *
+     * @param connection             kết nối CSDL đang mở transaction
+     * @param requestId              ID yêu cầu bảo trì cần đóng
+     * @param receptionistEmployeeId ID nhân viên lễ tân nghiệm thu
+     * @param acceptanceNote         ghi chú nghiệm thu sau bảo trì
+     * @return {@code true} nếu đóng phiếu thành công, ngược lại {@code false}
+     * @throws SQLException khi cập nhật CSDL lỗi
      */
     public boolean close(
             Connection connection,
@@ -532,11 +513,16 @@ public class MaintenanceRequestDAO {
     }
 
     /**
-     * Checks if there are any remaining InProgress maintenance requests for a given individual equipment item.
+     * Kiểm tra một thiết bị cá thể có còn yêu cầu bảo trì nào khác đang ở trạng thái {@code InProgress} hay không.
      *
-     * <p><b>Equipment Item Recovery Logic:</b> When closing an InProgress request, the system verifies
-     * whether any OTHER ongoing requests exist for the same individual machine before restoring its
-     * status to 'Available'. If this query returns true, the machine remains 'UnderMaintenance'.</p>
+     * <p><b>Cách hoạt động:</b> Khi đóng một phiếu, tầng Service gọi hàm này ({@code SELECT TOP 1 1} lọc theo
+     * {@code EquipmentItemId} và {@code Status = 'InProgress'}) để quyết định có được khôi phục máy về
+     * {@code Available} hay vẫn phải giữ {@code UnderMaintenance}.</p>
+     *
+     * @param connection      kết nối CSDL đang mở transaction
+     * @param equipmentItemId ID cá thể thiết bị cần kiểm tra
+     * @return {@code true} nếu vẫn còn phiếu đang xử lý, {@code false} nếu không còn
+     * @throws SQLException khi truy vấn CSDL lỗi
      */
     public boolean hasInProgressRequest(
             Connection connection,
@@ -559,8 +545,16 @@ public class MaintenanceRequestDAO {
     }
 
     /**
-     * Checks if there are any active (Open or InProgress) maintenance requests for an individual equipment item.
-     * Used to prevent duplicate defect reporting (BR-105) and block liquidation while repair is pending (CBR-99).
+     * Kiểm tra một thiết bị cá thể có yêu cầu bảo trì nào đang hoạt động ({@code Open} hoặc {@code InProgress}) hay không.
+     *
+     * <p><b>Cách hoạt động:</b> Truy vấn {@code SELECT TOP 1 1} theo {@code EquipmentItemId} với trạng thái
+     * thuộc {@code ('Open', 'InProgress')} trên kết nối transaction truyền vào; dùng để chặn báo hỏng trùng
+     * (BR-105) và chặn thanh lý máy đang bảo trì (CBR-99).</p>
+     *
+     * @param connection      kết nối CSDL đang mở transaction
+     * @param equipmentItemId ID cá thể thiết bị cần kiểm tra
+     * @return {@code true} nếu đang có yêu cầu chưa đóng, {@code false} nếu không có
+     * @throws SQLException khi truy vấn CSDL lỗi
      */
     public boolean hasActiveRequest(
             Connection connection,
@@ -583,14 +577,30 @@ public class MaintenanceRequestDAO {
         }
     }
 
+    /**
+     * Kiểm tra nhanh (tự mở kết nối) xem một thiết bị cá thể có yêu cầu bảo trì đang hoạt động hay không.
+     *
+     * <p><b>Cách hoạt động:</b> Mở kết nối mới từ {@code DBContext.getConnection()} rồi ủy quyền sang
+     * {@link #hasActiveRequest(Connection, int)} để kiểm tra trạng thái {@code Open}/{@code InProgress}.</p>
+     *
+     * @param equipmentItemId ID cá thể thiết bị cần kiểm tra
+     * @return {@code true} nếu có yêu cầu đang hoạt động, ngược lại {@code false}
+     * @throws SQLException khi mở kết nối hoặc truy vấn lỗi
+     */
     public boolean hasActiveRequest(int equipmentItemId) throws SQLException {
         try (Connection conn = DBContext.getConnection()) {
             return hasActiveRequest(conn, equipmentItemId);
         }
     }
 
-    // ===== Mapping =====
+    // ===== Ánh xạ & helper SQL =====
 
+    /**
+     * Tạo phần mệnh đề {@code SELECT ... FROM ... JOIN ...} dùng chung khi truy vấn danh sách hoặc chi tiết phiếu.
+     *
+     * <p><b>Cách hoạt động:</b> Ghép nối {@code MaintenanceRequests} với {@code EquipmentItems}, {@code Facilities}
+     * và các bảng {@code Employees}/{@code Persons} (người báo, người duyệt, người đóng) để lấy đủ tên hiển thị.</p>
+     */
     private String buildViewSelect() {
         return "SELECT "
                 + "mr.MaintenanceRequestId, mr.RequestCode, mr.EquipmentItemId, "
@@ -613,6 +623,12 @@ public class MaintenanceRequestDAO {
                 + "LEFT JOIN Persons closer ON closer.PersonId = cl.PersonId ";
     }
 
+    /**
+     * Nối điều kiện lọc động (từ khóa không dấu, trạng thái, mức độ ưu tiên, ngày báo cáo) vào câu SQL.
+     *
+     * <p><b>Cách hoạt động:</b> Kiểm tra từng tham số khác rỗng/khác {@code null}, thêm mệnh đề {@code AND ...}
+     * dùng {@code COLLATE Latin1_General_100_CI_AI} cho từ khóa và đẩy giá trị tương ứng vào danh sách {@code parameters}.</p>
+     */
     private void appendFilters(
             StringBuilder sql,
             List<Object> parameters,
@@ -657,15 +673,12 @@ public class MaintenanceRequestDAO {
         }
     }
 
-    private void appendFilters(
-            StringBuilder sql,
-            List<Object> parameters,
-            String keyword,
-            MaintenanceRequest.Status status
-    ) {
-        appendFilters(sql, parameters, keyword, status, null, null);
-    }
-
+    /**
+     * Thực thi câu truy vấn danh sách yêu cầu bảo trì dạng {@link MaintenanceRequestView}.
+     *
+     * <p><b>Cách hoạt động:</b> Mở kết nối, bind danh sách tham số qua {@link #setParameters}, duyệt {@code ResultSet}
+     * và gọi {@link #mapResultSetToView} cho từng bản ghi.</p>
+     */
     private List<MaintenanceRequestView> executeViewList(
             String sql,
             List<Object> parameters
@@ -688,6 +701,12 @@ public class MaintenanceRequestDAO {
         return items;
     }
 
+    /**
+     * Gán danh sách tham số kiểu động vào {@code PreparedStatement} theo đúng thứ tự vị trí {@code ?}.
+     *
+     * <p><b>Cách hoạt động:</b> Kiểm tra kiểu dữ liệu thực tế của từng phần tử ({@code Integer}, {@code Date},
+     * {@code Boolean}, hoặc chuỗi) để gọi setter JDBC tương ứng.</p>
+     */
     private void setParameters(
             PreparedStatement statement,
             List<Object> parameters
@@ -696,139 +715,26 @@ public class MaintenanceRequestDAO {
         for (int i = 0; i < parameters.size(); i++) {
             Object value = parameters.get(i);
 
-            if (value instanceof Integer intValue) {
-                statement.setInt(i + 1, intValue);
-            } else if (value instanceof Date sqlDate) {
-                statement.setDate(i + 1, sqlDate);
-            } else if (value instanceof Boolean boolValue) {
-                statement.setBoolean(i + 1, boolValue);
+            // Viết "instanceof rồi ép kiểu" kiểu cũ, KHÔNG dùng "instanceof Integer intValue":
+            // Compile on Save của NetBeans 17 không dịch được cú pháp đó → sinh class hỏng → màn báo lỗi 500.
+            if (value instanceof Integer) {
+                statement.setInt(i + 1, (Integer) value);
+            } else if (value instanceof Date) {
+                statement.setDate(i + 1, (Date) value);
+            } else if (value instanceof Boolean) {
+                statement.setBoolean(i + 1, (Boolean) value);
             } else {
                 statement.setString(i + 1, String.valueOf(value));
             }
         }
     }
 
-    // ===== Truy vấn yêu cầu chưa hoàn tất (cho cảnh báo) =====
-
     /**
-     * Retrieves all active (unfinished: Open or InProgress) maintenance requests for a specific facility.
-     * Used to display warning banners and cross-links when a receptionist creates a new request.
+     * Ánh xạ một dòng {@code ResultSet} thành entity {@link MaintenanceRequest}.
      *
-     * @param facilityId ID of the facility
-     * @return list of unfinished request summaries sorted with Open requests first
-     * @throws SQLException if a query error occurs
+     * <p><b>Cách hoạt động:</b> Đọc đầy đủ các cột của bảng {@code MaintenanceRequests} (xử lý giá trị {@code null}
+     * ở các trường duyệt/đóng, chuyển enum {@code Priority}/{@code IncidentType}/{@code Status} và cột thời gian).</p>
      */
-    public List<UnfinishedRequestSummary> findUnfinishedByFacilityId(int facilityId) throws SQLException {
-        String sql = "SELECT mr.MaintenanceRequestId, mr.RequestCode, mr.EquipmentItemId, "
-                + "ei.ItemCode, f.FacilityId, f.FacilityName, "
-                + "mr.Status, mr.Priority, mr.Description, mr.ReportedAt "
-                + "FROM MaintenanceRequests mr "
-                + "JOIN EquipmentItems ei ON ei.EquipmentItemId = mr.EquipmentItemId "
-                + "JOIN Facilities f ON f.FacilityId = ei.FacilityId "
-                + "WHERE f.FacilityId = ? AND mr.Status IN ('Open', 'InProgress') "
-                + "ORDER BY CASE mr.Status WHEN 'Open' THEN 0 ELSE 1 END, mr.ReportedAt DESC";
-
-        List<UnfinishedRequestSummary> list = new ArrayList<>();
-        try (Connection connection = DBContext.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, facilityId);
-            try (ResultSet rs = statement.executeQuery()) {
-                while (rs.next()) {
-                    list.add(mapResultSetToUnfinishedSummary(rs));
-                }
-            }
-        }
-        return list;
-    }
-
-    /**
-     * Retrieves all unfinished maintenance requests across all facilities, grouped by FacilityId in a Map.
-     *
-     * @return Map where key is FacilityId and value is the list of active UnfinishedRequestSummary objects
-     * @throws SQLException if a query error occurs
-     */
-    public Map<Integer, List<UnfinishedRequestSummary>> findUnfinishedRequestsMap() throws SQLException {
-        String sql = "SELECT mr.MaintenanceRequestId, mr.RequestCode, mr.EquipmentItemId, "
-                + "ei.ItemCode, f.FacilityId, f.FacilityName, "
-                + "mr.Status, mr.Priority, mr.Description, mr.ReportedAt "
-                + "FROM MaintenanceRequests mr "
-                + "JOIN EquipmentItems ei ON ei.EquipmentItemId = mr.EquipmentItemId "
-                + "JOIN Facilities f ON f.FacilityId = ei.FacilityId "
-                + "WHERE mr.Status IN ('Open', 'InProgress') "
-                + "ORDER BY f.FacilityId, CASE mr.Status WHEN 'Open' THEN 0 ELSE 1 END, mr.ReportedAt DESC";
-
-        Map<Integer, List<UnfinishedRequestSummary>> map = new LinkedHashMap<>();
-        try (Connection connection = DBContext.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql);
-             ResultSet rs = statement.executeQuery()) {
-            while (rs.next()) {
-                UnfinishedRequestSummary summary = mapResultSetToUnfinishedSummary(rs);
-                map.computeIfAbsent(summary.getFacilityId(), k -> new ArrayList<>()).add(summary);
-            }
-        }
-        return map;
-    }
-
-    /**
-     * Counts active unfinished requests for an individual equipment item.
-     */
-    public int countUnfinishedByEquipmentItem(Connection connection, int equipmentItemId) throws SQLException {
-        String sql = "SELECT COUNT(*) "
-                + "FROM MaintenanceRequests "
-                + "WHERE EquipmentItemId = ? AND Status IN ('Open', 'InProgress')";
-
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, equipmentItemId);
-            try (ResultSet rs = statement.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
-            }
-        }
-        return 0;
-    }
-
-    /**
-     * Counts active unfinished requests for a facility within a transaction connection.
-     */
-    public int countUnfinishedByFacility(Connection connection, int facilityId) throws SQLException {
-        String sql = "SELECT COUNT(*) "
-                + "FROM MaintenanceRequests mr "
-                + "JOIN EquipmentItems ei ON ei.EquipmentItemId = mr.EquipmentItemId "
-                + "WHERE ei.FacilityId = ? AND mr.Status IN ('Open', 'InProgress')";
-
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, facilityId);
-            try (ResultSet rs = statement.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
-            }
-        }
-        return 0;
-    }
-
-    private UnfinishedRequestSummary mapResultSetToUnfinishedSummary(ResultSet rs) throws SQLException {
-        MaintenanceRequest.Status st = MaintenanceRequest.Status.fromDbValue(rs.getString("Status"));
-        MaintenanceRequest.Priority pr = MaintenanceRequest.Priority.fromDbValue(rs.getString("Priority"));
-        Timestamp ts = rs.getTimestamp("ReportedAt");
-        LocalDateTime reportedAt = ts == null ? null : ts.toLocalDateTime();
-        return new UnfinishedRequestSummary(
-                rs.getInt("MaintenanceRequestId"),
-                rs.getString("RequestCode"),
-                rs.getInt("EquipmentItemId"),
-                rs.getString("ItemCode"),
-                rs.getInt("FacilityId"),
-                rs.getString("FacilityName"),
-                rs.getString("Status"),
-                st != null ? st.getDisplayName() : rs.getString("Status"),
-                rs.getString("Priority"),
-                pr != null ? pr.getDisplayName() : rs.getString("Priority"),
-                rs.getString("Description"),
-                reportedAt
-        );
-    }
-
     private MaintenanceRequest mapResultSetToRequest(ResultSet resultSet)
             throws SQLException {
 
@@ -903,6 +809,12 @@ public class MaintenanceRequestDAO {
         return request;
     }
 
+    /**
+     * Kiểm tra cột {@code columnName} có tồn tại trong {@code ResultSet} hiện tại hay không.
+     *
+     * <p><b>Cách hoạt động:</b> Gọi {@code rs.findColumn(columnName)}, trả về {@code true} nếu có và bắt
+     * {@code SQLException} trả về {@code false} khi câu truy vấn không SELECT cột đó.</p>
+     */
     private boolean hasColumn(ResultSet rs, String columnName) {
         try {
             rs.findColumn(columnName);
@@ -913,8 +825,16 @@ public class MaintenanceRequestDAO {
     }
 
     /**
-     * Tra cứu phiếu bảo trì đã đóng (Closed) gần nhất của thiết bị cá thể này.
-     * Dùng hiển thị khối 'Lần hỏng trước của máy này' trên màn hình Quản lý duyệt.
+     * Tra cứu phiếu bảo trì đã đóng ({@code Closed}) gần nhất của cùng thiết bị cá thể này.
+     *
+     * <p><b>Cách hoạt động:</b> Lọc các phiếu có {@code EquipmentItemId = ?}, {@code Status = 'Closed'}, khác ID
+     * phiếu hiện tại rồi sắp xếp theo {@code ClosedAt DESC} lấy {@code TOP 1} để hiển thị khối "Lần hỏng trước của máy này"
+     * trên màn hình Quản lý duyệt.</p>
+     *
+     * @param equipmentItemId  ID cá thể thiết bị
+     * @param excludeRequestId ID phiếu đang xem (cần loại trừ)
+     * @return bản ghi {@link MaintenanceRequestView} gần nhất đã đóng, hoặc {@code null} nếu chưa có tiền sử
+     * @throws SQLException khi truy vấn CSDL lỗi
      */
     public MaintenanceRequestView findLastClosedRequest(int equipmentItemId, int excludeRequestId)
             throws SQLException {
@@ -957,6 +877,12 @@ public class MaintenanceRequestDAO {
         return null;
     }
 
+    /**
+     * Ánh xạ một dòng {@code ResultSet} mở rộng sang DTO {@link MaintenanceRequestView}.
+     *
+     * <p><b>Cách hoạt động:</b> Kết hợp kết quả từ {@link #mapResultSetToRequest} với các thông tin đã JOIN
+     * gồm mã/nhãn cá thể, dòng thiết bị, vị trí và họ tên người báo/duyệt/đóng.</p>
+     */
     private MaintenanceRequestView mapResultSetToView(ResultSet resultSet)
             throws SQLException {
 
@@ -975,7 +901,7 @@ public class MaintenanceRequestDAO {
     }
 
     /**
-     * Dữ liệu yêu cầu bảo trì đã nối tên để hiển thị trên View.
+     * DTO biểu diễn dữ liệu yêu cầu bảo trì đã nối tên thiết bị và nhân viên để hiển thị trên JSP.
      */
     public static class MaintenanceRequestView {
 
@@ -990,6 +916,9 @@ public class MaintenanceRequestDAO {
         private final String reviewerName;
         private final String closerName;
 
+        /**
+         * Khởi tạo DTO {@code MaintenanceRequestView} với đầy đủ thông tin phiếu, máy và nhân sự liên quan.
+         */
         public MaintenanceRequestView(
                 MaintenanceRequest request,
                 String itemCode,
@@ -1014,164 +943,54 @@ public class MaintenanceRequestDAO {
             this.closerName = closerName;
         }
 
+        /** Trả về entity yêu cầu bảo trì gốc. */
         public MaintenanceRequest getRequest() {
             return request;
         }
 
+        /** Trả về mã cá thể thiết bị (ví dụ {@code TM-01}). */
         public String getItemCode() {
             return itemCode;
         }
 
+        /** Trả về nhãn hiển thị của cá thể thiết bị (ví dụ mức tạ). */
         public String getItemLabel() {
             return itemLabel;
         }
 
+        /** Trả về ghi chú vị trí đặt máy. */
         public String getPlacementNote() {
             return placementNote;
         }
 
+        /** Trả về ID dòng thiết bị cha. */
         public int getFacilityId() {
             return facilityId;
         }
 
+        /** Trả về tên dòng thiết bị. */
         public String getFacilityName() {
             return facilityName;
         }
 
+        /** Trả về khu vực đặt dòng thiết bị. */
         public String getFacilityLocation() {
             return facilityLocation;
         }
 
+        /** Trả về họ tên nhân viên báo hỏng. */
         public String getReporterName() {
             return reporterName;
         }
 
+        /** Trả về họ tên quản lý duyệt hoặc từ chối phiếu. */
         public String getReviewerName() {
             return reviewerName;
         }
 
+        /** Trả về họ tên lễ tân nghiệm thu đóng phiếu. */
         public String getCloserName() {
             return closerName;
-        }
-
-        public String getEquipmentDisplay() {
-            if (request != null && request.getAffectedItemsNote() != null && !request.getAffectedItemsNote().isBlank()) {
-                return request.getAffectedItemsNote().trim() + (itemCode != null && !itemCode.isBlank() ? " · " + itemCode : "");
-            }
-            StringBuilder sb = new StringBuilder();
-            if (itemLabel != null && !itemLabel.isBlank()) {
-                sb.append(itemLabel.trim());
-            }
-            if (placementNote != null && !placementNote.isBlank()) {
-                if (!sb.isEmpty()) {
-                    sb.append(" · ");
-                }
-                sb.append(placementNote.trim());
-            }
-            if (itemCode != null && !itemCode.isBlank()) {
-                if (!sb.isEmpty()) {
-                    sb.append(" (").append(itemCode.trim()).append(")");
-                } else {
-                    sb.append(itemCode.trim());
-                }
-            }
-            return sb.toString();
-        }
-    }
-
-    /**
-     * Data Transfer Object (DTO) / Projection: Represents a lightweight summary of an active
-     * (Open or InProgress) maintenance request for UI warning banners and cross-linking.
-     */
-    public static class UnfinishedRequestSummary {
-
-        private final int maintenanceRequestId;
-        private final String requestCode;
-        private final int equipmentItemId;
-        private final String itemCode;
-        private final int facilityId;
-        private final String facilityName;
-        private final String status;
-        private final String statusDisplayName;
-        private final String priority;
-        private final String priorityDisplayName;
-        private final String description;
-        private final LocalDateTime reportedAt;
-
-        public UnfinishedRequestSummary(
-                int maintenanceRequestId,
-                String requestCode,
-                int equipmentItemId,
-                String itemCode,
-                int facilityId,
-                String facilityName,
-                String status,
-                String statusDisplayName,
-                String priority,
-                String priorityDisplayName,
-                String description,
-                LocalDateTime reportedAt
-        ) {
-            this.maintenanceRequestId = maintenanceRequestId;
-            this.requestCode = requestCode;
-            this.equipmentItemId = equipmentItemId;
-            this.itemCode = itemCode;
-            this.facilityId = facilityId;
-            this.facilityName = facilityName;
-            this.status = status;
-            this.statusDisplayName = statusDisplayName;
-            this.priority = priority;
-            this.priorityDisplayName = priorityDisplayName;
-            this.description = description;
-            this.reportedAt = reportedAt;
-        }
-
-        public int getMaintenanceRequestId() {
-            return maintenanceRequestId;
-        }
-
-        public String getRequestCode() {
-            return requestCode;
-        }
-
-        public int getEquipmentItemId() {
-            return equipmentItemId;
-        }
-
-        public String getItemCode() {
-            return itemCode;
-        }
-
-        public int getFacilityId() {
-            return facilityId;
-        }
-
-        public String getFacilityName() {
-            return facilityName;
-        }
-
-        public String getStatus() {
-            return status;
-        }
-
-        public String getStatusDisplayName() {
-            return statusDisplayName;
-        }
-
-        public String getPriority() {
-            return priority;
-        }
-
-        public String getPriorityDisplayName() {
-            return priorityDisplayName;
-        }
-
-        public String getDescription() {
-            return description;
-        }
-
-        public LocalDateTime getReportedAt() {
-            return reportedAt;
         }
     }
 }

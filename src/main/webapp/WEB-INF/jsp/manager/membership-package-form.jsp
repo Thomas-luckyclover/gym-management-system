@@ -6,7 +6,7 @@
 <head>
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>${pageTitle}</title>
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/package-catalogue.css?v=20261031v1">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/package-catalogue.css?v=20261114a">
 </head>
 
 <body class="dock theme-manager">

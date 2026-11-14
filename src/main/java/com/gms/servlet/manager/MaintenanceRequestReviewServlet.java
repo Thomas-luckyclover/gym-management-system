@@ -5,6 +5,7 @@ import com.gms.constant.SessionKey;
 import com.gms.dao.MaintenanceRequestDAO;
 import com.gms.dto.ServiceResult;
 import com.gms.service.MaintenanceRequestService;
+import com.gms.service.NotificationService;
 import com.gms.util.RequestUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -30,11 +31,20 @@ public class MaintenanceRequestReviewServlet extends HttpServlet {
     private final MaintenanceRequestService maintenanceRequestService =
             new MaintenanceRequestService();
 
+    private final NotificationService notificationService =
+            new NotificationService();
+
     @Override
     protected void doGet(
             HttpServletRequest request,
             HttpServletResponse response
     ) throws ServletException, IOException {
+
+        HttpSession session = request.getSession(false);
+        if (session != null && session.getAttribute(SessionKey.ACCOUNT_ID) != null) {
+            int accountId = (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
+            notificationService.markTopicNotificationsRead(accountId, "Bảo trì");
+        }
 
         int requestId =
                 RequestUtil.getIntParam(

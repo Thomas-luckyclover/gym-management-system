@@ -53,10 +53,6 @@ document.addEventListener('DOMContentLoaded', function () {
         return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
     }
 
-    function formatDateStr(str) {
-        return formatVietnameseDate(str);
-    }
-
     function syncDisplayInputs() {
         if (startDisplay && startInput && startInput.value) {
             startDisplay.value = formatVietnameseDate(startInput.value);
@@ -155,6 +151,27 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    // Lọc danh sách buổi PT và cập nhật số lượng theo khoảng ngày đang chọn (không cần AJAX)
+    function updatePtImpactPreview(startIso, endIso) {
+        const box = document.getElementById('ptImpactBox');
+        const list = document.getElementById('ptImpactList');
+        if (!box || !list) return;
+
+        let count = 0;
+        list.querySelectorAll('li').forEach(li => {
+            const d = (li.dataset && li.dataset.slotDate) || '';
+            const inRange = d >= startIso && d <= endIso;
+            li.style.display = inRange ? '' : 'none';
+            if (inRange) count++;
+        });
+
+        const countText = document.getElementById('ptImpactCountText');
+        if (countText) {
+            countText.textContent = count + ' buổi tập PT';
+        }
+        box.style.display = count > 0 ? '' : 'none';
+    }
+
     // Tự động tính toán số ngày bảo lưu và hạn mới khi chọn ngày
     function calculateFreezeDays() {
         if (!startInput || !endInput || !startInput.value || !endInput.value) return;
@@ -162,6 +179,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const start = parseDate(startInput.value);
         const end = parseDate(endInput.value);
         if (!start || !end || end < start) return;
+
+        updatePtImpactPreview(startInput.value, endInput.value);
 
         // Số ngày bảo lưu = (end - start) + 1 ngày
         const diffDays = Math.max(1, Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1);
@@ -317,13 +336,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 r.style.display = (!val || r.textContent.toLowerCase().includes(val)) ? '' : 'none';
             });
         });
-    }
-
-    function escapeHtml(str) {
-        if (!str) return '';
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
     }
 
     // Export phục vụ kiểm thử đơn vị (Node.js test harness)

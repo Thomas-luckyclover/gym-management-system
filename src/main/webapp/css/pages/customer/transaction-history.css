@@ -283,6 +283,11 @@ html body.dock .th-dialog .btn.btn-buy {
   font-size: 0.82rem !important;
 }
 
+/* Chế độ SÁNG (14/11): xanh da trời #38bdf8 là màu sáng dành cho nền tối → trên thẻ sáng dòng thời hạn
+   ("Từ 26/10/2026 đến 26/11/2026") chỉ đạt tương phản 1.9:1, rất khó đọc. Chế độ sáng dùng màu chữ đậm cùng tông. */
+html:where(:not([data-theme="dark"])) .th-row__period { color: var(--color-info-ink) !important; }
+html:where(:not([data-theme="dark"])) .th-row__period i { color: var(--color-success-ink) !important; }
+
 .th-dialog__validity {
   display: flex !important;
   align-items: center !important;
