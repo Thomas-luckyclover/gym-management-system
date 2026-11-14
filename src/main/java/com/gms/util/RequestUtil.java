@@ -118,6 +118,16 @@ public final class RequestUtil {
     }
 
     /**
+     * Kiểm tra request có phải dạng multipart/form-data (upload tệp) không.
+     */
+    public static boolean isMultipartRequest(HttpServletRequest request) {
+        if (request == null || request.getContentType() == null) {
+            return false;
+        }
+        return request.getContentType().toLowerCase(java.util.Locale.ROOT).startsWith("multipart/");
+    }
+
+    /**
      * Đường dẫn request tính từ context path (không gồm context path).
      */
     public static String getPathWithinApp(HttpServletRequest request) {
