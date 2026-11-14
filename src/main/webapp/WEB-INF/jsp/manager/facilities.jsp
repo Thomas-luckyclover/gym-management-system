@@ -405,7 +405,7 @@
           </div>
 
           <div class="form-field">
-            <label class="form-label" for="itemLabelInput">Tên hiển thị / Quy cách *</label>
+            <label class="form-label" for="itemLabelInput">Tên hiển thị / Quy cách * (Duy nhất trong nhóm)</label>
             <input type="text" id="itemLabelInput" name="itemLabel" class="form-input" required minlength="1" maxlength="50" placeholder="VD: Số 9, Quả 22 kg, Tủ 51...">
           </div>
 
