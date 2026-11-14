@@ -6,6 +6,7 @@ import com.gms.dao.EmployeeDAO;
 import com.gms.dao.EquipmentItemDAO;
 import com.gms.dao.FacilityDAO;
 import com.gms.dao.MaintenanceRequestDAO;
+import com.gms.dao.NotificationDAO;
 import com.gms.dto.PageResult;
 import com.gms.dto.ServiceResult;
 import com.gms.entity.Account;
@@ -328,6 +329,259 @@ class MaintenanceRequestServiceTest {
         assertFalse(recordingNotificationService.roleNotifications.isEmpty());
         assertTrue(recordingNotificationService.roleNotifications.get(0).title.contains("2 yêu cầu mới"));
         assertTrue(recordingNotificationService.roleNotifications.get(0).content.contains("2 máy"));
+    }
+
+    @Test
+    @DisplayName("Tạo yêu cầu hàng loạt 60 thiết bị: Không vượt giới hạn 500 ký tự của Notifications.Content")
+    void createRequests_batch60Items_notificationStaysWithinDbLimit() {
+        Facility lockers = new Facility();
+        lockers.setFacilityId(10);
+        lockers.setFacilityName("Tủ khóa cá nhân");
+        lockers.setCategory(Facility.Category.AMENITIES);
+        lockers.setLocation("Khu thay đồ");
+        fakeFacilityDAO.facilities.put(10, lockers);
+
+        List<Integer> itemIds = new ArrayList<>();
+        for (int i = 1; i <= 60; i++) {
+            int itemId = 100 + i;
+            String itemCode = String.format("LK-%03d", i);
+            fakeEquipmentItemDAO.items.put(
+                    itemId,
+                    new EquipmentItem(itemId, 10, itemCode, EquipmentItem.Status.AVAILABLE)
+            );
+            itemIds.add(itemId);
+        }
+
+        ServiceResult<List<String>> result = service.createRequests(
+                RECEPTIONIST_ACCOUNT_ID,
+                itemIds,
+                "Normal",
+                "BrokenOrWorn",
+                "Receptionist",
+                "Hỏng khóa hàng loạt khu tủ đồ nam cần thay thế ổ khóa mới.",
+                true,
+                null
+        );
+
+        assertTrue(result.isSuccess(), "Expected success for 60 items but got: " + result.getMessage());
+        assertEquals(60, result.getData().size());
+        assertEquals(60, fakeMaintenanceRequestDAO.requests.size());
+
+        assertEquals(1, recordingNotificationService.roleNotifications.size());
+        RoleNotification notif = recordingNotificationService.roleNotifications.get(0);
+        assertTrue(notif.title.length() <= NotificationDAO.TITLE_MAX_LENGTH);
+        assertTrue(notif.content.length() <= NotificationDAO.CONTENT_MAX_LENGTH,
+                "Notification content exceeded 500 chars: " + notif.content.length());
+        assertTrue(notif.content.contains("60 máy"));
+        assertTrue(notif.content.contains("LK-001 (Tủ khóa cá nhân)"));
+        assertTrue(notif.content.contains("và 55 máy khác."));
+        assertFalse(notif.content.contains("BT-"), "Batch notification should open full list rather than filtering single code");
+    }
+
+    @Test
+    @DisplayName("Duyệt/Từ chối/Đóng hàng loạt 60 phiếu kèm ghi chú dài 500 ký tự: Thông báo luôn <= 500 ký tự")
+    void batchApproveAndClose_andMaxNotes_keepNotificationsWithin500Chars() {
+        Facility lockers = new Facility();
+        lockers.setFacilityId(10);
+        lockers.setFacilityName("Tủ khóa cá nhân");
+        fakeFacilityDAO.facilities.put(10, lockers);
+
+        List<Integer> itemIds = new ArrayList<>();
+        for (int i = 1; i <= 60; i++) {
+            int itemId = 200 + i;
+            fakeEquipmentItemDAO.items.put(
+                    itemId,
+                    new EquipmentItem(itemId, 10, String.format("LK-%03d", i), EquipmentItem.Status.AVAILABLE)
+            );
+            itemIds.add(itemId);
+        }
+
+        ServiceResult<List<String>> createRes = service.createRequests(
+                RECEPTIONIST_ACCOUNT_ID,
+                itemIds,
+                "Normal",
+                "NotWorking",
+                "Receptionist",
+                "Khóa tủ bị kẹt không đóng mở được hàng loạt.",
+                false,
+                null
+        );
+        assertTrue(createRes.isSuccess());
+
+        List<Integer> requestIds = new ArrayList<>(fakeMaintenanceRequestDAO.requests.keySet());
+        String max500Note = "N".repeat(500);
+
+        ServiceResult<Integer> approveRes = service.approveRequestsBatch(
+                MANAGER_ACCOUNT_ID,
+                requestIds,
+                true,
+                max500Note
+        );
+        assertTrue(approveRes.isSuccess());
+        assertEquals(60, approveRes.getData());
+        assertEquals(1, recordingNotificationService.employeeNotifications.size());
+        EmployeeNotification approveNotif = recordingNotificationService.employeeNotifications.get(0);
+        assertEquals(RECEPTIONIST_EMPLOYEE_ID, approveNotif.employeeId);
+        assertTrue(approveNotif.title.contains("60 yêu cầu"));
+        assertTrue(approveNotif.content.length() <= NotificationDAO.CONTENT_MAX_LENGTH);
+
+        ServiceResult<Integer> closeRes = service.closeRequestsBatch(
+                RECEPTIONIST_ACCOUNT_ID,
+                requestIds,
+                max500Note
+        );
+        assertTrue(closeRes.isSuccess());
+        assertEquals(60, closeRes.getData());
+        assertEquals(2, recordingNotificationService.employeeNotifications.size());
+        EmployeeNotification closeNotif = recordingNotificationService.employeeNotifications.get(1);
+        assertEquals(MANAGER_EMPLOYEE_ID, closeNotif.employeeId);
+        assertTrue(closeNotif.title.contains("60 yêu cầu"));
+        assertTrue(closeNotif.content.length() <= NotificationDAO.CONTENT_MAX_LENGTH);
+
+        // Kiểm tra NotificationDAO.safeTruncate bảo vệ biên 100 / 500
+        assertEquals(100, NotificationDAO.safeTruncate("A".repeat(150), NotificationDAO.TITLE_MAX_LENGTH).length());
+        assertEquals(500, NotificationDAO.safeTruncate("B".repeat(650), NotificationDAO.CONTENT_MAX_LENGTH).length());
+        assertTrue(NotificationDAO.safeTruncate("B".repeat(650), NotificationDAO.CONTENT_MAX_LENGTH).endsWith("..."));
+        assertEquals("", NotificationDAO.safeTruncate("ABC", 0));
+        assertEquals("AB", NotificationDAO.safeTruncate("ABCD", 2));
+        assertEquals(null, NotificationDAO.safeTruncate(null, 100));
+    }
+
+    @Test
+    @DisplayName("Biên thông báo 5 máy vs 6 máy và 60 máy tên dài tối đa 100 ký tự + affectedItemsNote 100 ký tự")
+    void createRequests_notificationBoundaries_5And6AndLong60Items() {
+        // TH1: Đúng 5 máy -> liệt kê đủ 5 máy, không có "máy khác"
+        Facility shortFac = new Facility();
+        shortFac.setFacilityId(10);
+        shortFac.setFacilityName("Tủ khóa");
+        fakeFacilityDAO.facilities.put(10, shortFac);
+
+        List<Integer> fiveIds = new ArrayList<>();
+        for (int i = 1; i <= 5; i++) {
+            int id = 300 + i;
+            fakeEquipmentItemDAO.items.put(id, new EquipmentItem(id, 10, "LK-0" + i, EquipmentItem.Status.AVAILABLE));
+            fiveIds.add(id);
+        }
+        String note100Padded = "  " + "G".repeat(100) + "  ";
+        ServiceResult<List<String>> fiveRes = service.createRequests(
+                RECEPTIONIST_ACCOUNT_ID, fiveIds, "Normal", "BrokenOrWorn", "Receptionist",
+                "Mô tả hợp lệ đủ tối thiểu 10 ký tự.", false, null, note100Padded);
+        assertTrue(fiveRes.isSuccess());
+        String fiveContent = recordingNotificationService.roleNotifications.get(0).content;
+        assertTrue(fiveContent.contains("LK-05 (Tủ khóa)"));
+        assertFalse(fiveContent.contains("máy khác"));
+        int firstReqId = fakeMaintenanceRequestDAO.requests.values().iterator().next().getMaintenanceRequestId();
+        assertEquals(100, fakeMaintenanceRequestDAO.requests.get(firstReqId).getAffectedItemsNote().length());
+
+        // Kiểm tra vượt biên affectedItemsNote = 101 ký tự
+        ServiceResult<List<String>> overAffectedNote = service.createRequests(
+                RECEPTIONIST_ACCOUNT_ID, fiveIds, "Normal", "BrokenOrWorn", "Receptionist",
+                "Mô tả hợp lệ đủ tối thiểu 10 ký tự.", false, null, "G".repeat(101));
+        assertFalse(overAffectedNote.isSuccess());
+        assertTrue(overAffectedNote.getFieldErrors().containsKey("affectedItemsNote"));
+
+        // Reset cho TH2: 6 máy -> hiển thị 5 máy + "và 1 máy khác."
+        recordingNotificationService.roleNotifications.clear();
+        int sixthId = 306;
+        fakeEquipmentItemDAO.items.put(sixthId, new EquipmentItem(sixthId, 10, "LK-06", EquipmentItem.Status.AVAILABLE));
+        List<Integer> sixIds = new ArrayList<>(fiveIds);
+        sixIds.add(sixthId);
+        // Xóa phiếu cũ để tái dùng 5 máy đầu
+        fakeMaintenanceRequestDAO.requests.clear();
+        ServiceResult<List<String>> sixRes = service.createRequests(
+                RECEPTIONIST_ACCOUNT_ID, sixIds, "Normal", "BrokenOrWorn", "Receptionist",
+                "Mô tả hợp lệ đủ tối thiểu 10 ký tự.", false, null);
+        assertTrue(sixRes.isSuccess());
+        String sixContent = recordingNotificationService.roleNotifications.get(0).content;
+        assertTrue(sixContent.contains("và 1 máy khác."));
+        assertTrue(sixContent.length() <= NotificationDAO.CONTENT_MAX_LENGTH);
+
+        // TH3: 60 máy mà tên dòng máy dài tối đa 100 ký tự + ItemCode 20 ký tự -> không vượt 500
+        recordingNotificationService.roleNotifications.clear();
+        fakeMaintenanceRequestDAO.requests.clear();
+        Facility longFac = new Facility();
+        longFac.setFacilityId(11);
+        longFac.setFacilityName("M".repeat(100));
+        fakeFacilityDAO.facilities.put(11, longFac);
+
+        List<Integer> sixtyLongIds = new ArrayList<>();
+        for (int i = 1; i <= 60; i++) {
+            int id = 400 + i;
+            String code = String.format("LONGCODE-%011d", i); // đúng 20 ký tự
+            fakeEquipmentItemDAO.items.put(id, new EquipmentItem(id, 11, code, EquipmentItem.Status.AVAILABLE));
+            sixtyLongIds.add(id);
+        }
+        ServiceResult<List<String>> sixtyLongRes = service.createRequests(
+                RECEPTIONIST_ACCOUNT_ID, sixtyLongIds, "Urgent", "SafetyHazard", "Receptionist",
+                "Kiểm tra biên 60 máy có tên dòng máy dài 100 ký tự.", true, null);
+        assertTrue(sixtyLongRes.isSuccess());
+        RoleNotification longNotif = recordingNotificationService.roleNotifications.get(0);
+        assertTrue(longNotif.title.length() <= NotificationDAO.TITLE_MAX_LENGTH);
+        assertTrue(longNotif.content.length() <= NotificationDAO.CONTENT_MAX_LENGTH);
+        assertTrue(longNotif.content.contains("60 máy"));
+        assertTrue(longNotif.content.contains("máy khác."));
+    }
+
+    @Test
+    @DisplayName("Biên validation khi duyệt/đóng hàng loạt (ghi chú 4, 5, 500, 501 ký tự)")
+    void batchApproveAndClose_validationBoundaries() {
+        ServiceResult<Integer> emptyApprove = service.approveRequestsBatch(MANAGER_ACCOUNT_ID, Collections.emptyList(), true, null);
+        assertFalse(emptyApprove.isSuccess());
+
+        ServiceResult<Integer> overNoteApprove = service.approveRequestsBatch(
+                MANAGER_ACCOUNT_ID, List.of(1), true, "N".repeat(501));
+        assertFalse(overNoteApprove.isSuccess());
+
+        ServiceResult<Integer> shortClose = service.closeRequestsBatch(
+                RECEPTIONIST_ACCOUNT_ID, List.of(1), "1234");
+        assertFalse(shortClose.isSuccess());
+        assertTrue(shortClose.getFieldErrors().containsKey("acceptanceNote"));
+
+        ServiceResult<Integer> longClose = service.closeRequestsBatch(
+                RECEPTIONIST_ACCOUNT_ID, List.of(1), "N".repeat(501));
+        assertFalse(longClose.isSuccess());
+        assertTrue(longClose.getFieldErrors().containsKey("acceptanceNote"));
+
+        // Đóng với ghi chú đúng biên min 5 ký tự trên phiếu đang InProgress
+        EquipmentItem item = new EquipmentItem(60, 1, "TM-060", EquipmentItem.Status.UNDER_MAINTENANCE);
+        fakeEquipmentItemDAO.items.put(60, item);
+        MaintenanceRequest req = new MaintenanceRequest();
+        req.setMaintenanceRequestId(60);
+        req.setRequestCode("BT-0060");
+        req.setEquipmentItemId(60);
+        req.setReviewedByEmployeeId(MANAGER_EMPLOYEE_ID);
+        req.setStatus(MaintenanceRequest.Status.IN_PROGRESS);
+        fakeMaintenanceRequestDAO.requests.put(60, req);
+
+        ServiceResult<Integer> minClose = service.closeRequestsBatch(
+                RECEPTIONIST_ACCOUNT_ID, List.of(60), "  12345  ");
+        assertTrue(minClose.isSuccess());
+        assertEquals(1, minClose.getData());
+    }
+
+    @Test
+    @DisplayName("Từ chối đơn lẻ với lý do 500 ký tự: Thông báo vẫn an toàn trong giới hạn 500 ký tự")
+    void rejectRequest_with500CharReason_notificationTruncatedSafely() {
+        EquipmentItem item = new EquipmentItem(50, 1, "TM-050", EquipmentItem.Status.AVAILABLE);
+        fakeEquipmentItemDAO.items.put(50, item);
+
+        MaintenanceRequest req = new MaintenanceRequest();
+        req.setMaintenanceRequestId(50);
+        req.setRequestCode("BT-0050");
+        req.setEquipmentItemId(50);
+        req.setReportedByEmployeeId(RECEPTIONIST_EMPLOYEE_ID);
+        req.setStatus(MaintenanceRequest.Status.OPEN);
+        fakeMaintenanceRequestDAO.requests.put(50, req);
+
+        String reason500 = "R".repeat(500);
+        ServiceResult<Void> result = service.rejectRequest(MANAGER_ACCOUNT_ID, 50, reason500);
+
+        assertTrue(result.isSuccess());
+        assertEquals(1, recordingNotificationService.employeeNotifications.size());
+        EmployeeNotification notif = recordingNotificationService.employeeNotifications.get(0);
+        assertTrue(notif.content.startsWith("BT-0050 · "));
+        assertTrue(notif.content.length() <= NotificationDAO.CONTENT_MAX_LENGTH);
+        assertTrue(notif.content.endsWith("..."));
     }
 
     @Test
@@ -861,8 +1115,21 @@ class MaintenanceRequestServiceTest {
         }
     }
 
+    private static class EmployeeNotification {
+        final int employeeId;
+        final String title;
+        final String content;
+
+        EmployeeNotification(int employeeId, String title, String content) {
+            this.employeeId = employeeId;
+            this.title = title;
+            this.content = content;
+        }
+    }
+
     private static class RecordingNotificationService extends NotificationService {
         final List<RoleNotification> roleNotifications = new ArrayList<>();
+        final List<EmployeeNotification> employeeNotifications = new ArrayList<>();
 
         @Override
         public void notifyRoleInTransaction(Connection connection, Role role, String title, String content) {
@@ -871,6 +1138,7 @@ class MaintenanceRequestServiceTest {
 
         @Override
         public void notifyEmployeeInTransaction(Connection connection, int employeeId, String title, String content) {
+            employeeNotifications.add(new EmployeeNotification(employeeId, title, content));
         }
     }
 }
