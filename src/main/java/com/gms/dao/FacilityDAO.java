@@ -350,8 +350,9 @@ public class FacilityDAO {
     private void setCatalogParameters(PreparedStatement statement, List<Object> parameters) throws SQLException {
         for (int i = 0; i < parameters.size(); i++) {
             Object value = parameters.get(i);
-            if (value instanceof Integer intVal) {
-                statement.setInt(i + 1, intVal);
+            // "instanceof rồi ép kiểu" kiểu cũ: Compile on Save của NetBeans 17 không dịch được "instanceof Integer intVal".
+            if (value instanceof Integer) {
+                statement.setInt(i + 1, (Integer) value);
             } else {
                 statement.setString(i + 1, String.valueOf(value));
             }

@@ -57,7 +57,9 @@ public final class TimeRange {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof TimeRange other)) return false;
+        // "instanceof rồi ép kiểu" kiểu cũ: Compile on Save của NetBeans 17 không dịch được "instanceof TimeRange other".
+        if (!(o instanceof TimeRange)) return false;
+        TimeRange other = (TimeRange) o;
         return date.equals(other.date) && start.equals(other.start) && end.equals(other.end);
     }
 

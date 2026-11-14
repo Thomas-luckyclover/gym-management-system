@@ -696,12 +696,14 @@ public class MaintenanceRequestDAO {
         for (int i = 0; i < parameters.size(); i++) {
             Object value = parameters.get(i);
 
-            if (value instanceof Integer intValue) {
-                statement.setInt(i + 1, intValue);
-            } else if (value instanceof Date sqlDate) {
-                statement.setDate(i + 1, sqlDate);
-            } else if (value instanceof Boolean boolValue) {
-                statement.setBoolean(i + 1, boolValue);
+            // Viết "instanceof rồi ép kiểu" kiểu cũ, KHÔNG dùng "instanceof Integer intValue":
+            // Compile on Save của NetBeans 17 không dịch được cú pháp đó → sinh class hỏng → màn báo lỗi 500.
+            if (value instanceof Integer) {
+                statement.setInt(i + 1, (Integer) value);
+            } else if (value instanceof Date) {
+                statement.setDate(i + 1, (Date) value);
+            } else if (value instanceof Boolean) {
+                statement.setBoolean(i + 1, (Boolean) value);
             } else {
                 statement.setString(i + 1, String.valueOf(value));
             }
