@@ -16,6 +16,5 @@ class FreezeMembershipServletTest {
         assertEquals("receptionist/freeze-membership", FreezeMembershipServlet.VIEW_NAME);
         assertEquals("applyFreeze", FreezeMembershipServlet.ACTION_APPLY_FREEZE);
         assertEquals("cancelFreezeEarly", FreezeMembershipServlet.ACTION_CANCEL_FREEZE_EARLY);
-        assertEquals("previewSessions", FreezeMembershipServlet.ACTION_PREVIEW_SESSIONS);
     }
 }

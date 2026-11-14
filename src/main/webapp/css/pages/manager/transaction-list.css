@@ -101,7 +101,24 @@
 .tx-table tr.is-refund td:first-child { box-shadow: inset 4px 0 0 var(--color-danger); }
 
 .tx-code { font-weight: var(--font-weight-bold); color: var(--color-text); letter-spacing: 0.01em; }
-.tx-sub { margin-top: 2px; font-size: var(--font-size-xs); color: var(--color-text-muted); }
+.tx-sub { margin-top: 2px; font-size: var(--font-size-xs); color: var(--color-text-muted); word-break: break-word; overflow-wrap: anywhere; }
+.tx-reason-clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+.tx-reason-clamp.expanded {
+  display: block;
+  -webkit-line-clamp: unset;
+  overflow: visible;
+}
+.tx-reason-clamp:hover {
+  color: var(--color-text);
+  text-decoration: underline dotted;
+}
 .tx-chan { display: inline-flex; align-items: center; gap: var(--space-1-5); color: var(--color-text); white-space: nowrap; }
 .tx-dot { width: 7px; height: 7px; background: var(--color-text-muted); flex: none; }
 .tx-dot.online { background: var(--color-info); }
@@ -150,6 +167,7 @@
   border: 1px solid var(--color-border-strong, var(--color-border));
   box-shadow: var(--shadow-lg);
   font-size: var(--font-size-xs); font-weight: var(--font-weight-medium); line-height: 1.4; white-space: normal;
+  overflow-wrap: anywhere; word-break: break-word;
 }
 
 /* ===== Popup ===== */
@@ -169,12 +187,12 @@
 .tx-mh { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); padding: var(--space-4-5) var(--space-5) var(--space-3); }
 .tx-mh h3 { margin: 0; display: flex; align-items: center; gap: var(--space-2-5); font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); color: var(--color-text); }
 .tx-mh p { margin: var(--space-1) 0 0; font-size: var(--font-size-sm); color: var(--color-text-soft); }
-.tx-x { border: 0; background: transparent; color: var(--color-text-muted); font-size: 22px; line-height: 1; cursor: pointer; padding: 2px 8px; }
+.tx-x { border: 0; background: transparent; color: var(--color-text-muted); font-size: 22px; line-height: 1; cursor: pointer; padding: 2px 8px; text-decoration: none; }
 .tx-x:hover { color: var(--color-text); }
 .tx-mb { padding: 0 var(--space-5) var(--space-4); display: flex; flex-direction: column; gap: var(--space-4); }
 .tx-mf { display: flex; justify-content: flex-end; gap: var(--space-3); padding: var(--space-3-5) var(--space-5); border-top: 1px solid var(--color-border); background: var(--color-surface-muted); }
 
-.tx-callout { padding: var(--space-3) var(--space-3-5); border: 1px solid; font-size: var(--font-size-sm); line-height: 1.5; }
+.tx-callout { padding: var(--space-3) var(--space-3-5); border: 1px solid; font-size: var(--font-size-sm); line-height: 1.5; overflow-wrap: anywhere; word-break: break-word; }
 .tx-callout.danger { background: var(--color-danger-tint); border-color: var(--color-danger-border); color: var(--color-danger-ink); }
 .tx-callout.warn { background: var(--color-warning-tint); border-color: var(--color-warning-border); color: var(--color-warning-ink); }
 .tx-callout.info { background: var(--color-info-tint); border-color: var(--color-info-border); color: var(--color-info-ink); }
@@ -182,12 +200,12 @@
 .tx-callout[hidden] { display: none; }
 
 .tx-cards { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); align-items: start; }
-.tx-card { border: 1px solid var(--color-border); padding: var(--space-3) var(--space-3-5); display: flex; flex-direction: column; gap: var(--space-2); background: var(--color-surface-muted); }
+.tx-card { min-width: 0; border: 1px solid var(--color-border); padding: var(--space-3) var(--space-3-5); display: flex; flex-direction: column; gap: var(--space-2); background: var(--color-surface-muted); }
 .tx-h { margin: 0 0 var(--space-2); font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold); letter-spacing: 0.04em; text-transform: uppercase; color: var(--color-text-soft); }
 .tx-card .tx-h { margin: 0 0 var(--space-1); }
 .tx-kv { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); font-size: var(--font-size-sm); }
 .tx-kv > span:first-child { color: var(--color-text-soft); white-space: nowrap; }
-.tx-kv > span:last-child, .tx-kv > b { text-align: right; }
+.tx-kv > span:last-child, .tx-kv > b { text-align: right; min-width: 0; overflow-wrap: anywhere; word-break: break-word; }
 .tx-kv b { color: var(--color-text); }
 .tx-total { padding-top: var(--space-2); border-top: 1px dashed var(--color-border); font-weight: var(--font-weight-bold); }
 

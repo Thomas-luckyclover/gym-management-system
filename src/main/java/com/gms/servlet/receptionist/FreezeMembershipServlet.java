@@ -1,5 +1,6 @@
 package com.gms.servlet.receptionist;
 
+import com.gms.constant.AppConstants;
 import com.gms.constant.Messages;
 import com.gms.constant.SessionKey;
 import com.gms.dto.CustomerMembershipRow;
@@ -27,24 +28,40 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 
 /**
- * Servlet màn hình Bảo lưu thẻ hội viên tại quầy Lễ tân (URL
- * /receptionist/freeze).
+ * Controller màn hình Bảo lưu thẻ hội viên tại quầy Lễ tân (Màn #34 - UC-18, Business Flow BF-09).
  *
- * <p>
- * GET: Tra cứu hội viên (mã/tên/SĐT), xem thông tin gói tập và xem danh sách
- * bảo lưu gần đây.
- * </p>
- * <p>
- * POST: Xác nhận bảo lưu gói tập hoặc mở lại thẻ trước hạn (hủy bảo lưu sớm).
- * </p>
+ * <p>Mapping URL: {@code @WebServlet("/receptionist/freeze")}</p>
+ *
+ * <p>GET: Nạp danh sách hội viên có phân trang/bộ lọc, chi tiết hội viên tra cứu và lịch sử bảo lưu.</p>
+ * <p>POST: Xử lý tạo lượt bảo lưu mới ({@code applyFreeze}) hoặc mở lại thẻ trước hạn ({@code cancelFreezeEarly}) theo mô hình PRG.</p>
  */
 @WebServlet("/receptionist/freeze")
 public class FreezeMembershipServlet extends HttpServlet {
 
     public static final String VIEW_NAME = "receptionist/freeze-membership";
+
     public static final String ACTION_APPLY_FREEZE = "applyFreeze";
     public static final String ACTION_CANCEL_FREEZE_EARLY = "cancelFreezeEarly";
-    public static final String ACTION_PREVIEW_SESSIONS = "previewSessions";
+
+    private static final int HISTORY_LIMIT = 50;
+    private static final DateTimeFormatter FLEXIBLE_DMY = DateTimeFormatter.ofPattern("d/M/yyyy");
+
+    /**
+     * Tiện ích chuẩn hóa và parse ngày linh hoạt từ input người dùng (hỗ trợ {@code d/M/yyyy} hoặc {@code yyyy-MM-dd}).
+     *
+     * @param dateStr chuỗi ngày đầu vào
+     * @return {@link LocalDate} đã parse
+     */
+    public static LocalDate parseFlexibleDate(String dateStr) {
+        if (dateStr == null || dateStr.trim().isEmpty()) {
+            throw new DateTimeParseException("Date string is empty", "", 0);
+        }
+        String trimmed = dateStr.trim();
+        if (trimmed.contains("/")) {
+            return LocalDate.parse(trimmed, FLEXIBLE_DMY);
+        }
+        return LocalDate.parse(trimmed);
+    }
 
     private final FreezeService freezeService;
 
@@ -60,7 +77,6 @@ public class FreezeMembershipServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        // B1: Lấy tài khoản đăng nhập từ session để kiểm tra quyền
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute(SessionKey.ACCOUNT_ID) == null) {
             RequestUtil.redirect(request, response, "/login");
@@ -68,28 +84,22 @@ public class FreezeMembershipServlet extends HttpServlet {
         }
         int accountId = (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
 
-        // B2: Xác định tab đang chọn (members hoặc history)
+        // B1: Đọc các tham số tab, bộ lọc và phân trang từ request
         String currentTab = RequestUtil.getTrimmedParam(request, "tab");
-        String historyQuery = RequestUtil.getTrimmedParam(request, "hq");
-        String historyFilter = RequestUtil.getTrimmedParam(request, "hfilter");
-        if (ValidationUtil.isNullOrEmpty(historyFilter)) {
-            historyFilter = "ALL";
-        }
-        if (ValidationUtil.isNullOrEmpty(currentTab)) {
-            currentTab = (!ValidationUtil.isNullOrEmpty(historyQuery) || !"ALL".equalsIgnoreCase(historyFilter)) ? "history" : "members";
-        }
-        request.setAttribute("currentTab", currentTab);
-
-        // Lấy từ khóa q (Tab 1) và bộ lọc filter
         String query = RequestUtil.getTrimmedParam(request, "q");
-        String filter = RequestUtil.getTrimmedParam(request, "filter");
-        if (ValidationUtil.isNullOrEmpty(filter)) {
-            filter = "ALL";
+        String filter = defaultIfEmpty(RequestUtil.getTrimmedParam(request, "filter"), "ALL");
+        String historyQuery = RequestUtil.getTrimmedParam(request, "hq");
+        String historyFilter = defaultIfEmpty(RequestUtil.getTrimmedParam(request, "hfilter"), "ALL");
+        //mới vào trang tất cả giá trị trên null ngoại trừ filter = ALL, historyFilter = ALL
+        if (ValidationUtil.isNullOrEmpty(currentTab)) {
+            boolean hasHistoryFilter = !ValidationUtil.isNullOrEmpty(historyQuery) || !"ALL".equalsIgnoreCase(historyFilter);
+            currentTab = hasHistoryFilter ? "history" : "members";
         }
-        int page = PaginationUtil.getPageNumber(request);
-        int pageSize = 10;
 
-        // B4: Lấy danh sách hội viên & hợp đồng hiển thị ở bảng (Tab 1)
+        int page = PaginationUtil.getPageNumber(request);
+        int pageSize = AppConstants.DEFAULT_PAGE_SIZE;
+
+        // B2: Gọi Service để nạp dữ liệu bảng hội viên (Tab 1), chi tiết hội viên (nếu tra cứu) và lịch sử (Tab 2)
         PageResult<CustomerMembershipRow> membershipsPage = freezeService.getCustomerMembershipsPage(query, filter, page, pageSize);
         request.setAttribute("membershipsPage", membershipsPage);
         request.setAttribute("customerMemberships", membershipsPage.getItems());
@@ -103,17 +113,16 @@ public class FreezeMembershipServlet extends HttpServlet {
             }
             request.setAttribute("query", query);
         }
-        request.setAttribute("currentFilter", filter);
 
-        // B5: Lấy toàn bộ lịch sử các đợt bảo lưu (Tab 2)
-        List<FreezeRecordItemView> freezeHistoryList = freezeService.getRecentFreezes(historyQuery, historyFilter, 50);
+        List<FreezeRecordItemView> freezeHistoryList = freezeService.getRecentFreezes(historyQuery, historyFilter, HISTORY_LIMIT);
+
+        request.setAttribute("currentTab", currentTab);
+        request.setAttribute("currentFilter", filter);
         request.setAttribute("freezeHistoryList", freezeHistoryList);
-        request.setAttribute("recentFreezes", freezeHistoryList); // tương thích ngược
         request.setAttribute("historyQuery", historyQuery);
         request.setAttribute("historyFilter", historyFilter);
         request.setAttribute("activeNav", "freeze");
 
-        // B6: Chuyển tiếp dữ liệu từ servlet sang jsp để hiển thị giao diện
         RequestUtil.forward(request, response, VIEW_NAME);
     }
 
@@ -121,7 +130,6 @@ public class FreezeMembershipServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        // Kiểm tra phiên đăng nhập của nhân viên Lễ tân
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute(SessionKey.ACCOUNT_ID) == null) {
             RequestUtil.redirect(request, response, "/login");
@@ -134,21 +142,18 @@ public class FreezeMembershipServlet extends HttpServlet {
         }
 
         int accountId = (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
-        String action = RequestUtil.getTrimmedParam(request, "action"); // Đọc action để biết người dùng muốn làm gì
+        String action = RequestUtil.getTrimmedParam(request, "action");
 
-        if (ACTION_APPLY_FREEZE.equalsIgnoreCase(action)) { // Nếu là xác nhận bảo lưu
-            handleApplyFreeze(request, response, accountId);
-            return;
+        switch (action != null ? action : "") {
+            case ACTION_APPLY_FREEZE:
+                handleApplyFreeze(request, response, accountId);
+                return;
+            case ACTION_CANCEL_FREEZE_EARLY:
+                handleCancelFreezeEarly(request, response, accountId);
+                return;
+            default:
+                finishAction(request, response, "/receptionist/freeze", "error", Messages.MSG04_SYSTEM_BUSY);
         }
-
-        if (ACTION_CANCEL_FREEZE_EARLY.equalsIgnoreCase(action)) { // Nếu là mở lại thẻ trước hạn
-            handleCancelFreezeEarly(request, response, accountId);
-            return;
-        }
-
-        // Trường hợp action không hợp lệ
-        RequestUtil.setFlashToast(request, "error", Messages.MSG04_SYSTEM_BUSY);
-        RequestUtil.redirect(request, response, "/receptionist/freeze");
     }
 
     /**
@@ -157,30 +162,20 @@ public class FreezeMembershipServlet extends HttpServlet {
     private void handleApplyFreeze(HttpServletRequest request, HttpServletResponse response, int accountId)
             throws IOException {
 
+        String redirectUrl = buildRedirectUrl(request);
         int subscriptionId = RequestUtil.getIntParam(request, "subscriptionId", 0);
         String startDateStr = RequestUtil.getTrimmedParam(request, "startDate");
         String plannedEndDateStr = RequestUtil.getTrimmedParam(request, "plannedEndDate");
         String reason = RequestUtil.getTrimmedParam(request, "reason");
-        String q = RequestUtil.getTrimmedParam(request, "q");
-        String filter = RequestUtil.getTrimmedParam(request, "filter");
-        String redirectUrl = buildRedirectUrl(q, filter);
 
         if (subscriptionId <= 0 || ValidationUtil.isNullOrEmpty(startDateStr)
                 || ValidationUtil.isNullOrEmpty(plannedEndDateStr)) {
-            RequestUtil.setFlashToast(request, "error", Messages.MSG285_FREEZE_PERIOD_REQUIRED);
-            RequestUtil.redirect(request, response, redirectUrl);
+            finishAction(request, response, redirectUrl, "error", Messages.MSG285_FREEZE_PERIOD_REQUIRED);
             return;
         }
 
-        if (ValidationUtil.isNullOrEmpty(reason) || reason.length() < 5) {
-            RequestUtil.setFlashToast(request, "error", Messages.MSG278_FREEZE_REASON_MIN);
-            RequestUtil.redirect(request, response, redirectUrl);
-            return;
-        }
-
-        if (reason.length() > 500) {
-            RequestUtil.setFlashToast(request, "error", Messages.MSG286_FREEZE_REASON_MAX);
-            RequestUtil.redirect(request, response, redirectUrl);
+        if (reason != null && reason.length() > 500) {
+            finishAction(request, response, redirectUrl, "error", Messages.MSG286_FREEZE_REASON_MAX);
             return;
         }
 
@@ -190,16 +185,12 @@ public class FreezeMembershipServlet extends HttpServlet {
             startDate = parseFlexibleDate(startDateStr);
             plannedEndDate = parseFlexibleDate(plannedEndDateStr);
         } catch (DateTimeParseException e) {
-            RequestUtil.setFlashToast(request, "error", Messages.MSG287_DATE_FORMAT_INVALID);
-            RequestUtil.redirect(request, response, redirectUrl);
+            finishAction(request, response, redirectUrl, "error", Messages.MSG287_DATE_FORMAT_INVALID);
             return;
         }
 
-        // Thực hiện bảo lưu thông qua service
-        ServiceResult<Void> result = freezeService.applyFreeze(accountId, subscriptionId, startDate, plannedEndDate,
-                reason);
-        RequestUtil.setFlashToast(request, result.isSuccess() ? "success" : "error", result.getMessage());
-        RequestUtil.redirect(request, response, redirectUrl);
+        ServiceResult<Void> result = freezeService.applyFreeze(accountId, subscriptionId, startDate, plannedEndDate, reason);
+        finishAction(request, response, redirectUrl, result);
     }
 
     /**
@@ -208,35 +199,38 @@ public class FreezeMembershipServlet extends HttpServlet {
     private void handleCancelFreezeEarly(HttpServletRequest request, HttpServletResponse response, int accountId)
             throws IOException {
 
+        String redirectUrl = buildRedirectUrl(request);
         int freezeRecordId = RequestUtil.getIntParam(request, "freezeRecordId", 0);
-        String q = RequestUtil.getTrimmedParam(request, "q");
-        String filter = RequestUtil.getTrimmedParam(request, "filter");
-        String redirectUrl = buildRedirectUrl(q, filter);
 
         if (freezeRecordId <= 0) {
-            RequestUtil.setFlashToast(request, "error", Messages.MSG288_FREEZE_ID_INVALID);
-            RequestUtil.redirect(request, response, redirectUrl);
+            finishAction(request, response, redirectUrl, "error", Messages.MSG288_FREEZE_ID_INVALID);
             return;
         }
 
-        // Thực hiện mở lại thẻ trước hạn thông qua service
         ServiceResult<Void> result = freezeService.cancelFreezeEarly(accountId, freezeRecordId);
-        RequestUtil.setFlashToast(request, result.isSuccess() ? "success" : "error", result.getMessage());
+        finishAction(request, response, redirectUrl, result);
+    }
+
+    private void finishAction(HttpServletRequest request, HttpServletResponse response,
+                              String redirectUrl, ServiceResult<Void> result) throws IOException {
+        finishAction(request, response, redirectUrl,
+                result.isSuccess() ? "success" : "error",
+                result.getMessage());
+    }
+
+    private void finishAction(HttpServletRequest request, HttpServletResponse response,
+                              String redirectUrl, String toastType, String message) throws IOException {
+        RequestUtil.setFlashToast(request, toastType, message);
         RequestUtil.redirect(request, response, redirectUrl);
     }
 
-    private LocalDate parseFlexibleDate(String dateStr) {
-        if (dateStr == null || dateStr.trim().isEmpty()) {
-            throw new DateTimeParseException("Date string is empty", "", 0);
-        }
-        dateStr = dateStr.trim();
-        if (dateStr.contains("/")) {
-            return LocalDate.parse(dateStr, DateTimeFormatter.ofPattern("d/M/yyyy"));
-        }
-        return LocalDate.parse(dateStr);
+    private String defaultIfEmpty(String value, String fallback) {
+        return ValidationUtil.isNullOrEmpty(value) ? fallback : value;
     }
 
-    private String buildRedirectUrl(String q, String filter) {
+    private String buildRedirectUrl(HttpServletRequest request) {
+        String q = RequestUtil.getTrimmedParam(request, "q");
+        String filter = RequestUtil.getTrimmedParam(request, "filter");
         StringBuilder sb = new StringBuilder("/receptionist/freeze");
         boolean hasParam = false;
         if (!ValidationUtil.isNullOrEmpty(q)) {

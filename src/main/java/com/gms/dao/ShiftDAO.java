@@ -156,13 +156,12 @@ public class ShiftDAO {
      * Tìm bất kỳ ca nào khác đang ở trạng thái Open trên toàn hệ thống (trừ exceptShiftId).
      */
     public Shift findOtherOpenShift(int exceptShiftId) throws SQLException {
-        return findFirstOpenShift("ShiftId <> ?", exceptShiftId);
+        return findFirstOpenShift("ShiftId <> ?", exceptShiftId);// ShiftId <> ? để tránh tìm chính ca hiện tại đang mở (tương đương dầu !=)
     }
 
     private Shift findFirstOpenShift(String extraCondition, Object param) {
         String sql = "SELECT TOP 1 " + SHIFT_COLUMNS + " FROM Shifts "
-                + "WHERE Status = 'Open' AND " + extraCondition
-                + " ORDER BY WorkDate ASC, CASE WHEN ShiftType = 'Morning' THEN 1 ELSE 2 END";
+                + "WHERE Status = 'Open' AND " + extraCondition;
         try (Connection conn = DBContext.getConnection()) {
             if (conn == null) {
                 return null;
@@ -365,6 +364,7 @@ public class ShiftDAO {
                 """
                 + TRANSACTION_FROM_SQL
                 + " ORDER BY o.CreatedAt DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+                //bỏ qua n dòng và lấy n dòng tiếp theo (phân trang SQL Server 2012+)
 
         List<ShiftTransactionItem> items = new ArrayList<>();
         try (Connection conn = DBContext.getConnection();
@@ -400,6 +400,10 @@ public class ShiftDAO {
 
     private void setTransactionFilterParams(PreparedStatement stmt, int shiftId,
                                             String search, String method, String status) throws SQLException {
+        // Tiền xử lý và chuẩn hóa các tham số lọc từ giao diện trước khi truyền vào SQL:
+        // - keyword: cắt khoảng trắng và bọc %...% để tìm kiếm LIKE, rỗng thì để null
+        // - dbMethod: chuyển về đúng giá trị 'Cash', 'Transfer' trong DB hoặc null nếu chọn Tất cả
+        // - dbStatus: chuẩn hóa trạng thái về 'Paid', 'Pending', 'Cancelled' hoặc null nếu chọn Tất cả
         String keyword = (search != null && !search.trim().isEmpty()) ? "%" + search.trim() + "%" : null;
         String dbMethod = (method == null || "all".equalsIgnoreCase(method))
                 ? null
@@ -448,107 +452,13 @@ public class ShiftDAO {
                             rs.getString("CustomerName"),
                             null, null, null, "Transfer", 0L, "Pending",
                             null, null, null, true, true));
-                }
+                }//mục tiêu là hiển thị cảnh báo thì k cần phải lấy hết các trường dữ liệu, chỉ cần OrderId, OrderCode, CustomerName là đủ
             }
         }
         return list;
     }
 
-    // ===== 4. Xác nhận Chuyển khoản & Hủy đơn hàng tại quầy =====
-
-    /**
-     * Lễ tân xác nhận đã nhận tiền chuyển khoản cho đơn hàng tại quầy (CBR-77).
-     */
-    public int confirmBankTransfer(Connection conn, int orderId, int employeeId, LocalDateTime completedAt) throws SQLException {
-        // B1: Cập nhật Order sang Paid trước để khóa đơn, chặn tranh chấp đồng thời (CBR-77, CS-19)
-        String updateOrderSql = "UPDATE Orders SET Status = 'Paid', PaidAt = ? WHERE OrderId = ? AND Status = 'Pending'";
-        int rowsUpdated;
-        try (PreparedStatement orderStmt = conn.prepareStatement(updateOrderSql)) {
-            orderStmt.setTimestamp(1, Timestamp.valueOf(completedAt));
-            orderStmt.setInt(2, orderId);
-            rowsUpdated = orderStmt.executeUpdate();
-        }
-
-        // Nếu đơn không còn ở trạng thái Pending (đã được xác nhận hoặc hủy trước đó) -> dừng ngay
-        if (rowsUpdated == 0) {
-            return 0;
-        }
-
-        // B2: Cập nhật giao dịch chuyển khoản sang Success
-        String updateTxSql = """
-                UPDATE Transactions 
-                SET Status = 'Success', ReceivedByEmployeeId = ?, CompletedAt = ? 
-                WHERE OrderId = ? AND Status = 'Pending'
-                """;
-        int txUpdated;
-        try (PreparedStatement txStmt = conn.prepareStatement(updateTxSql)) {
-            txStmt.setInt(1, employeeId);
-            txStmt.setTimestamp(2, Timestamp.valueOf(completedAt));
-            txStmt.setInt(3, orderId);
-            txUpdated = txStmt.executeUpdate();
-        }
-
-        // B2.1: Nếu đơn chưa có bản ghi Transaction nào thì tạo mới giao dịch Success
-        if (txUpdated == 0) {
-            String insertTxSql = """
-                    INSERT INTO Transactions (OrderId, Amount, PaymentMethod, ReceivedByEmployeeId, Status, CreatedAt, CompletedAt)
-                    SELECT OrderId, (UnitPriceSnapshot - DiscountAmount), 'Transfer', ?, 'Success', ?, ?
-                    FROM Orders WHERE OrderId = ?
-                    """;
-            try (PreparedStatement insertTxStmt = conn.prepareStatement(insertTxSql)) {
-                insertTxStmt.setInt(1, employeeId);
-                insertTxStmt.setTimestamp(2, Timestamp.valueOf(completedAt));
-                insertTxStmt.setTimestamp(3, Timestamp.valueOf(completedAt));
-                insertTxStmt.setInt(4, orderId);
-                insertTxStmt.executeUpdate();
-            }
-        }
-
-        // B3: Cấp thẻ tập (Subscription) cho hội viên nếu chưa có (CS-16)
-        String checkSubSql = "SELECT 1 FROM Subscriptions WHERE OrderId = ?";
-        boolean hasSub = false;
-        try (PreparedStatement checkStmt = conn.prepareStatement(checkSubSql)) {
-            checkStmt.setInt(1, orderId);
-            try (ResultSet rs = checkStmt.executeQuery()) {
-                hasSub = rs.next();
-            }
-        }
-
-        if (!hasSub) {
-            String insertSubSql = """
-                    INSERT INTO Subscriptions (OrderId, CustomerId, SubscriptionType, StartDate, EndDate, MaxFreezesSnapshot, Status)
-                    SELECT o.OrderId, o.HolderCustomerId, p.PackageType, CAST(? AS DATE),
-                           CASE WHEN p.PackageType = 'DayPass' THEN CAST(? AS DATE)
-                                ELSE DATEADD(MONTH, ISNULL(p.DurationValue, 1), CAST(? AS DATE)) END,
-                           CASE WHEN p.PackageType = 'Membership' THEN 2 ELSE NULL END,
-                           'Active'
-                    FROM Orders o
-                    JOIN Packages p ON p.PackageId = o.PackageId
-                    WHERE o.OrderId = ?
-                    """;
-            try (PreparedStatement insertSubStmt = conn.prepareStatement(insertSubSql)) {
-                insertSubStmt.setTimestamp(1, Timestamp.valueOf(completedAt));
-                insertSubStmt.setTimestamp(2, Timestamp.valueOf(completedAt));
-                insertSubStmt.setTimestamp(3, Timestamp.valueOf(completedAt));
-                insertSubStmt.setInt(4, orderId);
-                insertSubStmt.executeUpdate();
-            }
-
-            // Kích hoạt khách hàng New / Expired sang Active (CBR-01, CBR-02)
-            String activateCustSql = """
-                    UPDATE Customers 
-                    SET Status = 'Active' 
-                    WHERE CustomerId = (SELECT HolderCustomerId FROM Orders WHERE OrderId = ?)
-                      AND Status IN ('New', 'Expired')
-                    """;
-            try (PreparedStatement actStmt = conn.prepareStatement(activateCustSql)) {
-                actStmt.setInt(1, orderId);
-                actStmt.executeUpdate();
-            }
-        }
-
-        return rowsUpdated;
-    }
+    // ===== 4. Hủy đơn hàng tại quầy =====
 
     /**
      * Hủy 1 đơn tại quầy trong ca (CBR-11 đơn Paid, CBR-78 đơn Pending) — mọi bước trong transaction của Service.
@@ -584,9 +494,9 @@ public class ShiftDAO {
                     orderCreatedAt = rs.getTimestamp("CreatedAt");
                 }
             }
-        }
+        }//lấy
 
-        // B2
+        // B2 set status = Cancelled, CancelType = CancelledByReceptionist, CancelledAt = now, CancelReason = reason ở bảng Orders
         String updateOrderSql = """
                 UPDATE Orders
                 SET Status = 'Cancelled', CancelType = 'CancelledByReceptionist',
@@ -604,7 +514,7 @@ public class ShiftDAO {
             return 0;
         }
 
-        // B3
+        // B3 trả lại lượt voucher (UsedCount - 1) nếu đơn có VoucherId (BR-44)
         if (voucherId != null) {
             try (PreparedStatement vStmt = conn.prepareStatement(
                     "UPDATE Vouchers SET UsedCount = UsedCount - 1 WHERE VoucherId = ? AND UsedCount > 0")) {
@@ -613,14 +523,15 @@ public class ShiftDAO {
             }
         }
 
-        // B4
+        // B4 hủy Subscriptions của đơn (Status = Cancelled)
         String cancelSubSql = "UPDATE Subscriptions SET Status = 'Cancelled' WHERE OrderId = ?";
         try (PreparedStatement subStmt = conn.prepareStatement(cancelSubSql)) {
             subStmt.setInt(1, orderId);
             subStmt.executeUpdate();
         }
 
-        // B5
+        // B5 giải phóng các khung của buổi còn Scheduled → Free
+        //Time slot là khung giờ của buổi PT
         String freeSlotSql = """
                 UPDATE TimeSlots
                 SET Status = 'Free'
@@ -636,6 +547,7 @@ public class ShiftDAO {
         }
 
         // B6
+        //Session là buổi PT đc tạo khi thanh toán thành công, 1 time slot chỉ gắn với 1 session theo thời điểm
         String cancelSessionsSql = """
                 UPDATE Sessions
                 SET Status = 'Cancelled', CancelType = 'ByCustomer', CancelReason = ?, CancelledAt = ?,
@@ -651,7 +563,9 @@ public class ShiftDAO {
             sesStmt.executeUpdate();
         }
 
-        // B7
+        // B7: Giải phóng lịch giữ chỗ nếu đây là đơn gói PT ở trạng thái Pending
+        // 7.1: Xóa các khung giờ TẠO MỚI riêng cho đơn này (CreatedAt >= thời điểm tạo đơn)
+        // để tránh để lại lịch trống rác ngoài ý muốn của PT sau khi hủy đơn.
         if (orderCreatedAt != null) {
             String deleteHoldSlotsSql =
                     "DELETE FROM TimeSlots WHERE HeldByOrderId = ? AND Status = 'Held' AND CreatedAt >= ?";
@@ -730,16 +644,17 @@ public class ShiftDAO {
                         WHERE o.ShiftId = s.ShiftId
                     ) AS TotalInvoiceCount
                 FROM Shifts s
-                LEFT JOIN Employees eOpen ON eOpen.EmployeeId = s.OpenedByEmployeeId
-                LEFT JOIN Persons pOpen ON pOpen.PersonId = eOpen.PersonId
-                LEFT JOIN Employees eClose ON eClose.EmployeeId = s.ClosedByEmployeeId
-                LEFT JOIN Persons pClose ON pClose.PersonId = eClose.PersonId
+                JOIN Employees eOpen ON eOpen.EmployeeId = s.OpenedByEmployeeId
+                JOIN Persons pOpen ON pOpen.PersonId = eOpen.PersonId
+                JOIN Employees eClose ON eClose.EmployeeId = s.ClosedByEmployeeId
+                JOIN Persons pClose ON pClose.PersonId = eClose.PersonId
                 WHERE s.Status = 'Closed'
                   AND (? IS NULL OR s.WorkDate >= ?)
                   AND (? IS NULL OR s.WorkDate <= ?)
                 ORDER BY s.WorkDate DESC, s.ShiftId DESC
                 OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
                 """;
+                //Coalesce: nếu null thì trả về 0, tránh lỗi NullPointerException khi tính tổng tiền chuyển khoản
 
         Date fromSql = fromDate != null ? Date.valueOf(fromDate) : null;
         Date toSql = toDate != null ? Date.valueOf(toDate) : null;
@@ -814,3 +729,4 @@ public class ShiftDAO {
         );
     }
 }
+

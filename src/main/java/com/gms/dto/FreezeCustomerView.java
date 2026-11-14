@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * DTO tổng hợp dữ liệu màn hình Bảo lưu gói tập cho một hội viên được tra cứu (UC-18, BF-09).
  * Cung cấp đầy đủ thông tin hồ sơ, gói Membership hiện tại, điều kiện bảo lưu,
- * thông tin đợt bảo lưu đang mở (nếu có), và lịch sử các lần bảo lưu trước.
+ * và thông tin đợt bảo lưu đang mở (nếu có).
  */
 public class FreezeCustomerView {
 
@@ -59,9 +59,6 @@ public class FreezeCustomerView {
 
     // ===== 6. Danh sách các buổi PT bị ảnh hưởng (CBR-62) =====
     private List<FreezeSessionImpactView> affectedSessions = new ArrayList<>();
-
-    // ===== 7. Lịch sử bảo lưu của riêng khách hàng này =====
-    private List<FreezeRecordItemView> freezeHistory = new ArrayList<>();
 
     public FreezeCustomerView() {
     }
@@ -337,14 +334,6 @@ public class FreezeCustomerView {
 
     public void setAffectedSessions(List<FreezeSessionImpactView> affectedSessions) {
         this.affectedSessions = affectedSessions;
-    }
-
-    public List<FreezeRecordItemView> getFreezeHistory() {
-        return freezeHistory;
-    }
-
-    public void setFreezeHistory(List<FreezeRecordItemView> freezeHistory) {
-        this.freezeHistory = freezeHistory;
     }
 
 }
