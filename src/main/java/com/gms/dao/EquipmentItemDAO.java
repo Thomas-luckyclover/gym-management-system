@@ -81,29 +81,47 @@ public class EquipmentItemDAO {
     }
 
     /**
-     * Lấy toàn bộ cá thể máy con và gom nhóm theo FacilityId thành Map để nạp cho danh sách dòng máy.
-     * Hàm thực thi 1 truy vấn duy nhất (tránh N+1 query), sắp xếp máy Retired xuống cuối mỗi nhóm rồi dùng computeIfAbsent gom vào LinkedHashMap.
+     * Lấy toàn bộ cá thể máy con (bao gồm cả máy đã Retired) và gom nhóm theo FacilityId thành Map.
+     * Hàm ủy quyền cho {@link #findAllGroupedByFacility(boolean)} với {@code includeRetired = true}.
      */
     public Map<Integer, List<EquipmentItem>> findAllGroupedByFacility() throws SQLException {
-        String sql = """
+        return findAllGroupedByFacility(true);
+    }
+
+    /**
+     * Lấy danh sách cá thể máy con gom nhóm theo FacilityId, cho phép chọn giữ hay ẩn máy đã thanh lý ({@code Retired}).
+     * Hàm thực thi 1 truy vấn duy nhất (tránh N+1 query), lọc bỏ {@code Retired} khi {@code includeRetired = false},
+     * sắp xếp máy {@code Retired} xuống cuối mỗi nhóm rồi dùng {@code computeIfAbsent} gom vào {@link LinkedHashMap}.
+     */
+    public Map<Integer, List<EquipmentItem>> findAllGroupedByFacility(boolean includeRetired) throws SQLException {
+        StringBuilder sql = new StringBuilder("""
             SELECT ei.EquipmentItemId, ei.FacilityId, ei.ItemCode, ei.ItemLabel, ei.PlacementNote, ei.Status,
                    f.FacilityName, f.Location,
                    mr.RequestCode AS ActiveRequestCode, mr.MaintenanceRequestId AS ActiveRequestId
             FROM EquipmentItems ei
             JOIN Facilities f ON f.FacilityId = ei.FacilityId
             LEFT JOIN MaintenanceRequests mr ON mr.EquipmentItemId = ei.EquipmentItemId AND mr.Status IN ('Open', 'InProgress')
+            """);
+        if (!includeRetired) {
+            sql.append(" WHERE ei.Status <> ?\n");
+        }
+        sql.append("""
             ORDER BY ei.FacilityId, 
                      CASE WHEN ei.Status = 'Retired' THEN 1 ELSE 0 END,
                      ei.ItemCode
-            """;
+            """);
 
         Map<Integer, List<EquipmentItem>> map = new LinkedHashMap<>();
         try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                EquipmentItem item = mapResultSetToItem(rs);
-                map.computeIfAbsent(item.getFacilityId(), k -> new ArrayList<>()).add(item);
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            if (!includeRetired) {
+                ps.setString(1, EquipmentItem.Status.RETIRED.getDbValue());
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    EquipmentItem item = mapResultSetToItem(rs);
+                    map.computeIfAbsent(item.getFacilityId(), k -> new ArrayList<>()).add(item);
+                }
             }
         }
         return map;

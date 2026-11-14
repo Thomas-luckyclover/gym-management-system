@@ -103,9 +103,9 @@ public class FacilityDAO {
             }
         }
 
-        // Bổ sung danh sách các cá thể máy con cho từng dòng máy (tránh N+1 bằng map)
+        // Bổ sung danh sách các cá thể máy con chưa thanh lý cho từng dòng máy (tránh N+1 bằng map)
         if (!facilities.isEmpty()) {
-            Map<Integer, List<EquipmentItem>> itemsMap = equipmentItemDAO.findAllGroupedByFacility();
+            Map<Integer, List<EquipmentItem>> itemsMap = equipmentItemDAO.findAllGroupedByFacility(false);
             for (Facility f : facilities) {
                 List<EquipmentItem> items = itemsMap.get(f.getFacilityId());
                 if (items != null) {
@@ -160,7 +160,7 @@ public class FacilityDAO {
         }
 
         if (!facilities.isEmpty()) {
-            Map<Integer, List<EquipmentItem>> itemsMap = equipmentItemDAO.findAllGroupedByFacility();
+            Map<Integer, List<EquipmentItem>> itemsMap = equipmentItemDAO.findAllGroupedByFacility(true);
             for (Facility f : facilities) {
                 List<EquipmentItem> items = itemsMap.get(f.getFacilityId());
                 if (items != null) {
