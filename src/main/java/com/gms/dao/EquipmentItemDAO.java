@@ -238,6 +238,30 @@ public class EquipmentItemDAO {
     }
 
     /**
+     * Kiểm tra nhãn hiển thị (ItemLabel) đã tồn tại trong cùng nhóm máy (FacilityId) hay chưa.
+     * Hàm đếm số bản ghi có cùng FacilityId và ItemLabel (có thể loại trừ excludeItemId khi đang cập nhật) và trả về true nếu > 0.
+     */
+    public boolean isItemLabelExists(int facilityId, String itemLabel, Integer excludeItemId) throws SQLException {
+        StringBuilder sql = new StringBuilder(
+            "SELECT COUNT(*) FROM EquipmentItems WHERE FacilityId = ? AND ItemLabel = ?"
+        );
+        if (excludeItemId != null) {
+            sql.append(" AND EquipmentItemId <> ?");
+        }
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            ps.setInt(1, facilityId);
+            ps.setString(2, itemLabel.trim());
+            if (excludeItemId != null) {
+                ps.setInt(3, excludeItemId);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() && rs.getInt(1) > 0;
+            }
+        }
+    }
+
+    /**
      * Lấy danh sách các ghi chú vị trí đặt máy (PlacementNote) không trùng lặp để gợi ý nhập liệu cho Manager.
      * Hàm lọc các giá trị khác null/rỗng trong bảng EquipmentItems và sắp xếp tăng dần.
      */
