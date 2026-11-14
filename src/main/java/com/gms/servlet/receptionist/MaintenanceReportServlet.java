@@ -99,7 +99,7 @@ public class MaintenanceReportServlet extends HttpServlet {
 
         if (selectedItems.isEmpty()) {
             String warningMsg = (blockedItemCode != null)
-                    ? "Thiết bị " + blockedItemCode + " đang trong quá trình bảo trì hoặc đã có yêu cầu chờ duyệt."
+                    ? String.format(Messages.MSG344_MAINTENANCE_ITEM_BUSY, blockedItemCode)
                     : Messages.MSG242_MAINTENANCE_DEVICE_INACTIVE;
             RequestUtil.setFlashToast(request, "warning", warningMsg);
             response.sendRedirect(request.getContextPath() + "/receptionist/facilities");

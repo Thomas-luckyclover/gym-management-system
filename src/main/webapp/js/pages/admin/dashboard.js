@@ -20,6 +20,9 @@ document.addEventListener("DOMContentLoaded", function () {
     var initialTo = toInput ? (toInput.getAttribute("data-initial-value") || "") : "";
 
     function getMessage(key, fallback) {
+        if (typeof MESSAGES !== "undefined" && MESSAGES[key]) {
+            return MESSAGES[key];
+        }
         if (window.MESSAGES && window.MESSAGES[key]) {
             return window.MESSAGES[key];
         }
@@ -208,7 +211,13 @@ document.addEventListener("DOMContentLoaded", function () {
             if (isRangeDirty()) {
                 event.preventDefault();
                 if (typeof window.showToast === "function") {
-                    window.showToast("Khoảng ngày đã thay đổi. Vui lòng bấm \"Xem báo cáo\" trước khi xuất CSV.", "info");
+                    window.showToast(
+                        getMessage(
+                            "MSG366_REPORT_RANGE_CHANGED_BEFORE_EXPORT",
+                            "Khoảng ngày đã thay đổi. Vui lòng bấm \"Xem báo cáo\" trước khi xuất CSV."
+                        ),
+                        "info"
+                    );
                 }
                 if (submitButton) {
                     submitButton.focus();

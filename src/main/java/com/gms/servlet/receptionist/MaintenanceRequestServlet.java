@@ -214,7 +214,7 @@ public class MaintenanceRequestServlet extends HttpServlet {
             RequestUtil.setFlashToast(
                     request,
                     "success",
-                    "Đã nghiệm thu và đóng thành công " + result.getData() + " yêu cầu bảo trì."
+                    String.format(Messages.MSG350_MAINTENANCE_BATCH_CLOSE_SUCCESS, result.getData())
             );
         } else {
             RequestUtil.setFlashToast(

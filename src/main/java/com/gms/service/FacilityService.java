@@ -18,8 +18,6 @@ import java.util.List;
  */
 public class FacilityService {
 
-    private static final String MSG_ITEM_LABEL_EXISTS = "Tên hiển thị / Quy cách '%s' đã tồn tại trong nhóm máy này.";
-
     private final FacilityDAO facilityDAO;
     private final EquipmentItemDAO equipmentItemDAO;
     private final MaintenanceRequestDAO maintenanceRequestDAO;
@@ -113,7 +111,7 @@ public class FacilityService {
 
         String location = facility.getLocation() != null ? facility.getLocation().trim() : "";
         if (location.length() > 100) {
-            return ServiceResult.failField("location", "Khu vực đặt tối đa 100 ký tự.");
+            return ServiceResult.failField("location", Messages.MSG341_FACILITY_LOCATION_LENGTH);
         }
         facility.setLocation(location);
 
@@ -207,7 +205,7 @@ public class FacilityService {
             }
             // Kiểm tra trùng nhãn hiển thị trong cùng nhóm máy (khớp UQ_EquipmentItems_FacilityLabel)
             if (equipmentItemDAO.isItemLabelExists(item.getFacilityId(), item.getItemLabel(), excludeId)) {
-                return duplicateEquipmentField("itemLabel", MSG_ITEM_LABEL_EXISTS, item.getItemLabel());
+                return duplicateEquipmentField("itemLabel", Messages.MSG342_ITEM_LABEL_EXISTS, item.getItemLabel());
             }
 
             if (item.getEquipmentItemId() > 0) {
@@ -245,14 +243,14 @@ public class FacilityService {
         }
         String message = e.getMessage() != null ? e.getMessage() : "";
         if (message.contains("UQ_EquipmentItems_FacilityLabel")) {
-            return duplicateEquipmentField("itemLabel", MSG_ITEM_LABEL_EXISTS, item.getItemLabel());
+            return duplicateEquipmentField("itemLabel", Messages.MSG342_ITEM_LABEL_EXISTS, item.getItemLabel());
         }
         if (message.contains("UQ_EquipmentItems_ItemCode")) {
             return duplicateEquipmentField("itemCode", Messages.MSG228_ITEM_CODE_EXISTS, item.getItemCode());
         }
         try {
             if (equipmentItemDAO.isItemLabelExists(item.getFacilityId(), item.getItemLabel(), excludeId)) {
-                return duplicateEquipmentField("itemLabel", MSG_ITEM_LABEL_EXISTS, item.getItemLabel());
+                return duplicateEquipmentField("itemLabel", Messages.MSG342_ITEM_LABEL_EXISTS, item.getItemLabel());
             }
             if (equipmentItemDAO.isItemCodeExists(item.getItemCode(), excludeId)) {
                 return duplicateEquipmentField("itemCode", Messages.MSG228_ITEM_CODE_EXISTS, item.getItemCode());
@@ -277,7 +275,7 @@ public class FacilityService {
         }
         try {
             if (maintenanceRequestDAO.hasActiveRequest(equipmentItemId)) {
-                return ServiceResult.fail("Không thể thanh lý: Thiết bị đang có yêu cầu bảo trì chưa hoàn thành.");
+                return ServiceResult.fail(Messages.MSG343_ITEM_RETIRE_HAS_MAINTENANCE);
             }
             boolean updated = equipmentItemDAO.retire(equipmentItemId);
             if (!updated) {
