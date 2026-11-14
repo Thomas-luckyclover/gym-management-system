@@ -702,6 +702,12 @@ html body.dock .booking-page .booking-overview h2 {
   line-height: 1.05;
   letter-spacing: -0.02em;
 }
+/* Chế độ SÁNG (14/11): common.css có luật "tiêu đề trong mọi .panel = chữ mực #0F172A !important" (viết cho thẻ trắng).
+   Đầu gói lại là DẢI TỐI nằm trong .panel → tên gói thành chữ đen trên nền xanh đen, gần như không đọc được.
+   Luật dưới đây chỉ chạy ở chế độ sáng và đủ mạnh để thắng luật chung; chế độ tối không đổi gì. */
+html:where(:not([data-theme="dark"])) body.dock .booking-page .booking-overview :is(h2, h3, h4) {
+  color: var(--arena-on-dark) !important;
+}
 html body.dock .booking-page .booking-next {
   margin-top: var(--space-3);
   padding-top: var(--space-3);
