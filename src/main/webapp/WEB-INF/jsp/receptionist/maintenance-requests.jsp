@@ -7,7 +7,7 @@
 <head>
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Yêu cầu bảo trì · Super Gym Lễ tân</title>
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/maintenance-requests.css?v=20261113v1">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/maintenance-requests.css?v=20261114v1">
 
 </head>
 
