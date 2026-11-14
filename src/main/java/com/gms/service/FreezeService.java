@@ -264,11 +264,7 @@ public class FreezeService {
                 }
             }
 
-            // B7: Đọc lịch sử các lần bảo lưu trước đây của khách hàng
-            List<FreezeRecordItemView> history = freezeRecordDAO.findFreezesByCustomerId(cust.customerId);
-            view.setFreezeHistory(history);
-
-            // B8: Nếu có thể bảo lưu, lấy sẵn các buổi PT trong phần hạn còn lại để UI tự lọc khi đổi ngày
+            // B7: Nếu có thể bảo lưu, lấy sẵn các buổi PT trong phần hạn còn lại để UI tự lọc khi đổi ngày
             if (view.isEligibleToFreeze() && view.getMinStartDate() != null && view.getPackageEndDate() != null) {
                 List<FreezeSessionImpactView> affected = freezeRecordDAO.findScheduledSessionsInPeriod(
                         cust.customerId, view.getMinStartDate(), view.getPackageEndDate());

@@ -602,47 +602,6 @@
   font-size: var(--font-size-xs);
 }
 
-/* ===== 8. LỊCH SỬ BẢO LƯU CỦA HỘI VIÊN ===== */
-.history-card-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.history-card-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
-  transition: background var(--duration-fast) var(--ease-standard);
-}
-
-.history-card-item:hover {
-  background: var(--color-surface-muted);
-}
-
-.history-item-body .dates-line {
-  font-size: var(--font-size-sm);
-  color: var(--color-text);
-  margin-bottom: 2px;
-}
-
-.history-item-body .sub-line {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-soft);
-  word-break: break-word;
-}
-
-.history-item-body .staff-line {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-muted);
-  margin-top: 2px;
-}
-
 /* ===== 9. CỘT PHẢI: SIDE-CARD CHUẨN PROTOTYPE ===== */
 .side-card {
   background: var(--color-surface);

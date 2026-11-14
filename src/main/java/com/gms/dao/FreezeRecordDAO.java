@@ -1,5 +1,6 @@
 package com.gms.dao;
 
+import com.gms.constant.AppConstants;
 import com.gms.dto.CustomerMembershipRow;
 import com.gms.dto.FreezeRecordItemView;
 import com.gms.dto.FreezeSessionImpactView;
@@ -7,7 +8,6 @@ import com.gms.entity.FreezeRecord;
 import com.gms.entity.Subscription;
 import com.gms.util.DBContext;
 import com.gms.util.DateTimeUtil;
-import com.gms.util.SqlUtil;
 
 import java.sql.Connection;
 import java.sql.Date;
@@ -35,6 +35,14 @@ import java.util.List;
  * </p>
  */
 public class FreezeRecordDAO {
+
+    private static final String FREEZE_RECORD_COLUMNS =
+            "FreezeRecordId, SubscriptionId, HandledByEmployeeId, StartDate, "
+                    + "PlannedEndDate, ActualEndDate, Reason, CreatedAt";
+
+    private static final String SUBSCRIPTION_COLUMNS =
+            "SubscriptionId, OrderId, CustomerId, SubscriptionType, PtEmployeeId, StartDate, EndDate, "
+                    + "FixedStartTime, GeneratedSessionCount, FreezeUsed, MaxFreezesSnapshot, Status";
 
     // ===== 1. Thao tác trên bảng FreezeRecords =====
 
@@ -94,19 +102,8 @@ public class FreezeRecordDAO {
      * Tra cứu một bản ghi bảo lưu theo ID trong transaction (có khóa UPDLOCK).
      */
     public FreezeRecord findById(Connection conn, int freezeRecordId) throws SQLException {
-        String sql = """
-                SELECT
-                    FreezeRecordId,
-                    SubscriptionId,
-                    HandledByEmployeeId,
-                    StartDate,
-                    PlannedEndDate,
-                    ActualEndDate,
-                    Reason,
-                    CreatedAt
-                FROM FreezeRecords WITH (UPDLOCK, HOLDLOCK)
-                WHERE FreezeRecordId = ?
-                """;
+        String sql = "SELECT " + FREEZE_RECORD_COLUMNS
+                + " FROM FreezeRecords WITH (UPDLOCK, HOLDLOCK) WHERE FreezeRecordId = ?";
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, freezeRecordId);
@@ -123,20 +120,9 @@ public class FreezeRecordDAO {
      * Tìm đợt bảo lưu đang mở (ActualEndDate IS NULL) của một Subscription trong transaction.
      */
     public FreezeRecord findOpenFreezeBySubscriptionId(Connection conn, int subscriptionId) throws SQLException {
-        String sql = """
-                SELECT
-                    FreezeRecordId,
-                    SubscriptionId,
-                    HandledByEmployeeId,
-                    StartDate,
-                    PlannedEndDate,
-                    ActualEndDate,
-                    Reason,
-                    CreatedAt
-                FROM FreezeRecords WITH (UPDLOCK, HOLDLOCK)
-                WHERE SubscriptionId = ?
-                  AND ActualEndDate IS NULL
-                """;
+        String sql = "SELECT " + FREEZE_RECORD_COLUMNS
+                + " FROM FreezeRecords WITH (UPDLOCK, HOLDLOCK)"
+                + " WHERE SubscriptionId = ? AND ActualEndDate IS NULL";
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, subscriptionId);
@@ -153,27 +139,14 @@ public class FreezeRecordDAO {
      * Tìm đợt bảo lưu đang mở của một Subscription bằng kết nối riêng.
      */
     public FreezeRecord findOpenFreezeBySubscriptionId(int subscriptionId) throws SQLException {
-        try (Connection conn = DBContext.getConnection()) {
-            String sql = """
-                    SELECT
-                        FreezeRecordId,
-                        SubscriptionId,
-                        HandledByEmployeeId,
-                        StartDate,
-                        PlannedEndDate,
-                        ActualEndDate,
-                        Reason,
-                        CreatedAt
-                    FROM FreezeRecords
-                    WHERE SubscriptionId = ?
-                      AND ActualEndDate IS NULL
-                    """;
-            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-                stmt.setInt(1, subscriptionId);
-                try (ResultSet rs = stmt.executeQuery()) {
-                    if (rs.next()) {
-                        return mapResultSetToFreezeRecord(rs);
-                    }
+        String sql = "SELECT " + FREEZE_RECORD_COLUMNS
+                + " FROM FreezeRecords WHERE SubscriptionId = ? AND ActualEndDate IS NULL";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, subscriptionId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToFreezeRecord(rs);
                 }
             }
         }
@@ -202,21 +175,10 @@ public class FreezeRecordDAO {
      * Tìm các đợt bảo lưu đã quá hạn dự kiến (PlannedEndDate < today) nhưng chưa được chốt (JOB-01).
      */
     public List<FreezeRecord> findExpiredOpenFreezes(LocalDate today) throws SQLException {
-        String sql = """
-                SELECT
-                    FreezeRecordId,
-                    SubscriptionId,
-                    HandledByEmployeeId,
-                    StartDate,
-                    PlannedEndDate,
-                    ActualEndDate,
-                    Reason,
-                    CreatedAt
-                FROM FreezeRecords
-                WHERE ActualEndDate IS NULL
-                  AND PlannedEndDate < ?
-                ORDER BY PlannedEndDate ASC
-                """;
+        String sql = "SELECT " + FREEZE_RECORD_COLUMNS
+                + " FROM FreezeRecords"
+                + " WHERE ActualEndDate IS NULL AND PlannedEndDate < ?"
+                + " ORDER BY PlannedEndDate ASC";
 
         List<FreezeRecord> list = new ArrayList<>();
         try (Connection conn = DBContext.getConnection();
@@ -237,23 +199,8 @@ public class FreezeRecordDAO {
      * Đọc thông tin gói tập Membership theo SubscriptionId trong transaction (UPDLOCK).
      */
     public Subscription findMembershipSubscription(Connection conn, int subscriptionId) throws SQLException {
-        String sql = """
-                SELECT
-                    SubscriptionId,
-                    OrderId,
-                    CustomerId,
-                    SubscriptionType,
-                    PtEmployeeId,
-                    StartDate,
-                    EndDate,
-                    FixedStartTime,
-                    GeneratedSessionCount,
-                    FreezeUsed,
-                    MaxFreezesSnapshot,
-                    Status
-                FROM Subscriptions WITH (UPDLOCK, HOLDLOCK)
-                WHERE SubscriptionId = ?
-                """;
+        String sql = "SELECT " + SUBSCRIPTION_COLUMNS
+                + " FROM Subscriptions WITH (UPDLOCK, HOLDLOCK) WHERE SubscriptionId = ?";
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, subscriptionId);
@@ -375,28 +322,11 @@ public class FreezeRecordDAO {
     public List<Subscription> findLaterMembershipsForUpdate(Connection conn, int customerId,
                                                             int excludeSubscriptionId, LocalDate afterDate)
             throws SQLException {
-        String sql = """
-                SELECT
-                    SubscriptionId,
-                    OrderId,
-                    CustomerId,
-                    SubscriptionType,
-                    PtEmployeeId,
-                    StartDate,
-                    EndDate,
-                    FixedStartTime,
-                    GeneratedSessionCount,
-                    FreezeUsed,
-                    MaxFreezesSnapshot,
-                    Status
-                FROM Subscriptions WITH (UPDLOCK, HOLDLOCK)
-                WHERE CustomerId = ?
-                  AND SubscriptionType = 'Membership'
-                  AND Status = 'Active'
-                  AND SubscriptionId <> ?
-                  AND StartDate > ?
-                ORDER BY StartDate ASC, SubscriptionId ASC
-                """;
+        String sql = "SELECT " + SUBSCRIPTION_COLUMNS
+                + " FROM Subscriptions WITH (UPDLOCK, HOLDLOCK)"
+                + " WHERE CustomerId = ? AND SubscriptionType = 'Membership' AND Status = 'Active'"
+                + " AND SubscriptionId <> ? AND StartDate > ?"
+                + " ORDER BY StartDate ASC, SubscriptionId ASC";
 
         List<Subscription> list = new ArrayList<>();
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -563,7 +493,7 @@ public class FreezeRecordDAO {
                     + " THEN 1 ELSE 0 END AS CancelledBeforeStart";
 
     /**
-     * Lấy danh sách các lượt bảo lưu mới nhất của hệ thống có hỗ trợ lọc theo từ khóa (tên, mã khách, SĐT...).
+     * Lấy danh sách các lượt bảo lưu mới nhất của hệ thống có hỗ trợ lọc theo từ khóa (tên, mã khách, SĐT, email...).
      */
     public List<FreezeRecordItemView> findRecentFreezes(String keyword, int limit) throws SQLException {
         return findRecentFreezes(keyword, null, limit);
@@ -617,70 +547,13 @@ public class FreezeRecordDAO {
                 """
                 + (cond != null ? " AND " + cond.sqlCondition + " " : "")
                 + statusSql
-                + """
-                ORDER BY fr.CreatedAt DESC
-                """;
+                + "ORDER BY fr.CreatedAt DESC";
 
         List<FreezeRecordItemView> list = new ArrayList<>();
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, limit > 0 ? limit : 50);
-            int paramIndex = 2;
-            if (cond != null) {
-                for (String param : cond.params) {
-                    stmt.setString(paramIndex++, param);
-                }
-            }
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    list.add(mapResultSetToItemView(rs));
-                }
-            }
-        }
-        return list;
-    }
-
-    /**
-     * Lấy toàn bộ lịch sử các lần bảo lưu của một khách hàng cụ thể.
-     */
-    public List<FreezeRecordItemView> findFreezesByCustomerId(int customerId) throws SQLException {
-        String sql = """
-                SELECT
-                    fr.FreezeRecordId,
-                    fr.SubscriptionId,
-                    c.CustomerId,
-                    c.CustomerCode,
-                    p.FullName AS CustomerName,
-                    p.Phone AS CustomerPhone,
-                    pkg.PackageName,
-                    fr.StartDate,
-                    fr.PlannedEndDate,
-                    fr.ActualEndDate,
-                    fr.Reason,
-                    empP.FullName AS HandledByEmployeeName,
-                    emp.EmployeeCode AS HandledByEmployeeCode,
-                    fr.CreatedAt,
-                    s.EndDate AS SubscriptionEndDate,
-                """
-                + "    " + CANCELLED_BEFORE_START_COL + "\n"
-                + """
-                FROM FreezeRecords fr
-                JOIN Subscriptions s ON s.SubscriptionId = fr.SubscriptionId
-                JOIN Customers c ON c.CustomerId = s.CustomerId
-                JOIN Persons p ON p.PersonId = c.PersonId
-                JOIN Orders o ON o.OrderId = s.OrderId
-                JOIN Packages pkg ON pkg.PackageId = o.PackageId
-                JOIN Employees emp ON emp.EmployeeId = fr.HandledByEmployeeId
-                JOIN Persons empP ON empP.PersonId = emp.PersonId
-                WHERE c.CustomerId = ?
-                ORDER BY fr.CreatedAt DESC
-                """;
-
-        List<FreezeRecordItemView> list = new ArrayList<>();
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, customerId);
+            bindSearchParams(stmt, 2, cond);
 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
@@ -808,11 +681,7 @@ public class FreezeRecordDAO {
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            if (cond != null) {
-                for (int i = 0; i < cond.params.size(); i++) {
-                    stmt.setString(i + 1, cond.params.get(i));
-                }
-            }
+            bindSearchParams(stmt, 1, cond);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     return rs.getLong(1);
@@ -865,14 +734,9 @@ public class FreezeRecordDAO {
         List<CustomerMembershipRow> list = new ArrayList<>();
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            int paramIndex = 1;
-            if (cond != null) {
-                for (String param : cond.params) {
-                    stmt.setString(paramIndex++, param);
-                }
-            }
+            int paramIndex = bindSearchParams(stmt, 1, cond);
             stmt.setInt(paramIndex++, offset);
-            stmt.setInt(paramIndex, pageSize > 0 ? pageSize : 15);
+            stmt.setInt(paramIndex, pageSize > 0 ? pageSize : AppConstants.DEFAULT_PAGE_SIZE);
 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
@@ -881,6 +745,64 @@ public class FreezeRecordDAO {
             }
         }
         return list;
+    }
+
+    private int bindSearchParams(PreparedStatement stmt, int startIndex, SearchCondition cond) throws SQLException {
+        int paramIndex = startIndex;
+        if (cond != null) {
+            for (String param : cond.params) {
+                stmt.setString(paramIndex++, param);
+            }
+        }
+        return paramIndex;
+    }
+
+    /**
+     * Tra cứu tên gói tập theo OrderId.
+     */
+    public String findPackageNameByOrderId(int orderId) {
+        String sql = """
+                SELECT pkg.PackageName
+                FROM Orders o
+                JOIN Packages pkg ON o.PackageId = pkg.PackageId
+                WHERE o.OrderId = ?
+                """;
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, orderId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("PackageName");
+                }
+            }
+        } catch (SQLException e) {
+            // Trường hợp lỗi hoặc không tìm thấy, trả về giá trị mặc định
+        }
+        return "Gói Membership";
+    }
+
+    /**
+     * Tra cứu mã và tên nhân viên phục vụ hiển thị.
+     */
+    public String findEmployeeDisplay(int employeeId) {
+        String sql = """
+                SELECT emp.EmployeeCode, p.FullName
+                FROM Employees emp
+                JOIN Persons p ON emp.PersonId = p.PersonId
+                WHERE emp.EmployeeId = ?
+                """;
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, employeeId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("EmployeeCode") + " - " + rs.getString("FullName");
+                }
+            }
+        } catch (SQLException e) {
+            // Trường hợp lỗi hoặc không tìm thấy, trả về giá trị mặc định
+        }
+        return "Lễ tân quầy";
     }
 
     // ===== 5. Ánh xạ ResultSet thành Entity / DTO (đặt cuối class) =====
@@ -1013,54 +935,6 @@ public class FreezeRecordDAO {
         } catch (SQLException ignored) {
             return false;
         }
-    }
-
-    /**
-     * Tra cứu tên gói tập theo OrderId.
-     */
-    public String findPackageNameByOrderId(int orderId) {
-        String sql = """
-                SELECT pkg.PackageName
-                FROM Orders o
-                JOIN Packages pkg ON o.PackageId = pkg.PackageId
-                WHERE o.OrderId = ?
-                """;
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, orderId);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getString("PackageName");
-                }
-            }
-        } catch (SQLException e) {
-            // Trường hợp lỗi hoặc không tìm thấy, trả về giá trị mặc định
-        }
-        return "Gói Membership";
-    }
-
-    /**
-     * Tra cứu mã và tên nhân viên phục vụ hiển thị.
-     */
-    public String findEmployeeDisplay(int employeeId) {
-        String sql = """
-                SELECT emp.EmployeeCode, p.FullName
-                FROM Employees emp
-                JOIN Persons p ON emp.PersonId = p.PersonId
-                WHERE emp.EmployeeId = ?
-                """;
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, employeeId);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getString("EmployeeCode") + " - " + rs.getString("FullName");
-                }
-            }
-        } catch (SQLException e) {
-            // Trường hợp lỗi hoặc không tìm thấy, trả về giá trị mặc định
-        }
-        return "Lễ tân quầy";
     }
 
     private CustomerMembershipRow mapResultSetToCustomerMembershipRow(ResultSet rs) throws SQLException {

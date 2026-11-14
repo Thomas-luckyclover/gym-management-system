@@ -922,11 +922,6 @@ class FreezeServiceTest {
         public List<FreezeRecordItemView> findRecentFreezes(String keyword, int limit) {
             return List.of();
         }
-
-        @Override
-        public List<FreezeRecordItemView> findFreezesByCustomerId(int customerId) {
-            return List.of();
-        }
     }
 
     static class FakeCheckInDAO extends CheckInDAO {

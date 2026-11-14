@@ -41,7 +41,7 @@
 
         <main class="content" id="main-content" tabindex="-1">
 
-            <%-- KHỐI 1: CHI TIẾT & THAO TÁC NGHIỆP VỤ (HIỂN THỊ KHI ĐÃ CHỌN HỘI VIÊN) --%>
+            <%-- KHỐI 1: PHẦN CHI TIẾT BẢO LƯU (Bảo lưu, mở bảo lưu, xem ) --%>
             <c:if test="${not empty freezeCustomer}">
                 <div class="split customer-action-split">
 
@@ -276,43 +276,6 @@
                                 </div>
                             </c:if>
                         </section>
-
-                        <%-- LỊCH SỬ BẢO LƯU CỦA RIÊNG HỘI VIÊN NÀY --%>
-                        <c:if test="${not empty freezeCustomer.freezeHistory}">
-                            <section class="panel freeze-panel" id="custFreezeHistory" style="margin-top:var(--space-4);">
-                                <div class="panel-head">
-                                    <div>
-                                        <h3>Lịch sử bảo lưu của hội viên này</h3>
-                                        <p>Các đợt bảo lưu đã từng thực hiện trên hồ sơ này.</p>
-                                    </div>
-                                </div>
-                                <div class="history-card-list">
-                                    <c:forEach var="item" items="${freezeCustomer.freezeHistory}">
-                                        <div class="history-card-item">
-                                            <div class="history-item-body">
-                                                <div class="dates-line">
-                                                    <b><c:out value="${gms:formatDate(item.startDate)}" /></b> đến
-                                                    <c:choose>
-                                                        <c:when test="${not empty item.actualEndDate}">
-                                                            <b><c:out value="${gms:formatDate(item.actualEndDate)}" /></b> (Thực tế)
-                                                        </c:when>
-                                                        <c:otherwise>
-                                                            <b><c:out value="${gms:formatDate(item.plannedEndDate)}" /></b> (Dự kiến)
-                                                        </c:otherwise>
-                                                    </c:choose>
-                                                    · <span class="badge badge-info">${item.daysFrozen} ngày</span>
-                                                </div>
-                                                <div class="sub-line">Lý do: <c:out value="${item.reason}" /></div>
-                                                <div class="staff-line">Lễ tân tiếp nhận: <b><c:out value="${item.handledByEmployeeName}" /></b> <c:if test="${not empty item.handledByEmployeeCode}">(<c:out value="${item.handledByEmployeeCode}" />)</c:if></div>
-                                            </div>
-                                            <div class="history-item-status">
-                                                <span class="badge ${item.statusBadgeClass}"><c:out value="${item.statusLabel}" /></span>
-                                            </div>
-                                        </div>
-                                    </c:forEach>
-                                </div>
-                            </section>
-                        </c:if>
                     </div>
 
                     <%-- CỘT PHẢI: GÓI HIỆN TẠI & QUY TẮC NGHIỆP VỤ --%>
@@ -364,8 +327,8 @@
             <%-- KHỐI 2: TOÀN BỘ BẢNG DỮ LIỆU GYMMASTER & LỊCH SỬ TOÀN HỆ THỐNG (CHỈ HIỂN THỊ KHI CHƯA CHỌN HỘI VIÊN) --%>
             <c:if test="${empty freezeCustomer}">
             <div class="freeze-tabs-container">
-                <c:set var="isHistoryTab" value="${param.tab == 'history' or currentTab == 'history' or not empty param.hq or not empty param.hfilter}" />
-
+                <c:set var="isHistoryTab" value="${currentTab == 'history'}" />
+                <%-- mặc định mới vào trang tab = null  --%>
                 <%-- Thanh chuyển Tabs chuẩn BF-07 (Tách 2 trang độc lập) --%>
                 <nav class="bf07-tabs" aria-label="Các tab quản lý bảo lưu">
                     <a href="${pageContext.request.contextPath}/receptionist/freeze?tab=members"
