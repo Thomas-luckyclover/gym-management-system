@@ -185,6 +185,8 @@
 .maintenance-data-table,
 .maintenance-table {
   width: 100%;
+  min-width: calc(var(--layout-content-width) * 0.8);
+  table-layout: fixed;
   border-collapse: collapse;
   font-size: var(--font-size-xs);
 }
@@ -192,7 +194,7 @@
 /* Tiêu đề cột bảng: 12px tương đương, sáng hơn */
 .maintenance-data-table th,
 .maintenance-table th {
-  padding: var(--space-2) var(--space-2-5);
+  padding: var(--space-2) var(--space-2);
   border-bottom: var(--border-width) solid var(--color-border);
   background: var(--color-surface-muted);
   color: var(--color-text-soft);
@@ -204,7 +206,9 @@
   white-space: nowrap;
 }
 
-/* Cột Ngày báo · Người báo: cho phép tiêu đề xuống dòng để không đẩy rộng cột làm hẹp cột Sự cố */
+/* Cột Thiết bị · Máy & Ngày báo · Người báo: cho phép tiêu đề xuống dòng gọn, tránh hẹp cột Sự cố */
+.maintenance-data-table th:nth-child(3),
+.maintenance-table th:nth-child(3),
 .maintenance-data-table th:nth-child(6),
 .maintenance-table th:nth-child(6) {
   white-space: normal;
@@ -212,10 +216,49 @@
   line-height: var(--line-height-tight);
 }
 
+/* Phân bổ bề rộng cột cố định theo tỉ lệ để dữ liệu dài không đẩy bảng tràn sang 2 bên */
+.maintenance-data-table .col-check {
+  width: 4.5%;
+  padding-inline: var(--space-1-5);
+  text-align: center;
+}
+
+.maintenance-data-table .col-code {
+  width: 9.5%;
+  white-space: nowrap;
+}
+
+.maintenance-data-table .col-device {
+  width: 18%;
+}
+
+.maintenance-data-table .col-incident {
+  width: 22%;
+}
+
+.maintenance-data-table .col-priority {
+  width: 8.5%;
+  white-space: nowrap;
+}
+
+.maintenance-data-table .col-reporter {
+  width: 13%;
+}
+
+.maintenance-data-table .col-status {
+  width: 12.5%;
+}
+
+.maintenance-data-table .col-actions {
+  width: 12%;
+  text-align: right;
+  white-space: nowrap;
+}
+
 /* Hàng bảng: tăng padding dọc, đường kẻ ngang mảnh và nhạt hơn */
 .maintenance-data-table td,
 .maintenance-table td {
-  padding: var(--space-2-5) var(--space-2-5);
+  padding: var(--space-2-5) var(--space-2);
   border-bottom: var(--border-width) solid var(--color-border);
   color: var(--color-text);
   font-size: var(--font-size-xs);
@@ -249,7 +292,12 @@
 .cell-device-info {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: var(--space-0-5);
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .device-name,
@@ -275,7 +323,11 @@
 .cell-incident-info {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: var(--space-0-5);
+  width: 100%;
+  min-width: 0;
+  text-align: left;
 }
 
 .incident-title {
@@ -284,22 +336,86 @@
   color: var(--color-text);
 }
 
+.incident-desc-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-0-5);
+  width: 100%;
+  min-width: 0;
+}
+
 .incident-desc {
-  margin: var(--space-0-5) var(--space-0) var(--space-0-5) var(--space-0);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  margin: var(--space-0);
+  width: 100%;
+  max-width: 100%;
   font-size: var(--font-size-xs);
   line-height: var(--line-height-snug);
   color: var(--color-text-soft);
+  text-align: left;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.incident-desc.is-expandable {
+  cursor: pointer;
+}
+
+.incident-desc.is-expanded {
+  display: block;
+  -webkit-line-clamp: unset;
+  line-clamp: unset;
+  overflow: visible;
+  white-space: pre-wrap;
+}
+
+.incident-desc-toggle {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-0);
+  border: none;
+  background: transparent;
+  color: var(--color-link);
+  font-family: inherit;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+  text-align: left;
+  cursor: pointer;
+}
+
+.incident-desc-toggle[hidden] {
+  display: none;
+}
+
+.incident-desc-toggle:hover {
+  text-decoration: underline;
+}
+
+.incident-desc-toggle:focus-visible {
+  outline: var(--focus-outline-width) solid var(--color-link);
+  outline-offset: var(--focus-outline-offset);
+  border-radius: var(--radius-xs);
 }
 
 .incident-detected {
   display: none;
 }
 
-/* Dòng "Đã treo biển ngừng dùng": chữ đỏ/hồng sáng, cỡ 12px tương đương, viền mảnh */
+/* Dòng "Đã treo biển ngừng dùng": ôm gọn vừa chữ, căn lề trái thay vì kéo dãn cả cột */
 .warning-tag-pill {
   display: inline-flex;
   align-items: center;
+  align-self: flex-start;
+  width: fit-content;
+  max-width: 100%;
   gap: var(--space-1);
+  margin-top: var(--space-0-5);
   padding: var(--space-0-5) var(--space-2);
   border: var(--border-width) solid var(--color-danger-border);
   border-radius: var(--radius-pill);
@@ -307,6 +423,8 @@
   color: var(--color-danger-ink);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-tight);
+  white-space: normal;
 }
 
 /* Cột Ưu tiên: chấm tròn màu nhỏ phía trước bằng CSS (đỏ = Khẩn, xanh = Thường, xám = Thấp) */
@@ -358,7 +476,12 @@
 .cell-reporter-info {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: var(--space-0-5);
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .report-date {
@@ -474,6 +597,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-2-5);
+  min-width: 0;
 }
 
 .review-card {
@@ -550,6 +674,9 @@
   color: var(--color-text);
   font-size: var(--font-size-xs);
   line-height: var(--line-height-normal);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: pre-wrap;
 }
 
 .affected-items-box {
@@ -564,6 +691,9 @@
   margin: var(--space-0-5) var(--space-0) var(--space-0) var(--space-0);
   color: var(--color-warning-ink);
   font-size: var(--font-size-xs);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: pre-wrap;
 }
 
 .incident-image-col {
@@ -631,6 +761,8 @@
 .grid-val {
   color: var(--color-text);
   font-size: var(--font-size-xs);
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .history-block {
@@ -730,9 +862,12 @@
 
 /* Khối trạng thái tiến trình xử lý */
 .process-status-box {
+  min-width: 0;
   padding: var(--space-2) var(--space-2-5);
   border-radius: var(--radius-sm);
   font-size: var(--font-size-xs);
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .process-status-box.success {
@@ -799,6 +934,9 @@
   margin: var(--space-0-5) var(--space-0) var(--space-0) var(--space-0);
   color: var(--color-text);
   font-size: var(--font-size-xs);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: pre-wrap;
 }
 
 .modal-checkbox-row {

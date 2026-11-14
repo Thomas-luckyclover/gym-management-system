@@ -29,12 +29,20 @@ import java.util.UUID;
 @WebServlet(urlPatterns = {"/manager/facilities", "/facilities"})
 @MultipartConfig(
         fileSizeThreshold = 1024 * 1024,      // 1 MB
-        maxFileSize = 10 * 1024 * 1024,       // 10 MB
+        maxFileSize = 5 * 1024 * 1024,        // 5 MB theo SRS DBR-08
         maxRequestSize = 25 * 1024 * 1024     // 25 MB
 )
 public class FacilityManagementServlet extends HttpServlet {
 
-    private final FacilityService facilityService = new FacilityService();
+    private final FacilityService facilityService;
+
+    public FacilityManagementServlet() {
+        this(new FacilityService());
+    }
+
+    FacilityManagementServlet(FacilityService facilityService) {
+        this.facilityService = facilityService;
+    }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -99,28 +107,43 @@ public class FacilityManagementServlet extends HttpServlet {
             return;
         }
 
-        // B2: Kiểm tra CSRF token
-        if (!RequestUtil.isValidCsrfToken(request)) {
-            RequestUtil.setFlashToast(request, "danger", Messages.MSG214_FORM_SESSION_EXPIRED);
-            response.sendRedirect(request.getContextPath() + "/manager/facilities");
-            return;
-        }
-
-        String action = RequestUtil.getTrimmedParam(request, "action");
-        if (action == null) {
-            action = "";
-        }
-
-        switch (action) {
-            case "saveFacility" -> handleSaveFacility(request, response);
-            case "toggleFacility" -> handleToggleFacility(request, response);
-            case "saveItem" -> handleSaveEquipmentItem(request, response);
-            case "retireItem" -> handleRetireEquipmentItem(request, response);
-            default -> {
-                RequestUtil.setFlashToast(request, "warning", Messages.MSG244_ACTION_UNSUPPORTED);
+        try {
+            // B2: Kiểm tra CSRF token
+            if (!RequestUtil.isValidCsrfToken(request)) {
+                RequestUtil.setFlashToast(request, "danger", Messages.MSG214_FORM_SESSION_EXPIRED);
                 response.sendRedirect(request.getContextPath() + "/manager/facilities");
+                return;
             }
+
+            String action = RequestUtil.getTrimmedParam(request, "action");
+            if (action == null) {
+                action = "";
+            }
+
+            switch (action) {
+                case "saveFacility" -> handleSaveFacility(request, response);
+                case "toggleFacility" -> handleToggleFacility(request, response);
+                case "saveItem" -> handleSaveEquipmentItem(request, response);
+                case "retireItem" -> handleRetireEquipmentItem(request, response);
+                default -> {
+                    RequestUtil.setFlashToast(request, "warning", Messages.MSG244_ACTION_UNSUPPORTED);
+                    response.sendRedirect(request.getContextPath() + "/manager/facilities");
+                }
+            }
+        } catch (IllegalStateException ex) {
+            // Khi file vượt ngưỡng maxFileSize (5 MB), Tomcat ném IllegalStateException ngay khi đọc param/part
+            if (RequestUtil.isMultipartRequest(request)) {
+                redirectWithInvalidImage(request, response, 0);
+                return;
+            }
+            throw ex;
         }
+    }
+
+    private void redirectWithInvalidImage(HttpServletRequest request, HttpServletResponse response, int facilityId)
+            throws IOException {
+        RequestUtil.setFlashToast(request, "danger", String.format(Messages.MSG20_INVALID_IMAGE, "5 MB"));
+        response.sendRedirect(request.getContextPath() + "/manager/facilities" + (facilityId > 0 ? "?selectedId=" + facilityId : ""));
     }
 
     private void handleSaveFacility(HttpServletRequest request, HttpServletResponse response)
@@ -132,29 +155,43 @@ public class FacilityManagementServlet extends HttpServlet {
         String unitLabel = RequestUtil.getTrimmedParam(request, "unitLabel");
         String imageUrl = RequestUtil.getTrimmedParam(request, "imageUrl");
 
-        // Xử lý upload ảnh nếu người dùng chọn file
+        // Xử lý upload ảnh nếu người dùng chọn file (tối đa 5 MB, định dạng JPG/PNG theo SRS DBR-08)
+        Part filePart;
         try {
-            Part filePart = request.getPart("imageFile");
-            if (filePart != null && filePart.getSize() > 0) {
-                String submittedName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
-                String ext = "";
-                int dotIdx = submittedName.lastIndexOf('.');
-                if (dotIdx >= 0) {
-                    ext = submittedName.substring(dotIdx).toLowerCase();
-                }
-                if (ext.equals(".jpg") || ext.equals(".jpeg") || ext.equals(".png") || ext.equals(".webp")) {
-                    String uploadDir = getServletContext().getRealPath("/uploads/facilities");
-                    File dir = new File(uploadDir);
-                    if (!dir.exists()) {
-                        dir.mkdirs();
-                    }
-                    String newFilename = "fac_" + UUID.randomUUID().toString().substring(0, 8) + ext;
-                    filePart.write(uploadDir + File.separator + newFilename);
-                    imageUrl = "/uploads/facilities/" + newFilename;
-                }
+            filePart = request.getPart("imageFile");
+        } catch (IllegalStateException ex) {
+            redirectWithInvalidImage(request, response, facilityId);
+            return;
+        } catch (ServletException ignored) {
+            filePart = null;
+        }
+
+        if (filePart != null && filePart.getSize() > 0) {
+            if (filePart.getSize() > com.gms.constant.AppConstants.IMAGE_MAX_BYTES) {
+                redirectWithInvalidImage(request, response, facilityId);
+                return;
             }
-        } catch (Exception ignored) {
-            // Fallback giữ imageUrl cũ nếu không upload hoặc có lỗi đọc part
+            String submittedName = filePart.getSubmittedFileName() != null
+                    ? Paths.get(filePart.getSubmittedFileName()).getFileName().toString()
+                    : "";
+            String ext = "";
+            int dotIdx = submittedName.lastIndexOf('.');
+            if (dotIdx >= 0) {
+                ext = submittedName.substring(dotIdx).toLowerCase();
+            }
+            if (ext.equals(".jpg") || ext.equals(".jpeg") || ext.equals(".png")) {
+                String uploadDir = getServletContext().getRealPath("/uploads/facilities");
+                File dir = new File(uploadDir);
+                if (!dir.exists()) {
+                    dir.mkdirs();
+                }
+                String newFilename = "fac_" + UUID.randomUUID().toString().substring(0, 8) + ext;
+                filePart.write(uploadDir + File.separator + newFilename);
+                imageUrl = "/uploads/facilities/" + newFilename;
+            } else {
+                redirectWithInvalidImage(request, response, facilityId);
+                return;
+            }
         }
 
         Facility f = new Facility();

@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Nghiệp vụ đăng nhập và lấy vai trò của tài khoản (màn #1 Sign In, CBR-113).
@@ -32,23 +34,35 @@ import java.util.Map;
  */
 public class AuthService {
 
+    private static final Logger LOGGER = Logger.getLogger(AuthService.class.getName());
+
     /** Màn chọn vai trò (CBR-113). */
     public static final String SELECT_ROLE_PATH = "/select-role";
 
     private final AccountDAO accountDAO;
     private final SystemConfigService systemConfigService;
+    private final AuditLogService auditLogService;
 
     public AuthService() {
-        this(new AccountDAO(), new SystemConfigService());
+        this(new AccountDAO(), new SystemConfigService(), new AuditLogService());
     }
 
     public AuthService(AccountDAO accountDAO) {
-        this(accountDAO, new SystemConfigService());
+        this(accountDAO, new SystemConfigService(), new AuditLogService());
     }
 
     public AuthService(AccountDAO accountDAO, SystemConfigService systemConfigService) {
+        this(accountDAO, systemConfigService, new AuditLogService());
+    }
+
+    public AuthService(
+            AccountDAO accountDAO,
+            SystemConfigService systemConfigService,
+            AuditLogService auditLogService
+    ) {
         this.accountDAO = accountDAO;
         this.systemConfigService = systemConfigService;
+        this.auditLogService = auditLogService;
     }
 
     protected Connection getConnection() throws SQLException {
@@ -92,11 +106,16 @@ public class AuthService {
             }
 
             if (account == null) {
+                writeLoginAudit(conn, null, null, "SignInFailed", "Account", null,
+                        null, null, null, "Sai thông tin đăng nhập (không tìm thấy tài khoản)");
                 return ServiceResult.fail(Messages.MSG34_WRONG_CREDENTIALS_STAFF);
             }
 
             // B4: Kiểm tra trạng thái tài khoản (Inactive hoặc Admin khóa)
             if (account.getStatus() == Account.Status.INACTIVE || account.getStatus() == Account.Status.LOCKED) {
+                writeLoginAudit(conn, account.getAccountId(), null, "SignInFailed", "Account",
+                        account.getAccountId(), "Status", account.getStatus().name(), null,
+                        "Tài khoản đang bị khóa hoặc ngừng hoạt động");
                 return ServiceResult.fail(Messages.MSG37_ACCOUNT_INACTIVE);
             }
 
@@ -109,6 +128,9 @@ public class AuthService {
             // B5a: Kiểm tra khóa tạm thời do nhập sai quá số lần (LockedUntil)
             if (account.getLockedUntil() != null) {
                 if (now.isBefore(account.getLockedUntil())) {
+                    writeLoginAudit(conn, account.getAccountId(), null, "SignInFailed", "Account",
+                            account.getAccountId(), "LockedUntil", null, null,
+                            "Tài khoản đang trong thời gian khóa tạm");
                     long remainingSeconds = Duration.between(now, account.getLockedUntil()).getSeconds();
                     return ServiceResult.fail(String.format(Messages.MSG35_ACCOUNT_TEMP_LOCKED,
                             lockMinutes, formatMinutesSeconds(remainingSeconds)));
@@ -128,11 +150,15 @@ public class AuthService {
 
             // B6b: không còn vai trò nào → chặn như Inactive (CBR-86)
             if (profile.roles.isEmpty()) {
+                writeLoginAudit(conn, account.getAccountId(), null, "SignInFailed", "Account",
+                        account.getAccountId(), "Role", null, null,
+                        "Tài khoản không có vai trò hoạt động");
                 return ServiceResult.fail(Messages.MSG37_ACCOUNT_INACTIVE);
             }
 
             // B6c: có vai trò nhân viên thì không tự khóa (BR-01)
             boolean isStaff = profile.hasStaffRole();
+            Role actingRole = profile.roles.size() == 1 ? profile.roles.get(0) : null;
 
             // B7: Kiểm tra mật khẩu
             boolean isPasswordMatched = PasswordUtil.checkPassword(password, account.getPasswordHash());
@@ -140,6 +166,8 @@ public class AuthService {
             if (!isPasswordMatched) {
                 if (isStaff) {
                     // Nhân viên sai mật khẩu -> báo thông báo chung, không đếm số lần còn lại
+                    writeLoginAudit(conn, account.getAccountId(), actingRole, "SignInFailed", "Account",
+                            account.getAccountId(), null, null, null, "Sai mật khẩu");
                     return ServiceResult.fail(Messages.MSG34_WRONG_CREDENTIALS_STAFF);
                 } else {
                     // Khách hàng sai mật khẩu -> tăng counter và đếm số lần thử
@@ -147,10 +175,18 @@ public class AuthService {
                     int newFailedCount = account.getFailedLoginCount() + 1;
                     account.setFailedLoginCount(newFailedCount);
 
+                    writeLoginAudit(conn, account.getAccountId(), actingRole, "SignInFailed", "Account",
+                            account.getAccountId(), "FailedLoginCount",
+                            String.valueOf(newFailedCount - 1), String.valueOf(newFailedCount),
+                            "Sai mật khẩu");
+
                     if (newFailedCount >= maxFailedAttempts) {
                         LocalDateTime lockTime = now.plusMinutes(lockMinutes);
                         accountDAO.lockUntil(conn, account.getAccountId(), lockTime);
                         account.setLockedUntil(lockTime);
+                        writeLoginAudit(conn, account.getAccountId(), actingRole, "AccountLocked", "Account",
+                                account.getAccountId(), "LockedUntil", null, lockTime.toString(),
+                                "Khóa tạm do nhập sai mật khẩu quá số lần quy định");
                         return ServiceResult.fail(String.format(Messages.MSG35_ACCOUNT_TEMP_LOCKED, lockMinutes,
                                 formatMinutesSeconds(lockMinutes * 60L)));
                     } else {
@@ -176,6 +212,9 @@ public class AuthService {
             Role role = isSingleRole ? profile.roles.get(0) : null;
             String redirectUrl = isSingleRole ? role.getHomePath() : SELECT_ROLE_PATH;
 
+            writeLoginAudit(conn, account.getAccountId(), role, "SignIn", "Account",
+                    account.getAccountId(), null, null, null, "Đăng nhập thành công");
+
             LoginResult loginResult = new LoginResult(
                     account.getAccountId(),
                     account.getPersonId(),
@@ -191,6 +230,35 @@ public class AuthService {
 
         } catch (SQLException e) {
             return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+        }
+    }
+
+    /**
+     * Ghi nhận Audit Log cho sự kiện đăng nhập/khóa tạm; bỏ qua khi conn == null với cài đặt mặc định
+     * (phục vụ unit test không kết nối DB) và chỉ ghi warning nếu thao tác log gặp lỗi.
+     */
+    private void writeLoginAudit(
+            Connection conn,
+            Integer accountId,
+            Role actingRole,
+            String action,
+            String entityName,
+            Integer entityId,
+            String fieldChanged,
+            String oldValue,
+            String newValue,
+            String reason
+    ) {
+        if (conn == null && auditLogService.getClass() == AuditLogService.class) {
+            return;
+        }
+        try {
+            Role safeRole = accountId == null ? null : actingRole;
+            auditLogService.logInTransaction(
+                    conn, accountId, safeRole, action, entityName, entityId,
+                    fieldChanged, oldValue, newValue, reason);
+        } catch (SQLException ex) {
+            LOGGER.log(Level.WARNING, "Không thể ghi Audit Log cho hành động " + action, ex);
         }
     }
 

@@ -3,6 +3,7 @@ package com.gms.servlet.manager;
 import com.gms.constant.SessionKey;
 import com.gms.dto.ServiceResult;
 import com.gms.service.CustomerDeletionService;
+import com.gms.service.NotificationService;
 import com.gms.util.RequestUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -17,6 +18,7 @@ import com.gms.dto.CustomerDeletionReviewView;
 public class MemberDeletionReviewServlet extends HttpServlet {
 
     private final CustomerDeletionService service = new CustomerDeletionService();
+    private final NotificationService notificationService = new NotificationService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -57,6 +59,8 @@ public class MemberDeletionReviewServlet extends HttpServlet {
 
     private void showPage(HttpServletRequest request, HttpServletResponse response, int requestId) throws ServletException, IOException {
         int accountId = (Integer) request.getSession(false).getAttribute(SessionKey.ACCOUNT_ID);
+        // Tự động đánh dấu đã đọc thông báo xóa hồ sơ khi Quản lý mở trang review
+        notificationService.markTopicNotificationsRead(accountId, "xóa hồ sơ");
         ServiceResult<CustomerDeletionReviewView> result = service.getReviewDetail(accountId, requestId);
         if (!result.isSuccess()) {
             RequestUtil.setFlashToast(request, "error", result.getMessage());

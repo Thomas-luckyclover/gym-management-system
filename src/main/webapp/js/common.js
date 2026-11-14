@@ -295,8 +295,11 @@ const MESSAGES = {
     // EN: This slot overlaps an existing slot (%s–%s).
     MSG104_SLOT_OVERLAPS: "Khung giờ này trùng với khung giờ đã có (%s–%s).",
     // EN: This action is outside the allowed time window.
-    MSG105_ACTION_OUTSIDE_WINDOW: "Thao tác này nằm ngoài khung thời gian cho phép."
+    MSG105_ACTION_OUTSIDE_WINDOW: "Thao tác này nằm ngoài khung thời gian cho phép.",
+    // EN: Date range changed. Click View report before exporting CSV.
+    MSG366_REPORT_RANGE_CHANGED_BEFORE_EXPORT: "Khoảng ngày đã thay đổi. Vui lòng bấm \"Xem báo cáo\" trước khi xuất CSV."
 };
+window.MESSAGES = MESSAGES;
 
 // Hộp thoại xác nhận đang mở (chỉ mở 1 cái tại 1 thời điểm)
 let activeDialog = null;

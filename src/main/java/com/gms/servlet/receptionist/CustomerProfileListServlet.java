@@ -3,6 +3,7 @@ package com.gms.servlet.receptionist;
 import com.gms.constant.SessionKey;
 import com.gms.dto.ServiceResult;
 import com.gms.service.CustomerDeletionService;
+import com.gms.service.NotificationService;
 import com.gms.util.PaginationUtil;
 import com.gms.util.RequestUtil;
 import jakarta.servlet.ServletException;
@@ -21,6 +22,7 @@ import com.gms.dto.PageResult;
 public class CustomerProfileListServlet extends HttpServlet {
 
     private final CustomerDeletionService service = new CustomerDeletionService();
+    private final NotificationService notificationService = new NotificationService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -61,6 +63,8 @@ public class CustomerProfileListServlet extends HttpServlet {
 
     private void showPage(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         int accountId = (Integer) request.getSession(false).getAttribute(SessionKey.ACCOUNT_ID);
+        // Tự động đánh dấu đã đọc kết quả yêu cầu xóa hồ sơ khi lễ tân vào trang
+        notificationService.markTopicNotificationsRead(accountId, "xóa hồ sơ");
         int page = PaginationUtil.getPageNumber(request);
         int pageSize = 10; // BF-07 cố định 10 hồ sơ mỗi trang.
         String tab = RequestUtil.getTrimmedParam(request, "tab");

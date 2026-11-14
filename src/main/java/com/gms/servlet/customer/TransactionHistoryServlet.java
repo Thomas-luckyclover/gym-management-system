@@ -3,6 +3,7 @@ package com.gms.servlet.customer;
 import com.gms.constant.SessionKey;
 import com.gms.dto.ServiceResult;
 import com.gms.dto.TransactionHistoryItem;
+import com.gms.service.NotificationService;
 import com.gms.service.TransactionHistoryService;
 import com.gms.util.RequestUtil;
 import jakarta.servlet.ServletException;
@@ -19,6 +20,9 @@ public class TransactionHistoryServlet extends HttpServlet {
 
     private final TransactionHistoryService historyService =
             new TransactionHistoryService();
+
+    private final NotificationService notificationService =
+            new NotificationService();
 
     @Override
     protected void doGet(
@@ -38,6 +42,9 @@ public class TransactionHistoryServlet extends HttpServlet {
         }
 
         int accountId = (Integer) account;
+
+        // Tự động đánh dấu đã đọc các thông báo thanh toán, giao dịch khi khách vào trang
+        notificationService.markTopicNotificationsRead(accountId, "Thanh toán", "Mua gói", "đơn hàng");
         int page = parsePage(request.getParameter("page"));
 
         String status = request.getParameter("status");

@@ -3,6 +3,7 @@ package com.gms.servlet.manager;
 import com.gms.constant.SessionKey;
 import com.gms.dto.ServiceResult;
 import com.gms.service.CustomerDeletionService;
+import com.gms.service.NotificationService;
 import com.gms.util.PaginationUtil;
 import com.gms.util.RequestUtil;
 import jakarta.servlet.ServletException;
@@ -20,6 +21,7 @@ import com.gms.dto.PageResult;
 public class MemberListServlet extends HttpServlet {
 
     private final CustomerDeletionService service = new CustomerDeletionService();
+    private final NotificationService notificationService = new NotificationService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -33,6 +35,7 @@ public class MemberListServlet extends HttpServlet {
 
         // B2: mỗi tab nhận một PageResult; lỗi được hiển thị riêng với danh sách rỗng.
         if ("pending-deletions".equals(tab)) {
+            notificationService.markTopicNotificationsRead(accountId, "xóa hồ sơ");
             ServiceResult<PageResult<CustomerDeletionReviewView>> result = service.getPendingPage(accountId, page, pageSize);
             if (result.isSuccess()) {
                 request.setAttribute("pageData", result.getData());

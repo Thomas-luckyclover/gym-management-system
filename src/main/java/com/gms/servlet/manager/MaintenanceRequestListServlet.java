@@ -7,6 +7,7 @@ import com.gms.dto.PageResult;
 import com.gms.dto.ServiceResult;
 import com.gms.entity.MaintenanceRequest;
 import com.gms.service.MaintenanceRequestService;
+import com.gms.service.NotificationService;
 import com.gms.util.PaginationUtil;
 import com.gms.util.RequestUtil;
 import jakarta.servlet.ServletException;
@@ -41,6 +42,9 @@ public class MaintenanceRequestListServlet extends HttpServlet {
     private final MaintenanceRequestService maintenanceRequestService =
             new MaintenanceRequestService();
 
+    private final NotificationService notificationService =
+            new NotificationService();
+
     /**
      * Handles GET requests to display the filtered and paginated maintenance requests list for Managers.
      */
@@ -52,6 +56,12 @@ public class MaintenanceRequestListServlet extends HttpServlet {
 
         HttpSession session = request.getSession(true);
         request.setAttribute("csrfToken", RequestUtil.getOrCreateCsrfToken(session));
+
+        // Tự động đánh dấu đã đọc các thông báo bảo trì của Quản lý này khi vào trang
+        Integer currentAccountId = (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
+        if (currentAccountId != null && currentAccountId > 0) {
+            notificationService.markTopicNotificationsRead(currentAccountId, "Bảo trì");
+        }
 
         // Extract and sanitize search and filter parameters
         String keyword =
@@ -231,7 +241,7 @@ public class MaintenanceRequestListServlet extends HttpServlet {
                 RequestUtil.setFlashToast(
                         request,
                         "success",
-                        "Đã phê duyệt thành công " + result.getData() + " yêu cầu bảo trì."
+                        String.format(Messages.MSG347_MAINTENANCE_BATCH_APPROVE_SUCCESS, result.getData())
                 );
             } else {
                 RequestUtil.setFlashToast(

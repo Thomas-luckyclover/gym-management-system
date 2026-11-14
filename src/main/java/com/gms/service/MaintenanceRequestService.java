@@ -7,6 +7,7 @@ import com.gms.dao.EmployeeDAO;
 import com.gms.dao.EquipmentItemDAO;
 import com.gms.dao.FacilityDAO;
 import com.gms.dao.MaintenanceRequestDAO;
+import com.gms.dao.NotificationDAO;
 import com.gms.dto.PageResult;
 import com.gms.dto.ServiceResult;
 import com.gms.entity.Account;
@@ -21,15 +22,24 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Service Layer: Encapsulates the core business logic and transaction boundaries
- * for Facility Maintenance Workflows (BF-06 / UC-28, UC-29).
+ * Tầng Service xử lý toàn bộ nghiệp vụ và ranh giới transaction cho quy trình bảo trì thiết bị
+ * (BF-06 / UC-28, UC-29).
+ *
+ * <p><b>Cách hoạt động:</b> Tiếp nhận yêu cầu từ Servlet, kiểm tra dữ liệu đầu vào và quyền nhân viên,
+ * điều phối giao dịch CSDL giữa các DAO ({@code MaintenanceRequestDAO}, {@code EquipmentItemDAO},
+ * {@code FacilityDAO}), đồng thời ghi {@code AuditLog} và gửi {@code Notification} trong cùng transaction.</p>
  */
 public class MaintenanceRequestService {
+
+    private static final int BATCH_NOTIFICATION_PREVIEW_LIMIT = 5;
+    private static final String NOTE_PREFIX_MANAGER = "\n\nGhi chú: ";
+    private static final String NOTE_PREFIX_REJECT = "\n\nLý do: ";
+    private static final String NOTE_PREFIX_CLOSE = "\n\nNghiệm thu: ";
 
     private final MaintenanceRequestDAO maintenanceRequestDAO;
     private final FacilityDAO facilityDAO;
@@ -39,6 +49,9 @@ public class MaintenanceRequestService {
     private final AuditLogService auditLogService;
     private final NotificationService notificationService;
 
+    /**
+     * Khởi tạo Service mặc định cùng đầy đủ các DAO và Service phụ thuộc phục vụ chạy thực tế.
+     */
     public MaintenanceRequestService() {
         maintenanceRequestDAO = new MaintenanceRequestDAO();
         facilityDAO = new FacilityDAO();
@@ -50,7 +63,10 @@ public class MaintenanceRequestService {
     }
 
     /**
-     * Package-private constructor for dependency injection during unit testing.
+     * Constructor phạm vi package cho phép tiêm DAO/Service giả lập khi viết unit test.
+     *
+     * <p><b>Cách hoạt động:</b> Gán trực tiếp từng dependency được truyền vào cho các trường thành viên
+     * thay vì khởi tạo mặc định, giúp kiểm thử độc lập từng luồng nghiệp vụ không cần CSDL thật.</p>
      */
     MaintenanceRequestService(
             MaintenanceRequestDAO maintenanceRequestDAO,
@@ -70,20 +86,14 @@ public class MaintenanceRequestService {
         this.notificationService = notificationService;
     }
 
-    MaintenanceRequestService(
-            MaintenanceRequestDAO maintenanceRequestDAO,
-            FacilityDAO facilityDAO,
-            AccountDAO accountDAO,
-            EmployeeDAO employeeDAO,
-            AuditLogService auditLogService,
-            NotificationService notificationService
-    ) {
-        this(maintenanceRequestDAO, facilityDAO, new EquipmentItemDAO(), accountDAO, employeeDAO, auditLogService, notificationService);
-    }
-
     /**
-     * Factory method for obtaining a database connection.
-     * Overridable by tests to supply connection wrappers or mock connections.
+     * Mở kết nối cơ sở dữ liệu phục vụ các thao tác cần transaction trong Service.
+     *
+     * <p><b>Cách hoạt động:</b> Mặc định gọi {@code DBContext.getConnection()}, được khai báo {@code protected}
+     * để lớp test có thể override bằng connection mock hoặc wrapper.</p>
+     *
+     * @return kết nối {@link Connection} tới CSDL
+     * @throws SQLException khi không mở được kết nối
      */
     protected Connection openConnection() throws SQLException {
         return DBContext.getConnection();
@@ -92,17 +102,20 @@ public class MaintenanceRequestService {
     // ===== Tạo yêu cầu =====
 
     /**
-     * Receptionist creates new maintenance requests for one or multiple individual equipment items in a single transaction.
+     * Lễ tân tạo yêu cầu bảo trì cho một hoặc nhiều cá thể thiết bị cùng lúc (mặc định không có ghi chú mức tạ/bộ phận).
      *
-     * @param accountId          authenticated receptionist account ID
-     * @param equipmentItemIds   list of targeted individual equipment item IDs
-     * @param priorityValue      priority string ("Low", "Normal", "Urgent")
-     * @param incidentTypeValue  type of incident
-     * @param detectedByValue    detection source
-     * @param description        detailed description of malfunction (10-500 characters)
-     * @param warningTagPlaced   whether physical warning tag was placed on equipment
-     * @param attachedImages     optional image file paths or references
-     * @return ServiceResult containing generated request codes (e.g. ["BT-0001", "BT-0002"]) or validation errors
+     * <p><b>Cách hoạt động:</b> Ủy quyền thẳng sang hàm {@link #createRequests(int, List, String, String, String, String, boolean, String, String)}
+     * với tham số {@code affectedItemsNote = null}.</p>
+     *
+     * @param accountId         ID tài khoản Lễ tân đang đăng nhập
+     * @param equipmentItemIds  danh sách ID cá thể thiết bị cần báo hỏng
+     * @param priorityValue     mức độ ưu tiên ({@code Low}, {@code Normal}, {@code Urgent})
+     * @param incidentTypeValue loại sự cố
+     * @param detectedByValue   nguồn phát hiện sự cố
+     * @param description       mô tả chi tiết sự cố (10-500 ký tự)
+     * @param warningTagPlaced  đã gắn biển cảnh báo "Ngừng sử dụng" tại máy hay chưa
+     * @param attachedImages    đường dẫn ảnh minh họa đính kèm (tùy chọn)
+     * @return {@link ServiceResult} chứa danh sách mã phiếu vừa tạo hoặc thông báo lỗi validate
      */
     public ServiceResult<List<String>> createRequests(
             int accountId,
@@ -117,6 +130,25 @@ public class MaintenanceRequestService {
         return createRequests(accountId, equipmentItemIds, priorityValue, incidentTypeValue, detectedByValue, description, warningTagPlaced, attachedImages, null);
     }
 
+    /**
+     * Lễ tân tạo yêu cầu bảo trì cho một hoặc nhiều cá thể thiết bị trong cùng một transaction.
+     *
+     * <p><b>Cách hoạt động:</b> Validate toàn bộ đầu vào (danh sách ID máy, mức ưu tiên, mô tả 10-500 ký tự,
+     * ghi chú bộ phận ảnh hưởng <= 100 ký tự), loại bỏ ID trùng, sau đó mở transaction: kiểm tra vai trò Lễ tân,
+     * kiểm tra từng máy không bị thanh lý/đang bảo trì/đang có phiếu chờ duyệt, sinh mã phiếu {@code BT-xxxx},
+     * insert bản ghi, ghi {@code AuditLog} và gửi một thông báo tổng hợp cho vai trò {@code MANAGER} trước khi commit.</p>
+     *
+     * @param accountId         ID tài khoản Lễ tân đang đăng nhập
+     * @param equipmentItemIds  danh sách ID cá thể thiết bị được chọn
+     * @param priorityValue     mức độ ưu tiên
+     * @param incidentTypeValue loại sự cố
+     * @param detectedByValue   nguồn phát hiện sự cố
+     * @param description       mô tả sự cố (10-500 ký tự)
+     * @param warningTagPlaced  cờ đã treo biển cảnh báo tại máy
+     * @param attachedImages    danh sách đường dẫn ảnh đính kèm
+     * @param affectedItemsNote ghi chú máy/mức tạ/bộ phận ảnh hưởng (tùy chọn, tối đa 100 ký tự)
+     * @return {@link ServiceResult} chứa danh sách mã phiếu bảo trì mới tạo nếu thành công
+     */
     public ServiceResult<List<String>> createRequests(
             int accountId,
             List<Integer> equipmentItemIds,
@@ -129,7 +161,7 @@ public class MaintenanceRequestService {
             String affectedItemsNote
     ) {
 
-        // B1: Kiểm tra danh sách thiết bị
+        // B1: Kiểm tra danh sách thiết bị và dữ liệu đầu vào
         if (equipmentItemIds == null || equipmentItemIds.isEmpty()) {
             return ServiceResult.failField(
                     "equipmentItemId",
@@ -166,7 +198,14 @@ public class MaintenanceRequestService {
             );
         }
 
-        // Loại bỏ trùng lặp id
+        if (affectedItemsNote != null && affectedItemsNote.trim().length() > 100) {
+            return ServiceResult.failField(
+                    "affectedItemsNote",
+                    String.format(Messages.MSG314_NOTE_MAX_LENGTH, 100)
+            );
+        }
+
+        // Loại bỏ ID trùng lặp hoặc không hợp lệ
         List<Integer> uniqueItemIds = equipmentItemIds.stream()
                 .filter(id -> id != null && id > 0)
                 .distinct()
@@ -179,12 +218,12 @@ public class MaintenanceRequestService {
             );
         }
 
-        // B2: Mở Transaction boundary
+        // B2: Mở ranh giới transaction để đảm bảo tất cả phiếu, log và thông báo lưu đồng bộ
         try (Connection connection = openConnection()) {
             connection.setAutoCommit(false);
 
             try {
-                // Xác minh tài khoản thuộc Lễ tân active
+                // Xác minh tài khoản thuộc Lễ tân đang làm việc
                 Employee receptionist =
                         findEmployeeForAccount(accountId, Role.RECEPTIONIST);
 
@@ -217,7 +256,7 @@ public class MaintenanceRequestService {
                         connection.rollback();
                         return ServiceResult.failField(
                                 "equipmentItemId",
-                                "Thiết bị " + equipmentItem.getItemCode() + " đang trong quá trình bảo trì hoặc đã có yêu cầu chờ duyệt."
+                                String.format(Messages.MSG344_MAINTENANCE_ITEM_BUSY, equipmentItem.getItemCode())
                         );
                     }
 
@@ -225,7 +264,7 @@ public class MaintenanceRequestService {
                             facilityDAO.findById(connection, equipmentItem.getFacilityId());
                     String facilityName = facility != null ? facility.getFacilityName() : "Thiết bị";
 
-                    // Tạo đơn bảo trì Open
+                    // Khởi tạo và lưu đơn bảo trì ở trạng thái Open
                     MaintenanceRequest request = new MaintenanceRequest();
                     request.setRequestCode(
                             maintenanceRequestDAO.generateNextRequestCode(connection)
@@ -235,7 +274,7 @@ public class MaintenanceRequestService {
                     request.setReportedByEmployeeId(receptionist.getEmployeeId());
                     request.setPriority(priority);
                     request.setIncidentType(incidentType);
-                    request.setAffectedItemsNote(affectedItemsNote);
+                    request.setAffectedItemsNote(affectedItemsNote != null && !affectedItemsNote.isBlank() ? affectedItemsNote.trim() : null);
                     request.setWarningTagPlaced(warningTagPlaced);
                     request.setDescription(description.trim());
                     request.setAttachedImages(attachedImages);
@@ -243,7 +282,7 @@ public class MaintenanceRequestService {
 
                     int requestId = maintenanceRequestDAO.insert(connection, request);
 
-                    // Ghi AuditLog
+                    // Ghi nhật ký thao tác (AuditLog)
                     auditLogService.logInTransaction(
                             connection,
                             accountId,
@@ -261,14 +300,23 @@ public class MaintenanceRequestService {
                     summaryItems.add(equipmentItem.getItemCode() + " (" + facilityName + ")");
                 }
 
-                // Gửi Notification cho Manager
+                // Gửi thông báo (Notification) cho Quản lý về phiếu bảo trì mới (giữ gọn <= 500 ký tự khi báo nhiều máy)
                 String notifTitle = createdCodes.size() == 1
-                        ? "Bảo trì · Yêu cầu mới " + createdCodes.get(0)
-                        : "Bảo trì · " + createdCodes.size() + " yêu cầu mới";
+                        ? NotificationDAO.safeTruncate(
+                                String.format(Messages.MSG351_NOTIF_MAINTENANCE_NEW_TITLE, createdCodes.get(0)),
+                                NotificationDAO.TITLE_MAX_LENGTH
+                        )
+                        : NotificationDAO.safeTruncate(
+                                String.format(Messages.MSG352_NOTIF_MAINTENANCE_BATCH_NEW_TITLE, createdCodes.size()),
+                                NotificationDAO.TITLE_MAX_LENGTH
+                        );
 
                 String notifContent = createdCodes.size() == 1
-                        ? createdCodes.get(0) + " · " + summaryItems.get(0) + " vừa được Lễ tân báo hỏng."
-                        : "Lễ tân vừa báo hỏng " + createdCodes.size() + " máy: " + String.join(", ", summaryItems);
+                        ? NotificationDAO.safeTruncate(
+                                String.format(Messages.MSG353_NOTIF_MAINTENANCE_NEW_CONTENT, createdCodes.get(0), summaryItems.get(0)),
+                                NotificationDAO.CONTENT_MAX_LENGTH
+                        )
+                        : buildBatchReportNotificationContent(createdCodes.size(), summaryItems);
 
                 notificationService.notifyRoleInTransaction(
                         connection,
@@ -294,7 +342,11 @@ public class MaintenanceRequestService {
     }
 
     /**
-     * Receptionist creates a new maintenance request for an individual equipment item.
+     * Lễ tân tạo một yêu cầu bảo trì đơn lẻ cho một cá thể thiết bị (không truyền ghi chú bộ phận).
+     *
+     * <p><b>Cách hoạt động:</b> Gọi chuyển tiếp sang phiên bản 9 tham số với {@code affectedItemsNote = null}.</p>
+     *
+     * @return {@link ServiceResult} chứa mã phiếu bảo trì duy nhất nếu thành công
      */
     public ServiceResult<String> createRequest(
             int accountId,
@@ -309,6 +361,15 @@ public class MaintenanceRequestService {
         return createRequest(accountId, equipmentItemId, priorityValue, incidentTypeValue, detectedByValue, description, warningTagPlaced, attachedImages, null);
     }
 
+    /**
+     * Lễ tân tạo một yêu cầu bảo trì cho đúng một cá thể thiết bị cụ thể.
+     *
+     * <p><b>Cách hoạt động:</b> Kiểm tra {@code equipmentItemId > 0}, bọc thành danh sách 1 phần tử để gọi
+     * {@link #createRequests(int, List, String, String, String, String, boolean, String, String)} rồi trích xuất
+     * mã phiếu đầu tiên hoặc ánh xạ nguyên vẹn lỗi field/lỗi chung trả về cho caller.</p>
+     *
+     * @return {@link ServiceResult} chứa chuỗi mã phiếu vừa tạo hoặc thông báo lỗi
+     */
     public ServiceResult<String> createRequest(
             int accountId,
             int equipmentItemId,
@@ -354,6 +415,14 @@ public class MaintenanceRequestService {
         return ServiceResult.fail(multiResult.getMessage());
     }
 
+    /**
+     * Phiên bản rút gọn tạo một yêu cầu bảo trì đơn lẻ (chỉ truyền mức ưu tiên, mô tả và biển cảnh báo).
+     *
+     * <p><b>Cách hoạt động:</b> Ủy quyền sang {@link #createRequest(int, int, String, String, String, String, boolean, String)}
+     * với các trường tùy chọn để giá trị mặc định ({@code null}).</p>
+     *
+     * @return {@link ServiceResult} chứa mã phiếu bảo trì vừa tạo
+     */
     public ServiceResult<String> createRequest(
             int accountId,
             int equipmentItemId,
@@ -376,12 +445,14 @@ public class MaintenanceRequestService {
     // ===== Duyệt yêu cầu =====
 
     /**
-     * Manager approves an Open maintenance request, transitioning it to InProgress (BR-49).
+     * Quản lý duyệt một yêu cầu bảo trì đang {@code Open} chuyển sang {@code InProgress} (phiên bản không ghi chú).
      *
-     * @param accountId           authenticated manager account ID
-     * @param requestId           ID of the request to approve
-     * @param setUnderMaintenance whether to mark the physical individual equipment item as UnderMaintenance
-     * @return ServiceResult indicating success or failure message
+     * <p><b>Cách hoạt động:</b> Gọi tiếp sang {@link #approveRequest(int, int, boolean, String)} với {@code managerNote = null}.</p>
+     *
+     * @param accountId           ID tài khoản Quản lý đang đăng nhập
+     * @param requestId           ID yêu cầu cần duyệt
+     * @param setUnderMaintenance có chuyển cá thể thiết bị sang {@code UnderMaintenance} hay không
+     * @return {@link ServiceResult} thông báo kết quả duyệt
      */
     public ServiceResult<Void> approveRequest(
             int accountId,
@@ -391,6 +462,21 @@ public class MaintenanceRequestService {
         return approveRequest(accountId, requestId, setUnderMaintenance, null);
     }
 
+    /**
+     * Quản lý duyệt một yêu cầu bảo trì từ {@code Open} sang {@code InProgress} trong transaction (BR-49).
+     *
+     * <p><b>Cách hoạt động:</b> Kiểm tra ID và độ dài {@code managerNote} (<= 500 ký tự); trong transaction:
+     * xác minh nhân viên thuộc vai trò {@code MANAGER}, khóa dòng yêu cầu bằng {@code findByIdForUpdate} và kiểm tra
+     * đang {@code Open}, gọi DAO cập nhật trạng thái sang {@code InProgress}, nếu chọn {@code setUnderMaintenance}
+     * thì đổi trạng thái cá thể máy sang {@code UnderMaintenance} kèm audit log riêng, ghi audit log phiếu và
+     * gửi thông báo về cho Lễ tân đã báo hỏng.</p>
+     *
+     * @param accountId           ID tài khoản Quản lý đang đăng nhập
+     * @param requestId           ID phiếu bảo trì cần duyệt
+     * @param setUnderMaintenance cờ đánh dấu đưa máy vào trạng thái bảo trì
+     * @param managerNote         ghi chú xử lý của Quản lý (tối đa 500 ký tự, có thể {@code null})
+     * @return {@link ServiceResult} thành công hoặc thông báo lỗi nghiệp vụ
+     */
     public ServiceResult<Void> approveRequest(
             int accountId,
             int requestId,
@@ -404,12 +490,19 @@ public class MaintenanceRequestService {
             );
         }
 
-        // Open transaction boundary
+        if (managerNote != null && managerNote.trim().length() > 500) {
+            return ServiceResult.failField(
+                    "managerNote",
+                    String.format(Messages.MSG314_NOTE_MAX_LENGTH, 500)
+            );
+        }
+
+        // Mở ranh giới transaction
         try (Connection connection = openConnection()) {
             connection.setAutoCommit(false);
 
             try {
-                // Step 1: Verify manager role (BR-49)
+                // Bước 1: Xác minh quyền Quản lý (BR-49)
                 Employee manager =
                         findEmployeeForAccount(accountId, Role.MANAGER);
 
@@ -418,7 +511,7 @@ public class MaintenanceRequestService {
                     return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
                 }
 
-                // Step 2: Lock and verify current request state to prevent race conditions
+                // Bước 2: Khóa bản ghi và kiểm tra trạng thái Open để chống duyệt trùng
                 MaintenanceRequest request =
                         maintenanceRequestDAO.findByIdForUpdate(
                                 connection,
@@ -429,7 +522,7 @@ public class MaintenanceRequestService {
                     connection.rollback();
                     return ServiceResult.fail(
                             String.format(
-                                     Messages.MSG08_NOT_FOUND,
+                                    Messages.MSG08_NOT_FOUND,
                                     "yêu cầu bảo trì"
                             )
                     );
@@ -442,7 +535,7 @@ public class MaintenanceRequestService {
                     );
                 }
 
-                // Step 3: Transition request status from Open to InProgress (BR-49)
+                // Bước 3: Chuyển trạng thái phiếu từ Open sang InProgress trong DAO
                 boolean updated =
                         maintenanceRequestDAO.approve(
                                 connection,
@@ -457,7 +550,7 @@ public class MaintenanceRequestService {
                     return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
                 }
 
-                // Step 4: Conditionally update physical individual EquipmentItem status if manager opted in
+                // Bước 4: Cập nhật trạng thái cá thể máy sang UnderMaintenance nếu Quản lý tích chọn
                 if (setUnderMaintenance) {
                     EquipmentItem equipmentItem =
                             equipmentItemDAO.findById(connection, request.getEquipmentItemId());
@@ -478,7 +571,7 @@ public class MaintenanceRequestService {
                             return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
                         }
 
-                        // Write a dedicated AuditLog entry for the EquipmentItem status transition
+                        // Ghi AuditLog riêng cho lần chuyển trạng thái máy cá thể
                         auditLogService.logInTransaction(
                                 connection,
                                 accountId,
@@ -494,7 +587,7 @@ public class MaintenanceRequestService {
                     }
                 }
 
-                // Step 5: Write request AuditLog with Role.MANAGER
+                // Bước 5: Ghi AuditLog cho phiếu bảo trì dưới vai trò MANAGER
                 auditLogService.logInTransaction(
                         connection,
                         accountId,
@@ -508,38 +601,23 @@ public class MaintenanceRequestService {
                         null
                 );
 
-                EquipmentItem notifItem = equipmentItemDAO.findById(connection, request.getEquipmentItemId());
-                Facility notifFac = (notifItem != null) ? facilityDAO.findById(connection, notifItem.getFacilityId()) : null;
-                String deviceDetail = "";
-                if (notifItem != null) {
-                    String facName = (notifFac != null && notifFac.getFacilityName() != null)
-                            ? notifFac.getFacilityName() : "";
-                    String itemCode = notifItem.getItemCode() != null ? notifItem.getItemCode() : "";
-                    String itemLabel = notifItem.getItemLabel() != null ? notifItem.getItemLabel() : "";
-                    if (!itemLabel.isBlank() && !itemLabel.equalsIgnoreCase(itemCode)) {
-                        deviceDetail = facName + " (" + itemCode + " - " + itemLabel + ")";
-                    } else {
-                        deviceDetail = facName + " (" + itemCode + ")";
-                    }
-                }
-                if (deviceDetail.isBlank()) {
-                    deviceDetail = "Mã máy #" + request.getEquipmentItemId();
-                }
-
-                StringBuilder notifContent = new StringBuilder();
-                notifContent.append(request.getRequestCode())
-                        .append(" · ")
-                        .append(deviceDetail)
-                        .append(": Quản lý đã duyệt yêu cầu, chuyển sang trạng thái Đang xử lý.");
-                if (managerNote != null && !managerNote.isBlank()) {
-                    notifContent.append("\n\nGhi chú: ").append(managerNote.trim());
-                }
+                String deviceDetail = buildDeviceDetail(connection, request.getEquipmentItemId(), true);
+                String baseContent = String.format(
+                        Messages.MSG357_NOTIF_MAINTENANCE_APPROVED_CONTENT,
+                        request.getRequestCode(),
+                        deviceDetail
+                );
+                String notifContent = buildNotificationWithOptionalNote(
+                        baseContent,
+                        NOTE_PREFIX_MANAGER,
+                        managerNote
+                );
 
                 notificationService.notifyEmployeeInTransaction(
                         connection,
                         request.getReportedByEmployeeId(),
-                        "Bảo trì · Đã được duyệt",
-                        notifContent.toString()
+                        Messages.MSG356_NOTIF_MAINTENANCE_APPROVED_TITLE,
+                        notifContent
                 );
 
                 connection.commit();
@@ -560,13 +638,18 @@ public class MaintenanceRequestService {
     }
 
     /**
-     * Manager approves multiple Open maintenance requests in a single database transaction (Batch Approval).
+     * Quản lý duyệt hàng loạt nhiều yêu cầu bảo trì đang {@code Open} trong cùng một transaction.
      *
-     * @param accountId           authenticated manager account ID
-     * @param requestIds          list of maintenance request IDs to approve
-     * @param setUnderMaintenance whether to mark the physical individual equipment items as UnderMaintenance
-     * @param managerNote         optional common manager note applied to all approved requests
-     * @return ServiceResult containing the count of successfully approved requests
+     * <p><b>Cách hoạt động:</b> Lọc danh sách ID hợp lệ, kiểm tra độ dài ghi chú (<= 500 ký tự), mở transaction
+     * và duyệt lần lượt từng phiếu còn {@code Open}: chuyển sang {@code InProgress}, cập nhật trạng thái máy nếu
+     * {@code setUnderMaintenance = true}, ghi audit log và thông báo người báo hỏng; nếu không có phiếu nào
+     * được duyệt thì rollback và báo lỗi.</p>
+     *
+     * @param accountId           ID tài khoản Quản lý
+     * @param requestIds          danh sách ID các phiếu cần duyệt hàng loạt
+     * @param setUnderMaintenance cờ đánh dấu chuyển máy sang trạng thái bảo trì
+     * @param managerNote         ghi chú chung áp dụng cho các phiếu được duyệt
+     * @return {@link ServiceResult} chứa số lượng phiếu duyệt thành công
      */
     public ServiceResult<Integer> approveRequestsBatch(
             int accountId,
@@ -574,8 +657,12 @@ public class MaintenanceRequestService {
             boolean setUnderMaintenance,
             String managerNote
     ) {
+        if (managerNote != null && managerNote.trim().length() > 500) {
+            return ServiceResult.fail(String.format(Messages.MSG314_NOTE_MAX_LENGTH, 500));
+        }
+
         if (requestIds == null || requestIds.isEmpty()) {
-            return ServiceResult.fail("Vui lòng chọn ít nhất một yêu cầu bảo trì để duyệt.");
+            return ServiceResult.fail(Messages.MSG345_MAINTENANCE_BATCH_APPROVE_REQUIRED);
         }
 
         List<Integer> validIds = requestIds.stream()
@@ -584,7 +671,7 @@ public class MaintenanceRequestService {
                 .toList();
 
         if (validIds.isEmpty()) {
-            return ServiceResult.fail("Vui lòng chọn ít nhất một yêu cầu bảo trì để duyệt.");
+            return ServiceResult.fail(Messages.MSG345_MAINTENANCE_BATCH_APPROVE_REQUIRED);
         }
 
         try (Connection connection = openConnection()) {
@@ -598,6 +685,7 @@ public class MaintenanceRequestService {
                 }
 
                 int approvedCount = 0;
+                Map<Integer, List<BatchNotificationEntry>> approvedByReporter = new LinkedHashMap<>();
 
                 for (int reqId : validIds) {
                     MaintenanceRequest request = maintenanceRequestDAO.findByIdForUpdate(connection, reqId);
@@ -661,46 +749,49 @@ public class MaintenanceRequestService {
                             managerNote
                     );
 
-                    EquipmentItem notifItem = equipmentItemDAO.findById(connection, request.getEquipmentItemId());
-                    Facility notifFac = (notifItem != null) ? facilityDAO.findById(connection, notifItem.getFacilityId()) : null;
-                    String deviceDetail = "";
-                    if (notifItem != null) {
-                        String facName = (notifFac != null && notifFac.getFacilityName() != null)
-                                ? notifFac.getFacilityName() : "";
-                        String itemCode = notifItem.getItemCode() != null ? notifItem.getItemCode() : "";
-                        String itemLabel = notifItem.getItemLabel() != null ? notifItem.getItemLabel() : "";
-                        if (!itemLabel.isBlank() && !itemLabel.equalsIgnoreCase(itemCode)) {
-                            deviceDetail = facName + " (" + itemCode + " - " + itemLabel + ")";
-                        } else {
-                            deviceDetail = facName + " (" + itemCode + ")";
-                        }
-                    }
-                    if (deviceDetail.isBlank()) {
-                        deviceDetail = "Mã máy #" + request.getEquipmentItemId();
-                    }
-
-                    StringBuilder notifContent = new StringBuilder();
-                    notifContent.append(request.getRequestCode())
-                            .append(" · ")
-                            .append(deviceDetail)
-                            .append(": Quản lý đã duyệt yêu cầu, chuyển sang trạng thái Đang xử lý.");
-                    if (managerNote != null && !managerNote.isBlank()) {
-                        notifContent.append("\n\nGhi chú: ").append(managerNote.trim());
-                    }
-
-                    notificationService.notifyEmployeeInTransaction(
-                            connection,
-                            request.getReportedByEmployeeId(),
-                            "Bảo trì · Đã được duyệt",
-                            notifContent.toString()
-                    );
+                    String deviceDetail = buildDeviceDetail(connection, request.getEquipmentItemId(), true);
+                    approvedByReporter
+                            .computeIfAbsent(request.getReportedByEmployeeId(), k -> new ArrayList<>())
+                            .add(new BatchNotificationEntry(request.getRequestCode(), deviceDetail));
 
                     approvedCount++;
                 }
 
                 if (approvedCount == 0) {
                     connection.rollback();
-                    return ServiceResult.fail("Không có yêu cầu bảo trì nào ở trạng thái Chờ duyệt được chọn.");
+                    return ServiceResult.fail(Messages.MSG346_MAINTENANCE_BATCH_APPROVE_NONE_OPEN);
+                }
+
+                for (Map.Entry<Integer, List<BatchNotificationEntry>> group : approvedByReporter.entrySet()) {
+                    List<BatchNotificationEntry> entries = group.getValue();
+                    String notifTitle;
+                    String baseContent;
+
+                    if (entries.size() == 1) {
+                        BatchNotificationEntry single = entries.get(0);
+                        notifTitle = Messages.MSG356_NOTIF_MAINTENANCE_APPROVED_TITLE;
+                        baseContent = String.format(
+                                Messages.MSG357_NOTIF_MAINTENANCE_APPROVED_CONTENT,
+                                single.requestCode,
+                                single.deviceDetail
+                        );
+                    } else {
+                        notifTitle = NotificationDAO.safeTruncate(
+                                String.format(Messages.MSG358_NOTIF_MAINTENANCE_BATCH_APPROVED_TITLE, entries.size()),
+                                NotificationDAO.TITLE_MAX_LENGTH
+                        );
+                        baseContent = buildBatchStatusNotificationContent(
+                                Messages.MSG359_NOTIF_MAINTENANCE_BATCH_APPROVED_CONTENT,
+                                entries
+                        );
+                    }
+
+                    notificationService.notifyEmployeeInTransaction(
+                            connection,
+                            group.getKey(),
+                            notifTitle,
+                            buildNotificationWithOptionalNote(baseContent, NOTE_PREFIX_MANAGER, managerNote)
+                    );
                 }
 
                 connection.commit();
@@ -720,7 +811,16 @@ public class MaintenanceRequestService {
     }
 
     /**
-     * Manager rejects an Open maintenance request with a required justification reason (BR-49).
+     * Quản lý từ chối một yêu cầu bảo trì đang {@code Open} kèm lý do bắt buộc (BR-49).
+     *
+     * <p><b>Cách hoạt động:</b> Validate độ dài lý do từ chối trước khi mở kết nối; trong transaction,
+     * xác minh vai trò {@code MANAGER}, khóa phiếu kiểm tra đang {@code Open}, gọi {@code maintenanceRequestDAO.reject},
+     * ghi audit log lý do từ chối và gửi thông báo lại cho Lễ tân đã lập phiếu.</p>
+     *
+     * @param accountId    ID tài khoản Quản lý
+     * @param requestId    ID yêu cầu bảo trì cần từ chối
+     * @param rejectReason lý do từ chối
+     * @return {@link ServiceResult} kết quả xử lý
      */
     public ServiceResult<Void> rejectRequest(
             int accountId,
@@ -728,7 +828,7 @@ public class MaintenanceRequestService {
             String rejectReason
     ) {
 
-        // Validate reason length before acquiring database connection
+        // Kiểm tra độ dài lý do từ chối trước khi mở kết nối CSDL
         if (!ValidationUtil.isValidReason(rejectReason)) {
             return ServiceResult.failField(
                     "rejectReason",
@@ -740,7 +840,7 @@ public class MaintenanceRequestService {
             connection.setAutoCommit(false);
 
             try {
-                // Step 1: Verify manager role (BR-49)
+                // Bước 1: Xác minh quyền Quản lý (BR-49)
                 Employee manager =
                         findEmployeeForAccount(accountId, Role.MANAGER);
 
@@ -749,7 +849,7 @@ public class MaintenanceRequestService {
                     return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
                 }
 
-                // Step 2: Lock request and verify it is currently Open
+                // Bước 2: Khóa bản ghi và kiểm tra phiếu đang ở trạng thái Open
                 MaintenanceRequest request =
                         maintenanceRequestDAO.findByIdForUpdate(
                                 connection,
@@ -773,7 +873,7 @@ public class MaintenanceRequestService {
                     );
                 }
 
-                // Step 3: Transition from Open to Rejected in DAO (BR-49)
+                // Bước 3: Chuyển trạng thái phiếu sang Rejected trong DAO
                 boolean updated =
                         maintenanceRequestDAO.reject(
                                 connection,
@@ -787,7 +887,7 @@ public class MaintenanceRequestService {
                     return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
                 }
 
-                // Step 4: Write AuditLog with Role.MANAGER and rejection reason
+                // Bước 4: Ghi AuditLog từ chối và thông báo cho người báo hỏng
                 auditLogService.logInTransaction(
                         connection,
                         accountId,
@@ -801,22 +901,18 @@ public class MaintenanceRequestService {
                         rejectReason.trim()
                 );
 
-                EquipmentItem rejectItem = equipmentItemDAO.findById(connection, request.getEquipmentItemId());
-                Facility rejectFac = (rejectItem != null) ? facilityDAO.findById(connection, rejectItem.getFacilityId()) : null;
-                String rejectDeviceDetail = "";
-                if (rejectItem != null) {
-                    String facName = (rejectFac != null && rejectFac.getFacilityName() != null) ? rejectFac.getFacilityName() : "";
-                    rejectDeviceDetail = facName + " (" + rejectItem.getItemCode() + ")";
-                } else {
-                    rejectDeviceDetail = "Mã máy #" + request.getEquipmentItemId();
-                }
+                String rejectDeviceDetail = buildDeviceDetail(connection, request.getEquipmentItemId(), false);
+                String rejectBaseContent = String.format(
+                        Messages.MSG361_NOTIF_MAINTENANCE_REJECTED_CONTENT,
+                        request.getRequestCode(),
+                        rejectDeviceDetail
+                );
 
                 notificationService.notifyEmployeeInTransaction(
                         connection,
                         request.getReportedByEmployeeId(),
-                        "Bảo trì · Bị từ chối",
-                        request.getRequestCode() + " · " + rejectDeviceDetail
-                                + ": Quản lý đã từ chối yêu cầu.\n\nLý do: " + rejectReason.trim()
+                        Messages.MSG360_NOTIF_MAINTENANCE_REJECTED_TITLE,
+                        buildNotificationWithOptionalNote(rejectBaseContent, NOTE_PREFIX_REJECT, rejectReason)
                 );
 
                 connection.commit();
@@ -839,15 +935,17 @@ public class MaintenanceRequestService {
     // ===== Đóng yêu cầu =====
 
     /**
-     * Receptionist inspects and closes an InProgress maintenance request after physical verification (BR-48).
+     * Lễ tân nghiệm thu thực tế và đóng một yêu cầu bảo trì đang {@code InProgress} (BR-48).
      *
-     * <p><b>Equipment Item Recovery Logic:</b> Checks if any OTHER active InProgress requests exist
-     * for the same individual machine. If none remain, the machine is automatically restored to {@code Available}.</p>
+     * <p><b>Cách hoạt động:</b> Validate ghi chú nghiệm thu (5-500 ký tự); trong transaction: xác minh quyền
+     * {@code RECEPTIONIST}, khóa phiếu và kiểm tra trạng thái {@code InProgress}, chuyển sang {@code Closed},
+     * sau đó kiểm tra nếu thiết bị cá thể không còn phiếu {@code InProgress} nào khác và chưa bị thanh lý thì
+     * khôi phục trạng thái máy về {@code Available} (kèm audit log), cuối cùng ghi log đóng phiếu và báo cho Quản lý đã duyệt.</p>
      *
-     * @param accountId      authenticated receptionist account ID
-     * @param requestId      ID of the request to close
-     * @param acceptanceNote verification and acceptance notes (5-500 characters)
-     * @return ServiceResult indicating success or failure
+     * @param accountId      ID tài khoản Lễ tân
+     * @param requestId      ID phiếu bảo trì cần đóng
+     * @param acceptanceNote ghi chú nghiệm thu (5-500 ký tự)
+     * @return {@link ServiceResult} kết quả xử lý
      */
     public ServiceResult<Void> closeRequest(
             int accountId,
@@ -855,7 +953,7 @@ public class MaintenanceRequestService {
             String acceptanceNote
     ) {
 
-        // Validate acceptance note length before acquiring database resources
+        // Kiểm tra độ dài ghi chú nghiệm thu trước khi mở kết nối CSDL
         if (!ValidationUtil.isLengthValid(acceptanceNote, 5, 500)) {
             return ServiceResult.failField(
                     "acceptanceNote",
@@ -863,12 +961,12 @@ public class MaintenanceRequestService {
             );
         }
 
-        // Open transaction boundary
+        // Mở ranh giới transaction
         try (Connection connection = openConnection()) {
             connection.setAutoCommit(false);
 
             try {
-                // Step 1: Verify receptionist role (BR-48)
+                // Bước 1: Xác minh quyền Lễ tân (BR-48)
                 Employee receptionist =
                         findEmployeeForAccount(accountId, Role.RECEPTIONIST);
 
@@ -877,7 +975,7 @@ public class MaintenanceRequestService {
                     return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
                 }
 
-                // Step 2: Lock request and verify it is currently InProgress
+                // Bước 2: Khóa phiếu và xác nhận đang ở trạng thái InProgress
                 MaintenanceRequest request =
                         maintenanceRequestDAO.findByIdForUpdate(
                                 connection,
@@ -901,7 +999,7 @@ public class MaintenanceRequestService {
                     );
                 }
 
-                // Step 3: Transition request to CLOSED in DAO (BR-48)
+                // Bước 3: Chuyển trạng thái phiếu sang Closed trong DAO
                 boolean updated =
                         maintenanceRequestDAO.close(
                                 connection,
@@ -915,14 +1013,13 @@ public class MaintenanceRequestService {
                     return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
                 }
 
-                // Step 4: Check if any other InProgress tickets exist for this individual machine
+                // Bước 4: Kiểm tra cá thể máy có còn phiếu InProgress khác không để khôi phục về Available
                 boolean hasOtherInProgress =
                         maintenanceRequestDAO.hasInProgressRequest(
                                 connection,
                                 request.getEquipmentItemId()
                         );
 
-                // If no other in-progress tickets remain for this individual item, restore it to Available
                 if (!hasOtherInProgress) {
                     EquipmentItem equipmentItem =
                             equipmentItemDAO.findById(connection, request.getEquipmentItemId());
@@ -944,7 +1041,7 @@ public class MaintenanceRequestService {
                             return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
                         }
 
-                        // Write a dedicated AuditLog entry for the EquipmentItem status recovery
+                        // Ghi AuditLog khôi phục trạng thái máy cá thể
                         auditLogService.logInTransaction(
                                 connection,
                                 accountId,
@@ -960,7 +1057,7 @@ public class MaintenanceRequestService {
                     }
                 }
 
-                // Step 5: Write request closure AuditLog with Role.RECEPTIONIST
+                // Bước 5: Ghi AuditLog đóng phiếu và gửi thông báo cho Quản lý đã duyệt
                 auditLogService.logInTransaction(
                         connection,
                         accountId,
@@ -975,30 +1072,18 @@ public class MaintenanceRequestService {
                 );
 
                 if (request.getReviewedByEmployeeId() != null) {
-                    EquipmentItem closeItem = equipmentItemDAO.findById(connection, request.getEquipmentItemId());
-                    Facility closeFac = (closeItem != null) ? facilityDAO.findById(connection, closeItem.getFacilityId()) : null;
-                    String closeDeviceDetail = "";
-                    if (closeItem != null) {
-                        String facName = (closeFac != null && closeFac.getFacilityName() != null) ? closeFac.getFacilityName() : "";
-                        closeDeviceDetail = facName + " (" + closeItem.getItemCode() + ")";
-                    } else {
-                        closeDeviceDetail = "Mã máy #" + request.getEquipmentItemId();
-                    }
-
-                    StringBuilder closeContent = new StringBuilder();
-                    closeContent.append(request.getRequestCode())
-                            .append(" · ")
-                            .append(closeDeviceDetail)
-                            .append(": Yêu cầu đã được Lễ tân nghiệm thu và đóng.");
-                    if (acceptanceNote != null && !acceptanceNote.isBlank()) {
-                        closeContent.append("\n\nNghiệm thu: ").append(acceptanceNote.trim());
-                    }
+                    String closeDeviceDetail = buildDeviceDetail(connection, request.getEquipmentItemId(), false);
+                    String closeBaseContent = String.format(
+                            Messages.MSG363_NOTIF_MAINTENANCE_CLOSED_CONTENT,
+                            request.getRequestCode(),
+                            closeDeviceDetail
+                    );
 
                     notificationService.notifyEmployeeInTransaction(
                             connection,
                             request.getReviewedByEmployeeId(),
-                            "Bảo trì · Đã hoàn tất",
-                            closeContent.toString()
+                            Messages.MSG362_NOTIF_MAINTENANCE_CLOSED_TITLE,
+                            buildNotificationWithOptionalNote(closeBaseContent, NOTE_PREFIX_CLOSE, acceptanceNote)
                     );
                 }
 
@@ -1020,12 +1105,16 @@ public class MaintenanceRequestService {
     }
 
     /**
-     * Receptionist inspects and closes multiple InProgress maintenance requests in a single database transaction (Batch Closure).
+     * Lễ tân nghiệm thu và đóng hàng loạt nhiều phiếu bảo trì đang {@code InProgress} trong một transaction.
      *
-     * @param accountId      authenticated receptionist account ID
-     * @param requestIds     list of maintenance request IDs to close
-     * @param acceptanceNote verification and acceptance notes (5-500 characters, applied to all closed requests)
-     * @return ServiceResult containing the count of successfully closed requests
+     * <p><b>Cách hoạt động:</b> Validate ghi chú nghiệm thu chung (5-500 ký tự) và danh sách ID chọn, mở
+     * transaction và lặp từng phiếu còn {@code InProgress}: đóng phiếu, khôi phục máy về {@code Available} nếu
+     * không còn phiếu đang xử lý nào khác, ghi audit log và thông báo Quản lý; nếu đóng được 0 phiếu thì rollback.</p>
+     *
+     * @param accountId      ID tài khoản Lễ tân
+     * @param requestIds     danh sách ID các phiếu cần nghiệm thu hàng loạt
+     * @param acceptanceNote ghi chú nghiệm thu áp dụng chung (5-500 ký tự)
+     * @return {@link ServiceResult} chứa số lượng phiếu đã đóng thành công
      */
     public ServiceResult<Integer> closeRequestsBatch(
             int accountId,
@@ -1040,7 +1129,7 @@ public class MaintenanceRequestService {
         }
 
         if (requestIds == null || requestIds.isEmpty()) {
-            return ServiceResult.fail("Vui lòng chọn ít nhất một yêu cầu bảo trì để nghiệm thu.");
+            return ServiceResult.fail(Messages.MSG348_MAINTENANCE_BATCH_CLOSE_REQUIRED);
         }
 
         List<Integer> validIds = requestIds.stream()
@@ -1049,7 +1138,7 @@ public class MaintenanceRequestService {
                 .toList();
 
         if (validIds.isEmpty()) {
-            return ServiceResult.fail("Vui lòng chọn ít nhất một yêu cầu bảo trì để nghiệm thu.");
+            return ServiceResult.fail(Messages.MSG348_MAINTENANCE_BATCH_CLOSE_REQUIRED);
         }
 
         try (Connection connection = openConnection()) {
@@ -1063,6 +1152,7 @@ public class MaintenanceRequestService {
                 }
 
                 int closedCount = 0;
+                Map<Integer, List<BatchNotificationEntry>> closedByReviewer = new LinkedHashMap<>();
 
                 for (int reqId : validIds) {
                     MaintenanceRequest request = maintenanceRequestDAO.findByIdForUpdate(connection, reqId);
@@ -1132,31 +1222,10 @@ public class MaintenanceRequestService {
                     );
 
                     if (request.getReviewedByEmployeeId() != null) {
-                        EquipmentItem closeItem = equipmentItemDAO.findById(connection, request.getEquipmentItemId());
-                        Facility closeFac = (closeItem != null) ? facilityDAO.findById(connection, closeItem.getFacilityId()) : null;
-                        String closeDeviceDetail = "";
-                        if (closeItem != null) {
-                            String facName = (closeFac != null && closeFac.getFacilityName() != null) ? closeFac.getFacilityName() : "";
-                            closeDeviceDetail = facName + " (" + closeItem.getItemCode() + ")";
-                        } else {
-                            closeDeviceDetail = "Mã máy #" + request.getEquipmentItemId();
-                        }
-
-                        StringBuilder closeContent = new StringBuilder();
-                        closeContent.append(request.getRequestCode())
-                                .append(" · ")
-                                .append(closeDeviceDetail)
-                                .append(": Yêu cầu đã được Lễ tân nghiệm thu và đóng.");
-                        if (acceptanceNote != null && !acceptanceNote.isBlank()) {
-                            closeContent.append("\n\nNghiệm thu: ").append(acceptanceNote.trim());
-                        }
-
-                        notificationService.notifyEmployeeInTransaction(
-                                connection,
-                                request.getReviewedByEmployeeId(),
-                                "Bảo trì · Đã hoàn tất",
-                                closeContent.toString()
-                        );
+                        String closeDeviceDetail = buildDeviceDetail(connection, request.getEquipmentItemId(), false);
+                        closedByReviewer
+                                .computeIfAbsent(request.getReviewedByEmployeeId(), k -> new ArrayList<>())
+                                .add(new BatchNotificationEntry(request.getRequestCode(), closeDeviceDetail));
                     }
 
                     closedCount++;
@@ -1164,7 +1233,39 @@ public class MaintenanceRequestService {
 
                 if (closedCount == 0) {
                     connection.rollback();
-                    return ServiceResult.fail("Không có yêu cầu bảo trì nào ở trạng thái Đang xử lý được chọn.");
+                    return ServiceResult.fail(Messages.MSG349_MAINTENANCE_BATCH_CLOSE_NONE_IN_PROGRESS);
+                }
+
+                for (Map.Entry<Integer, List<BatchNotificationEntry>> group : closedByReviewer.entrySet()) {
+                    List<BatchNotificationEntry> entries = group.getValue();
+                    String notifTitle;
+                    String baseContent;
+
+                    if (entries.size() == 1) {
+                        BatchNotificationEntry single = entries.get(0);
+                        notifTitle = Messages.MSG362_NOTIF_MAINTENANCE_CLOSED_TITLE;
+                        baseContent = String.format(
+                                Messages.MSG363_NOTIF_MAINTENANCE_CLOSED_CONTENT,
+                                single.requestCode,
+                                single.deviceDetail
+                        );
+                    } else {
+                        notifTitle = NotificationDAO.safeTruncate(
+                                String.format(Messages.MSG364_NOTIF_MAINTENANCE_BATCH_CLOSED_TITLE, entries.size()),
+                                NotificationDAO.TITLE_MAX_LENGTH
+                        );
+                        baseContent = buildBatchStatusNotificationContent(
+                                Messages.MSG365_NOTIF_MAINTENANCE_BATCH_CLOSED_CONTENT,
+                                entries
+                        );
+                    }
+
+                    notificationService.notifyEmployeeInTransaction(
+                            connection,
+                            group.getKey(),
+                            notifTitle,
+                            buildNotificationWithOptionalNote(baseContent, NOTE_PREFIX_CLOSE, acceptanceNote)
+                    );
                 }
 
                 connection.commit();
@@ -1185,17 +1286,14 @@ public class MaintenanceRequestService {
 
     // ===== Dữ liệu màn hình =====
 
-    public ServiceResult<List<Facility>> getSelectableFacilities() {
-        try {
-            return ServiceResult.ok(
-                    facilityDAO.findSelectableFacilities()
-            );
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
-        }
-    }
-
+    /**
+     * Lấy danh sách toàn bộ cá thể thiết bị có thể chọn khi Lễ tân lập phiếu báo hỏng.
+     *
+     * <p><b>Cách hoạt động:</b> Gọi {@code equipmentItemDAO.findAllSelectable()} để lấy các máy chưa bị thanh lý
+     * thuộc dòng thiết bị đang hoạt động, kèm cờ đang có phiếu bảo trì hay không.</p>
+     *
+     * @return {@link ServiceResult} chứa danh sách {@link EquipmentItem} hợp lệ
+     */
     public ServiceResult<List<EquipmentItem>> getSelectableEquipmentItems() {
         try {
             return ServiceResult.ok(
@@ -1207,59 +1305,21 @@ public class MaintenanceRequestService {
         }
     }
 
-    public ServiceResult<List<EquipmentItem>> getEquipmentItemsByFacilityId(int facilityId) {
-        try {
-            return ServiceResult.ok(
-                    equipmentItemDAO.findByFacilityId(facilityId)
-            );
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
-        }
-    }
-
-    public ServiceResult<List<MaintenanceRequestDAO.UnfinishedRequestSummary>>
-    getUnfinishedRequests(int facilityId) {
-        try {
-            return ServiceResult.ok(
-                    maintenanceRequestDAO.findUnfinishedByFacilityId(facilityId)
-            );
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
-        }
-    }
-
     /**
-     * Retrieves all active unfinished requests mapped by FacilityId.
-     * Serves front-end dynamic warnings when selecting a facility during request creation.
-     */
-    public ServiceResult<Map<Integer, List<MaintenanceRequestDAO.UnfinishedRequestSummary>>>
-    getUnfinishedRequestsMap() {
-        try {
-            return ServiceResult.ok(
-                    maintenanceRequestDAO.findUnfinishedRequestsMap()
-            );
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
-        }
-    }
-
-    public ServiceResult<PageResult<MaintenanceRequestDAO.MaintenanceRequestView>>
-    getReceptionistPage(
-            int accountId,
-            String keyword,
-            String statusValue,
-            int page,
-            int pageSize
-    ) {
-        return getReceptionistPage(accountId, keyword, statusValue, null, null, page, pageSize);
-    }
-
-    /**
-     * Retrieves a paginated list of maintenance requests for Receptionists with extended filters.
-     * Receptionists have full visibility across all tickets to answer member inquiries.
+     * Lấy danh sách yêu cầu bảo trì có phân trang và bộ lọc đầy đủ cho màn hình Lễ tân.
+     *
+     * <p><b>Cách hoạt động:</b> Xác minh tài khoản là Lễ tân đang làm việc, quy đổi chuỗi {@code statusValue} và
+     * {@code priorityValue} sang enum, gọi {@code countForReceptionist} + {@code findForReceptionist} của DAO
+     * rồi đóng gói thành {@link PageResult}.</p>
+     *
+     * @param accountId     ID tài khoản Lễ tân
+     * @param keyword       từ khóa tìm kiếm
+     * @param statusValue   giá trị trạng thái cần lọc
+     * @param priorityValue giá trị mức ưu tiên cần lọc
+     * @param reportedDate  ngày báo cáo cần lọc
+     * @param page          số trang hiện tại
+     * @param pageSize      kích thước trang
+     * @return {@link ServiceResult} chứa {@link PageResult} các phiếu bảo trì
      */
     public ServiceResult<PageResult<MaintenanceRequestDAO.MaintenanceRequestView>>
     getReceptionistPage(
@@ -1318,18 +1378,20 @@ public class MaintenanceRequestService {
         }
     }
 
-    public ServiceResult<PageResult<MaintenanceRequestDAO.MaintenanceRequestView>>
-    getManagerPage(
-            String keyword,
-            String statusValue,
-            int page,
-            int pageSize
-    ) {
-        return getManagerPage(keyword, statusValue, null, null, page, pageSize);
-    }
-
     /**
-     * Retrieves a paginated list of maintenance requests for Managers with keyword, status, priority, and date filters.
+     * Lấy danh sách yêu cầu bảo trì có phân trang và bộ lọc đầy đủ cho màn hình Quản lý duyệt.
+     *
+     * <p><b>Cách hoạt động:</b> Chuyển chuỗi {@code statusValue}/{@code priorityValue} sang enum, gọi
+     * {@code countAll} và {@code findAll} của DAO với từ khóa, trạng thái, mức ưu tiên, ngày báo cáo rồi
+     * gói kết quả vào {@link PageResult}.</p>
+     *
+     * @param keyword       từ khóa tìm kiếm
+     * @param statusValue   trạng thái cần lọc
+     * @param priorityValue mức ưu tiên cần lọc
+     * @param reportedDate  ngày báo cáo cần lọc
+     * @param page          số trang hiện tại
+     * @param pageSize      kích thước trang
+     * @return {@link ServiceResult} chứa {@link PageResult} danh sách phiếu
      */
     public ServiceResult<PageResult<MaintenanceRequestDAO.MaintenanceRequestView>>
     getManagerPage(
@@ -1380,6 +1442,15 @@ public class MaintenanceRequestService {
         }
     }
 
+    /**
+     * Lấy thông tin chi tiết đầy đủ của một yêu cầu bảo trì theo ID.
+     *
+     * <p><b>Cách hoạt động:</b> Kiểm tra {@code requestId > 0}, gọi {@code maintenanceRequestDAO.findViewById}
+     * và trả về lỗi không tìm thấy nếu bản ghi trả về {@code null}.</p>
+     *
+     * @param requestId ID yêu cầu bảo trì
+     * @return {@link ServiceResult} chứa {@link MaintenanceRequestDAO.MaintenanceRequestView}
+     */
     public ServiceResult<MaintenanceRequestDAO.MaintenanceRequestView>
     getRequestDetail(int requestId) {
 
@@ -1410,6 +1481,14 @@ public class MaintenanceRequestService {
         }
     }
 
+    /**
+     * Lấy thống kê số lượng yêu cầu bảo trì theo từng trạng thái.
+     *
+     * <p><b>Cách hoạt động:</b> Gọi {@code maintenanceRequestDAO.countByStatus()} để lấy Map số đếm
+     * từng trạng thái ({@code Open}, {@code InProgress}, {@code Rejected}, {@code Closed}) phục vụ thẻ KPI.</p>
+     *
+     * @return {@link ServiceResult} chứa Map thống kê theo trạng thái
+     */
     public ServiceResult<Map<String, Integer>> getStatusCounts() {
         try {
             return ServiceResult.ok(
@@ -1422,13 +1501,15 @@ public class MaintenanceRequestService {
     }
 
     /**
-     * Retrieves a paginated list of facilities for the receptionist catalog view based on a single search keyword.
-     * Obsolete category and status filter parameters from legacy bookmarks or URLs are safely ignored.
+     * Lấy danh sách dòng thiết bị phân trang cho màn hình tra cứu của Lễ tân (lọc theo từ khóa).
      *
-     * @param keyword  optional search keyword matching facility name, category (English or Vietnamese), or location
-     * @param page     1-based page number
-     * @param pageSize number of items per page
-     * @return ServiceResult containing paginated facilities
+     * <p><b>Cách hoạt động:</b> Ủy quyền sang {@link #getFacilityCatalogPage(String, String, int, int)}
+     * với {@code location = null}.</p>
+     *
+     * @param keyword  từ khóa tìm kiếm theo tên, loại hoặc khu vực đặt thiết bị
+     * @param page     số trang hiện tại (bắt đầu từ 1)
+     * @param pageSize số bản ghi mỗi trang
+     * @return {@link ServiceResult} chứa {@link PageResult} dòng thiết bị
      */
     public ServiceResult<PageResult<Facility>> getFacilityCatalogPage(
             String keyword,
@@ -1438,6 +1519,18 @@ public class MaintenanceRequestService {
         return getFacilityCatalogPage(keyword, null, page, pageSize);
     }
 
+    /**
+     * Lấy danh sách dòng thiết bị phân trang cho màn hình Lễ tân theo từ khóa và khu vực đặt máy.
+     *
+     * <p><b>Cách hoạt động:</b> Gọi {@code facilityDAO.countCatalog} và {@code facilityDAO.findCatalogPage}
+     * (đã tính sẵn thống kê số máy khả dụng / đang bảo trì) rồi đóng gói vào {@link PageResult}.</p>
+     *
+     * @param keyword  từ khóa tìm kiếm (tùy chọn)
+     * @param location tên khu vực/vị trí cần lọc (tùy chọn)
+     * @param page     số trang hiện tại
+     * @param pageSize kích thước trang
+     * @return {@link ServiceResult} chứa danh sách phân trang {@link Facility}
+     */
     public ServiceResult<PageResult<Facility>> getFacilityCatalogPage(
             String keyword,
             String location,
@@ -1463,7 +1556,10 @@ public class MaintenanceRequestService {
     }
 
     /**
-     * Legacy signature preserving backward compatibility while safely ignoring obsolete category/status parameters.
+     * Chữ ký tương thích ngược cho màn hình danh mục Lễ tân (bỏ qua tham số phân loại và trạng thái cũ).
+     *
+     * <p><b>Cách hoạt động:</b> Bỏ qua {@code categoryValue} và {@code statusValue} không còn dùng trong bộ lọc mới,
+     * chỉ giữ {@code keyword}, {@code page}, {@code pageSize} chuyển sang {@link #getFacilityCatalogPage(String, int, int)}.</p>
      */
     public ServiceResult<PageResult<Facility>> getFacilityCatalogPage(
             String keyword,
@@ -1472,12 +1568,19 @@ public class MaintenanceRequestService {
             int page,
             int pageSize
     ) {
-        // Obsolete category and status filters are intentionally ignored per BF-06 search simplification
+        // Bỏ qua bộ lọc category/status cũ do màn hình Lễ tân đã đơn giản hóa thanh tìm kiếm
         return getFacilityCatalogPage(keyword, page, pageSize);
     }
 
     /**
-     * Tra cứu phiếu bảo trì đã đóng (Closed) gần nhất của thiết bị con.
+     * Tra cứu phiếu bảo trì đã đóng ({@code Closed}) gần nhất của cùng cá thể thiết bị.
+     *
+     * <p><b>Cách hoạt động:</b> Gọi {@code maintenanceRequestDAO.findLastClosedRequest} loại trừ ID phiếu
+     * hiện tại để hiển thị thông tin "Lần hỏng trước của máy này" trên màn hình Quản lý duyệt.</p>
+     *
+     * @param equipmentItemId  ID cá thể thiết bị
+     * @param currentRequestId ID phiếu đang xem để loại trừ
+     * @return {@link ServiceResult} chứa phiếu đã đóng gần nhất (hoặc {@code null} nếu chưa có)
      */
     public ServiceResult<MaintenanceRequestDAO.MaintenanceRequestView> getLastClosedRequest(int equipmentItemId, int currentRequestId) {
         try {
@@ -1491,7 +1594,13 @@ public class MaintenanceRequestService {
     }
 
     /**
-     * Lấy thông tin dòng máy theo FacilityId kèm thống kê khả dụng.
+     * Lấy thông tin chi tiết một dòng thiết bị theo {@code FacilityId} kèm thống kê số lượng khả dụng.
+     *
+     * <p><b>Cách hoạt động:</b> Gọi {@code facilityDAO.findById(facilityId)}, nếu không tồn tại thì trả về
+     * thông báo không tìm thấy thiết bị.</p>
+     *
+     * @param facilityId ID dòng thiết bị
+     * @return {@link ServiceResult} chứa đối tượng {@link Facility} hoặc lỗi
      */
     public ServiceResult<Facility> getFacilityById(int facilityId) {
         try {
@@ -1507,7 +1616,12 @@ public class MaintenanceRequestService {
     }
 
     /**
-     * Lấy danh sách các vị trí / khu vực duy nhất đang có.
+     * Lấy danh sách các vị trí / khu vực đặt thiết bị không trùng lặp đang có trong hệ thống.
+     *
+     * <p><b>Cách hoạt động:</b> Gọi {@code facilityDAO.findDistinctLocations()} để trả về danh sách khu vực
+     * phục vụ dropdown lọc trên danh mục thiết bị Lễ tân.</p>
+     *
+     * @return {@link ServiceResult} chứa danh sách tên khu vực
      */
     public ServiceResult<List<String>> getDistinctLocations() {
         try {
@@ -1518,6 +1632,17 @@ public class MaintenanceRequestService {
         }
     }
 
+    /**
+     * Tìm bản ghi nhân viên đang làm việc khớp với tài khoản và vai trò kỳ vọng.
+     *
+     * <p><b>Cách hoạt động:</b> Tra cứu {@code Account} từ {@code accountId}, lấy {@code Employee} tương ứng qua
+     * {@code personId}, rồi đối chiếu chức vụ ({@code expectedRole}) và trạng thái phải đang {@code WORKING}.</p>
+     *
+     * @param accountId    ID tài khoản cần xác minh
+     * @param expectedRole vai trò bắt buộc ({@code RECEPTIONIST} hoặc {@code MANAGER})
+     * @return đối tượng {@link Employee} hợp lệ, hoặc {@code null} nếu không thỏa điều kiện
+     * @throws SQLException khi truy vấn CSDL lỗi
+     */
     private Employee findEmployeeForAccount(
             int accountId,
             Role expectedRole
@@ -1542,6 +1667,153 @@ public class MaintenanceRequestService {
         }
 
         return employee;
+    }
+
+    /**
+     * Dựng chuỗi mô tả ngắn gọn cá thể máy kèm tên nhóm máy phục vụ hiển thị thông báo.
+     */
+    private String buildDeviceDetail(
+            Connection connection,
+            int equipmentItemId,
+            boolean includeItemLabel
+    ) throws SQLException {
+        EquipmentItem item = equipmentItemDAO.findById(connection, equipmentItemId);
+        if (item == null) {
+            return "Mã máy #" + equipmentItemId;
+        }
+        Facility facility = facilityDAO.findById(connection, item.getFacilityId());
+        String facName = (facility != null && facility.getFacilityName() != null)
+                ? facility.getFacilityName()
+                : "";
+        String itemCode = item.getItemCode() != null ? item.getItemCode() : "";
+        String itemLabel = item.getItemLabel() != null ? item.getItemLabel() : "";
+
+        String detail;
+        if (includeItemLabel && !itemLabel.isBlank() && !itemLabel.equalsIgnoreCase(itemCode)) {
+            detail = facName + " (" + itemCode + " - " + itemLabel + ")";
+        } else {
+            detail = facName + " (" + itemCode + ")";
+        }
+
+        return detail.isBlank() ? ("Mã máy #" + equipmentItemId) : detail;
+    }
+
+    /**
+     * Tạo nội dung thông báo báo hỏng hàng loạt luôn nằm trong giới hạn 500 ký tự của {@code Notifications.Content}.
+     *
+     * <p><b>Cách hoạt động:</b> Hiển thị toàn bộ khi {@code <= 5} máy và đủ độ dài; với số lượng lớn (như 60 máy),
+     * chỉ liệt kê tối đa {@value #BATCH_NOTIFICATION_PREVIEW_LIMIT} máy đầu vừa khung ký tự kèm phần tóm tắt
+     * {@code " và N máy khác."} để tránh lỗi cắt chuỗi từ SQL Server.</p>
+     */
+    private static String buildBatchReportNotificationContent(
+            int totalCount,
+            List<String> summaryItems
+    ) {
+        String prefix = String.format(Messages.MSG354_NOTIF_MAINTENANCE_BATCH_NEW_CONTENT, totalCount, "");
+        if (summaryItems.size() <= BATCH_NOTIFICATION_PREVIEW_LIMIT) {
+            String full = String.format(
+                    Messages.MSG354_NOTIF_MAINTENANCE_BATCH_NEW_CONTENT,
+                    totalCount,
+                    String.join(", ", summaryItems)
+            );
+            if (full.length() <= NotificationDAO.CONTENT_MAX_LENGTH) {
+                return full;
+            }
+        }
+
+        int maxPreview = Math.min(BATCH_NOTIFICATION_PREVIEW_LIMIT, summaryItems.size());
+        StringBuilder preview = new StringBuilder();
+        int included = 0;
+
+        for (int i = 0; i < maxPreview; i++) {
+            String item = summaryItems.get(i);
+            String suffix = formatBatchOverflowSuffix(totalCount - (i + 1));
+            String candidate = preview.length() == 0 ? item : preview + ", " + item;
+            if (prefix.length() + candidate.length() + suffix.length() <= NotificationDAO.CONTENT_MAX_LENGTH) {
+                if (preview.length() > 0) {
+                    preview.append(", ");
+                }
+                preview.append(item);
+                included = i + 1;
+            } else {
+                break;
+            }
+        }
+
+        if (included == 0 && !summaryItems.isEmpty()) {
+            String suffix = formatBatchOverflowSuffix(totalCount - 1);
+            int available = NotificationDAO.CONTENT_MAX_LENGTH - prefix.length() - suffix.length();
+            String firstItem = available > 3 ? NotificationDAO.safeTruncate(summaryItems.get(0), available) : "";
+            String content = String.format(
+                    Messages.MSG354_NOTIF_MAINTENANCE_BATCH_NEW_CONTENT,
+                    totalCount,
+                    firstItem + suffix
+            );
+            return NotificationDAO.safeTruncate(content, NotificationDAO.CONTENT_MAX_LENGTH);
+        }
+
+        String suffix = formatBatchOverflowSuffix(totalCount - included);
+        String content = String.format(
+                Messages.MSG354_NOTIF_MAINTENANCE_BATCH_NEW_CONTENT,
+                totalCount,
+                preview + suffix
+        );
+        return NotificationDAO.safeTruncate(content, NotificationDAO.CONTENT_MAX_LENGTH);
+    }
+
+    private static String formatBatchOverflowSuffix(int remaining) {
+        return remaining > 0
+                ? String.format(Messages.MSG355_NOTIF_MAINTENANCE_BATCH_MORE_ITEMS, remaining)
+                : "";
+    }
+
+    /**
+     * Dựng nội dung tóm tắt cho thông báo duyệt hoặc đóng hàng loạt nhiều yêu cầu bảo trì.
+     */
+    private static String buildBatchStatusNotificationContent(
+            String messageTemplate,
+            List<BatchNotificationEntry> entries
+    ) {
+        int total = entries.size();
+        int maxPreview = Math.min(BATCH_NOTIFICATION_PREVIEW_LIMIT, total);
+        StringBuilder codes = new StringBuilder();
+        for (int i = 0; i < maxPreview; i++) {
+            if (i > 0) {
+                codes.append(", ");
+            }
+            codes.append(entries.get(i).requestCode);
+        }
+        if (total > maxPreview) {
+            codes.append(", ...");
+        }
+        String content = String.format(messageTemplate, total, codes);
+        return NotificationDAO.safeTruncate(content, NotificationDAO.CONTENT_MAX_LENGTH);
+    }
+
+    /**
+     * Ghép thêm ghi chú/lý do tùy chọn vào nội dung thông báo và bảo đảm tổng độ dài không vượt quá 500 ký tự.
+     */
+    private static String buildNotificationWithOptionalNote(
+            String baseContent,
+            String notePrefix,
+            String rawNote
+    ) {
+        String safeBase = NotificationDAO.safeTruncate(baseContent, NotificationDAO.CONTENT_MAX_LENGTH);
+        if (rawNote == null || rawNote.isBlank()) {
+            return safeBase;
+        }
+        String trimmedNote = rawNote.trim();
+        if (safeBase.length() + notePrefix.length() + trimmedNote.length() <= NotificationDAO.CONTENT_MAX_LENGTH) {
+            return safeBase + notePrefix + trimmedNote;
+        }
+        int availableForNote = NotificationDAO.CONTENT_MAX_LENGTH - safeBase.length() - notePrefix.length();
+        if (availableForNote < 10) {
+            return safeBase;
+        }
+        return safeBase + notePrefix + NotificationDAO.safeTruncate(trimmedNote, availableForNote);
+    }
+
+    private record BatchNotificationEntry(String requestCode, String deviceDetail) {
     }
 
 }

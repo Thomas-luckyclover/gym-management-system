@@ -1,6 +1,7 @@
 package com.gms.service;
 
 import com.gms.constant.Messages;
+import com.gms.constant.Role;
 import com.gms.dao.AccountDAO;
 import com.gms.dto.LoginResult;
 import com.gms.dto.ServiceResult;
@@ -13,20 +14,25 @@ import org.junit.jupiter.api.Test;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AuthServiceTest {
 
     private FakeAccountDAO fakeAccountDAO;
+    private RecordingAuditLogService auditLogService;
     private AuthService authService;
 
     @BeforeEach
     void setUp() {
         fakeAccountDAO = new FakeAccountDAO();
-        authService = new TestableAuthService(fakeAccountDAO, new FakeSystemConfigService(3, 7));
+        auditLogService = new RecordingAuditLogService();
+        authService = new TestableAuthService(fakeAccountDAO, new FakeSystemConfigService(3, 7), auditLogService);
     }
 
     @Test
@@ -104,16 +110,106 @@ class AuthServiceTest {
         assertFalse(result.isSuccess());
         assertEquals(String.format(Messages.MSG35_ACCOUNT_TEMP_LOCKED, 7, "07:00"), result.getMessage());
         assertTrue(fakeAccountDAO.isLocked());
+        assertEquals(List.of("SignInFailed", "AccountLocked"),
+                auditLogService.entries.stream().map(AuditEntry::action).toList());
+        AuditEntry lockedEntry = auditLogService.entries.get(1);
+        assertEquals(3, lockedEntry.accountId());
+        assertEquals(Role.CUSTOMER, lockedEntry.actingRole());
+        assertEquals("Account", lockedEntry.entityName());
+    }
+
+    @Test
+    @DisplayName("B8: Đăng nhập thành công -> Ghi Audit Log SignIn")
+    void login_Success_RecordsSignInAudit() {
+        Account customer = new Account(4, 40, PasswordUtil.hashPassword("Dung2026abc"),
+                Account.Status.ACTIVE, 0, null, null, LocalDateTime.now());
+        fakeAccountDAO.setEmailAccount(customer);
+
+        ServiceResult<LoginResult> result = authService.login("khach@example.com", "Dung2026abc");
+
+        assertTrue(result.isSuccess());
+        assertEquals(1, auditLogService.entries.size());
+        AuditEntry entry = auditLogService.entries.get(0);
+        assertEquals("SignIn", entry.action());
+        assertEquals(4, entry.accountId());
+        assertEquals(Role.CUSTOMER, entry.actingRole());
+        assertEquals("Account", entry.entityName());
+    }
+
+    @Test
+    @DisplayName("B3: Không tìm thấy tài khoản -> Ghi SignInFailed với AccountId và ActingRole null")
+    void login_AccountNotFound_RecordsSignInFailedAuditWithNullActor() {
+        authService.login("notfound@example.com", "Password123");
+
+        assertEquals(1, auditLogService.entries.size());
+        AuditEntry entry = auditLogService.entries.get(0);
+        assertEquals("SignInFailed", entry.action());
+        assertNull(entry.accountId());
+        assertNull(entry.actingRole());
+        assertEquals("Account", entry.entityName());
+    }
+
+    @Test
+    @DisplayName("B7: Sai mật khẩu chưa tới ngưỡng -> Ghi SignInFailed với FailedLoginCount")
+    void login_CustomerWrongPassword_RecordsSignInFailedAudit() {
+        Account customer = new Account(2, 20, PasswordUtil.hashPassword("Dung2026abc"),
+                Account.Status.ACTIVE, 0, null, null, LocalDateTime.now());
+        fakeAccountDAO.setEmailAccount(customer);
+
+        authService.login("khach@example.com", "Sai2026abc");
+
+        assertEquals(1, auditLogService.entries.size());
+        AuditEntry entry = auditLogService.entries.get(0);
+        assertEquals("SignInFailed", entry.action());
+        assertEquals(2, entry.accountId());
+        assertEquals(Role.CUSTOMER, entry.actingRole());
+        assertEquals("FailedLoginCount", entry.fieldChanged());
+        assertEquals("1", entry.newValue());
     }
 
     private static class TestableAuthService extends AuthService {
-        TestableAuthService(AccountDAO accountDAO, SystemConfigService systemConfigService) {
-            super(accountDAO, systemConfigService);
+        TestableAuthService(
+                AccountDAO accountDAO,
+                SystemConfigService systemConfigService,
+                AuditLogService auditLogService
+        ) {
+            super(accountDAO, systemConfigService, auditLogService);
         }
 
         @Override
         protected Connection getConnection() throws SQLException {
             return null; // Không cần kết nối SQL thật trong unit test
+        }
+    }
+
+    private record AuditEntry(
+            Integer accountId,
+            Role actingRole,
+            String action,
+            String entityName,
+            String fieldChanged,
+            String newValue
+    ) {
+    }
+
+    /** AuditLogService giả lập: ghi lại toàn bộ sự kiện trong bộ nhớ để kiểm chứng trong test. */
+    private static class RecordingAuditLogService extends AuditLogService {
+        final List<AuditEntry> entries = new ArrayList<>();
+
+        @Override
+        void logInTransaction(
+                Connection conn,
+                Integer accountId,
+                Role actingRole,
+                String action,
+                String entityName,
+                Integer entityId,
+                String fieldChanged,
+                String oldValue,
+                String newValue,
+                String reason
+        ) {
+            entries.add(new AuditEntry(accountId, actingRole, action, entityName, fieldChanged, newValue));
         }
     }
 
@@ -138,6 +234,16 @@ class AuthServiceTest {
 
         @Override
         public boolean increaseFailedLogin(Connection conn, int accountId) {
+            return true;
+        }
+
+        @Override
+        public boolean resetFailedLogin(Connection conn, int accountId) {
+            return true;
+        }
+
+        @Override
+        public boolean updateLastLogin(Connection conn, int accountId, LocalDateTime lastLoginAt) {
             return true;
         }
 

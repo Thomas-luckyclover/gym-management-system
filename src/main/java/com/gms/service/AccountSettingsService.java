@@ -1,5 +1,6 @@
 package com.gms.service;
 
+import com.gms.constant.AppConstants;
 import com.gms.constant.Messages;
 import com.gms.constant.Role;
 import com.gms.dao.AccountDAO;
@@ -15,26 +16,28 @@ import com.gms.entity.Customer;
 import com.gms.entity.Employee;
 import com.gms.entity.Person;
 import com.gms.listener.SessionRegistryListener;
+import com.gms.util.DBContext;
 import com.gms.util.DateTimeUtil;
 import com.gms.util.PasswordUtil;
 import com.gms.util.ValidationUtil;
-import java.sql.SQLException;
-import java.time.LocalDate;
-import com.gms.constant.AppConstants;
-import com.gms.util.DBContext;
 
-import java.sql.Connection;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 /**
- * Nghiệp vụ Account Settings - UC-04.
+ * Tầng Service xử lý nghiệp vụ Cài đặt tài khoản - UC-04.
+ *
+ * <p><b>Cách hoạt động:</b> Cung cấp các thao tác xem hồ sơ cá nhân, tra cứu danh sách hồ sơ phụ thuộc
+ * được giám hộ, đổi mật khẩu an toàn (có Optimistic Locking và đăng xuất phiên khác), cập nhật/xóa ảnh đại diện.</p>
  */
 public class AccountSettingsService {
 
@@ -45,10 +48,16 @@ public class AccountSettingsService {
         private final AuditLogService auditLogService;
         private final SystemConfigService systemConfigService;
 
+        /**
+         * Khởi tạo Service mặc định với đầy đủ các DAO và Service phụ thuộc thực tế.
+         */
         public AccountSettingsService() {
                 this(new AccountDAO(), new CustomerDAO(), new PersonDAO(), new EmployeeDAO(), new AuditLogService(), new SystemConfigService());
         }
 
+        /**
+         * Constructor phạm vi package dùng để tiêm DAO/Service giả lập khi kiểm thử đơn vị.
+         */
         AccountSettingsService(AccountDAO accountDAO, CustomerDAO customerDAO, PersonDAO personDAO,
                                EmployeeDAO employeeDAO, AuditLogService auditLogService, SystemConfigService systemConfigService) {
                 this.accountDAO = accountDAO;
@@ -60,11 +69,15 @@ public class AccountSettingsService {
         }
 
         /**
-         * Lấy thông tin tài khoản và hồ sơ của người dùng hiện tại.
+         * Lấy thông tin tài khoản và hồ sơ hiển thị của người dùng hiện tại theo vai trò phiên đăng nhập.
+         *
+         * <p><b>Cách hoạt động:</b> Tra cứu {@code Account} và {@code Person}; nếu vai trò phiên là
+         * {@code CUSTOMER} thì lấy thông tin hội viên (loại bỏ hồ sơ đã xóa mềm), ngược lại lấy thông tin
+         * nhân viên (chỉ kèm thông số PT khi {@code sessionRole == PT}) và đóng gói vào {@link AccountSettingsView}.</p>
          *
          * @param accountId   id tài khoản đang đăng nhập
          * @param sessionRole vai trò lưu trong session
-         * @return dữ liệu Account Settings
+         * @return {@link ServiceResult} chứa dữ liệu Account Settings
          */
         public ServiceResult<AccountSettingsView> getAccountSettings(
                 int accountId,
@@ -153,7 +166,11 @@ public class AccountSettingsService {
         }
 
         /**
-         * Lấy danh sách hồ sơ phụ thuộc mà người dùng đang là giám hộ.
+         * Lấy danh sách hồ sơ phụ thuộc mà người dùng hiện tại đang là người giám hộ.
+         *
+         * <p><b>Cách hoạt động:</b> Chỉ cho phép vai trò {@code CUSTOMER}, lấy số điện thoại của người dùng để tìm
+         * các hồ sơ phụ thuộc trùng SĐT giám hộ qua {@code CustomerDAO}, đọc ngưỡng tuổi PT tối thiểu từ
+         * {@code SystemConfigService} rồi chuyển đổi từng dòng bằng {@link #buildDependentView}.</p>
          *
          * @param accountId   id tài khoản đang đăng nhập
          * @param sessionRole vai trò đang dùng trong session
@@ -238,8 +255,10 @@ public class AccountSettingsService {
         }
 
         /**
-         * Map DependentCustomerRow thô thành DependentCustomerView
-         * để hiển thị trên UI.
+         * Chuyển đổi {@link DependentCustomerRow} thô thành {@link DependentCustomerView} để hiển thị trên UI.
+         *
+         * <p><b>Cách hoạt động:</b> Tính tuổi hiện tại so với {@code today}, đối chiếu với ngưỡng {@code minAgeForPt}
+         * để gắn cờ dưới tuổi tập PT và tạo nhãn gói tập qua {@link #buildPackageLabel}.</p>
          *
          * @param row         dữ liệu thô từ DAO
          * @param today       ngày hiện tại (theo múi giờ gym)
@@ -272,12 +291,14 @@ public class AccountSettingsService {
         }
 
         /**
-         * Tạo nhãn hiển thị gói tập hiện tại của Dependent.
+         * Tạo nhãn hiển thị gói tập hiện tại của hồ sơ phụ thuộc.
+         *
+         * <p><b>Cách hoạt động:</b> Trả về {@code "Chưa có gói tập"} nếu thiếu tên gói hoặc ngày hết hạn;
+         * ngược lại ghép tên gói kèm ngày hết hạn đã định dạng.</p>
          *
          * @param packageName    tên gói, null nếu không có
          * @param packageEndDate ngày hết hạn gói, null nếu không có
-         * @return nhãn hiển thị, VD: "Gói Bạc (đến 05/10/2026)"
-         *         hoặc "Chưa có gói tập"
+         * @return nhãn hiển thị, VD: "Gói Bạc (đến 05/10/2026)" hoặc "Chưa có gói tập"
          */
         private String buildPackageLabel(
                 String packageName,
@@ -298,17 +319,16 @@ public class AccountSettingsService {
         /**
          * Đổi mật khẩu cho chính tài khoản đang đăng nhập.
          *
-         * Thứ tự kiểm tra: 1. Mật khẩu hiện tại có được nhập. 2. Mật khẩu hiện tại
-         * phải đúng. 3. Mật khẩu mới phải đúng định dạng. 4. Mật khẩu mới phải khác
-         * mật khẩu hiện tại. 5. Xác nhận mật khẩu phải khớp. 6. Cập nhật mật khẩu
-         * với kiểm soát tương tranh (Optimistic Locking - TC-17C) và đăng xuất các phiên khác.
+         * <p><b>Cách hoạt động:</b> Kiểm tra tuần tự: mật khẩu hiện tại phải nhập và khớp DB, mật khẩu mới hợp
+         * quy tắc và khác mật khẩu cũ, xác nhận khớp; băm mật khẩu mới bằng BCrypt, mở transaction cập nhật theo
+         * Optimistic Locking ({@code oldPasswordHash}) kèm ghi {@code AuditLog}, rồi vô hiệu hóa toàn bộ phiên khác.</p>
          *
          * @param accountId        id tài khoản hiện tại
          * @param currentPassword  mật khẩu hiện tại
          * @param newPassword      mật khẩu mới
          * @param confirmPassword  xác nhận mật khẩu mới
          * @param currentSessionId id phiên hiện tại cần giữ lại
-         * @param actingRole vai trò đang dùng khi đổi mật khẩu
+         * @param actingRole       vai trò đang dùng khi đổi mật khẩu
          * @return kết quả đổi mật khẩu
          */
         public ServiceResult<Void> changePassword(
@@ -330,7 +350,7 @@ public class AccountSettingsService {
                 try {
                         Account account = accountDAO.findById(accountId);
                         if (account == null) {
-                                //Dừng hàm đổi mật khẩu và trả về kết quả thất bại, kèm thông báo không tìm thấy tài khoản.
+                                // Dừng hàm đổi mật khẩu và trả về kết quả thất bại, kèm thông báo không tìm thấy tài khoản.
                                 return ServiceResult.fail(
                                         String.format(Messages.MSG08_NOT_FOUND, "tài khoản"));
                         }
@@ -346,8 +366,7 @@ public class AccountSettingsService {
                                         Messages.MSG71_CURRENT_PASSWORD_WRONG);
                         }
 
-                        // B3: Chỉ kiểm tra mật khẩu mới
-                        // sau khi mật khẩu hiện tại đã đúng
+                        // B3: Chỉ kiểm tra mật khẩu mới sau khi mật khẩu hiện tại đã đúng
                         if (ValidationUtil.isNullOrEmpty(
                                 newPassword)) {
                                 return ServiceResult.failField(
@@ -395,14 +414,13 @@ public class AccountSettingsService {
                                         Messages.MSG47_PASSWORD_MISMATCH);
                         }
 
-                        // B7: Hash mật khẩu mới
+                        // B7: Băm mật khẩu mới
                         String newPasswordHash = PasswordUtil.hashPassword(
                                 newPassword);
 
-                        // B8: Cập nhật mật khẩu và ghi AuditLog
-                        // trong cùng một transaction
+                        // B8: Cập nhật mật khẩu và ghi AuditLog trong cùng một transaction
                         try (Connection conn = DBContext.getConnection()) {
-                        //Tắt chế độ tự động chốt thay đổi vào database
+                                // Tắt chế độ tự động chốt thay đổi vào database
                                 conn.setAutoCommit(false);
 
                                 try {
@@ -441,8 +459,7 @@ public class AccountSettingsService {
                                 }
                         }
 
-                        // B9: Đăng xuất tất cả phiên khác,
-                        // giữ lại phiên hiện tại
+                        // B9: Đăng xuất tất cả phiên khác, giữ lại phiên hiện tại
                         SessionRegistryListener
                                 .invalidateSessionsOfAccount(
                                         accountId,
@@ -459,15 +476,16 @@ public class AccountSettingsService {
         }
 
         /**
-         * Cập nhật avatar cho chính tài khoản đang đăng nhập.
+         * Cập nhật ảnh đại diện (JPG/PNG) cho tài khoản đang đăng nhập.
          *
-         * Ảnh hợp lệ phải là JPG hoặc PNG và không vượt quá dung lượng được quy
-         * định bởi ValidationUtil/AppConstants.
+         * <p><b>Cách hoạt động:</b> Validate định dạng và dung lượng file ảnh, lưu file mới vào
+         * {@code uploadDirectory} bằng UUID chống trùng tên và kiểm tra path-traversal, cập nhật đường dẫn mới
+         * vào bảng {@code Persons} (xóa file mới nếu update DB thất bại), sau đó dọn ảnh cũ và ghi {@code AuditLog}.</p>
          *
          * @param accountId       id tài khoản hiện tại
          * @param contentType     MIME type của file
          * @param sizeInBytes     kích thước file
-         * @param inputStream     dữ liệu ảnh
+         * @param inputStream     luồng dữ liệu ảnh
          * @param uploadDirectory thư mục lưu avatar vật lý
          * @return kết quả cập nhật
          */
@@ -620,11 +638,14 @@ public class AccountSettingsService {
         }
 
         /**
-         * Xóa ảnh đại diện của tài khoản hiện tại, đưa Persons.Avatar về null và xóa file cũ an toàn.
+         * Xóa ảnh đại diện của tài khoản hiện tại, đưa {@code Persons.Avatar} về {@code null} và xóa file cũ an toàn.
+         *
+         * <p><b>Cách hoạt động:</b> Tra cứu tài khoản và hồ sơ kiểm tra có ảnh hay không, cập nhật cột {@code Avatar}
+         * về {@code null} trong CSDL trước rồi gọi {@link #deleteOldAvatarFile} xóa tệp vật lý và ghi {@code AuditLog}.</p>
          *
          * @param accountId       id tài khoản hiện tại
          * @param uploadDirectory thư mục chứa avatar vật lý
-         * @return kết quả xóa
+         * @return kết quả xóa ảnh đại diện
          */
         public ServiceResult<Void> removeAvatar(
                 int accountId,
@@ -676,8 +697,10 @@ public class AccountSettingsService {
         }
 
         /**
-         * Xóa avatar cũ do chức năng Account Settings tạo ra. Không đụng tới ảnh
-         * check-in hay loại ảnh khác.
+         * Xóa tệp avatar vật lý cũ do chức năng Account Settings tạo ra (không đụng tới ảnh check-in hay loại khác).
+         *
+         * <p><b>Cách hoạt động:</b> Kiểm tra tiền tố {@code /uploads/avatar/} và xác minh đường dẫn chuẩn hóa
+         * nằm bên trong {@code uploadDirectory} để phòng tránh path-traversal trước khi gọi {@code Files.deleteIfExists}.</p>
          *
          * @param oldAvatarPath   đường dẫn avatar cũ trong DB
          * @param uploadDirectory thư mục avatar vật lý
@@ -721,8 +744,7 @@ public class AccountSettingsService {
                                 oldFile);
 
                 } catch (IOException ignored) {
-                        // Avatar mới đã cập nhật thành công;
-                        // lỗi cleanup file cũ không làm rollback nghiệp vụ.
+                        // Avatar mới đã cập nhật thành công; lỗi dọn file cũ không làm rollback nghiệp vụ.
                 }
         }
 }

@@ -6,6 +6,7 @@ import com.gms.dto.LeaveBulkApprovalResult;
 import com.gms.constant.SessionKey;
 import com.gms.dto.ServiceResult;
 import com.gms.service.LeaveRequestService;
+import com.gms.service.NotificationService;
 import com.gms.util.RequestUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -29,6 +30,7 @@ import java.util.List;
 public class LeaveRequestReviewServlet extends HttpServlet {
 
     private final LeaveRequestService leaveRequestService;
+    private final NotificationService notificationService = new NotificationService();
 
     public LeaveRequestReviewServlet() {
         this(new LeaveRequestService());
@@ -51,8 +53,13 @@ public class LeaveRequestReviewServlet extends HttpServlet {
             return;
         }
 
+        Integer managerAccountId = getManagerAccountId(request);
+        if (managerAccountId != null && managerAccountId > 0) {
+            notificationService.markTopicNotificationsRead(managerAccountId, "nghỉ phép", "ngày nghỉ");
+        }
+
         // B2: tải dữ liệu và hiển thị; POST lỗi cũng dùng cùng bước này.
-        showReview(request, response, leaveRequestId, getManagerAccountId(request));
+        showReview(request, response, leaveRequestId, managerAccountId);
     }
 
     @Override

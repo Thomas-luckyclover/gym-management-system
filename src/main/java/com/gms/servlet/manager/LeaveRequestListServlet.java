@@ -9,6 +9,7 @@ import com.gms.dto.LeaveRequestItemView;
 import com.gms.dto.PageResult;
 import com.gms.dto.ServiceResult;
 import com.gms.service.LeaveRequestService;
+import com.gms.service.NotificationService;
 import com.gms.util.PaginationUtil;
 import com.gms.util.RequestUtil;
 import jakarta.servlet.ServletException;
@@ -31,6 +32,7 @@ public class LeaveRequestListServlet extends HttpServlet {
     private static final String VIEW_NAME = "manager/leave-request-list";
 
     private final LeaveRequestService leaveRequestService;
+    private final NotificationService notificationService = new NotificationService();
 
     public LeaveRequestListServlet() {
         this(new LeaveRequestService());
@@ -74,6 +76,11 @@ public class LeaveRequestListServlet extends HttpServlet {
         Integer managerAccountId = session == null
                 ? null
                 : (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
+
+        // Tự động đánh dấu đã đọc các thông báo nghỉ phép của Quản lý khi vào trang
+        if (managerAccountId != null && managerAccountId > 0) {
+            notificationService.markTopicNotificationsRead(managerAccountId, "nghỉ phép", "ngày nghỉ");
+        }
 
         // B2: chuẩn hóa một lần; đếm tab bỏ qua trạng thái nhưng giữ các điều kiện còn lại.
         LeaveRequestFilter filter = leaveRequestService.createManagerFilter(

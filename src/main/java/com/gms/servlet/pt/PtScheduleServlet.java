@@ -7,6 +7,7 @@ import com.gms.dto.JsonResponse;
 import com.gms.dto.PtHandleView;
 import com.gms.dto.PtScheduleWeek;
 import com.gms.dto.ServiceResult;
+import com.gms.service.NotificationService;
 import com.gms.service.PtScheduleService;
 import com.gms.service.PtSessionHandleService;
 import com.gms.util.DateTimeUtil;
@@ -49,6 +50,7 @@ public class PtScheduleServlet extends HttpServlet {
 
     private final PtScheduleService scheduleService = new PtScheduleService();
     private final PtSessionHandleService handleService = new PtSessionHandleService();
+    private final NotificationService notificationService = new NotificationService();
 
 
 
@@ -71,6 +73,9 @@ public class PtScheduleServlet extends HttpServlet {
             RequestUtil.redirect(request, response, "/login?returnUrl=" + PAGE_URL);
             return;
         }
+
+        // Tự động đánh dấu đã đọc các thông báo liên quan đến lịch dạy PT khi vào trang
+        notificationService.markTopicNotificationsRead(accountId, "buổi tập", "dạy thay", "gói PT", "khách gói PT");
 
         // B2: có ?handle= → sẽ mở hộp Xử lý buổi
         Integer handleId = RequestUtil.getPositiveIntParam(request, "handle");
