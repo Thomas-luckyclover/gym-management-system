@@ -16,7 +16,7 @@
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Bảo lưu gói tập · Super Gym Lễ tân</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/customer-list.css?v=20261031-fixed-page">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/freeze-membership.css?v=20261101_v38">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/freeze-membership.css?v=20261114a">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css?v=20261106_v2">
     <script src="${pageContext.request.contextPath}/js/pages/receptionist/freeze-membership.js?v=20261101_v23" defer></script>
     <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js?v=20261106_v2" defer></script>

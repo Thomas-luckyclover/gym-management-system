@@ -606,3 +606,10 @@ html body.dock.pt-dashboard-page .pt-outcome-legend i { border-radius: 1px; }
   background-color: var(--pt-panel);
   color: var(--pt-text);
 }
+
+/* Chế độ SÁNG (14/11): common.css có luật "tiêu đề trong mọi .panel = chữ mực #0F172A !important" (viết cho thẻ trắng).
+   Khối "Kết quả tháng và hoa hồng" lại là panel NỀN TỐI → tiêu đề thành chữ đen trên nền xanh đen (tương phản 1.25:1).
+   Chỉ chạy ở chế độ sáng, đủ mạnh để thắng luật chung; chế độ tối không đổi gì. */
+html:where(:not([data-theme="dark"])) body.dock .pt-board .pt-board__summary :is(h2, h3, h4) {
+  color: var(--arena-on-dark) !important;
+}

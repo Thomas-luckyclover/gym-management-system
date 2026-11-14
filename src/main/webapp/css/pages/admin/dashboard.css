@@ -412,3 +412,11 @@
 @media (max-width: 480px) {
   .dock .metric-grid { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* Chế độ SÁNG (14/11): tiêu đề mục ("Vận hành & doanh thu", "Audit & bảo mật") nằm THẲNG trên nền xanh cobalt,
+   không nằm trong thẻ trắng. Luật "tiêu đề ngoài thẻ = chữ trắng" của common.css bỏ sót vì khối bọc tên là
+   .dashboard-section (khớp [class*="-section"] nên bị coi là thẻ) → chữ xanh đen trên nền xanh, khó đọc.
+   Dấu ">" để chỉ đổi tiêu đề mục, không đụng tiêu đề nằm trong thẻ trắng bên dưới. */
+html:where(:not([data-theme="dark"])) body.dock .content .dashboard-section > .section-heading h2 {
+  color: var(--arena-on-dark);
+}

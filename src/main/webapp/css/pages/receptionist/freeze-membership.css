@@ -1061,6 +1061,19 @@
   color: #f87171;
 }
 
+/* Chế độ SÁNG (14/11): 3 màu trên là màu sáng dành cho nền tối → trên thẻ trắng chữ "Còn N ngày" gần như không
+   đọc được (xanh mint 1.7:1, vàng 1.5:1). Ở chế độ sáng dùng màu chữ đậm cùng nghĩa của hệ thống. */
+html:where(:not([data-theme="dark"])) .gym-days-left.ok { color: var(--color-success-ink); }
+html:where(:not([data-theme="dark"])) .gym-days-left.warn { color: var(--color-warning-ink); }
+html:where(:not([data-theme="dark"])) .gym-days-left.expired { color: var(--color-danger-ink); }
+
+/* Chế độ SÁNG (14/11): tab chưa chọn ("Lịch sử bảo lưu") nằm thẳng trên nền xanh cobalt nhưng lấy màu chữ của thẻ
+   trắng → chữ xanh đen chìm hẳn vào nền (1.05:1). customer-list.css đã xử lý cho .bf07-list-toolbar; màn này bọc
+   tab bằng .freeze-tabs-container nên luật đó không tới. */
+html:where(:not([data-theme="dark"])) .freeze-tabs-container .bf07-tab:not(.is-active) {
+  color: var(--zone-silver);
+}
+
 /* Ô trạng thái bảo lưu */
 .gym-status-cell {
   min-width: 0;
