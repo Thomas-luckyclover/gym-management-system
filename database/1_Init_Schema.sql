@@ -334,7 +334,6 @@ CREATE TABLE Orders (
     CancelType                 VARCHAR(25)    NULL,      -- DBR-43
     CancelledAt                DATETIME2(0)   NULL,
     CancelReason               NVARCHAR(500)  NULL,
-
     CONSTRAINT PK_Orders PRIMARY KEY (OrderId),
     CONSTRAINT UQ_Orders_OrderCode UNIQUE (OrderCode),
     CONSTRAINT FK_Orders_Holder    FOREIGN KEY (HolderCustomerId)    REFERENCES Customers(CustomerId),

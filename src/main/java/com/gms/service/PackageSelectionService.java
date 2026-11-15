@@ -211,9 +211,11 @@ public class PackageSelectionService {
                     openingHours, imageFileNames));
         }
 
-        // B5: dữ liệu cột bộ lọc, tính trên TOÀN BỘ gói (query thời hạn, khoảng giá, số lượng)
+        // B5: Điền cột bộ lọc vào view từ toàn bộ gói đang bán và lựa chọn của khách.
         PackageSelectionView view = new PackageSelectionView();
         fillFilterPanel(view, allOptions, criteria, safeTypeFilter);
+
+        // Lấy mã của các thời hạn đã tick để kiểm tra từng gói ở B6.
         Set<String> selectedDurationKeys = new HashSet<>();
         for (PackageFacetOption option : view.getDurationOptions()) {
             if (option.isSelected()) {
@@ -221,7 +223,7 @@ public class PackageSelectionService {
             }
         }
 
-        // B6: lọc (giữ nguyên thứ tự)
+        // B6: Giữ lại các gói thỏa tất cả bộ lọc đang bật.
         String normalizedKeyword = normalizeSearchText(safeKeyword);
         List<PackageOptionView> filteredOptions = new ArrayList<>();
         for (PackageOptionView option : allOptions) {
@@ -237,10 +239,10 @@ public class PackageSelectionService {
             }
         }
 
-        // B7: sắp xếp
+        // B7: Sắp xếp toàn bộ kết quả khớp trước khi lấy một trang.
         sortOptions(filteredOptions, safeSortKey);
 
-        // B8: cắt trang. Trang sai (nhỏ hơn 1 hoặc vượt tổng số trang) được ép về khoảng hợp lệ
+        // B8: Đếm kết quả, đưa số trang vào khoảng hợp lệ rồi lấy các gói của trang đó.
         int filteredCount = filteredOptions.size();
         int totalPages = (filteredCount + PAGE_SIZE - 1) / PAGE_SIZE;
         if (totalPages < 1) {
@@ -251,6 +253,7 @@ public class PackageSelectionService {
         int toIndex = Math.min(fromIndex + PAGE_SIZE, filteredCount);
         List<PackageOptionView> pageOptions = new ArrayList<>(filteredOptions.subList(fromIndex, toIndex));
 
+        // JSP dùng options để vẽ thẻ của trang hiện tại và filteredCount để hiện tổng số gói khớp.
         view.setOptions(pageOptions);
         view.setTotalActiveCount(allOptions.size());
         view.setKeyword(safeKeyword);
@@ -282,12 +285,13 @@ public class PackageSelectionService {
     }
 
     /**
-     * Điền dữ liệu cột bộ lọc (số lượng, thời hạn, khoảng giá, chip đang bật)
-     * vào view.
+     * Dùng allOptions để tính các lựa chọn có trên cột bộ lọc.
+     * Dùng criteria và safeTypeFilter để biết khách đang chọn gì.
+     * Ghi kết quả trực tiếp vào view để dùng khi lọc gói và khi dựng JSP.
      */
     private void fillFilterPanel(PackageSelectionView view, List<PackageOptionView> allOptions,
             PackageSearchCriteria criteria, String safeTypeFilter) {
-        // B1: đếm theo loại, hình thức mua; tìm giá thấp nhất / cao nhất; gom thời hạn (chỉ gói tính theo tháng)
+        // B1: Duyệt toàn bộ gói đang bán để đếm theo nhóm, tìm hai đầu khoảng giá và gom thời hạn.
         int gymCount = 0;
         int dayPassCount = 0;
         int ptCount = 0;
@@ -312,15 +316,17 @@ public class PackageSelectionService {
             minBound = Math.min(minBound, pkg.getPrice());
             maxBound = Math.max(maxBound, pkg.getPrice());
 
-            // Vé ngày và buổi lẻ không có số tháng nên không vào bộ lọc Thời hạn (đã có ở bộ lọc Loại gói)
+            // Chỉ gom gói tính theo tháng vào bộ lọc Thời hạn.
+            // Hai gói 3 tháng dùng chung một key trong Map và cho ra một mục "3 tháng (2)".
             if (isMonthBased(pkg)) {
                 String durationKey = buildDurationKey(pkg);
                 DurationFacet facet = facetsByKey.get(durationKey);
+                // Gặp thời hạn này lần đầu thì tạo nhóm. Các gói sau cùng thời hạn dùng lại nhóm đó.
                 if (facet == null) {
                     facet = new DurationFacet(durationKey, option.getDurationLabel(), getDurationDaysForSorting(pkg));
                     facetsByKey.put(durationKey, facet);
                 }
-                facet.count++;
+                facet.count++; // Tính cả gói đầu tiên vào số gói của nhóm.
             }
         }
         if (allOptions.isEmpty()) {
@@ -328,7 +334,8 @@ public class PackageSelectionService {
         }
         int counterOnlyCount = allOptions.size() - onlineCount;
 
-        // B2: thời hạn xếp ngắn → dài; chỉ giữ lựa chọn khách gửi lên nếu có thật trong dữ liệu
+        // B2: Xếp các nhóm 1 tháng, 3 tháng, ... từ ngắn đến dài.
+        // Mỗi nhóm thành một mục trên JSP và được đánh dấu nếu khách đã tick.
         List<DurationFacet> facets = new ArrayList<>(facetsByKey.values());
         facets.sort((first, second) -> Integer.compare(first.sortDays, second.sortDays));
         Set<String> requestedKeys = criteria.getDurationKeys();
@@ -338,7 +345,9 @@ public class PackageSelectionService {
             durationOptions.add(new PackageFacetOption("duration", facet.key, facet.label, facet.count, selected));
         }
 
-        // B3: chuẩn hóa khoảng giá: thiếu → đầu mút; ngoài khoảng → ép vào; min > max → đổi chỗ
+        // B3: Nếu khách bỏ trống giá từ hoặc giá đến, dùng giá thấp nhất hoặc cao nhất của danh mục.
+        // Nếu khách nhập ngoài khoảng giá đang bán, đưa số đó về mức thấp nhất hoặc cao nhất gần nó.
+        // Nếu giá từ lớn hơn giá đến, đổi chỗ hai giá trị.
         int minPrice = clamp(criteria.getMinPrice() == null ? minBound : criteria.getMinPrice(), minBound, maxBound);
         int maxPrice = clamp(criteria.getMaxPrice() == null ? maxBound : criteria.getMaxPrice(), minBound, maxBound);
         if (minPrice > maxPrice) {
@@ -355,7 +364,7 @@ public class PackageSelectionService {
             buyCounterOnly = false;
         }
 
-        // B5: chip bộ lọc đang bật
+        // B5: Dựng các chip có dấu × cho những điều kiện đang áp dụng.
         List<PackageFacetOption> chips = new ArrayList<>();
         if (!TYPE_ALL.equals(safeTypeFilter)) {
             chips.add(PackageFacetOption.chip("type", safeTypeFilter, buildTypeFilterLabel(safeTypeFilter)));

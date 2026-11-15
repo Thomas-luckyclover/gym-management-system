@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-11-14T16:15:00.000Z" agent="Antigravity GMS Engine" version="24.0.0" type="device">
+  <diagram id="AuthFilter-Flowchart" name="AuthFilter Execution Flow">
+    <mxGraphModel dx="1400" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1200" background="#ffffff" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- 1. START -->
+        <mxCell id="start_node" value="&lt;b&gt;START&lt;/b&gt;&lt;br/&gt;Client Request tới bất kỳ URL nào (/*)" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#e0f2fe;strokeColor=#0284c7;strokeWidth=2;fontSize=13;fontColor=#0369a1;" vertex="1" parent="1">
+          <mxGeometry x="630" y="30" width="240" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- 2. B1: isPublicPath -->
+        <mxCell id="dec_public" value="&lt;b&gt;B1: isPublicPath(path)?&lt;/b&gt;&lt;br/&gt;(Trang chủ, /login, /about, /css/*, Webhook VNPay...)" style="shape=rhombus;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#d97706;strokeWidth=2;fontSize=12;fontColor=#92400e;" vertex="1" parent="1">
+          <mxGeometry x="610" y="150" width="280" height="110" as="geometry" />
+        </mxCell>
+
+        <mxCell id="edge_start_public" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#64748b;strokeWidth=2;" edge="1" parent="1" source="start_node" target="dec_public">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Node: Public -> Pass -->
+        <mxCell id="act_public_pass" value="&lt;b&gt;chain.doFilter(req, resp)&lt;/b&gt;&lt;br/&gt;Cho qua cửa công khai!" style="shape=rect;rounded=1;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#16a34a;strokeWidth=2;fontSize=12;fontColor=#15803d;" vertex="1" parent="1">
+          <mxGeometry x="1060" y="175" width="200" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="edge_public_yes" value="CÓ (True)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#16a34a;strokeWidth=2;fontColor=#16a34a;fontSize=12;" edge="1" parent="1" source="dec_public" target="act_public_pass">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- 3. B2: isLoggedIn -->
+        <mxCell id="dec_logged_in" value="&lt;b&gt;B2: isLoggedIn?&lt;/b&gt;&lt;br/&gt;(session != null &amp;&amp;&lt;br/&gt;accountId != null)" style="shape=rhombus;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#d97706;strokeWidth=2;fontSize=12;fontColor=#92400e;" vertex="1" parent="1">
+          <mxGeometry x="635" y="320" width="230" height="110" as="geometry" />
+        </mxCell>
+
+        <mxCell id="edge_public_no" value="KHÔNG (Khu nội bộ)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#dc2626;strokeWidth=2;fontColor=#dc2626;fontSize=12;" edge="1" parent="1" source="dec_public" target="dec_logged_in">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ================= NHÁNH CHƯA LOGIN (BÊN TRÁI) ================= -->
+        <mxCell id="dec_ajax_unauth" value="&lt;b&gt;B3: isAjaxRequest?&lt;/b&gt;&lt;br/&gt;(Chạy ngầm hay trang thường?)" style="shape=rhombus;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#d97706;strokeWidth=2;fontSize=12;fontColor=#92400e;" vertex="1" parent="1">
+          <mxGeometry x="270" y="325" width="220" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="edge_login_no" value="CHƯA ĐĂNG NHẬP" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#dc2626;strokeWidth=2;fontColor=#dc2626;fontSize=12;" edge="1" parent="1" source="dec_logged_in" target="dec_ajax_unauth">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- AJAX 401 -->
+        <mxCell id="act_401" value="&lt;b&gt;HTTP 401 Unauthorized&lt;/b&gt;&lt;br/&gt;JsonUtil.writeJson(401, MSG06)&lt;br/&gt;{&quot;error&quot;: &quot;Session expired&quot;}" style="shape=rect;rounded=1;whiteSpace=wrap;html=1;fillColor=#fee2e2;strokeColor=#dc2626;strokeWidth=2;fontSize=12;fontColor=#991b1b;" vertex="1" parent="1">
+          <mxGeometry x="50" y="335" width="180" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="edge_ajax_401" value="AJAX = True" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#dc2626;strokeWidth=2;fontColor=#dc2626;fontSize=11;" edge="1" parent="1" source="dec_ajax_unauth" target="act_401">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Redirect Login -->
+        <mxCell id="act_redirect_login" value="&lt;b&gt;sendRedirect(loginUrl)&lt;/b&gt;&lt;br/&gt;/login?returnUrl=/customer/..." style="shape=rect;rounded=1;whiteSpace=wrap;html=1;fillColor=#fee2e2;strokeColor=#dc2626;strokeWidth=2;fontSize=12;fontColor=#991b1b;" vertex="1" parent="1">
+          <mxGeometry x="280" y="480" width="200" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="edge_ajax_no_login" value="Web thường (False)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#dc2626;strokeWidth=2;fontColor=#dc2626;fontSize=11;" edge="1" parent="1" source="dec_ajax_unauth" target="act_redirect_login">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ================= NHÁNH ĐÃ LOGIN (ĐI XUỐNG DƯỚI) ================= -->
+        <!-- Action: Init CSRF -->
+        <mxCell id="act_init_csrf" value="&lt;b&gt;Đảm bảo CSRF Token&lt;/b&gt;&lt;br/&gt;RequestUtil.getOrCreateCsrfToken(session)&lt;br/&gt;&amp;amp; Đăng ký SessionRegistry" style="shape=rect;rounded=1;whiteSpace=wrap;html=1;fillColor=#f1f5f9;strokeColor=#64748b;strokeWidth=1.5;fontSize=12;fontColor=#334155;" vertex="1" parent="1">
+          <mxGeometry x="620" y="480" width="260" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="edge_login_yes" value="ĐÃ ĐĂNG NHẬP" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#16a34a;strokeWidth=2;fontColor=#16a34a;fontSize=12;" edge="1" parent="1" source="dec_logged_in" target="act_init_csrf">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- 4. B2b: isRoleChosen -->
+        <mxCell id="dec_role_chosen" value="&lt;b&gt;B2b: isRoleChosen?&lt;/b&gt;&lt;br/&gt;(session có Role chưa?)&lt;br/&gt;&lt;i&gt;hoặc path là /select-role /logout&lt;/i&gt;" style="shape=rhombus;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#d97706;strokeWidth=2;fontSize=12;fontColor=#92400e;" vertex="1" parent="1">
+          <mxGeometry x="615" y="590" width="270" height="110" as="geometry" />
+        </mxCell>
+
+        <mxCell id="edge_csrf_to_role" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#64748b;strokeWidth=2;" edge="1" parent="1" source="act_init_csrf" target="dec_role_chosen">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ================= CHƯA CHỌN VAI TRÒ (RẼ PHẢI) ================= -->
+        <mxCell id="dec_ajax_no_role" value="&lt;b&gt;isAjaxRequest?&lt;/b&gt;" style="shape=rhombus;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#d97706;strokeWidth=2;fontSize=12;fontColor=#92400e;" vertex="1" parent="1">
+          <mxGeometry x="990" y="595" width="160" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="edge_role_no" value="CHƯA CHỌN ROLE" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#dc2626;strokeWidth=2;fontColor=#dc2626;fontSize=12;" edge="1" parent="1" source="dec_role_chosen" target="dec_ajax_no_role">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- AJAX 403 No Permission -->
+        <mxCell id="act_403" value="&lt;b&gt;HTTP 403 Forbidden&lt;/b&gt;&lt;br/&gt;JsonUtil.writeJson(403, MSG07)&lt;br/&gt;{&quot;error&quot;: &quot;No permission&quot;}" style="shape=rect;rounded=1;whiteSpace=wrap;html=1;fillColor=#fee2e2;strokeColor=#dc2626;strokeWidth=2;fontSize=12;fontColor=#991b1b;" vertex="1" parent="1">
+          <mxGeometry x="1240" y="550" width="190" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="edge_ajax_403" value="AJAX = True" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#dc2626;strokeWidth=2;fontColor=#dc2626;fontSize=11;" edge="1" parent="1" source="dec_ajax_no_role" target="act_403">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Redirect /select-role -->
+        <mxCell id="act_redirect_select_role" value="&lt;b&gt;sendRedirect(&quot;/select-role&quot;)&lt;/b&gt;&lt;br/&gt;Chuyển màn hình bắt chọn vai trò!" style="shape=rect;rounded=1;whiteSpace=wrap;html=1;fillColor=#fee2e2;strokeColor=#dc2626;strokeWidth=2;fontSize=12;fontColor=#991b1b;" vertex="1" parent="1">
+          <mxGeometry x="1240" y="660" width="210" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="edge_web_select_role" value="Web thường (False)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#dc2626;strokeWidth=2;fontColor=#dc2626;fontSize=11;" edge="1" parent="1" source="dec_ajax_no_role" target="act_redirect_select_role">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ================= ĐÃ CHỌN VAI TRÒ -> HOÀN TẤT ================= -->
+        <!-- Action: badgeService -->
+        <mxCell id="act_badge" value="&lt;b&gt;B2c: badgeService.ensure(session)&lt;/b&gt;&lt;br/&gt;Tạo thẻ góc phải: LT-0003 · Lễ tân..." style="shape=rect;rounded=1;whiteSpace=wrap;html=1;fillColor=#f1f5f9;strokeColor=#64748b;strokeWidth=1.5;fontSize=12;fontColor=#334155;" vertex="1" parent="1">
+          <mxGeometry x="625" y="760" width="250" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="edge_role_yes" value="ĐÃ CÓ ROLE (True)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#16a34a;strokeWidth=2;fontColor=#16a34a;fontSize=12;" edge="1" parent="1" source="dec_role_chosen" target="act_badge">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Action: chain.doFilter -->
+        <mxCell id="act_chain_pass" value="&lt;b&gt;chain.doFilter(request, response)&lt;/b&gt;&lt;br/&gt;Mở cửa chuyển sang Filter tiếp theo hoặc vào Servlet!" style="shape=rect;rounded=1;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#16a34a;strokeWidth=2;fontSize=13;fontColor=#15803d;" vertex="1" parent="1">
+          <mxGeometry x="615" y="870" width="270" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="edge_badge_to_chain" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#16a34a;strokeWidth=2;" edge="1" parent="1" source="act_badge" target="act_chain_pass">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- End nodes -->
+        <mxCell id="end_node" value="&lt;b&gt;END / VÀO SERVLET&lt;/b&gt;" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#16a34a;strokeWidth=2;fontSize=13;fontColor=#15803d;" vertex="1" parent="1">
+          <mxGeometry x="655" y="990" width="190" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="edge_chain_to_end" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#16a34a;strokeWidth=2;" edge="1" parent="1" source="act_chain_pass" target="end_node">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
