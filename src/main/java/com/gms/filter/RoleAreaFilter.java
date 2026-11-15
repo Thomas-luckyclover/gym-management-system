@@ -34,6 +34,8 @@ public abstract class RoleAreaFilter implements Filter {
      * @return vai trò được phép
      */
     protected abstract Role getAllowedRole();
+    //protected: chỉ các sub-class được kế thừa
+    //abstract: để rỗng, các lớp con tự khai báo
 
     /**
      * Lọc request: chưa đăng nhập → nhờ AuthFilter xử lý; đúng vai trò → cho qua;
@@ -55,13 +57,15 @@ public abstract class RoleAreaFilter implements Filter {
         }
 
         // B2: đọc vai trò trong session, so với vai trò được phép
-        String roleValue = (String) session.getAttribute(SessionKey.ROLE);
+        //quyết định chặn cửa ở file này thay vì quyết định gửi ShiftNotice như bên filter lễ tân
+        String roleValue = (String) session.getAttribute(SessionKey.ROLE);//trả về object lên phải ép kiểu sang String
         Role currentRole = Role.fromDbValue(roleValue);
         boolean isAllowed = currentRole == getAllowedRole();
 
         // B3: đúng vai trò → cho đi tiếp
         if (isAllowed) {
             chain.doFilter(request, response);
+            //nếu các filter chạy xong hết rồi thì sẽ đi vào servlet
             return;
         }
 

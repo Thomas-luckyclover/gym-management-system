@@ -257,7 +257,7 @@ public class SystemTransactionServlet extends HttpServlet {
             request.setAttribute("shiftPage", shiftResult.getData());
         } else {
             request.setAttribute("shiftPage",
-                    new PageResult<>(Collections.emptyList(), page, pageSize, 0));
+                    new PageResult<>(Collections.emptyList(), page, pageSize, 0));//bị lỗi nhưng vẫn truyền page và pageSize để phân trang
             request.setAttribute("pageError", shiftResult.getMessage());
         }
 
@@ -283,7 +283,6 @@ public class SystemTransactionServlet extends HttpServlet {
         if (ordersResult.isSuccess()) {
             request.setAttribute("shiftOrders", ordersResult.getData());
         } else {
-            request.setAttribute("shiftOrders", Collections.emptyList());
             request.setAttribute("shiftOrdersError", ordersResult.getMessage());
         }
 

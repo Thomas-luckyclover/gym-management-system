@@ -56,6 +56,7 @@ public class PageResult<T> {
     // GETTER TỰ TÍNH — không có field/setter "totalPages"; = (totalItems + pageSize − 1) ÷ pageSize, ít nhất 1; JSP: manager/leave-request-list.jsp:218 …
     public int getTotalPages() {
         long pages = (totalItems + pageSize - 1) / pageSize;
+        //phải trừ 1 nếu vd: 20/10 sẽ là 2 trang mặc dù có 1 trang
         if (pages < 1) {
             return 1;
         }

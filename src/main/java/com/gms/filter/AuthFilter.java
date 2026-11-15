@@ -66,7 +66,7 @@ public class AuthFilter implements Filter {
         HttpServletResponse httpResponse = (HttpServletResponse) response;
         String path = RequestUtil.getPathWithinApp(httpRequest);
 
-        // B1: URL công khai → cho qua luôn
+        // B1: URL được phép vào → cho qua luôn
         if (isPublicPath(path)) {
             chain.doFilter(request, response);
             return;

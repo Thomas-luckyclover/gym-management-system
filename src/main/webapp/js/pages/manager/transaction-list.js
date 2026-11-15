@@ -177,7 +177,9 @@ document.addEventListener("DOMContentLoaded", function () {
         const lastCash = attempts.find(function (a) {
             return a.paymentMethod === "Cash" || a.paymentMethod === "Transfer";
         });
-        const counterMethod = lastCash && lastCash.paymentMethod === "Transfer" ? "Chuyển khoản" : "Tiền mặt";
+        const counterMethod = lastCash
+                ? (lastCash.paymentMethod === "Transfer" ? "Chuyển khoản" : "Tiền mặt")
+                : "Chưa thanh toán";
 
         // --- Tiêu đề + nhãn tình trạng ---
         $("txdTitle").textContent = order.orderCode || "---";

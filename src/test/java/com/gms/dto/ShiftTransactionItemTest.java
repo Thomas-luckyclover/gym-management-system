@@ -69,4 +69,21 @@ class ShiftTransactionItemTest {
         assertEquals("Khách chọn nhầm ngày", item.getCancelReason());
         assertFalse(item.isCanCancel());
     }
+
+    @Test
+    @DisplayName("ShiftTransactionItem: Đơn Pending chưa tạo Transaction (paymentMethod = null)")
+    void testPendingWithoutTransactionItem() {
+        LocalDateTime now = LocalDateTime.now();
+        ShiftTransactionItem item = new ShiftTransactionItem(
+                4, "DH-2026-0004", "Phạm Thị D", "0911223344", "Gói PT 3 Tháng",
+                now, null, 23900000L, "Pending", null, null, null,
+                true, true);
+
+        assertTrue(item.isPending());
+        assertFalse(item.isCash());
+        assertFalse(item.isTransfer());
+        assertEquals("Chờ xác nhận", item.getStatusDisplayName());
+        assertEquals("Chưa thanh toán", item.getPaymentMethodDisplayName());
+        assertTrue(item.isCanConfirmTransfer());
+    }
 }

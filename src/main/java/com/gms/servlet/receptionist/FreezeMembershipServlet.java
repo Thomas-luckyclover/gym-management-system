@@ -93,6 +93,7 @@ public class FreezeMembershipServlet extends HttpServlet {
         //mới vào trang tất cả giá trị trên null ngoại trừ filter = ALL, historyFilter = ALL
         if (ValidationUtil.isNullOrEmpty(currentTab)) {
             boolean hasHistoryFilter = !ValidationUtil.isNullOrEmpty(historyQuery) || !"ALL".equalsIgnoreCase(historyFilter);
+            //Nếu không có tab thì vẫn biết được tab hiện tại là history hay members dựa vào các tham số historyQuery và historyFilter
             currentTab = hasHistoryFilter ? "history" : "members";
         }
 
@@ -102,7 +103,6 @@ public class FreezeMembershipServlet extends HttpServlet {
         // B2: Gọi Service để nạp dữ liệu bảng hội viên (Tab 1), chi tiết hội viên (nếu tra cứu) và lịch sử (Tab 2)
         PageResult<CustomerMembershipRow> membershipsPage = freezeService.getCustomerMembershipsPage(query, filter, page, pageSize);
         request.setAttribute("membershipsPage", membershipsPage);
-        request.setAttribute("customerMemberships", membershipsPage.getItems());
 
         if (!ValidationUtil.isNullOrEmpty(query)) {
             ServiceResult<FreezeCustomerView> lookupResult = freezeService.lookupCustomerForFreeze(query, accountId);

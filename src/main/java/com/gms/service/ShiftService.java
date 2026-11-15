@@ -175,15 +175,15 @@ public class ShiftService {
             String closedByName = shiftDAO.findEmployeeFullName(shift.getClosedByEmployeeId());
             //hển thị 4 thẻ kpi: tổng tiền mặt, tổng chuyển khoản, tổng thu, tổng đơn chờ xử lý
             ShiftMetrics metrics = shiftDAO.calculateShiftMetrics(shift.getShiftId());
-            //Lấy danh sách đơn Pending trong ca để hiển thị cảnh báo và chặn chốt ca
+            //Lấy danh sách giao dịch Pending trong ca để hiển thị cảnh báo và chặn chốt ca
             List<ShiftTransactionItem> pendingOrders = shiftDAO.findPendingOrdersInShift(shift.getShiftId());
             //Lấy 2 ca trong ngày hôm nay thứ tự sáng > chiều để hiển thị danh sách ca làm việc trên màn hình chi tiết ca
             List<Shift> todayShifts = shiftDAO.findTodayShifts(shift.getWorkDate());
 
             // B5: Tải danh sách giao dịch có lọc và phân trang
-            int validPage = Math.max(page, 1);//chuẩn hóa số trang hiện tại
-            int validPageSize = pageSize > 0 ? pageSize : AppConstants.DEFAULT_PAGE_SIZE;//chuẩn hóa số dòng hiển thị mỗi trang
-            int totalItems = shiftDAO.countTransactions(shift.getShiftId(), search, method, status);
+            int validPage = Math.max(page, 1);//hàm này chọn ra số trang lớn hơn page hoặc 1, nhằm ép page phải lớn hơn 1
+            int validPageSize = pageSize > 0 ? pageSize : AppConstants.DEFAULT_PAGE_SIZE;//chuẩn hóa số dòng hiển thị mỗi trang tránh sửa trên url
+            int totalItems = shiftDAO.countTransactions(shift.getShiftId(), search, method, status);//đếm các giao dịch
             int offset = (validPage - 1) * validPageSize;//số dòng cần bỏ qua để phân trang
 
             List<ShiftTransactionItem> items = shiftDAO.findTransactionsPage(
@@ -334,7 +334,7 @@ public class ShiftService {
                 LocalTime afternoonEnd = afternoonShiftEnd();//lấy giờ đóng cửa của ca chiều (22:00)
                 if (afternoonEnd != null && !now.toLocalTime().isBefore(afternoonEnd)) {
                     return ServiceResult.fail(afternoonShiftOverMessage(afternoonEnd));
-                    //Không thể mở ca chiều hôm nay nếu đã quá giờ đóng cửa
+                    //Không thể mở ca chiều hôm nay nếu đã quá giờ đóng cửa 22:00
                 }
                 Shift morningShift = findShiftByType(todayShifts, Shift.ShiftType.MORNING);//lấy ca sáng
                 if (morningShift != null && morningShift.isNotOpened()

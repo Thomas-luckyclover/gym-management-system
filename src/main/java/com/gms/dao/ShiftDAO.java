@@ -38,9 +38,9 @@ public class ShiftDAO {
             )
             WHERE o.ShiftId = ?
               AND (? IS NULL OR o.OrderCode LIKE ? OR p.FullName COLLATE Vietnamese_CI_AI LIKE ?)
-              AND (? IS NULL OR COALESCE(t.PaymentMethod, CASE WHEN o.Status = 'Pending' THEN 'Transfer' ELSE 'Cash' END) = ?)
+              AND (? IS NULL OR t.PaymentMethod = ?)
               AND (? IS NULL OR o.Status = ?)
-            """;
+            """;//SELECT MAX(TransactionId) để mỗi đơn hàng chỉ lấy đúng 1 giao dịch mới nhất, tránh bị nhân đôi dòng khi 1 đơn có nhiều lần thử thanh toán
 
     // ===== 1. Khởi tạo & Tìm kiếm Ca làm việc =====
 
@@ -239,7 +239,7 @@ public class ShiftDAO {
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     int shiftId = rs.getInt("ShiftId");
-                    if (!rs.wasNull()) {
+                    if (!rs.wasNull()) {//tránh nullpointer khi shiftId = null khi chạy test
                         return findById(shiftId);
                     }
                 }
@@ -304,6 +304,10 @@ public class ShiftDAO {
                 LEFT JOIN Transactions t ON t.OrderId = o.OrderId
                 WHERE o.ShiftId = ?
                 """;
+        //Coalesce: Vì lúc mới vào trang có thể chưa bán được đơn nào (null) nên dùng hàm này để trả về 0 hiển thị trên giao diện
+        //Distinct: Tránh đếm trùng OrderId khi 1 đơn có nhiều transaction
+        //Left Join: Vì có thể 1 đơn chưa có transaction nào (Pending) nên vẫn cần đếm số lượng đơn Pending
+        //Count: không trả null mặc định 0 nhưng sum thì có trả về null
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -355,7 +359,7 @@ public class ShiftDAO {
                     p.Phone AS CustomerPhone,
                     o.PackageNameSnapshot,
                     o.CreatedAt,
-                    COALESCE(t.PaymentMethod, CASE WHEN o.Status = 'Pending' THEN 'Transfer' ELSE 'Cash' END) AS PaymentMethod,
+                    t.PaymentMethod AS PaymentMethod,
                     (o.UnitPriceSnapshot - o.DiscountAmount) AS Amount,
                     o.Status AS OrderStatus,
                     o.CancelType,
@@ -450,7 +454,7 @@ public class ShiftDAO {
                             rs.getInt("OrderId"),
                             rs.getString("OrderCode"),
                             rs.getString("CustomerName"),
-                            null, null, null, "Transfer", 0L, "Pending",
+                            null, null, null, null, 0L, "Pending",
                             null, null, null, true, true));
                 }//mục tiêu là hiển thị cảnh báo thì k cần phải lấy hết các trường dữ liệu, chỉ cần OrderId, OrderCode, CustomerName là đủ
             }
@@ -530,7 +534,7 @@ public class ShiftDAO {
             subStmt.executeUpdate();
         }
 
-        // B5 giải phóng các khung của buổi còn Scheduled → Free
+        // B5 giải phóng các khung của buổi còn Scheduled → Free (Cho đơn Paid)
         //Time slot là khung giờ của buổi PT
         String freeSlotSql = """
                 UPDATE TimeSlots
@@ -569,6 +573,7 @@ public class ShiftDAO {
         if (orderCreatedAt != null) {
             String deleteHoldSlotsSql =
                     "DELETE FROM TimeSlots WHERE HeldByOrderId = ? AND Status = 'Held' AND CreatedAt >= ?";
+                    //Xóa khung giờ vừa đc tạo ngay ở bước giữ chỗ (Đơn pending)
             try (PreparedStatement statement = conn.prepareStatement(deleteHoldSlotsSql)) {
                 statement.setInt(1, orderId);
                 statement.setTimestamp(2, orderCreatedAt);
@@ -576,7 +581,7 @@ public class ShiftDAO {
             }
         }
         String freeHoldSlotsSql = "UPDATE TimeSlots SET Status = 'Free', HeldByOrderId = NULL, HoldExpiresAt = NULL "
-                + "WHERE HeldByOrderId = ? AND Status = 'Held'";
+                + "WHERE HeldByOrderId = ? AND Status = 'Held'";//Trả lại các khung giờ đang giữ cho đơn này về Free
         try (PreparedStatement statement = conn.prepareStatement(freeHoldSlotsSql)) {
             statement.setInt(1, orderId);
             statement.executeUpdate();

@@ -402,8 +402,8 @@
                             </thead>
                             <tbody>
                                 <c:choose>
-                                    <c:when test="${not empty customerMemberships}">
-                                        <c:forEach var="row" items="${customerMemberships}">
+                                    <c:when test="${not empty membershipsPage.items}">
+                                        <c:forEach var="row" items="${membershipsPage.items}">
                                             <tr>
                                                 <td>
                                                     <div class="bf07-person">

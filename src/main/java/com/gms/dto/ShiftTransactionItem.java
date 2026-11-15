@@ -193,7 +193,10 @@ public class ShiftTransactionItem {
     public String getPaymentMethodDisplayName() {
         if (isCash()) return "Tiền mặt";
         if (isTransfer()) return "Chuyển khoản";
-        return paymentMethod != null ? paymentMethod : "Khác";
+        if (paymentMethod == null || paymentMethod.isBlank()) {
+            return "Chưa thanh toán";
+        }
+        return paymentMethod;
     }
 
     /**

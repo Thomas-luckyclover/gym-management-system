@@ -111,7 +111,6 @@ public class ShiftServlet extends HttpServlet {
             return;
         }
 
-        // CSRF: token sai / thiếu → chặn (form: toast + quay lại; AJAX: JSON 403).
         if (RequestUtil.rejectInvalidCsrf(request, response, "/receptionist/shift")) {
             return;
         }

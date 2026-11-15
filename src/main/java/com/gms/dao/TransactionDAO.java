@@ -446,7 +446,7 @@ public class TransactionDAO {
                 + "    o.UnitPriceSnapshot, o.DiscountAmount, "
                 + "    (o.UnitPriceSnapshot - o.DiscountAmount) AS TotalAmount, "
                 + "    o.VatRateSnapshot, o.VatAmount, "
-                + "    COALESCE(t.PaymentMethod, 'Cash') AS PaymentMethod, "
+                + "    t.PaymentMethod AS PaymentMethod, "
                 + "    o.Status AS OrderStatus, o.CancelType, o.CancelReason, "
                 + "    tRefund.TransactionId AS RefundableTransactionId, "
                 + "    CASE WHEN tRefund.TransactionId IS NOT NULL THEN 1 ELSE 0 END AS NeedsRefund, "
@@ -483,7 +483,7 @@ public class TransactionDAO {
         // B2: Phương thức thanh toán
         if (method != null && !"all".equalsIgnoreCase(method)) {
             if ("cash".equalsIgnoreCase(method)) {
-                sql.append(" AND COALESCE(t.PaymentMethod, 'Cash') = 'Cash' ");
+                sql.append(" AND t.PaymentMethod = 'Cash' ");
             } else if ("transfer".equalsIgnoreCase(method)) {
                 sql.append(" AND t.PaymentMethod = 'Transfer' ");
             } else if ("online".equalsIgnoreCase(method) || "onlinegateway".equalsIgnoreCase(method)) {

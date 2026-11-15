@@ -434,8 +434,10 @@ public class ManagerTransactionService {
 
                 // Phương thức thanh toán
                 Cell c13 = row.createCell(13);
-                String methodLabel = "Tiền mặt";
-                if ("Transfer".equalsIgnoreCase(item.getPaymentMethod())) {
+                String methodLabel = "Chưa thanh toán";
+                if ("Cash".equalsIgnoreCase(item.getPaymentMethod())) {
+                    methodLabel = "Tiền mặt";
+                } else if ("Transfer".equalsIgnoreCase(item.getPaymentMethod())) {
                     methodLabel = "Chuyển khoản";
                 } else if ("OnlineGateway".equalsIgnoreCase(item.getPaymentMethod())) {
                     methodLabel = "Cổng VNPay";
