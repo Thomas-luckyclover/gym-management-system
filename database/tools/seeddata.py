@@ -227,13 +227,14 @@ order(2, PKG['m3'], dt_(2026, 9, 19, 10, 0), 'Online', status='Cancelled',
       note='giao dịch Success nhưng đơn đã hủy → Manager hoàn tay (CBR-72, BR-47)')
 single_session(2, 5, d_(2026, 9, 26), (10, 30), 'Online', dt_(2026, 9, 25, 19, 0))
 
-# ---- Quân (3): gói tập hết trước gói PT → buổi NoMembership + buổi cuối PackageExpired
+# ---- Quân (3): gói tập hết trước gói PT → các buổi cuối NoMembership (CBR-64).
+#      Không tạo buổi PackageExpired: mọi buổi đều nằm trong kỳ gói, ngày cuối (06/08) do JOB-04 chốt;
+#      JOB-02 chỉ hủy buổi SAU EndDate (ExpirePackagesDAO.cancelSessionsAfterEnd, CBR-55).
 o = order(3, PKG['m1'], dt_(2026, 7, 1, 18, 55), 'Counter')
 subscription(o, d_(2026, 7, 1))
 o = order(3, PKG['pt1'], dt_(2026, 7, 3, 9, 0), 'Counter', method='Transfer')
-pt_package(o, 5, d_(2026, 7, 6), (7, 0), events={d_(2026, 8, 6): ('cancel', 'PackageExpired', 'Gói PT hết hạn, buổi còn lại chưa diễn ra'),
-                                              d_(2026, 7, 15): ('missed', 'NoCheckIn')},
-           note='gói PT đã hết; 03–05/08 Missed vì hết gói tập (CBR-64)')
+pt_package(o, 5, d_(2026, 7, 6), (7, 0), events={d_(2026, 7, 15): ('missed', 'NoCheckIn')},
+           note='gói PT đã hết; 03–06/08 Missed vì hết gói tập (CBR-64)')
 
 # ---- Hồng (4): gói 6 tháng (đã ngừng bán) đang bảo lưu, gói PT 2 tháng với David
 o = order(4, PKG['m6old'], dt_(2026, 7, 29, 10, 30), 'Counter', method='Transfer')
