@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * SERVICE MÀN LỊCH TẬP (khách) — /customer/pt-sessions: thời khóa biểu tuần / lịch tháng, CHỈ XEM.
@@ -72,6 +71,10 @@ public class MyPtSessionService {
     /** Cảnh báo "phòng nghỉ" — màn Gói của tôi so câu này để phân biệt với cảnh báo thiếu quyền vào gym. */
     static final String CLOSED_DAY_WARNING =
             "Phòng tập nghỉ ngày này. PT sẽ liên hệ để dời buổi sang ngày khác, buổi không bị trừ.";
+
+    /** Buổi nằm ngoài giờ mở cửa của ngày đó (Manager đổi giờ — CBR-124): JOB-04 hủy GymClosed nếu PT không dời. */
+    static final String OUTSIDE_HOURS_WARNING =
+            "Buổi nằm ngoài giờ mở cửa của ngày này. PT sẽ liên hệ để dời buổi sang giờ khác, buổi không bị trừ.";
 
     private static final String[] DAY_NAMES = {"Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "Chủ nhật"};
 
@@ -268,10 +271,10 @@ public class MyPtSessionService {
             return;
         }
 
-        // B1: ngày phòng nghỉ trong khoảng đang xem (1 câu SQL)
+        // B1: buổi rơi vào lúc phòng đóng trong khoảng đang xem — nghỉ cả ngày hoặc ngoài giờ mở cửa (1 câu SQL, cùng luật JOB-04)
         LocalDate first = rows.get(0).getSlotDate();
         LocalDate last = rows.get(rows.size() - 1).getSlotDate();
-        Set<LocalDate> closedDays = sessionDAO.findClosedDays(first, last);
+        Map<Integer, Boolean> closedSessions = sessionDAO.findClosedSessions(myCustomerId, first, last);
 
         for (MyPtSessionRow row : rows) {
             // B2: nhãn loại gói + link Zalo PT
@@ -284,12 +287,15 @@ public class MyPtSessionService {
                 row.setPartnerName(iAmHolder ? row.getPartnerFullName() : row.getHolderName());
             }
 
-            // B4: cảnh báo cho buổi chưa kết thúc (phòng nghỉ, chưa có gói gym)
+            // B4: cảnh báo cho buổi chưa kết thúc (phòng nghỉ / ngoài giờ mở cửa, chưa có gói gym)
             String warning = null;
             if (isNotEnded(row, now)) {
-                warning = closedDays.contains(row.getSlotDate())
-                        ? CLOSED_DAY_WARNING
-                        : buildGymWarning(row, myCustomerId);
+                Boolean closedAllDay = closedSessions.get(row.getSessionId());
+                if (closedAllDay == null) {
+                    warning = buildGymWarning(row, myCustomerId);
+                } else {
+                    warning = closedAllDay ? CLOSED_DAY_WARNING : OUTSIDE_HOURS_WARNING;
+                }
             }
 
             // B5: trạng thái + lý do
