@@ -411,9 +411,9 @@ def session(sub_id, slot_id, pt, status, value, **kw):
         day = get('TimeSlots', slot_id)['SlotDate']
         r['AttendanceMarkedAt'] = datetime.combine(day + timedelta(days=1), time(0, 5))
         r['IsAutoClosed'] = 1
-    if status == 'Missed' and not any(s['TimeSlotId'] == slot_id and s['Status'] in ('Scheduled', 'CheckedIn')
-                                      for s in DB['Sessions']):
-        get('TimeSlots', slot_id)['Status'] = 'Free'
+    # Buổi đã chốt (CheckedIn / Missed / GymClosed) giữ khung Booked: JOB-04 (AutoCloseSessionDAO.closeScheduledSession)
+    # chỉ cập nhật Sessions. Khung chỉ về Free khi dời / PT hủy (PtSessionHandleDAO.releaseSlot), hết hạn gói (JOB-02)
+    # hoặc đơn bị hủy.
     return add('Sessions', r)
 
 
@@ -465,9 +465,11 @@ def pt_package(oid, pt, start, fixed, events=None, freeze=None, holder_checkin_r
         # Xét trước quyền vào gym/check-in; không nhả slot quá khứ.
         if d in CLOSED and d < FUTURE_FROM:
             sl = slot(pt, d, fixed, 'Booked')
+            # JOB-04 (AutoCloseSessionDAO.closeScheduledSession): GymClosed → hoa hồng 0, ghi giờ chốt 00:05 hôm sau
+            closed_at = datetime.combine(d + timedelta(days=1), time(0, 5))
             session(sid, sl, pt, 'Cancelled', value, CancelType='GymClosed',
                     CancelReason='Phòng tập nghỉ cả ngày, buổi chưa được PT dời trước ngày nghỉ',
-                    CancelledAt=datetime.combine(d + timedelta(days=1), time(0, 5)),
+                    CancelledAt=closed_at, CommissionAmount=0, AttendanceMarkedAt=closed_at,
                     IsAutoClosed=1)
             continue
         if ev and ev[0] == 'cancel':
@@ -488,7 +490,7 @@ def pt_package(oid, pt, start, fixed, events=None, freeze=None, holder_checkin_r
                     IsAutoClosed=1)
             continue
         # Quyết định 09/10/2026: bảo lưu không chốt sẵn buổi tương lai, slot vẫn Booked.
-        # Buổi trong bảo lưu đã qua ngày sẽ được session() chuyển Missed (và nhả slot như mọi buổi Missed).
+        # Buổi trong bảo lưu đã qua ngày sẽ được session() chuyển Missed (khung giữ Booked như JOB-04).
         sl = slot(pt, d, fixed, 'Booked')
         _session_status(sid, sl, pt, value, d, at, end_at, holder, partner, freeze, holder_checkin_rate)
     sub['Status'] = 'Expired' if end < SEED else 'Active'
@@ -539,6 +541,34 @@ def single_session(cid, pt, d, start, channel, created, status=None, note=None):
     return sid
 
 
+def reconcile_no_checkin():
+    """JOB-04 xét check-in SAU cùng một ngày: có check-in (người đứng tên, gói đôi thêm người đi kèm) là CheckedIn (CBR-42).
+    Buổi Missed / NoCheckIn được quyết định trước khi các lượt check-in khác của ngày đó được sinh,
+    nên cuối cùng soát lại: ngày đó có check-in thì chốt CheckedIn, giữ khung Booked; buổi lẻ → gói Used."""
+    fixed = 0
+    for s in DB['Sessions']:
+        if s['Status'] != 'Missed' or s['MissedReason'] != 'NoCheckIn':
+            continue
+        sl = get('TimeSlots', s['TimeSlotId'])
+        d = sl['SlotDate']
+        sub = get('Subscriptions', s['SubscriptionId'])
+        o = get('Orders', sub['OrderId'])
+        people = [o['HolderCustomerId']]
+        if sub['SubscriptionType'] == 'PTCouple' and o['PartnerCustomerId']:
+            people.append(o['PartnerCustomerId'])
+        if not any(checked_in_on(c, d) for c in people):
+            continue
+        assert not any(x is not s and x['TimeSlotId'] == s['TimeSlotId'] and x['Status'] in ('Scheduled', 'CheckedIn')
+                       for x in DB['Sessions']), f'khung {s["TimeSlotId"]} đã có buổi khác'
+        s['Status'] = 'CheckedIn'
+        s['MissedReason'] = None
+        sl['Status'] = 'Booked'
+        if sub['SubscriptionType'] == 'SingleSession':
+            sub['Status'] = 'Used'
+        fixed += 1
+    return fixed
+
+
 # ============================================================ in SQL
 def lit(v, now=None):
     if v is None:
@@ -568,6 +598,7 @@ EXTRA_SQL = []   # khối SQL viết tay, chép nguyên văn ngay trước khố
 
 
 def render(now=None, header=''):
+    reconcile_no_checkin()
     check_live_slots()
     out = [header]
     if now is None:

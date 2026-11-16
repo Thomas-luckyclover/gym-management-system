@@ -224,9 +224,9 @@
                                             </div>
                                         </div>
 
-                                        <%-- VÒNG TIẾN ĐỘ: còn = sp.totalSessions − sp.pastSessions (≤ 3 → màu cảnh báo) · % = sp.progressPercent. --%>
+                                        <%-- VÒNG TIẾN ĐỘ: còn = sp.remainingSessions (buổi còn Scheduled, giống Dashboard; ≤ 3 → màu cảnh báo) · % = sp.progressPercent. --%>
                                         <c:if test="${not empty sp}">
-                                            <c:set var="left" value="${sp.totalSessions - sp.pastSessions}" />
+                                            <c:set var="left" value="${sp.remainingSessions}" />
                                             <div class="booking-progress">
                                                 <%-- sp.progressPercent = getter tự tính getProgressPercent() · dto/MyPtPackageView.java (sp = MyPtPackageView) --%>
                                                 <div class="booking-ring ${left le 3 ? 'is-ending' : ''}" style="--p: ${sp.progressPercent}" role="img" aria-label="Còn ${left} buổi, đã qua ${sp.pastSessions} trên ${sp.totalSessions} buổi">
