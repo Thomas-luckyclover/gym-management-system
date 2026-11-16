@@ -11,9 +11,9 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 /**
  * DAO BUỔI PT CỦA KHÁCH — dùng chung cho 2 màn: "Lịch tập" (/customer/pt-sessions) và "Gói của tôi" (/customer/bookings).
@@ -180,7 +180,13 @@ public class MyPtSessionDAO {
                         FROM Sessions s
                         JOIN TimeSlots t ON t.TimeSlotId = s.TimeSlotId
                         WHERE s.SubscriptionId = sub.SubscriptionId
-                          AND t.SlotDate < ?) AS PastSessions
+                          AND t.SlotDate < ?) AS PastSessions,
+                       -- Còn N buổi = buổi còn Scheduled (chưa chốt, chưa hủy) — cùng cách đếm với Dashboard
+                       -- (CustomerDashboardDAO.findActiveSubscriptions); buổi PT đã hủy ở tương lai KHÔNG tính.
+                       (SELECT COUNT(*)
+                        FROM Sessions s
+                        WHERE s.SubscriptionId = sub.SubscriptionId
+                          AND s.Status = 'Scheduled') AS RemainingSessions
                 FROM Subscriptions sub
                 JOIN Orders o                   ON o.OrderId = sub.OrderId
                 JOIN Employees e                ON e.EmployeeId = sub.PtEmployeeId
@@ -216,6 +222,7 @@ public class MyPtSessionDAO {
                     p.setEndDate(rs.getDate("EndDate").toLocalDate());
                     p.setTotalSessions(rs.getInt("GeneratedSessionCount"));
                     p.setPastSessions(rs.getInt("PastSessions"));
+                    p.setRemainingSessions(rs.getInt("RemainingSessions"));
                     p.setPackageName(rs.getString("PackageNameSnapshot"));
                     p.setPartnerCustomerId(p.isCouple() ? getNullableInt(rs, "PartnerCustomerId") : null);
                     p.setPtName(rs.getString("PtName"));
@@ -289,29 +296,49 @@ public class MyPtSessionDAO {
         }
     }
 
-    /** fillDisplay B1: các ngày phòng NGHỈ CẢ NGÀY (Manager khai báo) trong [fromDate, toDate]. */
-    public Set<LocalDate> findClosedDays(LocalDate fromDate, LocalDate toDate) throws SQLException {
+    /**
+     * fillDisplay B1: buổi Scheduled của khách (đứng tên, hoặc đi kèm gói đôi) trong [fromDate, toDate] rơi vào lúc phòng ĐÓNG
+     * — nghỉ cả ngày, hoặc ngoài giờ mở cửa của ngày đó (ngoại lệ OperatingHourExceptions, không có thì P-17).
+     * Cùng luật JOB-04 B1 (AutoCloseSessionDAO) và việc "closedDay" ở dashboard PT (PtDashboardDAO.findClosedDaySessions),
+     * để 3 màn cùng nói một buổi sẽ bị hủy GymClosed nếu PT không dời (CBR-56, CBR-124).
+     * Trả về: SessionId → true = nghỉ cả ngày, false = ngoài giờ mở cửa. 4 dấu ?: customerId, customerId, fromDate, toDate.
+     */
+    public Map<Integer, Boolean> findClosedSessions(int customerId, LocalDate fromDate, LocalDate toDate)
+            throws SQLException {
         String sql = """
-                SELECT ApplyDate
-                FROM OperatingHourExceptions
-                WHERE IsClosedAllDay = 1
-                  AND ApplyDate BETWEEN ? AND ?
+                SELECT s.SessionId,
+                       CASE WHEN ISNULL(ex.IsClosedAllDay, 0) = 1 THEN 1 ELSE 0 END AS ClosedAllDay
+                FROM Sessions s
+                JOIN TimeSlots t       ON t.TimeSlotId = s.TimeSlotId
+                JOIN Subscriptions sub ON sub.SubscriptionId = s.SubscriptionId
+                JOIN Orders o          ON o.OrderId = sub.OrderId
+                LEFT JOIN OperatingHourExceptions ex ON ex.ApplyDate = t.SlotDate
+                LEFT JOIN SystemConfigs cfg          ON cfg.ConfigKey = 'P-17'
+                WHERE s.Status = 'Scheduled'
+                  AND (sub.CustomerId = ?
+                       OR (sub.SubscriptionType = 'PTCouple' AND o.PartnerCustomerId = ?))
+                  AND t.SlotDate BETWEEN ? AND ?
+                  AND (   ISNULL(ex.IsClosedAllDay, 0) = 1
+                       OR t.StartTime < COALESCE(ex.OpenTime, TRY_CONVERT(time(0), LEFT(cfg.ConfigValue, 5)))
+                       OR t.EndTime > COALESCE(ex.CloseTime, TRY_CONVERT(time(0), RIGHT(cfg.ConfigValue, 5))))
                 """;
 
-        Set<LocalDate> days = new HashSet<>();
+        Map<Integer, Boolean> sessions = new HashMap<>();
 
         try (Connection connection = DBContext.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
 
-            statement.setDate(1, Date.valueOf(fromDate));
-            statement.setDate(2, Date.valueOf(toDate));
+            statement.setInt(1, customerId);
+            statement.setInt(2, customerId);
+            statement.setDate(3, Date.valueOf(fromDate));
+            statement.setDate(4, Date.valueOf(toDate));
 
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
-                    days.add(rs.getDate("ApplyDate").toLocalDate());
+                    sessions.put(rs.getInt("SessionId"), rs.getInt("ClosedAllDay") == 1);
                 }
             }
         }
-        return days;
+        return sessions;
     }
 }

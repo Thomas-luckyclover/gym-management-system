@@ -18,10 +18,12 @@ public class MyPtPackageView {
     private LocalDate startDate;
     // ← Subscriptions.EndDate → ngày hết gói, câu "Gói hết hạn ngày …"
     private LocalDate endDate;
-    // ← tổng số buổi của gói → vòng tròn "còn N buổi" (= total − past), "x/y đã qua"
+    // ← tổng số buổi của gói → "x/y đã qua"
     private int totalSessions;
-    // ← DAO đếm buổi có ngày tập TRƯỚC hôm nay → vòng tròn, "x/y đã qua"
+    // ← DAO đếm buổi có ngày tập TRƯỚC hôm nay → vòng tròn %, "x/y đã qua"
     private int pastSessions;
+    // ← DAO đếm buổi còn Scheduled → "còn N buổi" (thẻ gói, vòng tròn) — khớp Dashboard; buổi đã hủy không tính
+    private int remainingSessions;
     // ← tên PT → "PT …" trên thẻ gói, khung "PT của gói"
     private String ptName;
     // ← SĐT PT → nút gọi PT
@@ -85,6 +87,9 @@ public class MyPtPackageView {
 
     public int getPastSessions() { return pastSessions; }
     public void setPastSessions(int pastSessions) { this.pastSessions = pastSessions; }
+
+    public int getRemainingSessions() { return remainingSessions; }
+    public void setRemainingSessions(int remainingSessions) { this.remainingSessions = remainingSessions; }
 
     public int getHolderCustomerId() { return holderCustomerId; }
     public void setHolderCustomerId(int holderCustomerId) { this.holderCustomerId = holderCustomerId; }
